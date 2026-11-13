@@ -28,6 +28,13 @@ function check(name, condition, extra = '') {
   console.log(`${condition ? '✅' : '❌'} ${name}${extra ? ' — ' + extra : ''}`);
 }
 
+/** A date `days` in the past, as YYYY-MM-DD. */
+function daysAgoIso(days) {
+  const date = new Date();
+  date.setDate(date.getDate() - days);
+  return date.toISOString().slice(0, 10);
+}
+
 /** Low-level request that returns the status instead of throwing (for expected failures). */
 async function raw(method, path, body, authToken) {
   const headers = { 'Content-Type': 'application/json' };
@@ -49,8 +56,7 @@ async function raw(method, path, body, authToken) {
 }
 
 /** Logs in as a throwaway user and returns its token + branch. */
-async function loginAs(userName, password) {
-  const response = await fetch(`${BASE}/auth/login`, {
+async function loginAs(userName, password) {  const response = await fetch(`${BASE}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userName, password }),
@@ -1276,6 +1282,97 @@ async function loginAs(userName, password) {
     lineIds: p3SplitAllDetail.lines.map((line) => line.lineId),
   });
   check('splitting every line is refused', p3SplitAll.status === 400, String(p3SplitAll.status));
+
+  // 40. P4 — stock count document (سند الجرد)
+  const employee = await call('POST', '/hr/employees', {
+    name: 'أمين مخزن الجرد', phone: '01099998877', baseSalary: 4000,
+  });
+  check('counting employee created', !!employee.employeeId, String(employee.employeeId));
+
+  const noEmployee = await raw('POST', '/stock-counts', { warehouseId });
+  check('the counting employee is mandatory', noEmployee.status === 400, String(noEmployee.status));
+
+  const badEmployee = await raw('POST', '/stock-counts', { warehouseId, employeeId: 999999 });
+  check('an unknown employee is refused', badEmployee.status === 400, String(badEmployee.status));
+
+  const count = await call('POST', '/stock-counts', {
+    warehouseId, employeeId: employee.employeeId, countDate: daysAgoIso(0), notes: 'جرد دوري',
+  });
+  check('count document created', !!count.stockCountId, count.countNo);
+
+  const secondOpen = await raw('POST', '/stock-counts', { warehouseId, employeeId: employee.employeeId });
+  check('only one open count per warehouse', secondOpen.status === 400, String(secondOpen.status));
+
+  // The expected quantity is the ledger balance at the moment of the line.
+  const balanceBefore = Number((await call('GET', `/inventory/balances?warehouseId=${warehouseId}`))
+    .find((row) => row.itemId === itemB.itemId)?.onHandQty ?? 0);
+
+  const counted = await call('POST', `/stock-counts/${count.stockCountId}/lines`, {
+    itemId: itemB.itemId, unitId: 1, countedQty: Math.max(0, balanceBefore - 4),
+  });
+  check('count line added', counted.added === true, JSON.stringify(counted));
+  check('the expected quantity is a snapshot of the balance',
+    Math.abs(Number(counted.expectedQty) - balanceBefore) < 0.01,
+    `${counted.expectedQty} vs ${balanceBefore}`);
+
+  const countDetail = await call('GET', `/stock-counts/${count.stockCountId}`);
+  const countLine = countDetail.lines.find((line) => line.itemId === itemB.itemId);
+  check('the difference is calculated', Math.abs(Number(countLine?.differenceQty) + 4) < 0.01,
+    String(countLine?.differenceQty));
+  check('the difference is valued at cost', Number(countLine?.differenceValue) !== 0,
+    String(countLine?.differenceValue));
+
+  // Adding the same item again adds to the quantity.
+  const merged = await call('POST', `/stock-counts/${count.stockCountId}/lines`, {
+    itemId: itemB.itemId, unitId: 1, countedQty: 1,
+  });
+  check('the same item in the same unit is merged', merged.merged === true, JSON.stringify(merged));
+
+  // A counted quantity equal to the balance has no difference and is refused.
+  const equalLine = await raw('POST', `/stock-counts/${count.stockCountId}/lines`, {
+    itemId: itemA.itemId, unitId: 1, countedQty: Number(
+      (await call('GET', `/inventory/balances?warehouseId=${warehouseId}`))
+        .find((row) => row.itemId === itemA.itemId)?.onHandQty ?? 0),
+  });
+  check('a quantity equal to the balance is not counted', equalLine.status === 400,
+    String(equalLine.status));
+
+  // Editing the counted quantity recalculates the difference.
+  const editedLine = await call('PUT', `/stock-counts/${count.stockCountId}/lines/${countLine.lineId}`, {
+    countedQty: Math.max(0, balanceBefore - 10),
+  });
+  check('the counted quantity can be edited', Number(editedLine.countedQty) === Math.max(0, balanceBefore - 10),
+    String(editedLine.countedQty));
+
+  const afterEdit = await call('GET', `/stock-counts/${count.stockCountId}`);
+  const editedLineRow = afterEdit.lines.find((line) => line.itemId === itemB.itemId);
+  check('the difference follows the edit', Math.abs(Number(editedLineRow?.differenceQty) + 10) < 0.01,
+    String(editedLineRow?.differenceQty));
+
+  // The document is applied only when it is approved.
+  const stockBeforeApprove = Number((await call('GET', `/inventory/balances?warehouseId=${warehouseId}`))
+    .find((row) => row.itemId === itemB.itemId)?.onHandQty ?? 0);
+  check('a draft count does not touch the stock', stockBeforeApprove === balanceBefore,
+    `${balanceBefore} -> ${stockBeforeApprove}`);
+
+  const approved = await call('POST', `/stock-counts/${count.stockCountId}/approve`, {});
+  check('count approved', approved.status === 2, JSON.stringify(approved));
+
+  const stockAfterApprove = Number((await call('GET', `/inventory/balances?warehouseId=${warehouseId}`))
+    .find((row) => row.itemId === itemB.itemId)?.onHandQty ?? 0);
+  check('the approval applies the difference to the stock',
+    Math.abs((stockAfterApprove - stockBeforeApprove) + 10) < 0.01,
+    `${stockBeforeApprove} -> ${stockAfterApprove}`);
+
+  const editApproved = await raw('PUT', `/stock-counts/${count.stockCountId}`, { notes: 'x' });
+  check('an approved count cannot be edited', editApproved.status === 400, String(editApproved.status));
+
+  const deleteApproved = await raw('DELETE', `/stock-counts/${count.stockCountId}`, {});
+  check('an approved count cannot be deleted', deleteApproved.status === 400, String(deleteApproved.status));
+
+  const countJournal = await call('GET', `/accounting/journals/${approved.journalId}`);
+  check('the count posted an accounting entry',
+    countJournal.lines.length === 2, `${countJournal.lines.length} lines`);
 
   const failed = results.filter((r) => !r.ok);
   console.log(`\n${results.length - failed.length}/${results.length} checks passed`);

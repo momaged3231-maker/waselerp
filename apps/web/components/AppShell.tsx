@@ -17,6 +17,7 @@ const NAV: NavItem[] = [
   { href: '/items', label: 'الأصناف', icon: '📦', permission: 'items.view' },
   { href: '/pricing', label: 'قوائم الأسعار', icon: '🏷️', permission: 'items.view' },
   { href: '/inventory', label: 'المخزون', icon: '🏬', permission: 'stock.view' },
+  { href: '/stock-count', label: 'سند الجرد', icon: '🧮', permission: 'stock.view' },
   { href: '/parties', label: 'العملاء والموردين', icon: '👥', permission: 'parties.view' },
   { href: '/installments', label: 'التقسيط', icon: '📆', permission: 'parties.ledger' },
   { href: '/treasury', label: 'الخزينة', icon: '💰', permission: 'cash.view' },

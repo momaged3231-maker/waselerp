@@ -6,6 +6,7 @@ import { applyMovement, getWarehouseCost, toBaseUnits, MoveType } from '../../co
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
 import { LiveEventsService } from '../events/live-events.service';
 import { EventsModule } from '../events/events.slice';
+import { StockCountController, StockCountService } from './stock-count.slice';
 
 export interface StockOperationInput {
   operationType: number;   // 1 transfer, 2 count, 3 adjustment
@@ -231,8 +232,8 @@ export class InventoryController {
 
 @Module({
   imports: [EventsModule],
-  controllers: [InventoryController],
-  providers: [InventoryService],
+  controllers: [InventoryController, StockCountController],
+  providers: [InventoryService, StockCountService],
   exports: [InventoryService],
 })
 export class InventoryModule {}
