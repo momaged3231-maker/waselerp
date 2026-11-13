@@ -253,43 +253,10 @@ async function main() {
     });
   }
 
-  // ---------------- purchases (the opening stock) ----------------
-  const purchaseBatches = [
-    { days: 28, supplier: 0 },
-    { days: 21, supplier: 1 },
-    { days: 14, supplier: 2 },
-    { days: 7, supplier: 3 },
-  ];
-  for (const batch of purchaseBatches) {
-    // Every item is bought in every batch so the stock covers the sales below.
-    const lines = created.map((item) => ({
-      itemId: item.itemId,
-      unitId: item.baseUnit,
-      quantity: between(60, 110),
-      unitPrice: item.cost,
-      discountPct: 0,
-      taxPct: item.vat,
-    }));
-    const total = lines.reduce((sum, line) => sum + line.quantity * line.unitPrice, 0);
-    await call('POST', '/sales/invoices', {
-      invoiceType: 2,
-      branchId,
-      warehouseId,
-      partyId: supplierIds[batch.supplier],
-      paymentType: 1,
-      cashAccountId: bankAccount.cashAccountId,
-      paidAmount: Math.round(total * 0.6 * 100) / 100,
-      invoiceDate: daysAgo(batch.days),
-      lines,
-      notes: 'شراء بضاعة',
-    });
-  }
-
-  // ---------------- sales across the last 30 days ----------------
-  const cashCategories = await call('GET', '/treasury/categories');
-  const depositCategory = cashCategories.find((c) => c.direction === 1);
-
-  let salesCount = 0;
+  // ---------------- plan the month of sales first ----------------
+  // The stock is bought afterwards to cover exactly what the sales need, so
+  // the demo never runs out of an item.
+  const salesPlan = [];
   for (let day = 29; day >= 0; day -= 1) {
     const invoicesToday = between(0, 3);
     for (let n = 0; n < invoicesToday; n += 1) {
@@ -303,6 +270,7 @@ async function main() {
         lines.push({
           itemId: item.itemId,
           unitId,
+          factor,
           // A carton holds many base units, so the sold quantity stays small.
           // Expensive items move in small quantities, like in a real shop.
           quantity: factor > 6 ? between(1, 3) : price > 300 ? between(1, 2) : between(1, 8),
@@ -335,26 +303,79 @@ async function main() {
         payments.push({ method: 1, amount: cashPart, cashAccountId: drawer.cashAccountId });
         payments.push({ method: 2, amount: Math.round((total - cashPart) * 100) / 100, cashAccountId: cardAccount.cashAccountId });
         paidAmount = total;
-      } else {
-        paidAmount = 0;
       }
 
-      await call('POST', '/sales/invoices', {
-        invoiceType: 1,
-        branchId,
-        warehouseId,
-        partyId: customerId,
-        paymentType: paidAmount >= total - 0.01 ? 1 : paidAmount > 0 ? 3 : 2,
-        cashAccountId: drawer.cashAccountId,
-        paidAmount: Math.round(paidAmount * 100) / 100,
-        payments: payments.length ? payments : undefined,
-        invoiceDate: daysAgo(day),
-        discountPct: random() > 0.9 ? 3 : 0,
-        lines,
-        notes: '',
+      salesPlan.push({
+        day, customerId, lines, total, payments, paidAmount,
+        headerDiscount: random() > 0.9 ? 3 : 0,
       });
-      salesCount += 1;
     }
+  }
+
+  // ---------------- purchases (the stock the plan needs) ----------------
+  const needed = new Map();
+  for (const sale of salesPlan) {
+    for (const line of sale.lines) {
+      needed.set(line.itemId, (needed.get(line.itemId) ?? 0) + line.quantity * line.factor);
+    }
+  }
+  const purchaseBatches = [
+    { days: 28, supplier: 0, share: 0.35 },
+    { days: 21, supplier: 1, share: 0.25 },
+    { days: 14, supplier: 2, share: 0.2 },
+    { days: 7, supplier: 3, share: 0.2 },
+  ];
+  for (const batch of purchaseBatches) {
+    const lines = created
+      .map((item) => ({
+        itemId: item.itemId,
+        unitId: item.baseUnit,
+        quantity: Math.max(5, Math.ceil(((needed.get(item.itemId) ?? 0) + 10) * batch.share)),
+        unitPrice: item.cost,
+        discountPct: 0,
+        taxPct: item.vat,
+      }))
+      .filter((line) => line.quantity > 0);
+    const total = lines.reduce((sum, line) => sum + line.quantity * line.unitPrice, 0);
+    await call('POST', '/sales/invoices', {
+      invoiceType: 2,
+      branchId,
+      warehouseId,
+      partyId: supplierIds[batch.supplier],
+      paymentType: 1,
+      cashAccountId: bankAccount.cashAccountId,
+      paidAmount: Math.round(total * 0.6 * 100) / 100,
+      invoiceDate: daysAgo(batch.days),
+      lines,
+      notes: 'شراء بضاعة',
+    });
+  }
+
+  // ---------------- sales across the last 30 days ----------------
+  const cashCategories = await call('GET', '/treasury/categories');
+  const depositCategory = cashCategories.find((c) => c.direction === 1);
+
+  let salesCount = 0;
+  for (const sale of salesPlan) {
+    const { day, customerId, lines, total, payments, paidAmount } = sale;
+    await call('POST', '/sales/invoices', {
+      invoiceType: 1,
+      branchId,
+      warehouseId,
+      partyId: customerId,
+      paymentType: paidAmount >= total - 0.01 ? 1 : paidAmount > 0 ? 3 : 2,
+      cashAccountId: drawer.cashAccountId,
+      paidAmount: Math.round(paidAmount * 100) / 100,
+      payments: payments.length ? payments : undefined,
+      invoiceDate: daysAgo(day),
+      discountPct: sale.headerDiscount,
+      lines: lines.map(({ factor, ...line }) => line),
+      notes: '',
+    });
+    salesCount += 1;
+  }
+
+  for (let day = 29; day >= 0; day -= 1) {
 
     // daily cash deposit into the bank
     if (random() > 0.55 && depositCategory) {
