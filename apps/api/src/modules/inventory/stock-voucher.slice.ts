@@ -188,7 +188,7 @@ export class StockVoucherService {
           `UPDATE stock_voucher_lines SET quantity = $2::numeric WHERE stock_voucher_line_id = $1::bigint`,
           [line.stock_voucher_line_id, newQty],
         );
-        return { added: true, merged: true, quantity: newQty };
+        return { added: true, merged: true, quantity: newQty, lineId: line.stock_voucher_line_id };
       }
 
       const lineNo = await client.query<{ n: number }>(
@@ -198,14 +198,15 @@ export class StockVoucherService {
       const unitCost = Number(dto.unitCost ?? 0) > 0 ? Number(dto.unitCost)
         : (await getWarehouseCost(client, itemId, Number(header.warehouse_id))) || Number(item.rows[0].cost_price ?? 0);
 
-      await client.query(
+      const insertedLine = await client.query<{ stock_voucher_line_id: number }>(
         `INSERT INTO stock_voucher_lines
            (stock_voucher_id, line_number, item_id, unit_id, quantity, unit_cost, serial_no, expiry_date, notes)
-         VALUES ($1::bigint,$2::int,$3::int,$4::int,$5::numeric,$6::numeric,$7::text,$8::date,$9::text)`,
+         VALUES ($1::bigint,$2::int,$3::int,$4::int,$5::numeric,$6::numeric,$7::text,$8::date,$9::text)
+         RETURNING stock_voucher_line_id`,
         [id, Number(lineNo.rows[0].n), itemId, unitId, qtyBase, round2(unitCost),
           dto.serialNo ?? null, dto.expiryDate ?? null, dto.notes ?? null],
       );
-      return { added: true, merged: false, quantity: qtyBase };
+      return { added: true, merged: false, quantity: qtyBase, lineId: Number(insertedLine.rows[0].stock_voucher_line_id) };
     });
   }
 

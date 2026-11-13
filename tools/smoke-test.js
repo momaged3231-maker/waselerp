@@ -1397,7 +1397,7 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
   });
   check('same item same unit merged', voucherMerged.merged === true, JSON.stringify(voucherMerged));
 
-  const voucherEdited = await call('PUT', `/stock-vouchers/${invVoucher.stockVoucherId}/lines/${added.lineId ?? 1}`, {
+  const voucherEdited = await call('PUT', `/stock-vouchers/${invVoucher.stockVoucherId}/lines/${added.lineId}`, {
     quantity: 20,
   });
   check('line quantity edited', voucherEdited.quantity === 20, String(voucherEdited.quantity));
@@ -1436,6 +1436,69 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
   check('outgoing voucher decreased stock by 5',
     Math.abs((stockAfterOut - stockAfter) - (-5)) < 0.01,
     `${stockAfter} -> ${stockAfterOut}`);
+
+  // 42. P4.3 — stock transfer indirect (تحويل غير مباشر بين مخازن)
+  const whA = warehouseId;
+  // The test creates its own second warehouse so it never depends on seed data.
+  let whB = Number((await call('GET', '/catalog/warehouses'))
+    .find((row) => row.warehouseId !== whA)?.warehouseId);
+  if (!whB) {
+    const createdWh = await call('POST', '/catalog/warehouses', {
+      code: 'WH-TEST', name: 'مخزن الاختبار', isActive: true,
+    });
+    whB = Number(createdWh.warehouseId);
+    check('second warehouse created for transfer test', !!whB, String(whB));
+  }
+  {
+    const transfer = await call('POST', '/stock-transfers', {
+      fromWarehouseId: whA, toWarehouseId: whB, transferDate: daysAgoIso(0), notes: 'تحويل تجريبي',
+    });
+    check('transfer created', !!transfer.stockTransferId, transfer.transferNo);
+
+    await call('POST', `/stock-transfers/${transfer.stockTransferId}/lines`, {
+      itemId: itemB.itemId, unitId: 1, quantity: 10, unitCost: 30,
+    });
+
+    const stockBeforeA = Number((await call('GET', `/inventory/balances?warehouseId=${whA}`))
+      .find((row) => row.itemId === itemB.itemId)?.onHandQty ?? 0);
+    const stockBeforeB = Number((await call('GET', `/inventory/balances?warehouseId=${whB}`))
+      .find((row) => row.itemId === itemB.itemId)?.onHandQty ?? 0);
+
+    const approved = await call('POST', `/stock-transfers/${transfer.stockTransferId}/approve`, {});
+    check('transfer approved (outbound voucher)', approved.status === 2, JSON.stringify(approved));
+
+    const stockAfterApproveA = Number((await call('GET', `/inventory/balances?warehouseId=${whA}`))
+      .find((row) => row.itemId === itemB.itemId)?.onHandQty ?? 0);
+    const stockAfterApproveB = Number((await call('GET', `/inventory/balances?warehouseId=${whB}`))
+      .find((row) => row.itemId === itemB.itemId)?.onHandQty ?? 0);
+    check('stock decreased at source after approve',
+      Math.abs((stockAfterApproveA - stockBeforeA) - (-10)) < 0.01,
+      `${stockBeforeA} -> ${stockAfterApproveA}`);
+    check('stock unchanged at destination before receive',
+      stockAfterApproveB === stockBeforeB,
+      `${stockBeforeB} -> ${stockAfterApproveB}`);
+
+    const received = await call('POST', `/stock-transfers/${transfer.stockTransferId}/receive`, {});
+    check('transfer received (inbound voucher)', received.status === 4, JSON.stringify(received));
+
+    const stockAfterReceiveA = Number((await call('GET', `/inventory/balances?warehouseId=${whA}`))
+      .find((row) => row.itemId === itemB.itemId)?.onHandQty ?? 0);
+    const stockAfterReceiveB = Number((await call('GET', `/inventory/balances?warehouseId=${whB}`))
+      .find((row) => row.itemId === itemB.itemId)?.onHandQty ?? 0);
+    check('stock increased at destination after receive',
+      Math.abs((stockAfterReceiveB - stockAfterApproveB) - 10) < 0.01,
+      `${stockAfterApproveB} -> ${stockAfterReceiveB}`);
+    check('stock unchanged at source after receive',
+      stockAfterReceiveA === stockAfterApproveA,
+      `${stockAfterApproveA} -> ${stockAfterReceiveA}`);
+
+    const editCompleted = await raw('PUT', `/stock-transfers/${transfer.stockTransferId}`, { notes: 'x' });
+    check('a completed transfer cannot be edited', editCompleted.status === 400, String(editCompleted.status));
+
+    const transferJournal = await call('GET', `/accounting/journals/${received.journalId}`);
+    check('receive posted a journal entry',
+      transferJournal.lines.length >= 2, `${transferJournal.lines.length} lines`);
+  }
 
   const failed = results.filter((r) => !r.ok);
   console.log(`\n${results.length - failed.length}/${results.length} checks passed`);

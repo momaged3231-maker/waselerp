@@ -19,6 +19,7 @@ const NAV: NavItem[] = [
   { href: '/inventory', label: 'المخزون', icon: '🏬', permission: 'stock.view' },
   { href: '/stock-count', label: 'سند الجرد', icon: '🧮', permission: 'stock.view' },
   { href: '/stock-voucher', label: 'أذون المخازن', icon: '📦', permission: 'stock.view' },
+  { href: '/stock-transfer', label: 'تحويل غير مباشر', icon: '🔄', permission: 'stock.view' },
   { href: '/parties', label: 'العملاء والموردين', icon: '👥', permission: 'parties.view' },
   { href: '/installments', label: 'التقسيط', icon: '📆', permission: 'parties.ledger' },
   { href: '/treasury', label: 'الخزينة', icon: '💰', permission: 'cash.view' },
