@@ -133,6 +133,9 @@ const CHART: {
   { code: '5108', name: 'إهلاكات الأصول الثابتة', nameEn: 'Depreciation', type: 5, parent: '5' },
   { code: '5109', name: 'خصم الموردين', nameEn: 'Purchase Discounts', type: 5, normal: 2, parent: '5', mapping: 'PURCHASE_DISCOUNT', mappingLabel: 'خصم الموردين' },
   { code: '5110', name: 'فروقات الصندوق', nameEn: 'Cash Short / Over', type: 5, parent: '5', mapping: 'CASH_DIFF', mappingLabel: 'فروقات الصندوق' },
+  { code: '5111', name: 'فروقات الجرد', nameEn: 'Inventory Variance', type: 5, parent: '5', mapping: 'INVENTORY_VARIANCE', mappingLabel: 'فروقات الجرد' },
+  { code: '5112', name: 'تالف وهادر', nameEn: 'Damage & Wastage', type: 5, parent: '5', mapping: 'DAMAGE_EXPENSE', mappingLabel: 'تالف وهادر' },
+  { code: '5113', name: 'إضافات مخزون', nameEn: 'Inventory Additions', type: 5, parent: '5', mapping: 'INVENTORY_ADDITION', mappingLabel: 'إضافات مخزون' },
 ];
 
 const CURRENCIES: [string, string, string, boolean, number][] = [

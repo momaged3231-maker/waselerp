@@ -1374,6 +1374,69 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
   check('the count posted an accounting entry',
     countJournal.lines.length === 2, `${countJournal.lines.length} lines`);
 
+  // 41. P4.2 — stock vouchers (أذون المخازن)
+  const wh = warehouseId;
+  const invVoucher = await call('POST', '/stock-vouchers', {
+    warehouseId: wh, voucherType: 1, voucherDate: daysAgoIso(0), notes: 'وارد تجريبي',
+  });
+  check('incoming voucher created', !!invVoucher.stockVoucherId, invVoucher.voucherNo);
+
+  const noType = await raw('POST', '/stock-vouchers', { warehouseId: wh, voucherType: 9 });
+  check('invalid voucher type refused', noType.status === 400, String(noType.status));
+
+  const noWarehouse = await raw('POST', '/stock-vouchers', { voucherType: 1 });
+  check('warehouse is mandatory', noWarehouse.status === 400, String(noWarehouse.status));
+
+  const added = await call('POST', `/stock-vouchers/${invVoucher.stockVoucherId}/lines`, {
+    itemId: itemB.itemId, unitId: 1, quantity: 10, unitCost: 25,
+  });
+  check('voucher line added', added.added === true, JSON.stringify(added));
+
+  const voucherMerged = await call('POST', `/stock-vouchers/${invVoucher.stockVoucherId}/lines`, {
+    itemId: itemB.itemId, unitId: 1, quantity: 5,
+  });
+  check('same item same unit merged', voucherMerged.merged === true, JSON.stringify(voucherMerged));
+
+  const voucherEdited = await call('PUT', `/stock-vouchers/${invVoucher.stockVoucherId}/lines/${added.lineId ?? 1}`, {
+    quantity: 20,
+  });
+  check('line quantity edited', voucherEdited.quantity === 20, String(voucherEdited.quantity));
+
+  const stockBefore = Number((await call('GET', `/inventory/balances?warehouseId=${wh}`))
+    .find((row) => row.itemId === itemB.itemId)?.onHandQty ?? 0);
+
+  const approvedV = await call('POST', `/stock-vouchers/${invVoucher.stockVoucherId}/approve`, {});
+  check('voucher approved', approvedV.status === 2, JSON.stringify(approvedV));
+
+  const stockAfter = Number((await call('GET', `/inventory/balances?warehouseId=${wh}`))
+    .find((row) => row.itemId === itemB.itemId)?.onHandQty ?? 0);
+  check('approval increased stock by 20', Math.abs((stockAfter - stockBefore) - 20) < 0.01,
+    `${stockBefore} -> ${stockAfter}`);
+
+  const editVoucher = await raw('PUT', `/stock-vouchers/${invVoucher.stockVoucherId}`, { notes: 'x' });
+  check('an approved voucher cannot be edited', editVoucher.status === 400, String(editVoucher.status));
+
+  const deleteVoucher = await raw('DELETE', `/stock-vouchers/${invVoucher.stockVoucherId}`, {});
+  check('an approved voucher cannot be deleted', deleteVoucher.status === 400, String(deleteVoucher.status));
+
+  const voucherJournal = await call('GET', `/accounting/journals/${approvedV.journalId}`);
+  check('voucher posted a journal entry',
+    voucherJournal.lines.length >= 2, `${voucherJournal.lines.length} lines`);
+
+  // Outgoing voucher (صادر) decreases stock and posts COGS.
+  const outVoucher = await call('POST', '/stock-vouchers', {
+    warehouseId: wh, voucherType: 2, voucherDate: daysAgoIso(0), notes: 'صادر تجريبي',
+  });
+  await call('POST', `/stock-vouchers/${outVoucher.stockVoucherId}/lines`, {
+    itemId: itemB.itemId, unitId: 1, quantity: 5,
+  });
+  await call('POST', `/stock-vouchers/${outVoucher.stockVoucherId}/approve`, {});
+  const stockAfterOut = Number((await call('GET', `/inventory/balances?warehouseId=${wh}`))
+    .find((row) => row.itemId === itemB.itemId)?.onHandQty ?? 0);
+  check('outgoing voucher decreased stock by 5',
+    Math.abs((stockAfterOut - stockAfter) - (-5)) < 0.01,
+    `${stockAfter} -> ${stockAfterOut}`);
+
   const failed = results.filter((r) => !r.ok);
   console.log(`\n${results.length - failed.length}/${results.length} checks passed`);
   if (failed.length) process.exit(1);
