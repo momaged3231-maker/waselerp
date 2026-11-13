@@ -1,0 +1,43 @@
+# ---- dependencies ----
+node_modules/
+.pnpm-store/
+
+# ---- build output ----
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# ---- runtime / local state ----
+.env
+.env.local
+*.log
+logs/
+apps/print-agent/agent-config.json
+apps/print-agent/*.bin
+tools/pg/data/
+tools/pg/node_modules/
+tmp/
+temp/
+
+# ---- OS / editor ----
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/
+*.swp
+
+# ---- raw reference dumps from the analysed third-party product ----
+# (kept locally for requirement traceability; not redistributed)
+analysis/db/
+analysis/strings/
+
+# ---- local databases / backups ----
+*.bak
+*.sql.gz
+
+# ---- embedded postgres (PGlite) local data ----
+tools/pg/pglite/data/
+tools/pg/pglite/*.log

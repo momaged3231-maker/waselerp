@@ -1,0 +1,25 @@
+{
+  "name": "waselerp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "WaselERP — نظام إدارة مبيعات ومخزون وفروع (Next.js SPA + NestJS + PostgreSQL)",
+  "scripts": {
+    "db:up": "node tools/pg/start.js",
+    "db:up:pglite": "node tools/pg/pglite/server.js",
+    "db:migrate": "node tools/pg/run-sql.js wasel db/schema.postgres.sql && node tools/pg/run-sql.js wasel db/migrations/2026-11-13-p0.sql && node tools/pg/run-sql.js wasel db/migrations/2026-11-13-p1.sql && node tools/pg/run-sql.js wasel db/migrations/2026-11-13-p2.sql && node tools/pg/run-sql.js wasel db/migrations/2026-11-13-p2b.sql && node tools/pg/run-sql.js wasel db/migrations/2026-11-13-p3.sql && node tools/pg/run-sql.js wasel db/migrations/2026-11-13-eta.sql",
+    "db:seed": "cd apps/api && npx ts-node --transpile-only src/cli/seed.ts",
+    "db:reset": "node tools/pg/run-sql.js wasel db/reset-dev-data.sql",
+    "db:demo": "node tools/demo-data.js",
+    "db:query": "node tools/pg/q.js",
+    "api:build": "cd apps/api && npx nest build",
+    "api:start": "cd apps/api && node dist/main.js",
+    "api:restart": "powershell -ExecutionPolicy Bypass -File tools/restart-api.ps1",
+    "api:dev": "cd apps/api && npx nest start --watch",
+    "web:build": "cd apps/web && npx next build",
+    "web:start": "node tools/web-serve.js",
+    "web:dev": "cd apps/web && npx next dev -p 3000",
+    "agent:start": "cd apps/print-agent && node server.js",
+    "test": "node tools/smoke-test.js",
+    "test:print": "node tools/print-agent-test.js"
+  }
+}

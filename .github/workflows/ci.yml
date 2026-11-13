@@ -1,0 +1,108 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PGHOST: localhost
+  PGPORT: 5432
+  PGUSER: postgres
+  PGPASSWORD: postgres
+  PGDATABASE: wasel
+  DATABASE_URL: postgres://postgres:postgres@localhost:5432/wasel
+  JWT_SECRET: ci-secret-not-for-production
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: wasel
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            apps/api/package-lock.json
+            apps/web/package-lock.json
+            apps/print-agent/package-lock.json
+
+      # ---------------- API ----------------
+      - name: Install API dependencies
+        working-directory: apps/api
+        run: npm ci
+
+      - name: Type-check API
+        working-directory: apps/api
+        run: npx tsc --noEmit -p tsconfig.json
+
+      - name: Build API
+        working-directory: apps/api
+        run: npx nest build
+
+      # ---------------- Schema + seed ----------------
+      - name: Apply schema
+        run: node tools/pg/run-sql.js "$PGDATABASE" db/schema.postgres.sql
+
+      - name: Seed baseline data
+        working-directory: apps/api
+        run: npx ts-node --transpile-only src/cli/seed.ts
+
+      # ---------------- Tests ----------------
+      - name: Start API
+        working-directory: apps/api
+        run: |
+          node dist/main.js &
+          echo $! > /tmp/api.pid
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:4000/api/auth/login -o /dev/null; then break; fi
+            sleep 1
+          done
+
+      - name: Smoke test (end-to-end)
+        run: node tools/smoke-test.js
+
+      - name: Stop API
+        if: always()
+        run: kill $(cat /tmp/api.pid) || true
+
+      # ---------------- Web ----------------
+      - name: Install web dependencies
+        working-directory: apps/web
+        run: npm ci
+
+      - name: Build web (includes type-check)
+        working-directory: apps/web
+        run: npx next build
+
+      # ---------------- Print agent ----------------
+      - name: Install print agent dependencies
+        working-directory: apps/print-agent
+        run: npm ci
+
+      - name: Syntax check print agent
+        working-directory: apps/print-agent
+        run: node --check server.js
