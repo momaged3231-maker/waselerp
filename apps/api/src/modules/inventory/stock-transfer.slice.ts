@@ -126,7 +126,7 @@ export class StockTransferService {
         }
       }
 
-      const serial = await this.nextNumber(client, `stocktransfer:${branchId}`);
+      const serial = await this.db.nextNumber(client, `stocktransfer:${branchId}`);
       const transferNo = `ST-${new Date().getFullYear()}-${String(serial).padStart(6, '0')}`;
       const inserted = await client.query<{ stock_transfer_id: number }>(
         `INSERT INTO stock_transfers
@@ -258,8 +258,7 @@ export class StockTransferService {
    * from the source warehouse. Stock leaves the source at this point.
    */
   async approve(id: number, user: AuthUser) {
-    try {
-      return await this.db.transaction(async (client) => {
+    return this.db.transaction(async (client) => {
       const header = await client.query<any>(
         'SELECT * FROM stock_transfers WHERE stock_transfer_id = $1::bigint FOR UPDATE',
         [id],
@@ -277,7 +276,7 @@ export class StockTransferService {
       if (!lines.rows.length) throw new BadRequestException('لا توجد أصناف في التحويل');
 
       // Create outbound voucher (type 2 = outgoing) from source warehouse.
-      const outSerial = await this.nextNumber(client, `stockvoucher:${Number(transfer.branch_id)}`);
+      const outSerial = await this.db.nextNumber(client, `stockvoucher:${Number(transfer.branch_id)}`);
       const outNo = `SV-${new Date().getFullYear()}-${String(outSerial).padStart(6, '0')}`;
       const outVoucher = await client.query<{ stock_voucher_id: number }>(
         `INSERT INTO stock_vouchers
@@ -358,11 +357,7 @@ export class StockTransferService {
       );
 
       return { stockTransferId: id, status: 2, outboundVoucherId: outVoucherId, journalId };
-      });
-    } catch (e) {
-      console.error('STOCK TRANSFER APPROVE ERROR', e);
-      throw e;
-    }
+    });
   }
 
   /**
@@ -391,7 +386,7 @@ export class StockTransferService {
       if (!lines.rows.length) throw new BadRequestException('لا توجد أصناف في التحويل');
 
       // Create inbound voucher (type 1 = incoming) at destination warehouse.
-      const inSerial = await this.nextNumber(client, `stockvoucher:${Number(transfer.branch_id)}`);
+      const inSerial = await this.db.nextNumber(client, `stockvoucher:${Number(transfer.branch_id)}`);
       const inNo = `SV-${new Date().getFullYear()}-${String(inSerial).padStart(6, '0')}`;
       const inVoucher = await client.query<{ stock_voucher_id: number }>(
         `INSERT INTO stock_vouchers
@@ -490,15 +485,6 @@ export class StockTransferService {
     return mapping.accountId;
   }
 
-  private async nextNumber(client: PoolClient, key: string): Promise<number> {
-    const { rows } = await client.query<{ last_number: string }>(
-      `INSERT INTO number_sequences (sequence_key, last_number) VALUES ($1, 1)
-       ON CONFLICT (sequence_key) DO UPDATE SET last_number = number_sequences.last_number + 1
-       RETURNING last_number`,
-      [key],
-    );
-    return Number(rows[0].last_number);
-  }
 }
 
 @Controller('stock-transfers')
