@@ -1,178 +1,170 @@
-import {
-  Body, Controller, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Query, BadRequestException,
-} from '@nestjs/common';
+import { Body, Controller, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Query, Delete } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
-import { postCashJournal } from '../../common/posting';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
 
 @Injectable()
 export class HrService {
   constructor(private readonly db: DatabaseService) {}
 
-  async employees(branchId: number, search: string) {
-    const like = `%${search.trim()}%`;
-    return this.db.query(
-      `SELECT e.employee_id AS "employeeId", e.code, e.name, e.job_title AS "jobTitle", e.mobile, e.phone,
-              d.name AS "departmentName", e.basic_salary AS "basicSalary", e.allowances, e.deductions,
-              e.hire_date AS "hireDate", e.is_active AS "isActive", b.name AS "branchName",
-              (SELECT COUNT(*)::int FROM attendances a
-                WHERE a.employee_id = e.employee_id AND a.work_date = CURRENT_DATE) AS "todayAttendance"
-         FROM employees e
-         LEFT JOIN departments d ON d.department_id = e.department_id
-         LEFT JOIN branches b ON b.branch_id = e.branch_id
-        WHERE ($1::int = 0 OR e.branch_id = $1)
-          AND ($2::text = '' OR e.name ILIKE $3 OR COALESCE(e.code,'') ILIKE $3)
-        ORDER BY e.name`,
-      [branchId, search.trim(), like],
+  // ---- Departments ----
+  async listDepartments(branchId: number) {
+    return this.db.query<any>(
+      `SELECT d.department_id AS "departmentId", d.name, d.is_active AS "isActive", d.branch_id AS "branchId"
+         FROM departments d WHERE ($1::int = 0 OR d.branch_id = $1) ORDER BY d.name`,
+      [branchId],
     );
   }
-
-  async createEmployee(body: any, branchId: number) {
-    if (!body.name) throw new BadRequestException('اسم الموظف مطلوب');
+  async createDepartment(dto: any, branchId: number) {
     const row = await this.db.one<any>(
-      `INSERT INTO employees (code, name, branch_id, department_id, job_title, national_id, phone, mobile,
-                              hire_date, birth_date, basic_salary, allowances, deductions, is_active)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING employee_id`,
-      [body.code ?? null, body.name, body.branchId ?? branchId, body.departmentId ?? null, body.jobTitle ?? null,
-        body.nationalId ?? null, body.phone ?? null, body.mobile ?? null, body.hireDate ?? null,
-        body.birthDate ?? null, Number(body.basicSalary ?? 0), Number(body.allowances ?? 0),
-        Number(body.deductions ?? 0), body.isActive ?? true],
+      `INSERT INTO departments (branch_id, name, is_active) VALUES ($1,$2,$3) RETURNING department_id AS "departmentId"`,
+      [branchId, dto.name, dto.isActive ?? true],
     );
-    return { employeeId: Number(row.employee_id) };
+    return row;
+  }
+  async updateDepartment(id: number, dto: any) {
+    await this.db.query(`UPDATE departments SET name = COALESCE($2, name), is_active = COALESCE($3, is_active) WHERE department_id = $1`,
+      [id, dto.name ?? null, dto.isActive ?? null]);
+    return { departmentId: id };
   }
 
-  async updateEmployee(id: number, body: any) {
+  // ---- Employees ----
+  async listEmployees(branchId: number, search?: string) {
+    const like = `%${search?.trim() ?? ''}%`;
+    return this.db.query<any>(
+      `SELECT e.employee_id AS "employeeId", e.name, e.branch_id AS "branchId", e.department_id AS "departmentId",
+              d.name AS "departmentName", e.basic_salary AS "basicSalary", e.allowances, e.deductions,
+              e.work_days_mask AS "workDaysMask", e.user_id AS "userId", e.is_active AS "isActive",
+              e.created_at AS "createdAt"
+         FROM employees e LEFT JOIN departments d ON d.department_id = e.department_id
+        WHERE ($1::int = 0 OR e.branch_id = $1)
+          AND ($2::text = '' OR e.name ILIKE $3)
+        ORDER BY e.name`,
+      [branchId, search?.trim() ?? '', like],
+    );
+  }
+  async getEmployee(id: number) {
+    return this.db.one<any>(
+      `SELECT e.employee_id AS "employeeId", e.name, e.branch_id AS "branchId", e.department_id AS "departmentId",
+              d.name AS "departmentName", e.basic_salary AS "basicSalary", e.allowances, e.deductions,
+              e.work_days_mask AS "workDaysMask", e.user_id AS "userId", e.is_active AS "isActive"
+         FROM employees e LEFT JOIN departments d ON d.department_id = e.department_id
+        WHERE e.employee_id = $1`,
+      [id],
+    );
+  }
+  async createEmployee(dto: any, branchId: number) {
+    const row = await this.db.one<any>(
+      `INSERT INTO employees (name, branch_id, department_id, basic_salary, allowances, deductions, work_days_mask, user_id, is_active)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING employee_id AS "employeeId"`,
+      [dto.name, branchId, dto.departmentId ?? null, dto.basicSalary ?? 0, dto.allowances ?? 0,
+       dto.deductions ?? 0, dto.workDaysMask ?? 31, dto.userId ?? null, dto.isActive ?? true],
+    );
+    return row;
+  }
+  async updateEmployee(id: number, dto: any) {
     await this.db.query(
-      `UPDATE employees SET code=$2, name=$3, department_id=$4, job_title=$5, national_id=$6, phone=$7,
-              mobile=$8, hire_date=$9, birth_date=$10, basic_salary=$11, allowances=$12, deductions=$13,
-              is_active=$14 WHERE employee_id=$1`,
-      [id, body.code ?? null, body.name, body.departmentId ?? null, body.jobTitle ?? null, body.nationalId ?? null,
-        body.phone ?? null, body.mobile ?? null, body.hireDate ?? null, body.birthDate ?? null,
-        Number(body.basicSalary ?? 0), Number(body.allowances ?? 0), Number(body.deductions ?? 0),
-        body.isActive ?? true],
+      `UPDATE employees SET name = COALESCE($2, name), department_id = COALESCE($3, department_id),
+              basic_salary = COALESCE($4, basic_salary), allowances = COALESCE($5, allowances),
+              deductions = COALESCE($6, deductions), work_days_mask = COALESCE($7, work_days_mask),
+              user_id = COALESCE($8, user_id), is_active = COALESCE($9, is_active)
+        WHERE employee_id = $1`,
+      [id, dto.name ?? null, dto.departmentId ?? null, dto.basicSalary ?? null, dto.allowances ?? null,
+       dto.deductions ?? null, dto.workDaysMask ?? null, dto.userId ?? null, dto.isActive ?? null],
     );
     return { employeeId: id };
   }
 
-  async attendance(params: { employeeId?: number; branchId: number; from: string; to: string }) {
-    return this.db.query(
-      `SELECT a.attendance_id AS "attendanceId", a.work_date AS "workDate", a.check_in AS "checkIn",
-              a.check_out AS "checkOut", a.status, a.overtime_minutes AS "overtimeMinutes",
-              a.late_minutes AS "lateMinutes", a.notes, e.name AS "employeeName", e.code AS "employeeCode"
+  // ---- Attendance ----
+  async listAttendance(params: { branchId: number; employeeId?: number; from?: string; to?: string }) {
+    return this.db.query<any>(
+      `SELECT a.attendance_id AS "attendanceId", a.employee_id AS "employeeId", e.name AS "employeeName",
+              a.work_date AS "workDate", a.status, a.overtime_minutes AS "overtimeMinutes",
+              a.late_minutes AS "lateMinutes", a.notes
          FROM attendances a JOIN employees e ON e.employee_id = a.employee_id
-        WHERE ($1::int IS NULL OR a.employee_id = $1)
-          AND ($2::int = 0 OR a.branch_id = $2)
+        WHERE ($1::int = 0 OR a.branch_id = $1)
+          AND ($2::int = 0 OR a.employee_id = $2)
           AND ($3::date IS NULL OR a.work_date >= $3::date)
           AND ($4::date IS NULL OR a.work_date <= $4::date)
-        ORDER BY a.work_date DESC, e.name LIMIT 500`,
-      [params.employeeId ?? null, params.branchId, params.from || null, params.to || null],
+        ORDER BY a.work_date DESC, e.name`,
+      [params.branchId, params.employeeId ?? 0, params.from ?? null, params.to ?? null],
     );
   }
-
-  /** Records one attendance row (check-in / check-out / absent). */
-  async recordAttendance(body: any, user: AuthUser, branchId: number) {
-    if (!body.employeeId) throw new BadRequestException('الموظف مطلوب');
-    const workDate = body.workDate ?? new Date().toISOString().slice(0, 10);
+  async upsertAttendance(dto: any, branchId: number) {
     const existing = await this.db.one<any>(
-      'SELECT attendance_id FROM attendances WHERE employee_id = $1 AND work_date = $2::date',
-      [body.employeeId, workDate],
+      `SELECT attendance_id FROM attendances WHERE employee_id = $1 AND work_date = $2::date`,
+      [dto.employeeId, dto.workDate],
     );
-
     if (existing) {
-      const row = await this.db.one<any>(
-        `UPDATE attendances SET check_in = COALESCE($3, check_in), check_out = COALESCE($4, check_out),
-                status = COALESCE($5, status), overtime_minutes = COALESCE($6, overtime_minutes), notes = $7
-          WHERE attendance_id = $1 RETURNING attendance_id AS "attendanceId"`,
-        [existing.attendance_id, body.checkIn ?? null, body.checkOut ?? null, body.status ?? null,
-          body.overtimeMinutes ?? null, body.notes ?? null],
+      await this.db.query(
+        `UPDATE attendances SET status = $2, overtime_minutes = $3, late_minutes = $4, notes = $5
+          WHERE attendance_id = $1`,
+        [existing.attendance_id, dto.status ?? 1, dto.overtimeMinutes ?? 0, dto.lateMinutes ?? 0, dto.notes ?? null],
       );
-      return row;
+      return { attendanceId: existing.attendance_id, updated: true };
     }
-
     const row = await this.db.one<any>(
-      `INSERT INTO attendances (employee_id, branch_id, work_date, check_in, check_out, status, overtime_minutes, notes)
-       VALUES ($1,$2,$3::date,$4,$5,$6,$7,$8) RETURNING attendance_id AS "attendanceId"`,
-      [body.employeeId, branchId, workDate, body.checkIn ?? null, body.checkOut ?? null,
-        body.status ?? 1, body.overtimeMinutes ?? 0, body.notes ?? null],
+      `INSERT INTO attendances (employee_id, branch_id, work_date, status, overtime_minutes, late_minutes, notes)
+       VALUES ($1,$2,$3::date,$4,$5,$6,$7) RETURNING attendance_id AS "attendanceId"`,
+      [dto.employeeId, branchId, dto.workDate, dto.status ?? 1, dto.overtimeMinutes ?? 0, dto.lateMinutes ?? 0, dto.notes ?? null],
+    );
+    return { attendanceId: row.attendance_id, updated: false };
+  }
+
+  // ---- Leave requests ----
+  async listLeaves(params: { branchId: number; employeeId?: number; status?: number }) {
+    return this.db.query<any>(
+      `SELECT l.leave_request_id AS "leaveId", l.employee_id AS "employeeId", e.name AS "employeeName",
+              l.leave_type AS "leaveType", l.start_date AS "startDate", l.end_date AS "endDate",
+              l.days, l.status, l.notes, l.created_at AS "createdAt"
+         FROM leave_requests l JOIN employees e ON e.employee_id = l.employee_id
+        WHERE ($1::int = 0 OR e.branch_id = $1)
+          AND ($2::int = 0 OR l.employee_id = $2)
+          AND ($3::int = 0 OR l.status = $3)
+        ORDER BY l.created_at DESC`,
+      [params.branchId, params.employeeId ?? 0, params.status ?? 0],
+    );
+  }
+  async createLeave(dto: any, user: AuthUser) {
+    const row = await this.db.one<any>(
+      `INSERT INTO leave_requests (employee_id, leave_type, start_date, end_date, days, status, notes, created_by)
+       VALUES ($1,$2,$3::date,$4::date,$5,$6,$7,$8) RETURNING leave_request_id AS "leaveId"`,
+      [dto.employeeId, dto.leaveType, dto.startDate, dto.endDate, dto.days ?? 0, dto.status ?? 1, dto.notes ?? null, user.userId],
     );
     return row;
   }
-
-  /** Salary sheet for a month: basic + allowances + overtime - deductions. */
-  async salarySheet(branchId: number, month: string) {
-    const periodMonth = month ? `${month}-01` : new Date().toISOString().slice(0, 7) + '-01';
-    return this.db.query(
-      `SELECT e.employee_id AS "employeeId", e.name, e.job_title AS "jobTitle", b.name AS "branchName",
-              e.basic_salary AS "basicSalary", e.allowances, e.deductions,
-              COALESCE((
-                SELECT SUM(a.overtime_minutes) FROM attendances a
-                 WHERE a.employee_id = e.employee_id
-                   AND a.work_date >= $2::date AND a.work_date < ($2::date + INTERVAL '1 month')
-              ), 0) AS "overtimeMinutes",
-              sp.salary_pay_id AS "salaryPayId", sp.net_pay AS "netPay", sp.status
-         FROM employees e
-         LEFT JOIN branches b ON b.branch_id = e.branch_id
-         LEFT JOIN salary_pays sp ON sp.employee_id = e.employee_id AND sp.period_month = $2::date
-        WHERE e.is_active = true AND ($1::int = 0 OR e.branch_id = $1)
-        ORDER BY e.name`,
-      [branchId, periodMonth],
-    );
+  async updateLeaveStatus(id: number, status: number) {
+    await this.db.query(`UPDATE leave_requests SET status = $2 WHERE leave_request_id = $1`, [id, status]);
+    return { leaveId: id, status };
   }
 
-  async paySalary(body: any, user: AuthUser, branchId: number) {
-    if (!body.employeeId) throw new BadRequestException('الموظف مطلوب');
-    const periodMonth = body.month ? `${body.month}-01` : new Date().toISOString().slice(0, 7) + '-01';
-    const employee = await this.db.one<any>(
-      'SELECT employee_id, basic_salary, allowances, deductions FROM employees WHERE employee_id = $1',
-      [body.employeeId],
+  // ---- Salary pays ----
+  async listSalaryPays(params: { branchId: number; employeeId?: number; month?: string }) {
+    return this.db.query<any>(
+      `SELECT s.salary_pay_id AS "salaryPayId", s.employee_id AS "employeeId", e.name AS "employeeName",
+              s.period_month AS "periodMonth", s.basic_salary AS "basicSalary", s.allowances, s.overtime_amount AS "overtimeAmount",
+              s.deductions, s.bonus, s.net_pay AS "netPay", s.status, s.created_at AS "createdAt"
+         FROM salary_pays s JOIN employees e ON e.employee_id = s.employee_id
+        WHERE ($1::int = 0 OR s.branch_id = $1)
+          AND ($2::int = 0 OR s.employee_id = $2)
+          AND ($3::date IS NULL OR s.period_month = $3::date)
+        ORDER BY s.period_month DESC, e.name`,
+      [params.branchId, params.employeeId ?? 0, params.month ?? null],
     );
-    if (!employee) throw new BadRequestException('الموظف غير موجود');
-
-    const overtime = await this.db.one<any>(
-      `SELECT COALESCE(SUM(overtime_minutes),0) AS minutes FROM attendances
-        WHERE employee_id = $1 AND work_date >= $2::date AND work_date < ($2::date + INTERVAL '1 month')`,
-      [body.employeeId, periodMonth],
-    );
-    const hourly = Number(employee.basic_salary) / 240;
-    const overtimeAmount = (Number(overtime?.minutes ?? 0) / 60) * hourly;
-
-    const basic = Number(employee.basic_salary);
-    const allowances = Number(employee.allowances);
-    const deductions = Number(employee.deductions) + Number(body.extraDeduction ?? 0);
-    const bonus = Number(body.bonus ?? 0);
-    const net = basic + allowances + overtimeAmount + bonus - deductions;
-
+  }
+  async createSalaryPay(dto: any, user: AuthUser, branchId: number) {
+    const netPay = Number(dto.basicSalary ?? 0) + Number(dto.allowances ?? 0) + Number(dto.overtimeAmount ?? 0)
+      + Number(dto.bonus ?? 0) - Number(dto.deductions ?? 0);
     const row = await this.db.one<any>(
-      `INSERT INTO salary_pays (employee_id, branch_id, period_month, basic_salary, allowances, overtime_amount,
-                                 deductions, bonus, net_pay, payment_date, cash_account_id, status, notes, created_by)
-       VALUES ($1,$2,$3::date,$4,$5,$6,$7,$8,$9,$10::date,$11,2,$12,$13)
-       ON CONFLICT DO NOTHING
-       RETURNING salary_pay_id AS "salaryPayId", net_pay AS "netPay"`,
-      [body.employeeId, branchId, periodMonth, basic, allowances, overtimeAmount, deductions, bonus, net,
-        body.paymentDate ?? new Date().toISOString().slice(0, 10), body.cashAccountId ?? null,
-        body.notes ?? null, user.userId],
+      `INSERT INTO salary_pays (employee_id, branch_id, period_month, basic_salary, allowances, overtime_amount, deductions, bonus, net_pay, status, created_by)
+       VALUES ($1,$2,$3::date,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING salary_pay_id AS "salaryPayId"`,
+      [dto.employeeId, branchId, dto.periodMonth, dto.basicSalary ?? 0, dto.allowances ?? 0,
+       dto.overtimeAmount ?? 0, dto.deductions ?? 0, dto.bonus ?? 0, netPay, dto.status ?? 1, user.userId],
     );
-
-    if (row.salaryPayId && body.cashAccountId) {
-      await this.db.query(
-        `INSERT INTO cash_transactions (branch_id, cash_account_id, direction, amount, transaction_date, description, created_by)
-         VALUES ($1,$2,2,$3, now(), $4, $5)`,
-        [branchId, body.cashAccountId, net, `مرتب ${body.employeeId}`, user.userId],
-      );
-      await this.db.transaction(async (client) => {
-        await postCashJournal(client, {
-          branchId,
-          direction: 2,
-          amount: net,
-          cashAccountId: Number(body.cashAccountId),
-          description: `مرتب ${body.employeeId}`,
-          userId: user.userId,
-          sourceType: 'salary',
-          sourceId: row.salaryPayId ? Number(row.salaryPayId) : null,
-        });
-      });
-    }
-    return row ?? { salaryPayId: null, netPay: net };
+    return { ...row, netPay };
+  }
+  async updateSalaryPayStatus(id: number, status: number) {
+    await this.db.query(`UPDATE salary_pays SET status = $2 WHERE salary_pay_id = $1`, [id, status]);
+    return { salaryPayId: id, status };
   }
 }
 
@@ -181,51 +173,49 @@ export class HrController {
   constructor(private readonly service: HrService) {}
 
   @RequirePermissions('hr.view')
-  @Get('employees')
-  employees(@CurrentBranch() branchId: number, @Query('search') search = '') {
-    return this.service.employees(branchId, search);
-  }
-
+  @Get('departments') listDepartments(@CurrentBranch() branchId: number) { return this.service.listDepartments(branchId); }
   @RequirePermissions('hr.manage')
-  @Post('employees')
-  createEmployee(@Body() body: any, @CurrentBranch() branchId: number) {
-    return this.service.createEmployee(body, branchId);
-  }
-
+  @Post('departments') createDepartment(@Body() dto: any, @CurrentBranch() branchId: number) { return this.service.createDepartment(dto, branchId); }
   @RequirePermissions('hr.manage')
-  @Put('employees/:id')
-  updateEmployee(@Param('id', ParseIntPipe) id: number, @Body() body: any) {
-    return this.service.updateEmployee(id, body);
-  }
+  @Put('departments/:id') updateDepartment(@Param('id', ParseIntPipe) id: number, @Body() dto: any) { return this.service.updateDepartment(id, dto); }
 
   @RequirePermissions('hr.view')
-  @Get('attendance')
-  attendance(@Query('employeeId') employeeId: string, @Query('from') from: string, @Query('to') to: string, @CurrentBranch() branchId: number) {
-    return this.service.attendance({ employeeId: employeeId ? Number(employeeId) : undefined, branchId, from, to });
-  }
-
+  @Get('employees') listEmployees(@CurrentBranch() branchId: number, @Query('search') search: string) { return this.service.listEmployees(branchId, search); }
+  @RequirePermissions('hr.view')
+  @Get('employees/:id') getEmployee(@Param('id', ParseIntPipe) id: number) { return this.service.getEmployee(id); }
   @RequirePermissions('hr.manage')
-  @Post('attendance')
-  recordAttendance(@Body() body: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.recordAttendance(body, user, branchId);
-  }
+  @Post('employees') createEmployee(@Body() dto: any, @CurrentBranch() branchId: number) { return this.service.createEmployee(dto, branchId); }
+  @RequirePermissions('hr.manage')
+  @Put('employees/:id') updateEmployee(@Param('id', ParseIntPipe) id: number, @Body() dto: any) { return this.service.updateEmployee(id, dto); }
 
   @RequirePermissions('hr.view')
-  @Get('salaries')
-  salarySheet(@CurrentBranch() branchId: number, @Query('month') month: string) {
-    return this.service.salarySheet(branchId, month);
+  @Get('attendance') listAttendance(@CurrentBranch() branchId: number, @Query('employeeId') employeeId: string, @Query('from') from: string, @Query('to') to: string) {
+    return this.service.listAttendance({ branchId, employeeId: employeeId ? Number(employeeId) : undefined, from, to });
   }
-
   @RequirePermissions('hr.manage')
-  @Post('salaries/pay')
-  paySalary(@Body() body: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.paySalary(body, user, branchId);
+  @Post('attendance') upsertAttendance(@Body() dto: any, @CurrentBranch() branchId: number) { return this.service.upsertAttendance(dto, branchId); }
+
+  @RequirePermissions('hr.view')
+  @Get('leaves') listLeaves(@CurrentBranch() branchId: number, @Query('employeeId') employeeId: string, @Query('status') status: string) {
+    return this.service.listLeaves({ branchId, employeeId: employeeId ? Number(employeeId) : undefined, status: status ? Number(status) : undefined });
   }
+  @RequirePermissions('hr.manage')
+  @Post('leaves') createLeave(@Body() dto: any, @CurrentUser() user: AuthUser) { return this.service.createLeave(dto, user); }
+  @RequirePermissions('hr.manage')
+  @Put('leaves/:id/status') updateLeaveStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: any) { return this.service.updateLeaveStatus(id, dto.status); }
+
+  @RequirePermissions('hr.view')
+  @Get('salary') listSalaryPays(@CurrentBranch() branchId: number, @Query('employeeId') employeeId: string, @Query('month') month: string) {
+    return this.service.listSalaryPays({ branchId, employeeId: employeeId ? Number(employeeId) : undefined, month });
+  }
+  @RequirePermissions('hr.manage')
+  @Post('salary') createSalaryPay(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) { return this.service.createSalaryPay(dto, user, branchId); }
+  @RequirePermissions('hr.manage')
+  @Put('salary/:id/status') updateSalaryPayStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: any) { return this.service.updateSalaryPayStatus(id, dto.status); }
 }
 
 @Module({
-  controllers: [HrController],
   providers: [HrService],
-  exports: [HrService],
+  controllers: [HrController],
 })
 export class HrModule {}
