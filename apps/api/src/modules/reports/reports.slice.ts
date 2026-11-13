@@ -217,6 +217,27 @@ export class ReportsService {
     );
   }
 
+  /** Sales rep commissions: per-rep sales totals and commission amounts. */
+  async commissions(branchId: number, from: string, to: string) {
+    return this.db.query(
+      `SELECT u.user_id AS "repId", u.full_name AS "repName",
+              COUNT(i.invoice_id)::int AS "invoiceCount",
+              COALESCE(SUM(i.total_amount), 0) AS "totalSales",
+              COALESCE(SUM(i.profit_amount), 0) AS "totalProfit",
+              COALESCE(u.commission_pct, 0) AS "commissionPct",
+              COALESCE(SUM(i.total_amount) * COALESCE(u.commission_pct, 0) / 100, 0) AS "commissionAmount"
+         FROM invoices i
+         JOIN users u ON u.user_id = i.rep_id
+        WHERE i.invoice_type = 1 AND i.status = 2
+          AND ($1::int = 0 OR i.branch_id = $1)
+          AND ($2::date IS NULL OR i.invoice_date >= $2::date)
+          AND ($3::date IS NULL OR i.invoice_date <= $3::date)
+        GROUP BY u.user_id, u.full_name, u.commission_pct
+        ORDER BY "totalSales" DESC`,
+      [branchId, from || null, to || null],
+    );
+  }
+
   /** Hourly distribution used by the POS dashboard. */
   async salesByHour(branchId: number, from: string, to: string) {
     return this.db.query(
@@ -289,6 +310,12 @@ export class ReportsController {
   @Get('debt-aging')
   debtAging(@CurrentBranch() branchId: number) {
     return this.service.debtAging(branchId);
+  }
+
+  @RequirePermissions('reports.view')
+  @Get('commissions')
+  commissions(@CurrentBranch() branchId: number, @Query('from') from: string, @Query('to') to: string) {
+    return this.service.commissions(branchId, from, to);
   }
 }
 
