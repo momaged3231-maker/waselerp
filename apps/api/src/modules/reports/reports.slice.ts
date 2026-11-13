@@ -171,6 +171,52 @@ export class ReportsService {
     );
   }
 
+  /** Items at or below their reorder point. */
+  async reorderReport(branchId: number) {
+    return this.db.query(
+      `SELECT i.item_id AS "itemId", i.code AS "itemCode", i.name AS "itemName",
+              i.reorder_point AS "reorderPoint",
+              COALESCE(SUM(q.on_hand_qty), 0) AS "onHand",
+              i.base_unit_id AS "unitId", u.name AS "unitName",
+              COALESCE((SELECT AVG(i2.cost_price) FROM items i2 WHERE i2.item_id = i.item_id), 0) AS "estCost"
+         FROM items i
+         LEFT JOIN units u ON u.unit_id = i.base_unit_id
+         LEFT JOIN item_warehouse_qty q ON q.item_id = i.item_id AND q.unit_id = i.base_unit_id
+         LEFT JOIN warehouses w ON w.warehouse_id = q.warehouse_id
+        WHERE i.is_active = true AND i.reorder_point > 0
+          AND ($1::int = 0 OR w.branch_id = $1 OR w.warehouse_id IS NULL)
+        GROUP BY i.item_id, i.code, i.name, i.reorder_point, i.base_unit_id, u.name
+       HAVING COALESCE(SUM(q.on_hand_qty), 0) <= i.reorder_point
+        ORDER BY i.name`,
+      [branchId],
+    );
+  }
+
+  /** Debt aging for customers: balances grouped by age buckets. */
+  async debtAging(branchId: number) {
+    return this.db.query(
+      `SELECT p.party_id AS "partyId", p.name, p.phone, p.credit_limit AS "creditLimit",
+              COALESCE(SUM(CASE WHEN l.direction = 1 THEN l.amount ELSE -l.amount END), 0) AS balance,
+              COALESCE(SUM(CASE WHEN l.direction = 1 AND l.entry_date >= CURRENT_DATE - 30 THEN l.amount
+                                WHEN l.direction = 2 AND l.entry_date >= CURRENT_DATE - 30 THEN -l.amount ELSE 0 END), 0) AS "bucket0_30",
+              COALESCE(SUM(CASE WHEN l.direction = 1 AND l.entry_date < CURRENT_DATE - 30 AND l.entry_date >= CURRENT_DATE - 60 THEN l.amount
+                                WHEN l.direction = 2 AND l.entry_date < CURRENT_DATE - 30 AND l.entry_date >= CURRENT_DATE - 60 THEN -l.amount ELSE 0 END), 0) AS "bucket31_60",
+              COALESCE(SUM(CASE WHEN l.direction = 1 AND l.entry_date < CURRENT_DATE - 60 AND l.entry_date >= CURRENT_DATE - 90 THEN l.amount
+                                WHEN l.direction = 2 AND l.entry_date < CURRENT_DATE - 60 AND l.entry_date >= CURRENT_DATE - 90 THEN -l.amount ELSE 0 END), 0) AS "bucket61_90",
+              COALESCE(SUM(CASE WHEN l.direction = 1 AND l.entry_date < CURRENT_DATE - 90 THEN l.amount
+                                WHEN l.direction = 2 AND l.entry_date < CURRENT_DATE - 90 THEN -l.amount ELSE 0 END), 0) AS "bucket90plus",
+              MAX(l.entry_date) AS "lastMovement"
+         FROM parties p
+         LEFT JOIN ledger_entries l ON l.party_id = p.party_id
+        WHERE p.party_type IN (1, 3)
+          AND ($1::int = 0 OR p.branch_id = $1 OR p.branch_id IS NULL)
+        GROUP BY p.party_id, p.name, p.phone, p.credit_limit
+       HAVING COALESCE(SUM(CASE WHEN l.direction = 1 THEN l.amount ELSE -l.amount END), 0) > 0
+        ORDER BY balance DESC`,
+      [branchId],
+    );
+  }
+
   /** Hourly distribution used by the POS dashboard. */
   async salesByHour(branchId: number, from: string, to: string) {
     return this.db.query(
@@ -231,6 +277,18 @@ export class ReportsController {
   @Get('sales-by-hour')
   salesByHour(@CurrentBranch() branchId: number, @Query('from') from: string, @Query('to') to: string) {
     return this.service.salesByHour(branchId, from, to);
+  }
+
+  @RequirePermissions('reports.view')
+  @Get('reorder')
+  reorder(@CurrentBranch() branchId: number) {
+    return this.service.reorderReport(branchId);
+  }
+
+  @RequireAnyPermission('reports.view', 'parties.ledger')
+  @Get('debt-aging')
+  debtAging(@CurrentBranch() branchId: number) {
+    return this.service.debtAging(branchId);
   }
 }
 

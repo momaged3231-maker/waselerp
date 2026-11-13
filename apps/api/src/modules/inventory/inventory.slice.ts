@@ -60,6 +60,45 @@ export class InventoryService {
     );
   }
 
+  /** Items whose stock is at or below reorder point. */
+  async reorderAlerts(branchId: number) {
+    return this.db.query(
+      `SELECT i.item_id AS "itemId", i.code, i.name, i.reorder_point AS "reorderPoint",
+              COALESCE(SUM(q.on_hand_qty), 0) AS "onHand", u.name AS "unitName",
+              w.name AS "warehouseName"
+         FROM items i
+         LEFT JOIN units u ON u.unit_id = i.base_unit_id
+         LEFT JOIN item_warehouse_qty q ON q.item_id = i.item_id AND q.unit_id = i.base_unit_id
+         LEFT JOIN warehouses w ON w.warehouse_id = q.warehouse_id
+        WHERE i.is_active = true AND i.reorder_point > 0
+          AND ($1::int = 0 OR w.branch_id = $1 OR w.warehouse_id IS NULL)
+        GROUP BY i.item_id, i.code, i.name, i.reorder_point, u.name, w.name
+       HAVING COALESCE(SUM(q.on_hand_qty), 0) <= i.reorder_point
+        ORDER BY i.name`,
+      [branchId],
+    );
+  }
+
+  /** Stock lines expiring within the next N days. */
+  async expiryAlerts(branchId: number, days: number) {
+    return this.db.query(
+      `SELECT i.item_id AS "itemId", i.code, i.name, u.name AS "unitName",
+              w.name AS "warehouseName", q.expiry_date AS "expiryDate",
+              q.on_hand_qty AS "onHand", q.serial_no AS "serialNo",
+              (q.expiry_date - CURRENT_DATE) AS "daysLeft"
+         FROM item_warehouse_qty q
+         JOIN items i ON i.item_id = q.item_id
+         LEFT JOIN units u ON u.unit_id = q.unit_id
+         LEFT JOIN warehouses w ON w.warehouse_id = q.warehouse_id
+        WHERE q.expiry_date IS NOT NULL
+          AND q.expiry_date <= CURRENT_DATE + $2::int
+          AND q.on_hand_qty > 0
+          AND ($1::int = 0 OR w.branch_id = $1)
+        ORDER BY q.expiry_date, i.name`,
+      [branchId, days || 30],
+    );
+  }
+
   async movements(params: { itemId?: number; warehouseId?: number; branchId?: number; from?: string; to?: string; limit: number }) {
     return this.db.query(
       `SELECT m.stock_movement_id AS "movementId", m.move_date AS "moveDate", m.move_type AS "moveType",
@@ -229,6 +268,18 @@ export class InventoryController {
   @Get('operations')
   listOperations(@CurrentBranch() branchId: number) {
     return this.service.listOperations(branchId);
+  }
+
+  @RequirePermissions('stock.view')
+  @Get('reorder-alerts')
+  reorderAlerts(@CurrentBranch() branchId: number) {
+    return this.service.reorderAlerts(branchId);
+  }
+
+  @RequirePermissions('stock.view')
+  @Get('expiry-alerts')
+  expiryAlerts(@CurrentBranch() branchId: number, @Query('days') days: string) {
+    return this.service.expiryAlerts(branchId, days ? Number(days) : 30);
   }
 }
 
