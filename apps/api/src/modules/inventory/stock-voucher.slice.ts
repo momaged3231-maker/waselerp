@@ -115,7 +115,7 @@ export class StockVoucherService {
         throw new BadRequestException('المخزن لا يتبع الفرع الحالي');
       }
 
-      const serial = await this.nextNumber(client, `stockvoucher:${branchId}`);
+      const serial = await this.db.nextNumber(client, `stockvoucher:${branchId}`);
       const voucherNo = `SV-${new Date().getFullYear()}-${String(serial).padStart(6, '0')}`;
       const inserted = await client.query<{ stock_voucher_id: number }>(
         `INSERT INTO stock_vouchers
@@ -127,6 +127,56 @@ export class StockVoucherService {
       );
       return { stockVoucherId: Number(inserted.rows[0].stock_voucher_id), voucherNo };
     });
+  }
+
+  /** Imports lines from CSV text into a new draft voucher.
+   *  Expected CSV columns: item_code, quantity, unit_cost (optional), serial_no (optional), expiry_date (optional)
+   *  First row is header. */
+  async importCsv(dto: any, user: AuthUser, branchId: number) {
+    const warehouseId = Number(dto.warehouseId);
+    const voucherType = Number(dto.voucherType);
+    if (!warehouseId) throw new BadRequestException('اختر المخزن');
+    if (![1, 2, 3, 4].includes(voucherType)) throw new BadRequestException('نوع الأذن غير صحيح');
+    if (!dto.csv) throw new BadRequestException('بيانات CSV مطلوبة');
+
+    const lines = dto.csv.trim().split(/\r?\n/).filter((l: string) => l.trim());
+    if (lines.length < 2) throw new BadRequestException('ملف CSV فارغ أو بدون بيانات');
+
+    const header = lines[0].split(',').map((h: string) => h.trim().toLowerCase());
+    const idxCode = header.indexOf('item_code');
+    const idxQty = header.indexOf('quantity');
+    const idxCost = header.indexOf('unit_cost');
+    const idxSerial = header.indexOf('serial_no');
+    const idxExpiry = header.indexOf('expiry_date');
+
+    if (idxCode < 0 || idxQty < 0) throw new BadRequestException('CSV يجب أن يحتوي على أعمدة item_code و quantity');
+
+    // Create voucher
+    const created = await this.create({ warehouseId, voucherType, notes: dto.notes ?? 'استيراد CSV' }, user, branchId);
+    const voucherId = created.stockVoucherId;
+
+    let imported = 0;
+    for (let i = 1; i < lines.length; i++) {
+      const cols = lines[i].split(',').map((c: string) => c.trim());
+      const code = cols[idxCode];
+      const qty = Number(cols[idxQty]);
+      if (!code || qty <= 0) continue;
+
+      const item = await this.db.one<any>('SELECT item_id, base_unit_id FROM items WHERE code = $1 AND is_active = true', [code]);
+      if (!item) continue;
+
+      await this.addLine(voucherId, {
+        itemId: Number(item.item_id),
+        unitId: Number(item.base_unit_id),
+        quantity: qty,
+        unitCost: idxCost >= 0 && cols[idxCost] ? Number(cols[idxCost]) : 0,
+        serialNo: idxSerial >= 0 ? cols[idxSerial] || null : null,
+        expiryDate: idxExpiry >= 0 ? cols[idxExpiry] || null : null,
+      });
+      imported++;
+    }
+
+    return { stockVoucherId: voucherId, voucherNo: created.voucherNo, imported };
   }
 
   /** Edits the header of a draft voucher. */
@@ -368,15 +418,6 @@ export class StockVoucherService {
     return mapping.accountId;
   }
 
-  private async nextNumber(client: PoolClient, key: string): Promise<number> {
-    const { rows } = await client.query<{ last_number: string }>(
-      `INSERT INTO number_sequences (sequence_key, last_number) VALUES ($1, 1)
-       ON CONFLICT (sequence_key) DO UPDATE SET last_number = number_sequences.last_number + 1
-       RETURNING last_number`,
-      [key],
-    );
-    return Number(rows[0].last_number);
-  }
 }
 
 @Controller('stock-vouchers')
@@ -415,6 +456,12 @@ export class StockVoucherController {
   @Post()
   create(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
     return this.service.create(dto, user, branchId);
+  }
+
+  @RequirePermissions('stock.manage')
+  @Post('import-csv')
+  importCsv(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
+    return this.service.importCsv(dto, user, branchId);
   }
 
   @RequirePermissions('stock.manage')
