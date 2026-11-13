@@ -8,6 +8,7 @@ import { AuthModule } from './modules/auth/auth.slice';
 import { CatalogModule } from './modules/catalog/catalog.slice';
 import { ItemsModule } from './modules/catalog/items.slice';
 import { PartiesModule } from './modules/parties/parties.slice';
+import { CustomerGroupsModule } from './modules/parties/customer-group.slice';
 import { SalesModule } from './modules/sales/sales.module';
 import { InventoryModule } from './modules/inventory/inventory.slice';
 import { TreasuryModule } from './modules/treasury/treasury.slice';
@@ -38,6 +39,7 @@ import { EtaModule } from './modules/eta/eta.slice';
     CatalogModule,
     ItemsModule,
     PartiesModule,
+    CustomerGroupsModule,
     SalesModule,
     InventoryModule,
     TreasuryModule,
