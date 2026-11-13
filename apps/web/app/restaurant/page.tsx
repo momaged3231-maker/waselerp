@@ -5,7 +5,7 @@ import AppShell from '@/components/AppShell';
 import { apiFetch, formatDate, formatMoney } from '@/lib/api';
 import { useSession } from '@/lib/session';
 
-type Tab = 'tables' | 'orders' | 'kitchen';
+type Tab = 'tables' | 'orders' | 'kitchen' | 'setup';
 
 const KITCHEN_STATUS: Record<number, string> = {
   1: 'جديد', 2: 'في المطبخ', 3: 'جاهز', 4: 'تم التقديم',
@@ -26,6 +26,15 @@ export default function RestaurantPage() {
   const [selected, setSelected] = useState<any>(null);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [halls, setHalls] = useState<any[]>([]);
+  const [noteTemplates, setNoteTemplates] = useState<any[]>([]);
+  const [modifiers, setModifiers] = useState<any[]>([]);
+  const [settings, setSettings] = useState<any>({});
+  const [hallForm, setHallForm] = useState({ name: '', code: '', tableCount: 8 });
+  const [noteForm, setNoteForm] = useState('');
+  const [modifierForm, setModifierForm] = useState({ itemId: 0, name: '', price: 0, maxQuantity: 1 });
+  const [kitchenColumn, setKitchenColumn] = useState(0);
+  const [splitState, setSplitState] = useState<{ tableId: number; lineIds: number[] } | null>(null);
 
   const [tableForm, setTableForm] = useState({ name: '', tableType: 1, capacity: 4 });
   const [newOrder, setNewOrder] = useState<{ tableId: number; guestCount: number; lines: any[] }>({
@@ -35,10 +44,14 @@ export default function RestaurantPage() {
   const canManage = can('pos.operate');
 
   async function load() {
-    const [t, o, k, itemRows, wh, cash] = await Promise.all([
+    const [t, o, k, hallRows, noteRows, modifierRows, settingRow, itemRows, wh, cash] = await Promise.all([
       apiFetch<any[]>('/pos/tables'),
       apiFetch<any[]>('/pos/table-orders?limit=100'),
-      apiFetch<any[]>('/pos/kitchen'),
+      apiFetch<any[]>(`/pos/kitchen${kitchenColumn ? `?categoryId=${kitchenColumn}` : ''}`),
+      apiFetch<any[]>('/pos/halls'),
+      apiFetch<any[]>('/pos/note-templates'),
+      apiFetch<any[]>('/pos/modifiers'),
+      apiFetch<any>('/pos/settings'),
       apiFetch<any>('/items?pageSize=200'),
       apiFetch<any[]>('/catalog/warehouses'),
       apiFetch<any[]>('/treasury/accounts'),
@@ -46,12 +59,78 @@ export default function RestaurantPage() {
     setTables(t);
     setOrders(o);
     setKitchen(k);
+    setHalls(hallRows);
+    setNoteTemplates(noteRows);
+    setModifiers(modifierRows);
+    setSettings(settingRow ?? {});
     setItems(itemRows.items ?? itemRows);
     setWarehouses(wh);
     setCashAccounts(cash);
   }
 
   useEffect(() => { load().catch((e) => setError(e.message)); }, []);
+  useEffect(() => {
+    apiFetch<any[]>(`/pos/kitchen${kitchenColumn ? `?categoryId=${kitchenColumn}` : ''}`)
+      .then(setKitchen).catch(() => {});
+  }, [kitchenColumn]);
+
+  async function addHall() {
+    setError(''); setMessage('');
+    try {
+      await apiFetch('/pos/halls', { method: 'POST', body: hallForm });
+      setHallForm({ name: '', code: '', tableCount: 8 });
+      await load();
+      setMessage('تم إنشاء القاعة');
+    } catch (e: any) { setError(e.message); }
+  }
+
+  async function addNote() {
+    setError(''); setMessage('');
+    try {
+      await apiFetch('/pos/note-templates', { method: 'POST', body: { name: noteForm } });
+      setNoteForm('');
+      await load();
+    } catch (e: any) { setError(e.message); }
+  }
+
+  async function addModifier() {
+    setError(''); setMessage('');
+    try {
+      await apiFetch('/pos/modifiers', { method: 'POST', body: modifierForm });
+      setModifierForm({ itemId: 0, name: '', price: 0, maxQuantity: 1 });
+      await load();
+    } catch (e: any) { setError(e.message); }
+  }
+
+  async function saveSettings(body: any) {
+    setError(''); setMessage('');
+    try {
+      await apiFetch('/pos/settings', { method: 'PUT', body: { ...settings, ...body } });
+      await load();
+      setMessage('تم حفظ إعدادات المطعم');
+    } catch (e: any) { setError(e.message); }
+  }
+
+  async function splitOrder(orderId: number, tableId: number, lineIds: number[]) {
+    setError(''); setMessage('');
+    try {
+      await apiFetch(`/pos/table-orders/${orderId}/split`, { method: 'POST', body: { tableId, lineIds } });
+      setSplitState(null);
+      setSelected(null);
+      await load();
+      setMessage('تم فصل المائدة');
+    } catch (e: any) { setError(e.message); }
+  }
+
+  async function moveOrder(orderId: number, tableId: number) {
+    setError(''); setMessage('');
+    try {
+      await apiFetch(`/pos/table-orders/${orderId}/move`, { method: 'POST', body: { tableId } });
+      setSelected(null);
+      await load();
+      setMessage('تم نقل الطلب');
+    } catch (e: any) { setError(e.message); }
+  }
 
   async function addTable() {
     setError('');
@@ -184,6 +263,7 @@ export default function RestaurantPage() {
         <button className={tab === 'tables' ? 'btn-primary' : 'btn-soft'} onClick={() => setTab('tables')}>الطاولات</button>
         <button className={tab === 'orders' ? 'btn-primary' : 'btn-soft'} onClick={() => setTab('orders')}>طلبات الطاولات</button>
         <button className={tab === 'kitchen' ? 'btn-primary' : 'btn-soft'} onClick={() => setTab('kitchen')}>شاشة المطبخ</button>
+        <button className={tab === 'setup' ? 'btn-primary' : 'btn-soft'} onClick={() => setTab('setup')}>إعداد المطعم</button>
       </div>
 
       {tab === 'tables' && (
@@ -370,18 +450,308 @@ export default function RestaurantPage() {
         </div>
       )}
 
+      {tab === 'setup' && (
+        <div className="grid lg:grid-cols-2 gap-4">
+          <div className="card">
+            <div className="card-title"><span>القاعات والموائد</span></div>
+            <div className="p-4 space-y-3">
+              <p className="text-xs text-slate-500">
+                كود القاعة هو بادئة أرقام الموائد: كود A مع 8 موائد ينشئ A1 حتى A8.
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                <input className="input" placeholder="اسم القاعة" value={hallForm.name}
+                  onChange={(e) => setHallForm({ ...hallForm, name: e.target.value })} />
+                <input className="input" placeholder="الكود" value={hallForm.code} dir="ltr"
+                  onChange={(e) => setHallForm({ ...hallForm, code: e.target.value.toUpperCase() })} />
+                <input className="input" type="number" placeholder="عدد الموائد" value={hallForm.tableCount}
+                  onChange={(e) => setHallForm({ ...hallForm, tableCount: Number(e.target.value) })} />
+              </div>
+              <button className="btn-primary w-full" disabled={!hallForm.name || !hallForm.code} onClick={addHall}>
+                إنشاء القاعة
+              </button>
+
+              <div className="table-wrap">
+                <table className="table">
+                  <thead><tr><th>القاعة</th><th>الكود</th><th>الموائد</th><th>مسموح لهم</th></tr></thead>
+                  <tbody>
+                    {halls.map((hall) => (
+                      <tr key={hall.hallId}>
+                        <td className="text-xs font-semibold">{hall.name}</td>
+                        <td className="font-mono text-xs">{hall.code}</td>
+                        <td className="text-xs">{hall.activeTables}</td>
+                        <td className="text-xs">{hall.canWork ? 'كل المستخدمين' : 'محدود'}</td>
+                      </tr>
+                    ))}
+                    {halls.length === 0 && (
+                      <tr><td colSpan={4} className="text-center text-slate-400 py-6">لا توجد قاعات</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="card">
+              <div className="card-title"><span>رسوم الخدمة</span></div>
+              <div className="p-4 space-y-3">
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="label">سعر رسوم الخدمة</label>
+                    <input className="input" type="number" step="0.01"
+                      value={settings.serviceChargePerGuest ?? 0}
+                      onChange={(e) => setSettings({ ...settings, serviceChargePerGuest: Number(e.target.value) })} />
+                  </div>
+                  <div>
+                    <label className="label">الحد الأدنى</label>
+                    <input className="input" type="number" step="0.01"
+                      value={settings.serviceChargeMinimum ?? 0}
+                      onChange={(e) => setSettings({ ...settings, serviceChargeMinimum: Number(e.target.value) })} />
+                  </div>
+                  <div>
+                    <label className="label">طريقة الحساب</label>
+                    <select className="input" value={settings.serviceChargeMode ?? 1}
+                      onChange={(e) => setSettings({ ...settings, serviceChargeMode: Number(e.target.value) })}>
+                      <option value={1}>مبلغ لكل شخص</option>
+                      <option value={2}>حد أدنى لكل شخص</option>
+                    </select>
+                  </div>
+                </div>
+                <button className="btn-primary w-full" onClick={() => saveSettings({})}>حفظ رسوم الخدمة</button>
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="card-title"><span>الملاحظات الجاهزة للمطبخ</span></div>
+              <div className="p-4 space-y-3">
+                <div className="flex gap-2">
+                  <input className="input" placeholder="بدون بصل" value={noteForm}
+                    onChange={(e) => setNoteForm(e.target.value)} />
+                  <button className="btn-soft" disabled={!noteForm} onClick={addNote}>إضافة</button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {noteTemplates.map((note) => (
+                    <span key={note.noteId} className="badge bg-slate-100 text-slate-700">
+                      {note.name}
+                    </span>
+                  ))}
+                  {noteTemplates.length === 0 && (
+                    <span className="text-xs text-slate-400">لا توجد ملاحظات جاهزة</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="card-title"><span>الأصناف الإضافية</span></div>
+              <div className="p-4 space-y-3">
+                <div className="grid grid-cols-4 gap-2">
+                  <select className="input" value={modifierForm.itemId}
+                    onChange={(e) => setModifierForm({ ...modifierForm, itemId: Number(e.target.value) })}>
+                    <option value={0}>— الصنف —</option>
+                    {items.map((item) => (
+                      <option key={item.itemId} value={item.itemId}>{item.code} — {item.name}</option>
+                    ))}
+                  </select>
+                  <input className="input" placeholder="اسم الإضافة" value={modifierForm.name}
+                    onChange={(e) => setModifierForm({ ...modifierForm, name: e.target.value })} />
+                  <input className="input" type="number" step="0.01" placeholder="السعر" value={modifierForm.price}
+                    onChange={(e) => setModifierForm({ ...modifierForm, price: Number(e.target.value) })} />
+                  <input className="input" type="number" step="1" placeholder="أقصى كمية" value={modifierForm.maxQuantity}
+                    onChange={(e) => setModifierForm({ ...modifierForm, maxQuantity: Number(e.target.value) })} />
+                </div>
+                <button className="btn-primary w-full"
+                  disabled={!modifierForm.itemId || !modifierForm.name}
+                  onClick={addModifier}>
+                  إضافة الإضافة
+                </button>
+                <div className="table-wrap">
+                  <table className="table">
+                    <thead><tr><th>الصنف</th><th>الإضافة</th><th>السعر</th><th>أقصى كمية</th></tr></thead>
+                    <tbody>
+                      {modifiers.map((row) => (
+                        <tr key={row.modifierId}>
+                          <td className="text-xs">{row.itemName}</td>
+                          <td className="text-xs">{row.name}</td>
+                          <td className="text-xs">{formatMoney(row.price)}</td>
+                          <td className="text-xs">{Number(row.maxQuantity) || '—'}</td>
+                        </tr>
+                      ))}
+                      {modifiers.length === 0 && (
+                        <tr><td colSpan={4} className="text-center text-slate-400 py-6">لا توجد إضافات</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab === 'setup' && (
+        <div className="grid lg:grid-cols-2 gap-4">
+          <div className="card">
+            <div className="card-title"><span>القاعات والموائد</span></div>
+            <div className="p-4 space-y-3">
+              <p className="text-xs text-slate-500">
+                كود القاعة هو بادئة أرقام الموائد: كود A مع 8 موائد ينشئ A1 حتى A8.
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                <input className="input" placeholder="اسم القاعة" value={hallForm.name}
+                  onChange={(e) => setHallForm({ ...hallForm, name: e.target.value })} />
+                <input className="input" placeholder="الكود" value={hallForm.code} dir="ltr"
+                  onChange={(e) => setHallForm({ ...hallForm, code: e.target.value.toUpperCase() })} />
+                <input className="input" type="number" placeholder="عدد الموائد" value={hallForm.tableCount}
+                  onChange={(e) => setHallForm({ ...hallForm, tableCount: Number(e.target.value) })} />
+              </div>
+              <button className="btn-primary w-full" disabled={!hallForm.name || !hallForm.code} onClick={addHall}>
+                إنشاء القاعة
+              </button>
+
+              <div className="table-wrap">
+                <table className="table">
+                  <thead><tr><th>القاعة</th><th>الكود</th><th>الموائد</th><th>مسموح لهم</th></tr></thead>
+                  <tbody>
+                    {halls.map((hall) => (
+                      <tr key={hall.hallId}>
+                        <td className="text-xs font-semibold">{hall.name}</td>
+                        <td className="font-mono text-xs">{hall.code}</td>
+                        <td className="text-xs">{hall.activeTables}</td>
+                        <td className="text-xs">{hall.canWork ? 'كل المستخدمين' : 'محدود'}</td>
+                      </tr>
+                    ))}
+                    {halls.length === 0 && (
+                      <tr><td colSpan={4} className="text-center text-slate-400 py-6">لا توجد قاعات</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="card">
+              <div className="card-title"><span>رسوم الخدمة</span></div>
+              <div className="p-4 space-y-3">
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="label">سعر رسوم الخدمة</label>
+                    <input className="input" type="number" step="0.01"
+                      value={settings.serviceChargePerGuest ?? 0}
+                      onChange={(e) => setSettings({ ...settings, serviceChargePerGuest: Number(e.target.value) })} />
+                  </div>
+                  <div>
+                    <label className="label">الحد الأدنى</label>
+                    <input className="input" type="number" step="0.01"
+                      value={settings.serviceChargeMinimum ?? 0}
+                      onChange={(e) => setSettings({ ...settings, serviceChargeMinimum: Number(e.target.value) })} />
+                  </div>
+                  <div>
+                    <label className="label">طريقة الحساب</label>
+                    <select className="input" value={settings.serviceChargeMode ?? 1}
+                      onChange={(e) => setSettings({ ...settings, serviceChargeMode: Number(e.target.value) })}>
+                      <option value={1}>مبلغ لكل شخص</option>
+                      <option value={2}>حد أدنى لكل شخص</option>
+                    </select>
+                  </div>
+                </div>
+                <button className="btn-primary w-full" onClick={() => saveSettings({})}>حفظ رسوم الخدمة</button>
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="card-title"><span>الملاحظات الجاهزة للمطبخ</span></div>
+              <div className="p-4 space-y-3">
+                <div className="flex gap-2">
+                  <input className="input" placeholder="بدون بصل" value={noteForm}
+                    onChange={(e) => setNoteForm(e.target.value)} />
+                  <button className="btn-soft" disabled={!noteForm} onClick={addNote}>إضافة</button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {noteTemplates.map((note) => (
+                    <span key={note.noteId} className="badge bg-slate-100 text-slate-700">
+                      {note.name}
+                    </span>
+                  ))}
+                  {noteTemplates.length === 0 && (
+                    <span className="text-xs text-slate-400">لا توجد ملاحظات جاهزة</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="card-title"><span>الأصناف الإضافية</span></div>
+              <div className="p-4 space-y-3">
+                <div className="grid grid-cols-4 gap-2">
+                  <select className="input" value={modifierForm.itemId}
+                    onChange={(e) => setModifierForm({ ...modifierForm, itemId: Number(e.target.value) })}>
+                    <option value={0}>— الصنف —</option>
+                    {items.map((item) => (
+                      <option key={item.itemId} value={item.itemId}>{item.code} — {item.name}</option>
+                    ))}
+                  </select>
+                  <input className="input" placeholder="اسم الإضافة" value={modifierForm.name}
+                    onChange={(e) => setModifierForm({ ...modifierForm, name: e.target.value })} />
+                  <input className="input" type="number" step="0.01" placeholder="السعر" value={modifierForm.price}
+                    onChange={(e) => setModifierForm({ ...modifierForm, price: Number(e.target.value) })} />
+                  <input className="input" type="number" step="1" placeholder="أقصى كمية" value={modifierForm.maxQuantity}
+                    onChange={(e) => setModifierForm({ ...modifierForm, maxQuantity: Number(e.target.value) })} />
+                </div>
+                <button className="btn-primary w-full"
+                  disabled={!modifierForm.itemId || !modifierForm.name}
+                  onClick={addModifier}>
+                  إضافة الإضافة
+                </button>
+                <div className="table-wrap">
+                  <table className="table">
+                    <thead><tr><th>الصنف</th><th>الإضافة</th><th>السعر</th><th>أقصى كمية</th></tr></thead>
+                    <tbody>
+                      {modifiers.map((row) => (
+                        <tr key={row.modifierId}>
+                          <td className="text-xs">{row.itemName}</td>
+                          <td className="text-xs">{row.name}</td>
+                          <td className="text-xs">{formatMoney(row.price)}</td>
+                          <td className="text-xs">{Number(row.maxQuantity) || '—'}</td>
+                        </tr>
+                      ))}
+                      {modifiers.length === 0 && (
+                        <tr><td colSpan={4} className="text-center text-slate-400 py-6">لا توجد إضافات</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {tab === 'kitchen' && (
         <div className="card">
-          <div className="card-title"><span>شاشة المطبخ ({kitchen.length})</span></div>
+          <div className="card-title">
+            <span>شاشة المطبخ ({kitchen.length})</span>
+            <select className="input w-44 py-1 text-xs" value={kitchenColumn}
+              onChange={(e) => setKitchenColumn(Number(e.target.value))}>
+              <option value={0}>كل التصنيفات</option>
+              {items.map((item) => (
+                <option key={item.categoryId ?? item.itemId} value={item.categoryId ?? 0}>
+                  {item.categoryName ?? 'بدون تصنيف'}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="table-wrap">
             <table className="table">
-              <thead><tr><th>الطلب</th><th>الطاولة</th><th>الصنف</th><th>الكمية</th><th>ملاحظات</th><th>الحالة</th></tr></thead>
+              <thead><tr><th>الطلب</th><th>الطاولة</th><th>الصنف</th><th>التصنيف</th><th>الكمية</th><th>ملاحظات</th><th>الحالة</th></tr></thead>
               <tbody>
                 {kitchen.map((row) => (
                   <tr key={row.lineId}>
                     <td className="font-mono text-xs">{row.orderNo}</td>
                     <td className="text-xs">{row.tableName ?? '—'}</td>
                     <td className="text-xs font-semibold">{row.itemName}</td>
+                    <td className="text-xs">{row.categoryName ?? '—'}</td>
                     <td className="text-xs">{Number(row.quantity)} {row.unitName}</td>
                     <td className="text-xs">{row.notes ?? '—'}</td>
                     <td>
@@ -393,7 +763,7 @@ export default function RestaurantPage() {
                   </tr>
                 ))}
                 {kitchen.length === 0 && (
-                  <tr><td colSpan={6} className="text-center text-slate-400 py-8">لا توجد طلبات في المطبخ</td></tr>
+                  <tr><td colSpan={7} className="text-center text-slate-400 py-8">لا توجد طلبات في المطبخ</td></tr>
                 )}
               </tbody>
             </table>
