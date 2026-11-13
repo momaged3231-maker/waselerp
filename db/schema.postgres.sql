@@ -1380,3 +1380,9 @@ CREATE INDEX IF NOT EXISTS ix_customer_classifications_active ON customer_classi
 ALTER TABLE parties ADD COLUMN IF NOT EXISTS customer_group_id bigint REFERENCES customer_groups(customer_group_id);
 ALTER TABLE parties ADD COLUMN IF NOT EXISTS classification_id bigint REFERENCES customer_classifications(classification_id);
 
+
+ALTER TABLE installment_plans ADD COLUMN IF NOT EXISTS guarantor_party_id integer REFERENCES parties(party_id);
+ALTER TABLE installment_plans ADD COLUMN IF NOT EXISTS guarantor_name varchar(200);
+ALTER TABLE installment_plans ADD COLUMN IF NOT EXISTS guarantor_phone varchar(50);
+ALTER TABLE installment_plans ADD COLUMN IF NOT EXISTS guarantor_id_number varchar(60);
+

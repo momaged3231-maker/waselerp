@@ -15,6 +15,10 @@ export interface InstallmentPlanInput {
   frequency?: number;   // 1 monthly, 2 weekly
   startDate: string;
   notes?: string;
+  guarantorPartyId?: number;
+  guarantorName?: string;
+  guarantorPhone?: string;
+  guarantorIdNumber?: string;
 }
 
 @Injectable()
@@ -43,7 +47,9 @@ export class InstallmentsService {
       `SELECT p.installment_plan_id AS "planId", p.plan_no AS "planNo", p.title, p.total_amount AS "totalAmount",
               p.down_payment AS "downPayment", p.installment_count AS "installmentCount", p.frequency,
               p.start_date AS "startDate", p.notes, p.party_id AS "partyId", pa.name AS "partyName",
-              p.invoice_id AS "invoiceId"
+              p.invoice_id AS "invoiceId",
+               p.guarantor_party_id AS "guarantorPartyId", p.guarantor_name AS "guarantorName",
+               p.guarantor_phone AS "guarantorPhone", p.guarantor_id_number AS "guarantorIdNumber"
          FROM installment_plans p JOIN parties pa ON pa.party_id = p.party_id
         WHERE p.installment_plan_id = $1`,
       [id],
@@ -74,10 +80,11 @@ export class InstallmentsService {
       const plan = await client.query<{ installment_plan_id: number }>(
         `INSERT INTO installment_plans
            (plan_no, branch_id, party_id, title, total_amount, down_payment, installment_count, frequency,
-            start_date, invoice_id, notes, created_by)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::date,$10,$11,$12) RETURNING installment_plan_id`,
+            start_date, invoice_id, notes, created_by, guarantor_party_id, guarantor_name, guarantor_phone, guarantor_id_number)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::date,$10,$11,$12,$13,$14,$15,$16) RETURNING installment_plan_id`,
         [planNo, branchId, dto.partyId, dto.title ?? `تقسيط فاتورة`, Number(dto.totalAmount), downPayment,
-          dto.installmentCount, dto.frequency ?? 1, dto.startDate, dto.invoiceId ?? null, dto.notes ?? null, user.userId],
+          dto.installmentCount, dto.frequency ?? 1, dto.startDate, dto.invoiceId ?? null, dto.notes ?? null, user.userId,
+          dto.guarantorPartyId ?? null, dto.guarantorName ?? null, dto.guarantorPhone ?? null, dto.guarantorIdNumber ?? null],
       );
       const planId = Number(plan.rows[0].installment_plan_id);
 
