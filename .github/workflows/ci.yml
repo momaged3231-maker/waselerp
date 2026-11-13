@@ -64,6 +64,9 @@ jobs:
         run: npx nest build
 
       # ---------------- Schema + seed ----------------
+      - name: Check schema ordering
+        run: node tools/pg/check-schema-order.js
+
       - name: Apply schema
         run: node tools/pg/run-sql.js "$PGDATABASE" db/schema.postgres.sql
 
