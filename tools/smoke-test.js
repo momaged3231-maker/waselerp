@@ -1040,6 +1040,31 @@ async function loginAs(userName, password) {
   check('trial balance balanced after the pos flows', trialP3.balanced === true,
     `${trialP3.totalDebit} vs ${trialP3.totalCredit}`);
 
+  // 37. rounding — a document with VAT and a discount must still balance
+  const roundingItem = await call('POST', '/items', {
+    code: `ROUND-${Date.now()}`, name: 'صنف اختبار التقريب', baseUnitId: 1,
+    costPrice: 33.33, sellPrice: 49.99, vatPct: 14,
+  });
+  const roundingInvoice = await raw('POST', '/sales/invoices', {
+    invoiceType: 2, branchId, warehouseId, paymentType: 2,
+    lines: [
+      { itemId: roundingItem.itemId, unitId: 1, quantity: 3, unitPrice: 33.33, discountPct: 5, taxPct: 14 },
+      { itemId: roundingItem.itemId, unitId: 1, quantity: 7, unitPrice: 33.33, taxPct: 14 },
+    ],
+  });
+  check('invoice with vat and discount posts', roundingInvoice.status === 201,
+    roundingInvoice.status === 201 ? roundingInvoice.data.invoiceNo : roundingInvoice.data?.message);
+
+  const roundingDetail = await call('GET', `/sales/invoices/${roundingInvoice.data.invoiceId}`);
+  const roundingJournal = await call('GET', `/accounting/journals/${roundingDetail.header.glJournalId}`);
+  check('rounded journal is balanced',
+    Number(roundingJournal.header.totalDebit) === Number(roundingJournal.header.totalCredit),
+    `${roundingJournal.header.totalDebit} vs ${roundingJournal.header.totalCredit}`);
+
+  const roundingTrial = await call('GET', '/accounting/reports/trial-balance');
+  check('trial balance still balanced after rounding', roundingTrial.balanced === true,
+    `${roundingTrial.totalDebit} vs ${roundingTrial.totalCredit}`);
+
   const failed = results.filter((r) => !r.ok);
   console.log(`\n${results.length - failed.length}/${results.length} checks passed`);
   if (failed.length) process.exit(1);

@@ -68,6 +68,9 @@ const TYPE_MOVE: Record<number, MoveType> = {
 
 const TYPE_PREFIX: Record<number, string> = { 1: 'S', 2: 'P', 3: 'SR', 4: 'PR' };
 
+/** Money is rounded to two decimals — the ledger has no room for fractions of a piastre. */
+const round2 = (value: number) => Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+
 @Injectable()
 export class SalesService {
   constructor(private readonly db: DatabaseService, private readonly live: LiveEventsService) {}
@@ -322,11 +325,11 @@ export class SalesService {
         const discountPct = Number(line.discountPct ?? 0);
         const taxPct = Number(line.taxPct ?? item.vat_pct ?? 0);
 
-        const gross = quantity * unitPrice;
-        const discountAmount = gross * (discountPct / 100);
-        const net = gross - discountAmount;
-        const taxAmount = net * (taxPct / 100);
-        const lineTotal = net + taxAmount;
+        const gross = round2(quantity * unitPrice);
+        const discountAmount = round2(gross * (discountPct / 100));
+        const net = round2(gross - discountAmount);
+        const taxAmount = round2(net * (taxPct / 100));
+        const lineTotal = round2(net + taxAmount);
 
         const baseQty = await toBaseUnits(client, Number(item.item_id), Number(line.unitId), quantity);
         const key = `${item.item_id}:${line.unitId}`;
@@ -356,14 +359,16 @@ export class SalesService {
           }
         }
 
-        const lineCost = baseQty * baseUnitCost;
+        // The purchase value is the line net; deriving it back from the base
+        // unit cost would introduce a float drift that breaks the journal.
+        const lineCost = invoiceType === 2 ? net : round2(baseQty * baseUnitCost);
         const unitCostSelling = quantity > 0 ? lineCost / quantity : 0;
 
-        subTotal += gross;
-        discountTotal += discountAmount;
-        taxTotal += taxAmount;
-        lineTotalSum += lineTotal;
-        costTotal += lineCost;
+        subTotal = round2(subTotal + gross);
+        discountTotal = round2(discountTotal + discountAmount);
+        taxTotal = round2(taxTotal + taxAmount);
+        lineTotalSum = round2(lineTotalSum + lineTotal);
+        costTotal = round2(costTotal + lineCost);
 
         computed.push({
           lineNumber: index + 1,
@@ -477,17 +482,17 @@ export class SalesService {
         }
       }
 
-      const deliveryFee = invoiceType === 1 ? Math.max(0, Number(dto.deliveryFee ?? 0)) : 0;
-      const totalAmount = lineTotalSum - headerDiscount + deliveryFee;
+      const deliveryFee = invoiceType === 1 ? Math.max(0, round2(Number(dto.deliveryFee ?? 0))) : 0;
+      const totalAmount = round2(lineTotalSum - headerDiscount + deliveryFee);
       const paymentTotal = paymentRows.reduce((sum, payment) => sum + payment.amount, 0);
       let paidAmount = paymentRows.length
-        ? Math.round(paymentTotal * 100) / 100
-        : Math.max(0, Math.min(Number(dto.paidAmount ?? 0), totalAmount));
+        ? round2(paymentTotal)
+        : round2(Math.max(0, Math.min(Number(dto.paidAmount ?? 0), totalAmount)));
       if (paymentRows.length && paidAmount > totalAmount + 0.005) {
         throw new BadRequestException('إجمالي المدفوع أكبر من إجمالي الفاتورة');
       }
-      const remaining = Math.max(0, totalAmount - paidAmount);
-      const profit = totalAmount - taxTotal - costTotal;
+      const remaining = round2(Math.max(0, totalAmount - paidAmount));
+      const profit = round2(totalAmount - taxTotal - costTotal);
 
       // A collected amount must land in a cash account, otherwise the drawer
       // and the invoice would disagree with no trace of where the money went.

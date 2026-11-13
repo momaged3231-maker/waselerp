@@ -37,6 +37,12 @@ export interface JournalInput {
   sequenceKey?: string;
   /** Set to false to keep the journal in draft (status 1). */
   post?: boolean;
+  /**
+   * Allows the engine to absorb a rounding residual of one cent into the
+   * largest line. Used by the automatic postings (invoices, vouchers) where
+   * the document totals are already rounded; manual journals stay strict.
+   */
+  autoBalance?: boolean;
 }
 
 export interface MappedAccount {
@@ -148,9 +154,23 @@ export async function postJournal(client: PoolClient, input: JournalInput): Prom
   });
 
   if (Math.abs(totalDebit - totalCredit) > 0.005) {
-    throw new BadRequestException(
-      `القيد غير متوازن: المدين ${totalDebit.toFixed(2)} والدائن ${totalCredit.toFixed(2)}`,
-    );
+    if (!input.autoBalance || Math.abs(totalDebit - totalCredit) > 0.05) {
+      throw new BadRequestException(
+        `القيد غير متوازن: المدين ${totalDebit.toFixed(2)} والدائن ${totalCredit.toFixed(2)}`,
+      );
+    }
+    // Absorb the rounding residual into the largest line of the journal.
+    const residual = round2(totalDebit - totalCredit);
+    let target = normalised[0];
+    for (const line of normalised) {
+      if (Math.abs(line.debit) + Math.abs(line.credit) > Math.abs(target.debit) + Math.abs(target.credit)) {
+        target = line;
+      }
+    }
+    if (target.debit > 0) target.debit = round2(target.debit - residual);
+    else target.credit = round2(target.credit + residual);
+    totalDebit = normalised.reduce((sum, line) => sum + line.debit, 0);
+    totalCredit = normalised.reduce((sum, line) => sum + line.credit, 0);
   }
 
   const journalDate = input.journalDate ?? new Date().toISOString().slice(0, 10);
@@ -465,6 +485,7 @@ export async function postCashJournal(
     sourceId: input.sourceId ?? null,
     lines,
     userId: input.userId,
+    autoBalance: true,
   });
 }
 
