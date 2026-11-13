@@ -24,6 +24,12 @@ export interface CartLineInput {
   serialNo?: string;
   expiryDate?: string;
   notes?: string;
+  /** A giveaway: the customer pays nothing but the stock still leaves. */
+  isGift?: boolean;
+  /** Modifier (extra) attached to another line of the same invoice. */
+  parentLineIndex?: number;
+  /** The modifier this line belongs to (for the maximum quantity check). */
+  modifierId?: number;
 }
 
 export interface InvoicePaymentInput {
@@ -53,6 +59,8 @@ export interface InvoiceInput {
   orderType?: number;
   deliveryAddress?: string;
   deliveryFee?: number;
+  /** Restaurant service charge (per guest). */
+  serviceCharge?: number;
   driverName?: string;
   driverPhone?: string;
   tableRef?: string;
@@ -308,22 +316,79 @@ export class SalesService {
         })
         : new Map<number, { price: number; minPrice: number; priceListName: string }>();
 
+      // A modifier may only be used up to its maximum quantity; a zero
+      // maximum means the extra is not offered at all.
+      if (invoiceType === 1) {
+        const modifierTotals = new Map<number, number>();
+        for (const line of dto.lines) {
+          if (!line.modifierId) continue;
+          const id = Number(line.modifierId);
+          modifierTotals.set(id, (modifierTotals.get(id) ?? 0) + Number(line.quantity ?? 0));
+        }
+        for (const [modifierId, quantity] of modifierTotals) {
+          const modifierResult = await client.query<any>(
+            'SELECT name, max_quantity FROM item_modifiers WHERE modifier_id = $1::int',
+            [modifierId],
+          );
+          const name = modifierResult.rows[0]?.name ?? '';
+          const max = Number(modifierResult.rows[0]?.max_quantity ?? 0);
+          if (max <= 0) {
+            throw new BadRequestException(`لا توجد إضافات مسموح بها — حدّد أقصى كمية للإضافة «${name}»`);
+          }
+          if (quantity > max + 0.000001) {
+            throw new BadRequestException(
+              `عفوا الكمية المختار اكبر من الكمية المسموح به — «${name}» (الحد ${max})`,
+            );
+          }
+        }
+      }
+
       for (const [index, line] of dto.lines.entries()) {
         const item = itemMap.get(Number(line.itemId));
         if (!item) throw new BadRequestException(`الصنف رقم ${line.itemId} غير موجود`);
 
         const quantity = Number(line.quantity);
         const listPrice = listPrices.get(Number(line.itemId));
-        const unitPrice = line.unitPrice === undefined || line.unitPrice === null
-          ? Number(listPrice?.price ?? item.sell_price ?? 0)
-          : Number(line.unitPrice);
-        if (listPrice && listPrice.minPrice > 0 && unitPrice > 0 && unitPrice < listPrice.minPrice) {
+        const resolvedPrice = listPrice?.price ?? item.sell_price ?? 0;
+
+        // A modifier (extra) hangs under the item it belongs to. Its price is
+        // its own, and a zero price means a free extra.
+        const isModifier = line.parentLineIndex !== undefined && line.parentLineIndex !== null;
+        let modifierRow: any = null;
+        if (isModifier && line.modifierId) {
+          const modifierResult = await client.query<any>(
+            'SELECT modifier_id, name, price, max_quantity FROM item_modifiers WHERE modifier_id = $1::int',
+            [Number(line.modifierId)],
+          );
+          if (!modifierResult.rows.length) {
+            throw new BadRequestException('الإضافة الإضافية غير موجودة');
+          }
+          modifierRow = modifierResult.rows[0];
+        }
+
+        // A giveaway is free for the customer but still leaves the stock, so
+        // the company carries its cost. Only a manager may hand one out.
+        let unitPrice = Number(line.unitPrice ?? 0);
+        let isGift = false;
+        if (line.isGift) {
+          if (!user.permissions.includes('sales.giveaway')) {
+            throw new BadRequestException('ليس لديك صلاحية منح أصناف مجانًا');
+          }
+          isGift = true;
+          unitPrice = 0;
+        } else if (isModifier) {
+          unitPrice = Number(modifierRow.price ?? 0);
+          if (unitPrice === 0) isGift = true;
+        } else if (line.unitPrice === undefined || line.unitPrice === null) {
+          unitPrice = Number(resolvedPrice);
+        }
+        if (!isGift && !isModifier && listPrice && listPrice.minPrice > 0 && unitPrice > 0 && unitPrice < listPrice.minPrice) {
           throw new BadRequestException(
             `سعر الصنف «${item.name}» أقل من الحد الأدنى المسموح به في قائمة الأسعار`,
           );
         }
-        const discountPct = Number(line.discountPct ?? 0);
-        const taxPct = Number(line.taxPct ?? item.vat_pct ?? 0);
+        const discountPct = isGift ? 0 : Number(line.discountPct ?? 0);
+        const taxPct = isGift ? 0 : Number(line.taxPct ?? item.vat_pct ?? 0);
 
         const gross = round2(quantity * unitPrice);
         const discountAmount = round2(gross * (discountPct / 100));
@@ -387,7 +452,11 @@ export class SalesService {
           baseQty,
           serialNo: line.serialNo ?? null,
           expiryDate: line.expiryDate ?? null,
-          notes: line.notes ?? null,
+          notes: isModifier
+            ? `-- ${line.notes ?? modifierRow?.name ?? ''}`.trim()
+            : line.notes ?? null,
+          parentLineIndex: isModifier ? Number(line.parentLineIndex) : undefined,
+          isModifier,
           trackQuantity: item.track_quantity,
         });
       }
@@ -483,7 +552,8 @@ export class SalesService {
       }
 
       const deliveryFee = invoiceType === 1 ? Math.max(0, round2(Number(dto.deliveryFee ?? 0))) : 0;
-      const totalAmount = round2(lineTotalSum - headerDiscount + deliveryFee);
+      const serviceCharge = invoiceType === 1 ? Math.max(0, round2(Number(dto.serviceCharge ?? 0))) : 0;
+      const totalAmount = round2(lineTotalSum - headerDiscount + deliveryFee + serviceCharge);
       const paymentTotal = paymentRows.reduce((sum, payment) => sum + payment.amount, 0);
       let paidAmount = paymentRows.length
         ? round2(paymentTotal)
@@ -554,9 +624,9 @@ export class SalesService {
            (invoice_no, invoice_type, branch_id, warehouse_id, party_id, invoice_date, period_id, status, payment_type,
             sub_total, discount_amount, discount_pct, tax_amount, total_amount, paid_amount, cost_total, profit_amount,
             cash_account_id, cashier_id, created_by, notes, is_posted, posted_at, client_request_id, parent_invoice_id,
-            coupon_code, order_type, delivery_address, delivery_fee, driver_name, driver_phone, table_ref)
+            coupon_code, order_type, delivery_address, delivery_fee, service_charge, driver_name, driver_phone, table_ref)
          VALUES ($1,$2,$3,$4,$5, COALESCE($6, now()), $7, 2, $8, $9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20, true, now(), $21, $22, $23,
-                 $24::smallint, $25::text, $26::numeric, $27::text, $28::text, $29::text)
+                 $24::smallint, $25::text, $26::numeric, $27::numeric, $28::text, $29::text, $30::text)
          RETURNING invoice_id`,
         [
           invoiceNo, invoiceType, effectiveBranch, dto.warehouseId, partyId ?? null,
@@ -565,24 +635,33 @@ export class SalesService {
           costTotal, profit, cashAccountId, user.userId, user.userId, dto.notes ?? null,
           dto.clientRequestId ?? null, dto.parentInvoiceId ?? null,
           couponRow?.code ?? null,
-          Number(dto.orderType ?? 1), dto.deliveryAddress ?? null, deliveryFee,
+          Number(dto.orderType ?? 1), dto.deliveryAddress ?? null, deliveryFee, serviceCharge,
           dto.driverName ?? null, dto.driverPhone ?? null, dto.tableRef ?? null,
         ],
       );
       const invoiceId = Number(invoice.rows[0].invoice_id);
 
+      const insertedLineIds: number[] = [];
       for (const line of computed) {
-        await client.query(
+        const parentLineId = line.parentLineIndex !== undefined
+          ? insertedLineIds[line.parentLineIndex] ?? null
+          : null;
+        const insertedLine = await client.query<{ invoice_line_id: number }>(
           `INSERT INTO invoice_lines
              (invoice_id, line_number, item_id, unit_id, quantity, unit_price, discount_pct, discount_amount,
-              tax_pct, tax_amount, line_total, unit_cost, serial_no, expiry_date, notes)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+              tax_pct, tax_amount, line_total, unit_cost, serial_no, expiry_date, notes,
+              parent_line_id, is_modifier)
+           VALUES ($1::bigint,$2::int,$3::int,$4::int,$5::numeric,$6::numeric,$7::numeric,$8::numeric,
+                   $9::numeric,$10::numeric,$11::numeric,$12::numeric,$13::text,$14::date,$15::text,
+                   $16::bigint,$17::boolean)
+           RETURNING invoice_line_id`,
           [
             invoiceId, line.lineNumber, line.itemId, line.unitId, line.quantity, line.unitPrice, line.discountPct,
             line.discountAmount, line.taxPct, line.taxAmount, line.lineTotal, line.unitCost, line.serialNo,
-            line.expiryDate, line.notes,
+            line.expiryDate, line.notes, parentLineId, !!line.isModifier,
           ],
         );
+        insertedLineIds.push(Number(insertedLine.rows[0].invoice_line_id));
 
         if (line.trackQuantity) {
           await applyMovement(client, {
@@ -669,6 +748,7 @@ export class SalesService {
         headerDiscount,
         taxTotal,
         deliveryFee,
+        serviceCharge,
         costTotal,
         userId: user.userId,
       });
@@ -930,7 +1010,8 @@ export class SalesService {
               i.cash_account_id AS "cashAccountId", i.created_by AS "createdBy", u.full_name AS "createdByName",
               i.coupon_code AS "couponCode",
               i.order_type AS "orderType", i.delivery_address AS "deliveryAddress",
-              i.delivery_fee AS "deliveryFee", i.driver_name AS "driverName",
+              i.delivery_fee AS "deliveryFee", i.service_charge AS "serviceCharge",
+              i.driver_name AS "driverName",
               i.driver_phone AS "driverPhone", i.table_ref AS "tableRef",
               i.gl_journal_id AS "glJournalId",
               i.parent_invoice_id AS "parentInvoiceId", pi.invoice_no AS "parentInvoiceNo"
@@ -955,7 +1036,8 @@ export class SalesService {
               l.quantity, l.unit_price AS "unitPrice", l.discount_pct AS "discountPct",
               l.discount_amount AS "discountAmount", l.tax_pct AS "taxPct", l.tax_amount AS "taxAmount",
               l.line_total AS "lineTotal", l.unit_cost AS "unitCost", l.serial_no AS "serialNo",
-              l.expiry_date AS "expiryDate"
+              l.expiry_date AS "expiryDate", l.notes,
+              l.parent_line_id AS "parentLineId", l.is_modifier AS "isModifier"
          FROM invoice_lines l
          JOIN items it ON it.item_id = l.item_id
          LEFT JOIN units u ON u.unit_id = l.unit_id

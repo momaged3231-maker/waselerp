@@ -1065,6 +1065,218 @@ async function loginAs(userName, password) {
   check('trial balance still balanced after rounding', roundingTrial.balanced === true,
     `${roundingTrial.totalDebit} vs ${roundingTrial.totalCredit}`);
 
+  // 38. P3 rest — split table, move order, service charge, kitchen columns, gifts
+  const p3Settings = await call('PUT', '/pos/settings', {
+    serviceChargePerGuest: 15, serviceChargeMinimum: 40, kitchenColumns: [],
+  });
+  check('restaurant settings saved', Number(p3Settings.serviceChargePerGuest) === 15,
+    String(p3Settings.serviceChargePerGuest));
+
+  // The split needs two tables: one busy and one free.
+  await call('POST', '/pos/tables', {
+    name: `طاولة اختبار ${Date.now() % 1000}`, tableType: 1, capacity: 4,
+  });
+  const posTables = await call('GET', '/pos/tables');
+  check('two tables available for the split', posTables.length >= 2, `${posTables.length}`);
+  const freeTable = posTables.find((row) => row.openOrders === 0) ?? posTables[0];
+  const busyTable = posTables.find((row) => row.tableId !== freeTable.tableId) ?? posTables[1];
+
+  const p3SplitOrder = await call('POST', '/pos/table-orders', {
+    tableId: busyTable.tableId, guestCount: 4,
+    lines: [
+      { itemId: itemB.itemId, unitId: 1, quantity: 2, unitPrice: 60, taxPct: 10 },
+      { itemId: itemA.itemId, unitId: 1, quantity: 1, unitPrice: 40, taxPct: 0 },
+    ],
+  });
+  const p3SplitDetail = await call('GET', `/pos/table-orders/${p3SplitOrder.tableOrderId}`);
+  check('split candidate order has two lines', p3SplitDetail.lines.length === 2, `${p3SplitDetail.lines.length}`);
+
+  const p3SplitResult = await call('POST', `/pos/table-orders/${p3SplitOrder.tableOrderId}/split`, {
+    tableId: freeTable.tableId, lineIds: [p3SplitDetail.lines[0].lineId], guestCount: 2,
+  });
+  check('table split moved one line', p3SplitResult.movedLines === 1, JSON.stringify(p3SplitResult));
+
+  const p3SourceAfterSplit = await call('GET', `/pos/table-orders/${p3SplitOrder.tableOrderId}`);
+  check('source order lost the moved line', p3SourceAfterSplit.lines.length === 1, `${p3SourceAfterSplit.lines.length}`);
+  const p3TargetAfterSplit = await call('GET', `/pos/table-orders/${p3SplitResult.targetOrderId}`);
+  check('target order received the line', p3TargetAfterSplit.lines.length === 1, `${p3TargetAfterSplit.lines.length}`);
+  check('split kept the totals right',
+    Math.abs(Number(p3SourceAfterSplit.header.totalAmount) + Number(p3TargetAfterSplit.header.totalAmount)
+      - Number(p3SplitDetail.header.totalAmount)) < 0.01,
+    `${p3SourceAfterSplit.header.totalAmount} + ${p3TargetAfterSplit.header.totalAmount} vs ${p3SplitDetail.header.totalAmount}`);
+
+  // A line the kitchen already started cannot be moved.
+  await call('POST', `/pos/table-orders/${p3SplitOrder.tableOrderId}/kitchen`, { status: 2 });
+  const p3StartedDetail = await call('GET', `/pos/table-orders/${p3SplitOrder.tableOrderId}`);
+  const p3StartedLine = p3StartedDetail.lines.find((line) => line.kitchenStatus !== 1);
+  if (p3StartedLine) {
+    const splitStarted = await raw('POST', `/pos/table-orders/${p3SplitOrder.tableOrderId}/split`, {
+      tableId: freeTable.tableId, lineIds: [p3StartedLine.lineId],
+    });
+    check('a line already in the kitchen cannot be split', splitStarted.status === 400,
+      String(splitStarted.status));
+  }
+
+  // Moving an order to a table that already has one is refused.
+  const moveToBusy = await raw('POST', `/pos/table-orders/${p3SplitResult.targetOrderId}/move`, {
+    tableId: busyTable.tableId,
+  });
+  check('moving to an occupied table is refused', moveToBusy.status === 400, String(moveToBusy.status));
+
+  // The service charge is added when the table order is closed.
+  const p3ServiceOrder = await call('POST', '/pos/table-orders', {
+    tableId: busyTable.tableId, guestCount: 3,
+    lines: [{ itemId: itemB.itemId, unitId: 1, quantity: 1, unitPrice: 50, taxPct: 10 }],
+  });
+  const p3ServiceInvoice = await call('POST', `/pos/table-orders/${p3ServiceOrder.tableOrderId}/close`, {
+    paymentType: 1, paidAmount: 0, cashAccountId,
+  });
+  check('table order closed with a service charge', !!p3ServiceInvoice.invoiceId, p3ServiceInvoice.invoiceNo);
+
+  const p3ServiceDetail = await call('GET', `/sales/invoices/${p3ServiceInvoice.invoiceId}`);
+  check('service charge added to the invoice', Number(p3ServiceDetail.header.serviceCharge) === 45,
+    `${p3ServiceDetail.header.serviceCharge} (3 guests × 15)`);
+
+  const p3ServiceJournal = await call('GET', `/accounting/journals/${p3ServiceDetail.header.glJournalId}`);
+  const serviceLine = p3ServiceJournal.lines.find((line) => line.description === 'إيرادات الخدمة');
+  check('service charge posted to its own revenue account', Number(serviceLine?.credit) === 45,
+    String(serviceLine?.credit));
+
+  const p3Kitchen = await call('GET', '/pos/kitchen');
+  check('kitchen returns the category of every line',
+    p3Kitchen.every((row) => row.categoryId !== undefined), `${p3Kitchen.length}`);
+
+  // A giveaway needs the dedicated permission.
+  const p3GiftInvoice = await raw('POST', '/sales/invoices', {
+    invoiceType: 1, branchId, warehouseId, paymentType: 1, paidAmount: 0, cashAccountId,
+    lines: [{ itemId: itemB.itemId, unitId: 1, quantity: 1, unitPrice: 0, isGift: true, taxPct: 0 }],
+  });
+  check('gift line accepted for a manager', p3GiftInvoice.status === 201, String(p3GiftInvoice.status));
+
+  const p3GiftDetail = await call('GET', `/sales/invoices/${p3GiftInvoice.data.invoiceId}`);
+  check('gift line is free', Number(p3GiftDetail.lines[0].lineTotal) === 0,
+    String(p3GiftDetail.lines[0].lineTotal));
+
+  // 39. Ezees guide conformance — halls, service charge modes, modifiers, notes
+  const p3HallName = `قاعة اختبار ${Date.now() % 1000}`;
+  const p3Hall = await call('POST', '/pos/halls', {
+    name: p3HallName, code: `Z${Date.now() % 100}`, tableCount: 3,
+    tableType: 1, capacity: 4,
+  });
+  check('hall created', !!p3Hall.hallId, String(p3Hall.hallId));
+
+  const hallTables = await call('GET', '/pos/tables');
+  const generated = hallTables.filter((row) => row.name.startsWith(p3Hall.code));
+  check('hall generated its numbered tables', generated.length === 3,
+    generated.map((row) => row.name).join(','));
+
+  const duplicateHall = await raw('POST', '/pos/halls', {
+    name: p3HallName, code: `Y${Date.now() % 100}`, tableCount: 2,
+  });
+  check('a hall with the same name is refused', duplicateHall.status === 400,
+    String(duplicateHall.status));
+
+  const p3Halls = await call('GET', '/pos/halls');
+  check('halls listed with the work permission', p3Halls.length > 0, `${p3Halls.length}`);
+
+  // Service charge: amount per guest.
+  await call('PUT', '/pos/settings', {
+    serviceChargePerGuest: 20, serviceChargeMinimum: 10, serviceChargeMode: 1,
+  });
+  const perGuestOrder = await call('POST', '/pos/table-orders', {
+    tableId: generated[0].tableId, guestCount: 3,
+    lines: [{ itemId: itemB.itemId, unitId: 1, quantity: 1, unitPrice: 500, taxPct: 0 }],
+  });
+  const perGuestInvoice = await call('POST', `/pos/table-orders/${perGuestOrder.tableOrderId}/close`, {
+    paymentType: 1, paidAmount: 0, cashAccountId,
+  });
+  const perGuestDetail = await call('GET', `/sales/invoices/${perGuestInvoice.invoiceId}`);
+  check('service charge = rate × guests', Number(perGuestDetail.header.serviceCharge) === 60,
+    String(perGuestDetail.header.serviceCharge));
+
+  // Service charge: minimum per guest — the shortfall is charged.
+  await call('PUT', '/pos/settings', {
+    serviceChargePerGuest: 20, serviceChargeMinimum: 10, serviceChargeMode: 2,
+  });
+  const minOrder = await call('POST', '/pos/table-orders', {
+    tableId: generated[1].tableId, guestCount: 3,
+    lines: [{ itemId: itemB.itemId, unitId: 1, quantity: 1, unitPrice: 10, taxPct: 0 }],
+  });
+  const minInvoice = await call('POST', `/pos/table-orders/${minOrder.tableOrderId}/close`, {
+    paymentType: 1, paidAmount: 0, cashAccountId,
+  });
+  const minDetail = await call('GET', `/sales/invoices/${minInvoice.invoiceId}`);
+  check('minimum charge covers the shortfall', Number(minDetail.header.serviceCharge) === 50,
+    `${minDetail.header.serviceCharge} (minimum 60 − order 10)`);
+
+  const richOrder = await call('POST', '/pos/table-orders', {
+    tableId: generated[2].tableId, guestCount: 2,
+    lines: [{ itemId: itemB.itemId, unitId: 1, quantity: 5, unitPrice: 100, taxPct: 0 }],
+  });
+  const richInvoice = await call('POST', `/pos/table-orders/${richOrder.tableOrderId}/close`, {
+    paymentType: 1, paidAmount: 0, cashAccountId,
+  });
+  const richDetail = await call('GET', `/sales/invoices/${richInvoice.invoiceId}`);
+  check('no service charge when the order passes the minimum',
+    Number(richDetail.header.serviceCharge) === 0, String(richDetail.header.serviceCharge));
+
+  // Modifiers: maximum quantity and the free extra.
+  const p3Modifier = await call('POST', '/pos/modifiers', {
+    itemId: itemA.itemId, name: 'إضافة اختبار', price: 5, maxQuantity: 2,
+  });
+  check('modifier created', !!p3Modifier.modifierId, String(p3Modifier.modifierId));
+
+  const p3ModifierInvoice = await call('POST', '/sales/invoices', {
+    invoiceType: 1, branchId, warehouseId, paymentType: 1, paidAmount: 0, cashAccountId,
+    lines: [
+      { itemId: itemA.itemId, unitId: 1, quantity: 1, unitPrice: 100, taxPct: 0 },
+      {
+        itemId: itemB.itemId, unitId: 1, quantity: 1, unitPrice: 0, taxPct: 0,
+        parentLineIndex: 0, modifierId: p3Modifier.modifierId, notes: 'إضافة اختبار',
+      },
+    ],
+  });
+  check('invoice with a modifier posted', !!p3ModifierInvoice.invoiceId, p3ModifierInvoice.invoiceNo);
+
+  const p3ModifierDetail = await call('GET', `/sales/invoices/${p3ModifierInvoice.invoiceId}`);
+  const p3ModifierLine = p3ModifierDetail.lines.find((line) => line.itemId === itemB.itemId);
+  check('the modifier line is marked', p3ModifierLine?.isModifier === true, String(p3ModifierLine?.isModifier));
+  check('the modifier hangs under its parent', p3ModifierLine?.parentLineId === p3ModifierDetail.lines[0].invoiceLineId,
+    `${p3ModifierLine?.parentLineId}`);
+  check('the modifier note carries the -- prefix',
+    String(p3ModifierLine?.notes ?? '').startsWith('--'), String(p3ModifierLine?.notes));
+
+  const tooManyModifiers = await raw('POST', '/sales/invoices', {
+    invoiceType: 1, branchId, warehouseId, paymentType: 1, paidAmount: 0, cashAccountId,
+    lines: [
+      { itemId: itemA.itemId, unitId: 1, quantity: 1, unitPrice: 100, taxPct: 0 },
+      {
+        itemId: itemB.itemId, unitId: 1, quantity: 5, unitPrice: 0, taxPct: 0,
+        parentLineIndex: 0, modifierId: p3Modifier.modifierId,
+      },
+    ],
+  });
+  check('a modifier beyond its maximum is refused', tooManyModifiers.status === 400,
+    String(tooManyModifiers.status));
+
+  // Ready-made kitchen notes.
+  const p3Note = await call('POST', '/pos/note-templates', { name: 'بدون بصل' });
+  check('ready-made note saved', !!p3Note.noteId, String(p3Note.noteId));
+  const p3Notes = await call('GET', '/pos/note-templates');
+  check('ready-made notes listed', p3Notes.length > 0, `${p3Notes.length}`);
+
+  // Splitting every line would duplicate the order — it must be refused.
+  const p3SplitAllOrder = await call('POST', '/pos/table-orders', {
+    tableId: generated[0].tableId, guestCount: 2,
+    lines: [{ itemId: itemB.itemId, unitId: 1, quantity: 1, unitPrice: 30, taxPct: 0 }],
+  });
+  const p3SplitAllDetail = await call('GET', `/pos/table-orders/${p3SplitAllOrder.tableOrderId}`);
+  const p3SplitAll = await raw('POST', `/pos/table-orders/${p3SplitAllOrder.tableOrderId}/split`, {
+    tableId: generated[1].tableId,
+    lineIds: p3SplitAllDetail.lines.map((line) => line.lineId),
+  });
+  check('splitting every line is refused', p3SplitAll.status === 400, String(p3SplitAll.status));
+
   const failed = results.filter((r) => !r.ok);
   console.log(`\n${results.length - failed.length}/${results.length} checks passed`);
   if (failed.length) process.exit(1);

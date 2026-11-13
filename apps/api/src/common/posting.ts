@@ -287,6 +287,8 @@ export interface InvoicePostingInput {
   taxTotal: number;
   /** Delivery fee collected with the order (revenue of its own). */
   deliveryFee?: number;
+  /** Restaurant service charge (per guest) — credited to its own account. */
+  serviceCharge?: number;
   /** Goods value at cost (used for COGS / inventory). */
   costTotal: number;
   userId?: number | null;
@@ -382,6 +384,12 @@ export async function postInvoiceJournal(
         delivery?.accountId ?? sales.accountId,
         'إيرادات التوصيل',
       );
+    }
+    if (Number(input.serviceCharge ?? 0) > 0) {
+      const service = await resolveMapping(client, 'SERVICE_CHARGE');
+      if (service) {
+        pushCredit(Number(input.serviceCharge), service.accountId, 'إيرادات الخدمة');
+      }
     }
     pushCredit(input.taxTotal, vat.accountId, 'ضريبة القيمة المضافة (مخرجات)');
     // Cost of sales

@@ -22,6 +22,7 @@ const PERMISSIONS: [string, string, string][] = [
   ['parties.ledger', 'العملاء والموردين', 'كشوف الحسابات'],
   ['sales.view', 'المبيعات', 'عرض فواتير المبيعات'],
   ['sales.manage', 'المبيعات', 'إنشاء وتعديل فواتير المبيعات'],
+  ['sales.giveaway', 'المبيعات', 'منح أصناف مجانًا (هدايا)'],
   ['pos.operate', 'نقطة البيع', 'تشغيل نقطة البيع'],
   ['purchases.view', 'المشتريات', 'عرض فواتير المشتريات'],
   ['purchases.manage', 'المشتريات', 'إنشاء وتعديل فواتير المشتريات'],
@@ -119,6 +120,7 @@ const CHART: {
   { code: '4103', name: 'خصم مسموح به', nameEn: 'Discounts Allowed', type: 4, normal: 1, mapping: 'DISCOUNT', mappingLabel: 'خصم مسموح به', parent: '4' },
   { code: '4104', name: 'إيرادات أخرى', nameEn: 'Other Income', type: 4, mapping: 'OTHER_INCOME', mappingLabel: 'إيرادات أخرى', parent: '4' },
   { code: '4105', name: 'إيرادات التوصيل', nameEn: 'Delivery Revenue', type: 4, mapping: 'DELIVERY_FEE', mappingLabel: 'إيرادات التوصيل', parent: '4' },
+  { code: '4106', name: 'إيرادات الخدمة', nameEn: 'Service Charge', type: 4, mapping: 'SERVICE_CHARGE', mappingLabel: 'إيرادات الخدمة', parent: '4' },
 
   { code: '5', name: 'المصروفات', nameEn: 'Expenses', type: 5, group: true },
   { code: '5101', name: 'تكلفة المبيعات', nameEn: 'Cost of Sales', type: 5, mapping: 'COGS', mappingLabel: 'تكلفة المبيعات', parent: '5' },

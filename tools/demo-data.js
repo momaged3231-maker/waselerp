@@ -246,10 +246,30 @@ async function main() {
     supplierIds.push(createdParty.partyId);
   }
 
-  // ---------------- restaurant tables ----------------
-  for (let index = 1; index <= 6; index += 1) {
-    await call('POST', '/pos/tables', {
-      name: `طاولة ${index}`, tableType: index <= 4 ? 1 : 2, capacity: index <= 4 ? 4 : 6,
+  // ---------------- restaurant halls, notes & modifiers ----------------
+  // The hall code is the prefix of the table numbers (A + 4 tables -> A1..A4).
+  const existingHalls = await call('GET', '/pos/halls');
+  for (const hall of [
+    { name: 'الدور الأرضي', code: 'A', tableCount: 4 },
+    { name: 'التراس', code: 'T', tableCount: 2 },
+  ]) {
+    if (existingHalls.some((row) => row.name === hall.name)) continue;
+    await call('POST', '/pos/halls', { ...hall, tableType: 1, capacity: 4 });
+  }
+  const existingNotes = await call('GET', '/pos/note-templates');
+  for (const note of ['بدون بصل', 'حار', 'بدون ملح']) {
+    if (existingNotes.some((row) => row.name === note)) continue;
+    await call('POST', '/pos/note-templates', { name: note });
+  }
+
+  const croissant = byCode('DEMO-CROISSANT');
+  const existingModifiers = await call('GET', `/pos/modifiers?itemId=${croissant.itemId}`);
+  if (!existingModifiers.length) {
+    await call('POST', '/pos/modifiers', {
+      itemId: croissant.itemId, name: 'إضافة جبنة', price: 8, maxQuantity: 3,
+    });
+    await call('POST', '/pos/modifiers', {
+      itemId: croissant.itemId, name: 'إضافة بسكويت', price: 0, maxQuantity: 1,
     });
   }
 
