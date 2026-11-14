@@ -60,21 +60,27 @@ const SETTING_SECTIONS: { id: string; title: string; desc: string; fields: Setti
   {
     id: 'company',
     title: 'الشركة والفاتورة',
-    desc: 'البيانات التي تُطبع على الفاتورة والإيصال والسندات',
+    desc: 'بيانات الشركة — تُطبع على الإيصال والفاتورة المطبوعة تلقائيًا',
     fields: [
-      { key: 'CompanyName', label: 'اسم الشركة', type: 'text', placeholder: 'مثال: شركة الوصل للتجارة' },
-      { key: 'CompanyPhone', label: 'تليفون الشركة', type: 'text', dir: 'ltr' },
-      { key: 'CompanyAddress', label: 'العنوان', type: 'text' },
-      { key: 'TaxNumber', label: 'الرقم الضريبي', type: 'text', dir: 'ltr' },
-      { key: 'InvoiceFooter', label: 'نص تذييل الفاتورة', type: 'text', desc: 'يظهر أسفل الفاتورة المطبوعة' },
+      { key: 'CompanyName', label: 'اسم الشركة', type: 'text', placeholder: 'مثال: شركة الوصل للتجارة', desc: 'يظهر بأعلى الإيصال والفاتورة المطبوعة' },
+      { key: 'CompanyPhone', label: 'تليفون الشركة', type: 'text', dir: 'ltr', desc: 'يظهر أسفل الاسم في الطباعة' },
+      { key: 'CompanyAddress', label: 'العنوان', type: 'text', desc: 'يظهر بأعلى الإيصال تحت اسم الشركة' },
+      { key: 'TaxNumber', label: 'الرقم الضريبي', type: 'text', dir: 'ltr', desc: 'يظهر في الطباعة والفوترة' },
+      { key: 'InvoiceFooter', label: 'نص تذييل الفاتورة', type: 'text', desc: 'يظهر أسفل كل إيصال/فاتورة مطبوعة (مثال: شكراً لزيارتكم)' },
     ],
   },
   {
     id: 'tax',
     title: 'الضرائب',
-    desc: 'النسبة الافتراضية للضريبة على الفواتير الجديدة',
+    desc: 'تسمية الضريبة وكيفية عرضها على الإيصال المطبوع',
     fields: [
-      { key: 'DefaultVatPct', label: 'النسبة الافتراضية لضريبة القيمة المضافة', type: 'number', unit: '%', dir: 'ltr' },
+      { key: 'TaxName', label: 'تسمية الضريبة المطبقة على المبيعات', type: 'text', desc: 'الاسم الذي يُطبع بجانب مبلغ الضريبة (مثال: ضريبة القيمة المضافة)' },
+      {
+        key: 'ShowTaxOnReceipt',
+        label: 'إظهار الضريبة في الإيصال المطبوع',
+        type: 'boolean',
+        desc: 'إظهار/إخفاء سطر الضريبة في الطباعة — الحساب في النظام لا يتأثر (تظهر أو تختفي في الورقة فقط)',
+      },
     ],
   },
   {

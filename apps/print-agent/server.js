@@ -114,8 +114,10 @@ function buildReceiptBytes(receipt, width = 42) {
   if (Number(header.discountAmount ?? 0) !== 0) {
     chunks.push(line(`الخصم: ${Number(header.discountAmount).toFixed(2)}`, { align: 'right', width }));
   }
-  if (Number(header.taxAmount ?? 0) !== 0) {
-    chunks.push(line(`الضريبة: ${Number(header.taxAmount).toFixed(2)}`, { align: 'right', width }));
+  const showTax = receipt.showTax !== false;
+  const taxName = String(receipt.taxName ?? 'الضريبة');
+  if (showTax && Number(header.taxAmount ?? 0) !== 0) {
+    chunks.push(line(`${taxName}: ${Number(header.taxAmount).toFixed(2)}`, { align: 'right', width }));
   }
   chunks.push(line(`المطلوب: ${Number(header.totalAmount ?? 0).toFixed(2)}`, { align: 'right', width, bold: true, double: true }));
   chunks.push(line(`المدفوع: ${Number(header.paidAmount ?? 0).toFixed(2)}`, { align: 'right', width }));

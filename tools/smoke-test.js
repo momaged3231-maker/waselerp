@@ -1598,6 +1598,30 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
   const attachmentAfterDelete = await call('GET', `/attachments?entityType=invoice&entityId=${purchase.invoiceId}`);
   check('attachment deleted', !attachmentAfterDelete.some((row) => row.attachmentId === uploaded.attachmentId));
 
+  // 45. settings — company identity consumed by the printed receipt (POS)
+  const printContext = await call('GET', '/sales/print-context');
+  check('print context returns company identity + tax presentation',
+    typeof printContext.companyName === 'string' && typeof printContext.invoiceFooter === 'string'
+      && typeof printContext.taxName === 'string' && typeof printContext.showTaxOnReceipt === 'boolean',
+    JSON.stringify(printContext));
+
+  const settingsSnapshot = await call('GET', '/admin/settings');
+  await call('PUT', '/admin/settings', { ...settingsSnapshot, TaxName: 'ضريبة بيع', ShowTaxOnReceipt: 'false' });
+  const printContextHidden = await call('GET', '/sales/print-context');
+  check('receipt tax label + visibility round-trip',
+    printContextHidden.taxName === 'ضريبة بيع' && printContextHidden.showTaxOnReceipt === false,
+    `${printContextHidden.taxName} / showTax=${printContextHidden.showTaxOnReceipt}`);
+
+  await call('PUT', '/admin/settings', {
+    ...settingsSnapshot,
+    TaxName: settingsSnapshot.TaxName ?? 'ضريبة القيمة المضافة',
+    ShowTaxOnReceipt: settingsSnapshot.ShowTaxOnReceipt ?? 'true',
+  });
+  const printContextRestored = await call('GET', '/sales/print-context');
+  check('receipt settings restored after round-trip',
+    printContextRestored.showTaxOnReceipt === true && printContextRestored.taxName === (settingsSnapshot.TaxName ?? 'ضريبة القيمة المضافة'),
+    `${printContextRestored.taxName} / showTax=${printContextRestored.showTaxOnReceipt}`);
+
   const failed = results.filter((r) => !r.ok);
   console.log(`\n${results.length - failed.length}/${results.length} checks passed`);
   if (failed.length) process.exit(1);

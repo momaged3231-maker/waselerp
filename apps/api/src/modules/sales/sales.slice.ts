@@ -84,6 +84,29 @@ const round2 = (value: number) => Math.round((Number(value) + Number.EPSILON) * 
 export class SalesService {
   constructor(private readonly db: DatabaseService, private readonly live: LiveEventsService) {}
 
+  /**
+   * Company identity + receipt presentation settings, readable by any POS/sales user.
+   * The raw app_settings table is admin-only; the printed receipt needs the same values.
+   */
+  async printContext() {
+    const rows = await this.db.query<{ setting_key: string; setting_value: string | null }>(
+      `SELECT setting_key, setting_value FROM app_settings WHERE setting_key = ANY($1::text[])`,
+      [['CompanyName', 'CompanyPhone', 'CompanyAddress', 'TaxNumber',
+        'InvoiceFooter', 'ShowTaxOnReceipt', 'TaxName']],
+    );
+    const map = new Map(rows.map((row) => [row.setting_key, row.setting_value]));
+    const value = (key: string) => (map.get(key) ?? '') ?? '';
+    return {
+      companyName: value('CompanyName'),
+      companyPhone: value('CompanyPhone'),
+      companyAddress: value('CompanyAddress'),
+      taxNumber: value('TaxNumber'),
+      invoiceFooter: value('InvoiceFooter') || 'شكراً لتعاملكم معنا',
+      showTaxOnReceipt: (value('ShowTaxOnReceipt') || 'true') !== 'false',
+      taxName: value('TaxName') || 'الضريبة',
+    };
+  }
+
   /** Sales representatives active in the system (used by POS to assign repId). */
   reps() {
     return this.db.query(
@@ -1181,6 +1204,12 @@ export class SalesService {
 @Controller('sales')
 export class SalesController {
   constructor(private readonly service: SalesService) {}
+
+  @RequireAnyPermission('sales.view', 'purchases.view', 'pos.operate')
+  @Get('print-context')
+  printContext() {
+    return this.service.printContext();
+  }
 
   @RequireAnyPermission('sales.view', 'purchases.view', 'pos.operate')
   @Get('reps')

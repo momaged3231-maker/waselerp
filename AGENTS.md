@@ -36,7 +36,7 @@ cd apps/print-agent && npm install && node server.js
 ## 2) الاختبارات (مهم جدًا)
 
 ```bash
-npm test          # tools/smoke-test.js — 327 فحص end-to-end
+npm test          # tools/smoke-test.js — 330 فحص end-to-end
 npm run test:print   # tools/print-agent-test.js — توليد ESC/POS بدون طابعة
 ```
 
@@ -105,7 +105,8 @@ tools/              pg/ (تشغيل + فحص DB + pglite) · smoke-test.js · de
 - ✅ 30 شاشة + PWA (manifest + service worker)
 - ✅ **P7 — الإعدادات والأدوات (2026-11-14)**: تقييد مخازن/صناديق لكل مستخدم (API `GET/PUT /admin/users/:id/restrictions` + `GET /admin/restrictions/options` + مودال «مخازن / صناديق» في تبويب المستخدمون + تنفيذ فعلي في قوائم المخزن/الصندوق للكاشير/المندوب) · تبويب «النسخ الاحتياطي» في الإعدادات (تنزيل JSON كامل + استعادة مع تأكيد ومسح/إعادة إدراج مع audit) · مرفقات الفواتير (`AttachmentsPanel` في تفاصيل الفاتورة — رفع/تنزيل/حذف، حد 5MB) · تصدير CSV + طباعة/PDF من التقارير · جدول محوري (`/reports/pivot/sales`, `/reports/pivot/stock`) · دول/مدن/شحن + البيانات الأساسية
 - ✅ **الواجهة (2026-11-14)**: Sidebar مجمّع بنمط SaaS (SVG icons, 6 مجموعات) + لوحة معلومات بأيقونات SVG — راجع commit 8b44683
-- ✅ `npm test` → 327/327 فحصًا ناجحًا (القسم 44 يغطّي P7: القيود + استرجاع/تفريغ + فلاتر المخزن/الصندوق + النسخة الاحتياطية + المرفقات)
+- ✅ **هوية الشركة للطباعة (2026-11-14)**: `GET /sales/print-context` (sales.view/pos.operate) تغذّي `CompanyName/Phone/Address/TaxNumber/InvoiceFooter` إلى وكيل الطباعة + معاينة المتصفح؛ `ShowTaxOnReceipt` + `TaxName` للتحكم بصريًا بسطر الضريبة؛ حُذف `DefaultVatPct` (كان لا يُستهلك) — راجع `docs/GAP-SETTINGS-EZEES.md`
+- ✅ `npm test` → 330/330 فحصًا ناجحًا (القسمان 44–45 يغطّيان P7 + بصيغة الإيصال)
 
 ## 6) الشغل اللي فاضل (مرتّب بالأولوية)
 

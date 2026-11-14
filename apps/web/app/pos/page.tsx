@@ -40,6 +40,7 @@ export default function PosPage() {
   const [busy, setBusy] = useState(false);
   const [receipt, setReceipt] = useState<any>(null);
   const [agentOnline, setAgentOnline] = useState<boolean | null>(null);
+  const [printContext, setPrintContext] = useState<any>(null);
   const [printError, setPrintError] = useState('');
   const [currentShift, setCurrentShift] = useState<any>(null);
   const [requireShift, setRequireShift] = useState(false);
@@ -206,6 +207,7 @@ export default function PosPage() {
       setShiftAccountId((value) => value ?? rows[0]?.cashAccountId ?? null);
     });
     apiFetch<any[]>('/sales/reps').then(setReps).catch(() => setReps([]));
+    apiFetch('/sales/print-context').then(setPrintContext).catch(() => {});
     loadShift();
     agentHealth().then((health) => setAgentOnline(!!health?.ok)).catch(() => setAgentOnline(false));
   }, [session?.activeBranchId]);
@@ -595,13 +597,21 @@ export default function PosPage() {
     if (!detail) return;
     setPrintError('');
     const health = await agentHealth();
+    const company = printContext ?? {};
     if (health?.ok) {
       try {
         await printReceipt({
-          store: { name: 'واصل ERP', phone: '', taxNumber: '' },
+          store: {
+            name: company.companyName || 'واصل ERP',
+            address: company.companyAddress ?? '',
+            phone: company.companyPhone ?? '',
+            taxNumber: company.taxNumber ?? '',
+          },
           header: detail.header,
           lines: detail.lines,
-          footer: 'شكراً لتعاملكم معنا',
+          footer: company.invoiceFooter || 'شكراً لتعاملكم معنا',
+          showTax: company.showTaxOnReceipt !== false,
+          taxName: company.taxName || 'الضريبة',
         });
         await openDrawer().catch(() => {});
         return;
@@ -1255,8 +1265,11 @@ export default function PosPage() {
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="card w-full max-w-sm p-5 max-h-[90vh] overflow-y-auto">
             <div className="text-center border-b border-dashed border-slate-300 pb-3 mb-3">
-              <div className="font-extrabold text-lg">واصل ERP</div>
-              <div className="text-xs text-slate-500">فاتورة مبيعات</div>
+              <div className="font-extrabold text-lg">{printContext?.companyName || 'واصل ERP'}</div>
+              {printContext?.companyAddress && <div className="text-xs text-slate-500">{printContext.companyAddress}</div>}
+              {printContext?.companyPhone && <div className="text-[11px] text-slate-500">هاتف: <span dir="ltr">{printContext.companyPhone}</span></div>}
+              {printContext?.taxNumber && <div className="text-[11px] text-slate-500">الرقم الضريبي: <span dir="ltr">{printContext.taxNumber}</span></div>}
+              <div className="text-xs text-slate-500 mt-1">فاتورة مبيعات</div>
               <div className="text-xs text-slate-500">{receipt.header.invoiceNo}</div>
               <div className="text-xs text-slate-500">{new Date(receipt.header.invoiceDate).toLocaleString('ar-EG')}</div>
             </div>
@@ -1275,10 +1288,17 @@ export default function PosPage() {
             <div className="mt-3 space-y-1 text-xs border-t border-dashed border-slate-300 pt-2">
               <div className="flex justify-between"><span>الإجمالي</span><span>{formatMoney(receipt.header.subTotal)}</span></div>
               <div className="flex justify-between"><span>الخصم</span><span>{formatMoney(receipt.header.discountAmount)}</span></div>
-              <div className="flex justify-between"><span>الضريبة</span><span>{formatMoney(receipt.header.taxAmount)}</span></div>
+              {printContext?.showTaxOnReceipt !== false && (
+                <div className="flex justify-between">
+                  <span>{printContext?.taxName || 'الضريبة'}</span>
+                  <span>{formatMoney(receipt.header.taxAmount)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-sm font-extrabold"><span>المطلوب</span><span>{formatMoney(receipt.header.totalAmount)}</span></div>
               <div className="flex justify-between"><span>المدفوع</span><span>{formatMoney(receipt.header.paidAmount)}</span></div>
             </div>
+
+            {printContext?.invoiceFooter && <div className="mt-2 text-center text-xs text-slate-500">{printContext.invoiceFooter}</div>}
 
             {printError && <div className="text-xs text-rose-600">{printError}</div>}
             <div className="flex gap-2 mt-4">

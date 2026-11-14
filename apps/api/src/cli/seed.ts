@@ -77,10 +77,11 @@ const SETTINGS: [string, string][] = [
   ['CompanyAddress', ''],
   ['TaxNumber', ''],
   ['InvoiceFooter', 'شكراً لتعاملكم معنا'],
-  ['DefaultVatPct', '0'],
   ['AllowNegativeStock', 'false'],
   ['RequireCashierShift', 'false'],
   ['EnableGLPosting', 'true'],
+  ['ShowTaxOnReceipt', 'true'],
+  ['TaxName', 'ضريبة القيمة المضافة'],
 ];
 
 function hashPassword(password: string) {
