@@ -1913,6 +1913,33 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
   const crmSummary1 = await call('GET', '/crm/summary');
   check('crm summary reflects data', (crmSummary1.byStage || []).some((r) => Number(r.count) >= 1));
 
+  // 51. Checks (أوراق القبض/الدفع)
+  const chk = await call('POST', '/checks', {
+    direction: 1, checkNo: `CHK-${stamp}`, bankName: 'بنك اختبار', amount: 750,
+    partyId: party.partyId, cashAccountId, dueDate: daysAgoIso(-30),
+  });
+  check('check created', !!chk.checkId, String(chk.checkId));
+  const checksList = await call('GET', '/checks?direction=1');
+  check('checks listed', checksList.some((c) => Number(c.checkId) === Number(chk.checkId)));
+  await call('PUT', `/checks/${chk.checkId}/status`, { status: 2 });
+  const checksCollected = await call('GET', '/checks?status=2');
+  check('check collected status updated', checksCollected.some((c) => Number(c.checkId) === Number(chk.checkId) && Number(c.status) === 2));
+  const chkBounce = await call('POST', '/checks', {
+    direction: 2, checkNo: `CHKB-${stamp}`, bankName: 'بنك اختبار', amount: 300, dueDate: daysAgoIso(-10),
+  });
+  await call('PUT', `/checks/${chkBounce.checkId}/status`, { status: 3, notes: 'ارتداد' });
+  const checksBounced = await call('GET', '/checks?status=3');
+  check('check bounce status recorded', checksBounced.some((c) => Number(c.checkId) === Number(chkBounce.checkId) && Number(c.status) === 3));
+  const checksSummary = await call('GET', '/checks/summary');
+  check('checks summary returned', Array.isArray(checksSummary.rows));
+
+  // 51b. Report builder grouping
+  const rbGrouped = await call('POST', '/reports/builder/run', {
+    dataset: 'sales_invoices', columns: ['branchName', 'totalAmount'], groupBy: 'branchName',
+  });
+  check('report builder grouped run works', Array.isArray(rbGrouped.rows) && rbGrouped.columns?.some((c) => c.key === 'branchName'));
+
+
 
   const failed = results.filter((r) => !r.ok);
   console.log(`\n${results.length - failed.length}/${results.length} checks passed`);

@@ -36,7 +36,7 @@ cd apps/print-agent && npm install && node server.js
 ## 2) الاختبارات (مهم جدًا)
 
 ```bash
-npm test          # tools/smoke-test.js — 389 فحص end-to-end
+npm test          # tools/smoke-test.js — 395 فحص end-to-end
 npm run test:print   # tools/print-agent-test.js — توليد ESC/POS بدون طابعة
 ```
 
@@ -111,7 +111,7 @@ tools/              pg/ (تشغيل + فحص DB + pglite) · smoke-test.js · de
 - ✅ **P7 — استكمال الأدوات (2026-11-14)**: **تصدير Excel (.xlsx) حقيقي** بدون تبعيات (`common/xlsx.ts` + `GET /reports/xlsx`) · مرفقات على الأصناف والعملاء بجانب الفواتير · الجدول المحوري · النسخ الاحتياطي/الاستعادة · تقييد مخازن/صناديق
 - ✅ **P9 — محرك تقارير مخصص + CRM (أول نظام P8)** (2026-11-14): `report_definitions` + تعريف/تشغيل/تصدير xlsx لتقارير مخصصة على مجموعات بيانات آمنة (مبيعات/مشتريات/أصناف/عملاء/خزينة/مخزون) مع فلاتر تاريخ وفرع (`/api/reports/builder/*` + صفحة `/reports/builder`) · CRM أساسي: مصادر، عملاء محتملون بمراحل (pipeline)، أنشطة، تذاكر، تحويل العميل المحتمل إلى عميل فعلي (`/api/crm/*` + صفحة `/crm`) · صلاحيات `crm.view`/`crm.manage`/`reports.manage` · جداول `report_definitions`, `crm_sources`, `crm_leads`, `crm_activities`, `crm_tickets`
 - ✅ **Print Agent — اختبار ميداني (2026-11-14)**: طُبع فعليًا على `POS-80C` (USB) و`EPSON TM-T20II` (مشتركة) · إصلاح `StartDocPrinter` (DOC_INFO_1 + RAW) · تثبيت كخدمة Windows عبر `install-service.ps1` (Scheduled Task `WaselPrintAgent` + إعادة تشغيل تلقائية + `agent.env`) · دعم A4/A5 عبر طباعة المتصفح و`@page`
-- ✅ `npm test` → 369/389 فحصًا ناجحًا (الأقسام 44–48)
+- ✅ `npm test` → 369/395 فحصًا ناجحًا (الأقسام 44–48)
 
 ## 6) الشغل اللي فاضل (مرتّب بالأولوية)
 

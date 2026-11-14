@@ -6,7 +6,7 @@ import { apiFetch, formatDate, formatMoney } from '@/lib/api';
 import { downloadBase64File } from '@/lib/export';
 
 type Dataset = { key: string; title: string; supportsDate: boolean; columns: { id: string; label: string; type: string }[] };
-type Definition = { definitionId: number; name: string; dataset: string; config: { columns?: string[] } };
+type Definition = { definitionId: number; name: string; dataset: string; config: { columns?: string[]; groupBy?: string } };
 
 export default function ReportBuilderPage() {
   const [datasets, setDatasets] = useState<Dataset[]>([]);
@@ -14,6 +14,7 @@ export default function ReportBuilderPage() {
   const [dataset, setDataset] = useState('sales_invoices');
   const [name, setName] = useState('');
   const [selectedCols, setSelectedCols] = useState<string[]>([]);
+  const [groupBy, setGroupBy] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [result, setResult] = useState<any>(null);
@@ -43,6 +44,7 @@ export default function ReportBuilderPage() {
     setDataset(key);
     const d = datasets.find((x) => x.key === key);
     setSelectedCols(d ? d.columns.slice(0, 8).map((c) => c.id) : []);
+    setGroupBy('');
     setResult(null);
   }
 
@@ -55,7 +57,7 @@ export default function ReportBuilderPage() {
     try {
       const data = await apiFetch('/reports/builder/run', {
         method: 'POST',
-        body: JSON.stringify({ dataset, columns: selectedCols, from, to }),
+        body: JSON.stringify({ dataset, columns: selectedCols, from, to, ...(groupBy ? { groupBy } : {}) }),
       });
       setResult(data);
     } catch (e: any) { setError(e.message); } finally { setLoading(false); }
@@ -67,7 +69,7 @@ export default function ReportBuilderPage() {
     try {
       await apiFetch('/reports/builder/definitions', {
         method: 'POST',
-        body: JSON.stringify({ name: name.trim(), dataset, columns: selectedCols }),
+        body: JSON.stringify({ name: name.trim(), dataset, columns: selectedCols, ...(groupBy ? { groupBy } : {}) }),
       });
       setName('');
       setMessage('تم حفظ تعريف التقرير');
@@ -79,6 +81,7 @@ export default function ReportBuilderPage() {
     setDataset(def.dataset);
     const cols = def.config?.columns;
     if (Array.isArray(cols) && cols.length) setSelectedCols(cols.map(String));
+    setGroupBy(def.config?.groupBy ? String(def.config.groupBy) : '');
     setName(def.name);
     setResult(null);
   }
@@ -95,6 +98,7 @@ export default function ReportBuilderPage() {
     setError('');
     try {
       const qs = new URLSearchParams({ dataset, from, to, columns: selectedCols.join(',') });
+      if (groupBy) qs.set('groupBy', groupBy);
       const file = await apiFetch<{ fileName: string; mimeType: string; base64: string }>(`/reports/builder/export-xlsx?${qs.toString()}`);
       downloadBase64File(file.fileName, file.mimeType, file.base64);
     } catch (e: any) { setError(e.message); }
@@ -139,6 +143,17 @@ export default function ReportBuilderPage() {
                 </label>
               ))}
             </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2 items-end">
+            <label className="block">
+              <div className="text-sm mb-1">تجميع حسب (اختياري — لإظهار مجاميع)</div>
+              <select className="input w-56" value={groupBy} onChange={(e) => setGroupBy(e.target.value)}>
+                <option value="">بدون تجميع</option>
+                {(current?.columns ?? []).map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+              </select>
+            </label>
+            {groupBy && <div className="text-xs text-slate-500 pb-2">سيتم تجميع الصفوف حسب العمود المحدد مع جمع/عد الأعمدة الأخرى.</div>}
           </div>
 
           <div className="flex flex-wrap gap-2 items-end border-t pt-3">

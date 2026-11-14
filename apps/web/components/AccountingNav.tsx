@@ -7,6 +7,7 @@ const TABS = [
   { href: '/accounting', label: 'شجرة الحسابات' },
   { href: '/accounting/journals', label: 'القيود' },
   { href: '/accounting/vouchers', label: 'السندات والشيكات' },
+  { href: '/accounting/checks', label: 'الشيكات' },
   { href: '/accounting/reports', label: 'التقارير المالية' },
 ];
 

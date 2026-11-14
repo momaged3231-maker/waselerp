@@ -279,13 +279,15 @@ export class ReportBuilderService {
     return { ok: true };
   }
 
-  async run(params: { dataset: string; columns?: string[]; from?: string; to?: string; limit?: number }, branchId: number) {
+  async run(
+    params: { dataset: string; columns?: string[]; from?: string; to?: string; limit?: number; groupBy?: string; aggregates?: Record<string, string> },
+    branchId: number,
+  ) {
     const datasetKey = this.validateDataset(params.dataset);
     const def = DATASETS[datasetKey];
     const requested = Array.isArray(params.columns) && params.columns.length ? params.columns : defaultColumnsFor(datasetKey);
     const cols = requested.filter((c) => def.columns[c]);
     if (!cols.length) throw new BadRequestException('اختر عمودًا واحدًا على الأقل');
-    const select = cols.map((c) => `${def.columns[c].expr} AS "${c}"`).join(', ');
 
     const where: string[] = [];
     const values: any[] = [];
@@ -297,8 +299,39 @@ export class ReportBuilderService {
     if (def.branchColumn) { where.push(`${def.branchColumn} = $${idx++}::int`); values.push(branchId); }
     if (def.dateColumn && params.from) { where.push(`${def.dateColumn} >= $${idx++}::date`); values.push(params.from); }
     if (def.dateColumn && params.to) { where.push(`${def.dateColumn} <= ($${idx++}::date + interval '1 day' - interval '1 second')`); values.push(params.to); }
-
     const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
+
+    const groupBy = params.groupBy && def.columns[params.groupBy] ? params.groupBy : '';
+    if (groupBy) {
+      const allowedFns: Record<string, string> = { sum: 'SUM', count: 'COUNT', avg: 'AVG', min: 'MIN', max: 'MAX' };
+      const aggs = params.aggregates && typeof params.aggregates === 'object' ? params.aggregates : {};
+      const metricCols = cols.filter((c) => c !== groupBy);
+      const selectParts: string[] = [`${def.columns[groupBy].expr} AS "${groupBy}"`];
+      const outColumns: { key: string; label: string; type: string }[] = [
+        { key: groupBy, label: def.columns[groupBy].label, type: def.columns[groupBy].type ?? 'text' },
+      ];
+      for (const c of metricCols) {
+        const colDef = def.columns[c];
+        const numeric = colDef.type === 'number';
+        const fnKey = String(aggs[c] ?? (numeric ? 'sum' : 'count')).toLowerCase();
+        const fn = allowedFns[fnKey] ?? (numeric ? 'SUM' : 'COUNT');
+        const expr = `${fn}(${colDef.expr})`;
+        selectParts.push(`${expr} AS "${c}"`);
+        outColumns.push({ key: c, label: `${colDef.label} (${fnKey})`, type: 'number' });
+      }
+      if (metricCols.length === 0) {
+        selectParts.push(`COUNT(*)::int AS "count"`);
+        outColumns.push({ key: 'count', label: 'العدد', type: 'number' });
+      }
+      const limit = Math.min(Math.max(Number(params.limit ?? 500), 1), 2000);
+      values.push(limit);
+      const groupExpr = def.columns[groupBy].expr;
+      const sql = `SELECT ${selectParts.join(', ')} ${def.from} ${whereSql} GROUP BY ${groupExpr} ORDER BY ${metricCols.length ? `"${metricCols[0]}"` : '"count"'} DESC LIMIT $${idx}::int`;
+      const rows = await this.db.query<any>(sql, values);
+      return { dataset: datasetKey, title: def.title, columns: outColumns, rows, grouped: true };
+    }
+
+    const select = cols.map((c) => `${def.columns[c].expr} AS "${c}"`).join(', ');
     const limit = Math.min(Math.max(Number(params.limit ?? 500), 1), 2000);
     values.push(limit);
     const order = def.dateColumn ? `ORDER BY ${def.dateColumn} DESC` : '';
@@ -308,7 +341,7 @@ export class ReportBuilderService {
     return { dataset: datasetKey, title: def.title, columns, rows };
   }
 
-  async exportXlsx(params: { dataset: string; columns?: string[]; from?: string; to?: string }, branchId: number) {
+  async exportXlsx(params: { dataset: string; columns?: string[]; from?: string; to?: string; groupBy?: string; aggregates?: Record<string, string> }, branchId: number) {
     const result = await this.run({ ...params, limit: 5000 }, branchId);
     const header = result.columns.map((c) => c.label);
     const body = result.rows.map((row) => result.columns.map((c) => row[c.key] ?? ''));
@@ -330,7 +363,8 @@ export class ReportBuilderService {
 
   private normalizeConfig(dto: any, dataset: DatasetKey) {
     const cols = Array.isArray(dto.columns) ? dto.columns.filter((c: any) => DATASETS[dataset].columns[String(c)]) : defaultColumnsFor(dataset);
-    return { columns: cols.length ? cols : defaultColumnsFor(dataset) };
+    const groupBy = dto.groupBy && DATASETS[dataset].columns[String(dto.groupBy)] ? String(dto.groupBy) : undefined;
+    return { columns: cols.length ? cols : defaultColumnsFor(dataset), ...(groupBy ? { groupBy } : {}) };
   }
 }
 
@@ -382,9 +416,10 @@ export class ReportBuilderController {
     @Query('columns') columns?: string,
     @Query('from') from?: string,
     @Query('to') to?: string,
+    @Query('groupBy') groupBy?: string,
   ) {
     const cols = columns ? columns.split(',').map((c) => c.trim()).filter(Boolean) : undefined;
-    return this.svc.exportXlsx({ dataset, columns: cols, from, to }, branchId);
+    return this.svc.exportXlsx({ dataset, columns: cols, from, to, groupBy }, branchId);
   }
 }
 
