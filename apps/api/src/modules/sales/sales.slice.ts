@@ -88,8 +88,13 @@ export class SalesService {
    * Company identity + receipt/print presentation settings, readable by any POS/sales user.
    * The raw app_settings table is admin-only; printed output needs the same values.
    * All presentation booleans default to visible; numbers are clamped to sane ranges.
+   *
+   * D2 station profiles: when `profileId` is given (and belongs to the caller's branch)
+   * the profile overrides the global settings — printer name, paper size, copies,
+   * kitchen ticket and the four receipt show/hide flags (NULL = keep global).
+   * An unknown/foreign profileId is silently ignored so receipts always print.
    */
-  async printContext() {
+  async printContext(profileId?: number, branchId?: number) {
     const rows = await this.db.query<{ setting_key: string; setting_value: string | null }>(
       `SELECT setting_key, setting_value FROM app_settings WHERE setting_key = ANY($1::text[])`,
       [['CompanyName', 'CompanyPhone', 'CompanyAddress', 'TaxNumber',
@@ -115,7 +120,7 @@ export class SalesService {
     const defaultPaymentType = [1, 2, 3].includes(Number(value('DefaultPaymentType')))
       ? Number(value('DefaultPaymentType'))
       : 1;
-    return {
+    const ctx = {
       companyName: value('CompanyName'),
       companyPhone: value('CompanyPhone'),
       companyAddress: value('CompanyAddress'),
@@ -132,7 +137,53 @@ export class SalesService {
       kitchenTicketCopies: int('KitchenTicketCopies', 1, 3, 1),
       kitchenPrinterName: value('KitchenPrinterName'),
       defaultPaymentType,
+      profileId: null as number | null,
+      profileName: null as string | null,
+      defaultPrinter: '',
+      autoOpenDrawer: true,
+      receiptWidth: 42,
     };
+    if (profileId && branchId) {
+      const profile = await this.db.one<any>(
+        `SELECT profile_id, name, default_printer, paper_size, receipt_copies, auto_open_drawer,
+                receipt_width, kitchen_ticket_enabled, kitchen_ticket_copies, kitchen_printer_name,
+                show_tax_on_receipt, receipt_show_branch_name, receipt_show_party_name, receipt_show_totals
+           FROM print_profiles
+          WHERE profile_id = $1::int AND branch_id = $2::int`,
+        [profileId, branchId],
+      );
+      if (profile) {
+        ctx.profileId = Number(profile.profile_id);
+        ctx.profileName = profile.name;
+        ctx.defaultPrinter = profile.default_printer ?? '';
+        ctx.receiptPaperSize = ['thermal80', 'thermal58', 'a5', 'a4'].includes(profile.paper_size)
+          ? profile.paper_size
+          : ctx.receiptPaperSize;
+        ctx.receiptCopies = Math.min(5, Math.max(1, Number(profile.receipt_copies) || ctx.receiptCopies));
+        ctx.autoOpenDrawer = profile.auto_open_drawer ?? ctx.autoOpenDrawer;
+        ctx.receiptWidth = Math.min(48, Math.max(20, Number(profile.receipt_width) || ctx.receiptWidth));
+        if (profile.kitchen_ticket_enabled !== null && profile.kitchen_ticket_enabled !== undefined) {
+          ctx.kitchenTicketEnabled = !!profile.kitchen_ticket_enabled;
+        }
+        ctx.kitchenTicketCopies = Math.min(3, Math.max(1, Number(profile.kitchen_ticket_copies) || ctx.kitchenTicketCopies));
+        if (profile.kitchen_printer_name !== null && profile.kitchen_printer_name !== undefined) {
+          ctx.kitchenPrinterName = profile.kitchen_printer_name;
+        }
+        if (profile.show_tax_on_receipt !== null && profile.show_tax_on_receipt !== undefined) {
+          ctx.showTaxOnReceipt = !!profile.show_tax_on_receipt;
+        }
+        if (profile.receipt_show_branch_name !== null && profile.receipt_show_branch_name !== undefined) {
+          ctx.receiptShowBranchName = !!profile.receipt_show_branch_name;
+        }
+        if (profile.receipt_show_party_name !== null && profile.receipt_show_party_name !== undefined) {
+          ctx.receiptShowPartyName = !!profile.receipt_show_party_name;
+        }
+        if (profile.receipt_show_totals !== null && profile.receipt_show_totals !== undefined) {
+          ctx.receiptShowTotals = !!profile.receipt_show_totals;
+        }
+      }
+    }
+    return ctx;
   }
 
   /** Sales representatives active in the system (used by POS to assign repId). */
@@ -1267,8 +1318,9 @@ export class SalesController {
 
   @RequireAnyPermission('sales.view', 'purchases.view', 'pos.operate')
   @Get('print-context')
-  printContext() {
-    return this.service.printContext();
+  printContext(@Query('profileId') profileId?: string, @CurrentBranch() branchId?: number) {
+    const id = Number(profileId);
+    return this.service.printContext(Number.isFinite(id) && id > 0 ? id : undefined, branchId);
   }
 
   @RequireAnyPermission('sales.view', 'purchases.view', 'pos.operate')

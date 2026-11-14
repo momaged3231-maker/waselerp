@@ -42,6 +42,8 @@ export default function PosPage() {
   const [receipt, setReceipt] = useState<any>(null);
   const [agentOnline, setAgentOnline] = useState<boolean | null>(null);
   const [printContext, setPrintContext] = useState<any>(null);
+  const [printProfiles, setPrintProfiles] = useState<any[]>([]);
+  const [printProfileId, setPrintProfileId] = useState<number | null>(null);
   const [printError, setPrintError] = useState('');
   const [currentShift, setCurrentShift] = useState<any>(null);
   const [requireShift, setRequireShift] = useState(false);
@@ -208,7 +210,16 @@ export default function PosPage() {
       setShiftAccountId((value) => value ?? rows[0]?.cashAccountId ?? null);
     });
     apiFetch<any[]>('/sales/reps').then(setReps).catch(() => setReps([]));
-    apiFetch('/sales/print-context').then((ctx: any) => {
+    // Station print profile (D2): remembered per device, falls back to branch default → global settings.
+    apiFetch<any[]>('/settings/print-profiles').then((rows: any[]) => {
+      setPrintProfiles(rows ?? []);
+      const stored = Number(localStorage.getItem('wasel-print-profile'));
+      const valid = rows?.find((r) => r.profileId === stored);
+      const chosen = valid ?? rows?.find((r) => r.isDefault) ?? null;
+      setPrintProfileId(chosen?.profileId ?? null);
+      return apiFetch(`/sales/print-context${chosen?.profileId ? `?profileId=${chosen.profileId}` : ''}`);
+    }).then((ctx: any) => {
+      if (!ctx) return;
       setPrintContext(ctx);
       const def = Number(ctx?.defaultPaymentType);
       if ([1, 2, 3].includes(def)) setPaymentType(def);
@@ -609,7 +620,11 @@ export default function PosPage() {
       const health = await agentHealth();
       if (health?.ok) {
         try {
-          const width = paperSize === 'thermal58' ? 32 : 42;
+          // Station profile supplies the printer name + width; falls back to agent defaults.
+          const printer = ctx.defaultPrinter
+            ? { type: 'windows' as const, name: ctx.defaultPrinter }
+            : undefined;
+          const width = Number(ctx.receiptWidth) || (paperSize === 'thermal58' ? 32 : 42);
           await printReceipt({
             store: {
               name: ctx.companyName || 'واصل ERP',
@@ -625,8 +640,8 @@ export default function PosPage() {
             showBranch: ctx.receiptShowBranchName !== false,
             showParty: ctx.receiptShowPartyName !== false,
             showTotals: ctx.receiptShowTotals !== false,
-          }, undefined, { width, copies: Number(ctx.receiptCopies ?? 1) });
-          await openDrawer().catch(() => {});
+          }, printer, { width, copies: Number(ctx.receiptCopies ?? 1) });
+          if (ctx.autoOpenDrawer !== false) await openDrawer(printer).catch(() => {});
           return;
         } catch (error: any) {
           setPrintError(error?.message ?? 'فشلت الطباعة');
@@ -636,6 +651,19 @@ export default function PosPage() {
 
     // Browser fallback (also the primary path for A4/A5 paper)
     window.print();
+  }
+
+  /** Switches the station print profile (D2) and re-resolves the effective print context. */
+  function changePrintProfile(id: string) {
+    const value = id ? Number(id) : null;
+    setPrintProfileId(value);
+    if (value) localStorage.setItem('wasel-print-profile', String(value));
+    else localStorage.removeItem('wasel-print-profile');
+    apiFetch(`/sales/print-context${value ? `?profileId=${value}` : ''}`).then((ctx: any) => {
+      setPrintContext(ctx);
+      const def = Number(ctx?.defaultPaymentType);
+      if ([1, 2, 3].includes(def)) setPaymentType(def);
+    }).catch(() => {});
   }
 
   async function printCurrentReceipt() {
@@ -648,6 +676,23 @@ export default function PosPage() {
 
   return (
     <AppShell title="نقطة البيع">
+      {printProfiles.length > 0 && (
+        <div className="card p-2 mb-3 flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-slate-500">ملف الطباعة لهذا الجهاز:</span>
+          <select className="input py-1.5 max-w-xs" value={printProfileId ?? ''}
+            onChange={(e) => changePrintProfile(e.target.value)}>
+            <option value="">افتراضي النظام (بدون ملف محطة)</option>
+            {printProfiles.map((p) => (
+              <option key={p.profileId} value={p.profileId}>
+                {p.name}{p.isDefault ? ' — افتراضي الفرع' : ''}
+              </option>
+            ))}
+          </select>
+          {printContext?.defaultPrinter && (
+            <span className="text-xs text-slate-400" dir="ltr">{printContext.defaultPrinter}</span>
+          )}
+        </div>
+      )}
       {draftAvailable && (
         <div className="card p-3 mb-4 flex flex-wrap items-center gap-3 border-amber-200 bg-amber-50 text-sm text-amber-900">
           <span>توجد فاتورة غير محفوظة من جلسة سابقة — هل ترغب في استعادتها؟</span>

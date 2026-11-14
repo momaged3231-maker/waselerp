@@ -190,9 +190,10 @@ export default function RestaurantPage() {
     try {
       await apiFetch(`/pos/table-orders/${id}/kitchen`, { method: 'POST', body: { status } });
       if (status === 2) {
-        // Opt-in kitchen ticket (settings: KitchenTicketEnabled / KitchenTicketCopies)
+        // Opt-in kitchen ticket (station print profile D2 → global settings fallback)
         try {
-          const ctx = await apiFetch<any>('/sales/print-context');
+          const profileId = Number(localStorage.getItem('wasel-print-profile'));
+          const ctx = await apiFetch<any>(`/sales/print-context${profileId > 0 ? `?profileId=${profileId}` : ''}`);
           if (ctx?.kitchenTicketEnabled) {
             const agentReady = await agentHealth();
             if (agentReady?.ok) {

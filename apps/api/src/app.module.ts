@@ -29,6 +29,7 @@ import { ShippingModule } from './modules/shipping/shipping.slice';
 import { MaintenanceModule } from './modules/maintenance/maintenance.slice';
 import { CrmModule } from './modules/crm/crm.slice';
 import { ChecksModule } from './modules/checks/checks.slice';
+import { PrintProfilesModule } from './modules/settings/print-profiles.slice';
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { ChecksModule } from './modules/checks/checks.slice';
     MaintenanceModule,
     CrmModule,
     ChecksModule,
+    PrintProfilesModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
