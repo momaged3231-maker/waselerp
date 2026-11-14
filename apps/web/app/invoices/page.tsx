@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
+import AttachmentsPanel from '@/components/AttachmentsPanel';
 import { apiFetch, formatDate, formatMoney } from '@/lib/api';
 
 const TYPES = [
@@ -287,6 +288,8 @@ export default function InvoicesPage() {
                 </div>
               )}
             </div>
+
+            <AttachmentsPanel entityType="invoice" entityId={detail.header.invoiceId} />
           </div>
         </div>
       )}

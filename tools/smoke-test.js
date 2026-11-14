@@ -1548,6 +1548,56 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
   const maintList = await call('GET', `/maintenance/tickets?from=${daysAgoIso(7)}`);
   check('ticket list returned', Array.isArray(maintList.items), `${maintList.items?.length ?? 0} items`);
 
+  // 44. P7 — settings & tools: user list restrictions, backup, attachments
+  const restrictionOptions = await call('GET', '/admin/restrictions/options');
+  check('restriction options returned', Array.isArray(restrictionOptions.warehouses) && Array.isArray(restrictionOptions.cashAccounts),
+    `${restrictionOptions.warehouses?.length ?? 0} مخزن / ${restrictionOptions.cashAccounts?.length ?? 0} صندوق`);
+
+  const beforeRestriction = await call('GET', `/admin/users/${accountantId}/restrictions`);
+  check('restrictions start empty', (beforeRestriction.warehouseIds ?? []).length === 0 && (beforeRestriction.cashAccountIds ?? []).length === 0);
+
+  const savedRestriction = await call('PUT', `/admin/users/${accountantId}/restrictions`, {
+    warehouseIds: [warehouseId],
+    cashAccountIds: [cashAccountId],
+  });
+  check('restrictions saved', savedRestriction.warehouseCount === 1 && savedRestriction.cashAccountCount === 1, JSON.stringify(savedRestriction));
+
+  const afterRestriction = await call('GET', `/admin/users/${accountantId}/restrictions`);
+  check('restrictions round-trip', (afterRestriction.warehouseIds ?? []).includes(warehouseId) && (afterRestriction.cashAccountIds ?? []).includes(cashAccountId));
+
+  const accountantToken = (await loginAs(`accountant_${stamp}`, testPassword)).accessToken;
+  const filteredWarehouses = await raw('GET', '/catalog/warehouses', undefined, accountantToken);
+  check('restricted user sees only allowed warehouses', filteredWarehouses.ok && filteredWarehouses.data.length === 1 && filteredWarehouses.data[0].warehouseId === warehouseId,
+    `${filteredWarehouses.data?.length ?? 0} مخزن`);
+  const filteredAccounts = await raw('GET', '/treasury/accounts', undefined, accountantToken);
+  check('restricted user sees only allowed cash accounts', filteredAccounts.ok && filteredAccounts.data.length === 1 && filteredAccounts.data[0].cashAccountId === cashAccountId,
+    `${filteredAccounts.data?.length ?? 0} صندوق`);
+
+  await call('PUT', `/admin/users/${accountantId}/restrictions`, { warehouseIds: [], cashAccountIds: [] });
+  const clearedRestriction = await call('GET', `/admin/users/${accountantId}/restrictions`);
+  check('restrictions cleared back to unrestricted', clearedRestriction.warehouseIds.length === 0 && clearedRestriction.cashAccountIds.length === 0);
+
+  const backup = await call('GET', '/admin/backup');
+  check('backup snapshot generated', backup && backup.version === 1 && backup.tables && !!backup.tables.users && !!backup.tables.gl_journals,
+    `${backup?.tables ? Object.keys(backup.tables).length : 0} جدول`);
+
+  const attachmentBody = Buffer.from('wasel p7 smoke attachment').toString('base64');
+  const uploaded = await call('POST', '/attachments', {
+    entityType: 'invoice', entityId: purchase.invoiceId,
+    fileName: 'smoke-test.txt', mimeType: 'text/plain', contentBase64: attachmentBody,
+  });
+  check('attachment uploaded', !!uploaded.attachmentId, String(uploaded.attachmentId ?? ''));
+
+  const attachmentList = await call('GET', `/attachments?entityType=invoice&entityId=${purchase.invoiceId}`);
+  check('attachment listed', attachmentList.length >= 1, `${attachmentList.length} مرفق`);
+
+  const attachmentFull = await call('GET', `/attachments/${uploaded.attachmentId}`);
+  check('attachment downloads with content', Buffer.from(String(attachmentFull.contentBase64 ?? ''), 'base64').toString() === 'wasel p7 smoke attachment');
+
+  await call('DELETE', `/attachments/${uploaded.attachmentId}`);
+  const attachmentAfterDelete = await call('GET', `/attachments?entityType=invoice&entityId=${purchase.invoiceId}`);
+  check('attachment deleted', !attachmentAfterDelete.some((row) => row.attachmentId === uploaded.attachmentId));
+
   const failed = results.filter((r) => !r.ok);
   console.log(`\n${results.length - failed.length}/${results.length} checks passed`);
   if (failed.length) process.exit(1);

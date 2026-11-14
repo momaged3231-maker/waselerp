@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import AppShell from '@/components/AppShell';
 import { apiFetch, formatDate } from '@/lib/api';
@@ -460,7 +460,7 @@ const ADVANCED_UNAVAILABLE: { title: string; reason: string }[] = [
 ];
 
 export default function AdminPage() {
-  const [tab, setTab] = useState<'branches' | 'users' | 'roles' | 'settings' | 'advanced' | 'audit' | 'zatca' | 'eta'>('branches');
+  const [tab, setTab] = useState<'branches' | 'users' | 'roles' | 'settings' | 'advanced' | 'audit' | 'zatca' | 'eta' | 'backup'>('branches');
   const [branches, setBranches] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [roles, setRoles] = useState<any[]>([]);
@@ -474,6 +474,18 @@ export default function AdminPage() {
   const [etaDocuments, setEtaDocuments] = useState<any[]>([]);
   const [error, setError] = useState('');
   const [settingsSaved, setSettingsSaved] = useState(false);
+
+  // P7 — تقييد قوائم المستخدم (مخازن + صناديق)
+  const [restrictionUser, setRestrictionUser] = useState<any>(null);
+  const [restrictionOptions, setRestrictionOptions] = useState<{ warehouses: any[]; cashAccounts: any[] }>({ warehouses: [], cashAccounts: [] });
+  const [restrictionForm, setRestrictionForm] = useState<{ warehouseIds: number[]; cashAccountIds: number[] }>({ warehouseIds: [], cashAccountIds: [] });
+  const [restrictionBusy, setRestrictionBusy] = useState(false);
+  const [restrictionNote, setRestrictionNote] = useState('');
+
+  // P7 — نسخ احتياطي / استعادة
+  const [backupBusy, setBackupBusy] = useState(false);
+  const [backupNote, setBackupNote] = useState('');
+  const restoreInputRef = useRef<HTMLInputElement>(null);
 
   async function load() {
     if (tab === 'branches') setBranches(await apiFetch('/admin/branches'));
@@ -496,6 +508,92 @@ export default function AdminPage() {
   }
 
   useEffect(() => { load(); }, [tab]);
+
+  async function openRestrictions(user: any) {
+    setRestrictionUser(user);
+    setRestrictionNote('');
+    setRestrictionBusy(true);
+    try {
+      const [options, current] = await Promise.all([
+        restrictionOptions.warehouses.length || restrictionOptions.cashAccounts.length
+          ? Promise.resolve(restrictionOptions)
+          : apiFetch('/admin/restrictions/options'),
+        apiFetch<{ warehouseIds: number[]; cashAccountIds: number[] }>(`/admin/users/${user.userId}/restrictions`),
+      ]);
+      setRestrictionOptions(options);
+      setRestrictionForm({ warehouseIds: current.warehouseIds ?? [], cashAccountIds: current.cashAccountIds ?? [] });
+    } catch (err: any) {
+      setRestrictionNote(err?.message ?? 'تعذر تحميل القيود');
+    } finally {
+      setRestrictionBusy(false);
+    }
+  }
+
+  function toggleRestriction(kind: 'warehouseIds' | 'cashAccountIds', id: number) {
+    setRestrictionForm((prev) => {
+      const list = prev[kind];
+      const next = list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
+      return { ...prev, [kind]: next };
+    });
+  }
+
+  async function saveRestrictions() {
+    if (!restrictionUser) return;
+    setRestrictionBusy(true);
+    setRestrictionNote('');
+    try {
+      await apiFetch(`/admin/users/${restrictionUser.userId}/restrictions`, { method: 'PUT', body: restrictionForm });
+      setRestrictionNote('تم الحفظ بنجاح');
+      window.setTimeout(() => setRestrictionNote(''), 3000);
+    } catch (err: any) {
+      setRestrictionNote(err?.message ?? 'تعذر الحفظ');
+    } finally {
+      setRestrictionBusy(false);
+    }
+  }
+
+  async function downloadBackup() {
+    setBackupBusy(true);
+    setBackupNote('');
+    try {
+      const data = await apiFetch('/admin/backup');
+      const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
+      anchor.href = url;
+      anchor.download = `wasel-backup-${stamp}.json`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+      setBackupNote('تم تنزيل النسخة الاحتياطية بنجاح');
+    } catch (err: any) {
+      setBackupNote(err?.message ?? 'تعذر إنشاء النسخة');
+    } finally {
+      setBackupBusy(false);
+    }
+  }
+
+  async function restoreBackup(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setBackupBusy(true);
+    setBackupNote('');
+    try {
+      const text = await file.text();
+      const payload = JSON.parse(text);
+      const confirmed = window.confirm(
+        'سيتم استبدال كل بيانات قاعدة البيانات بالنسخة المرفوعة — هذا الإجراء لا يمكن التراجع عنه. هل أنت متأكد؟',
+      );
+      if (!confirmed) return;
+      const result = await apiFetch<any>('/admin/backup/restore', { method: 'POST', body: payload });
+      setBackupNote(`تمت الاستعادة بنجاح (${result?.tables ?? '—'} جدول)`);
+    } catch (err: any) {
+      setBackupNote(err?.message ?? 'تعذر الاستعادة — تأكد أن الملف نسخة احتياطية صالحة');
+    } finally {
+      setBackupBusy(false);
+      if (restoreInputRef.current) restoreInputRef.current.value = '';
+    }
+  }
 
   async function addBranch(event: React.FormEvent) {
     event.preventDefault();
@@ -554,7 +652,7 @@ export default function AdminPage() {
   return (
     <AppShell title="الإعدادات">
       <div className="flex gap-2 mb-4 flex-wrap">
-        {([['branches', 'الفروع'], ['users', 'المستخدمون'], ['roles', 'الأدوار والصلاحيات'], ['settings', 'إعدادات النظام'], ['advanced', 'الإعدادات المتقدمة'], ['eta', 'الفاتورة الإلكترونية (مصر)'], ['zatca', 'الضريبة الإلكترونية (السعودية)'], ['audit', 'سجل العمليات']] as const).map(([key, label]) => (
+        {([['branches', 'الفروع'], ['users', 'المستخدمون'], ['roles', 'الأدوار والصلاحيات'], ['settings', 'إعدادات النظام'], ['advanced', 'الإعدادات المتقدمة'], ['eta', 'الفاتورة الإلكترونية (مصر)'], ['zatca', 'الضريبة الإلكترونية (السعودية)'], ['backup', 'النسخ الاحتياطي'], ['audit', 'سجل العمليات']] as const).map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)} className={tab === key ? 'btn-primary' : 'btn-soft'}>{label}</button>
         ))}
       </div>
@@ -603,7 +701,7 @@ export default function AdminPage() {
             <div className="card-title"><span>المستخدمون ({users.length})</span></div>
             <div className="table-wrap">
               <table className="table">
-                <thead><tr><th>اسم المستخدم</th><th>الاسم</th><th>الأدوار</th><th>آخر دخول</th><th>الحالة</th></tr></thead>
+                <thead><tr><th>اسم المستخدم</th><th>الاسم</th><th>الأدوار</th><th>آخر دخول</th><th>الحالة</th><th>تقييد القوائم</th></tr></thead>
                 <tbody>
                   {users.map((user) => (
                     <tr key={user.userId}>
@@ -615,6 +713,11 @@ export default function AdminPage() {
                         <span className={`badge ${user.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
                           {user.isActive ? 'نشط' : 'موقوف'}
                         </span>
+                      </td>
+                      <td>
+                        <button className="btn-soft text-xs py-1.5" onClick={() => openRestrictions(user)}>
+                          مخازن / صناديق
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -997,6 +1100,126 @@ export default function AdminPage() {
           <div className="card p-5">
             <div className="font-bold mb-2">مستندات ZATCA</div>
             <ZatcaList />
+          </div>
+        </div>
+      )}
+
+      {tab === 'backup' && (
+        <div className="max-w-3xl space-y-4">
+          <div className="card p-5 border-amber-300 bg-amber-50">
+            <div className="font-extrabold text-amber-900 inline-flex items-center gap-2">
+              <span aria-hidden="true">⚠</span> قبل أي عملية استعادة
+            </div>
+            <p className="text-xs text-amber-900 mt-2 leading-6">
+              الاستعادة تستبدل كل جداول قاعدة البيانات بالكامل (مسح كامل ثم إعادة إدخال من الملف).
+              نزّل نسخة جديدة قبل الاستعادة، وتأكد أن الجهاز الهدف هو نفسه بيئة الإنتاج. تُسجَّل العملية في سجل العمليات.
+            </p>
+          </div>
+
+          <div className="card p-6 space-y-3">
+            <div className="font-bold text-slate-800">تنزيل نسخة احتياطية كاملة</div>
+            <div className="text-xs text-slate-500 leading-6">
+              ملف JSON واحد يحتوي كل الجداول (المبيعات، المخزون، الخزينة، القيود المحاسبية…). مناسب للأرشفة قبل أي تحديث كبير.
+            </div>
+            <button className="btn-primary" onClick={downloadBackup} disabled={backupBusy}>
+              {backupBusy ? 'جارٍ إنشاء النسخة…' : 'تنزيل النسخة الآن'}
+            </button>
+          </div>
+
+          <div className="card p-6 space-y-3">
+            <div className="font-bold text-rose-700">استعادة من نسخة احتياطية</div>
+            <div className="text-xs text-slate-500 leading-6">
+              اختر ملف JSON تم تنزيله من هذا الزر نفسه. بعد التأكيد ستُستبدل كل البيانات الحالية.
+            </div>
+            <label className={`btn-danger inline-flex ${backupBusy ? 'opacity-60 pointer-events-none' : 'cursor-pointer'}`}>
+              {backupBusy ? 'جارٍ التنفيذ…' : 'اختيار ملف النسخة للاستعادة…'}
+              <input
+                ref={restoreInputRef}
+                type="file"
+                accept="application/json,.json"
+                className="hidden"
+                onChange={restoreBackup}
+                disabled={backupBusy}
+              />
+            </label>
+            {backupNote && <div className="text-xs font-semibold text-slate-600">{backupNote}</div>}
+          </div>
+        </div>
+      )}
+
+      {restrictionUser && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setRestrictionUser(null)}>
+          <div className="card w-full max-w-2xl p-5 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between gap-3 mb-1">
+              <div>
+                <div className="font-extrabold text-lg text-slate-800">تقييد القوائم — {restrictionUser.fullName}</div>
+                <div className="text-[11px] text-slate-500" dir="ltr">@{restrictionUser.userName}</div>
+              </div>
+              <button className="btn-soft" onClick={() => setRestrictionUser(null)}>إغلاق</button>
+            </div>
+            <div className="text-[11px] text-slate-500 mb-3 leading-5">
+              القائمة الفارغة = «الكل مسموح». أي اختيار يقيّد المستخدم بالمحدد فقط في قوائم المخازن والصناديق/الخزائن (نقطة البيع، الجرد، التحويل، أذون المخازن، الخزينة).
+            </div>
+
+            {restrictionBusy && restrictionOptions.warehouses.length === 0 && restrictionOptions.cashAccounts.length === 0 ? (
+              <div className="text-sm text-slate-400 py-8 text-center">جارٍ التحميل…</div>
+            ) : (
+              <>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-sm font-bold text-slate-700 mb-2">المخازن المسموحة ({restrictionForm.warehouseIds.length})</div>
+                    <div className="space-y-1.5 max-h-64 overflow-y-auto pl-1">
+                      {restrictionOptions.warehouses.map((warehouse) => (
+                        <label
+                          key={warehouse.warehouseId}
+                          className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm cursor-pointer hover:border-brand-300 hover:bg-brand-50/40 transition-colors"
+                        >
+                          <input
+                            type="checkbox"
+                            className="w-4 h-4 accent-brand-600"
+                            checked={restrictionForm.warehouseIds.includes(warehouse.warehouseId)}
+                            onChange={() => toggleRestriction('warehouseIds', warehouse.warehouseId)}
+                          />
+                          <span className="flex-1 min-w-0 truncate">{warehouse.name}</span>
+                          <span className="text-[10px] text-slate-400 shrink-0">{warehouse.branchName}</span>
+                        </label>
+                      ))}
+                      {restrictionOptions.warehouses.length === 0 && <div className="text-xs text-slate-400 py-4 text-center">لا توجد مخازن</div>}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-slate-700 mb-2">الصناديق / الخزائن المسموحة ({restrictionForm.cashAccountIds.length})</div>
+                    <div className="space-y-1.5 max-h-64 overflow-y-auto pl-1">
+                      {restrictionOptions.cashAccounts.map((account) => (
+                        <label
+                          key={account.cashAccountId}
+                          className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm cursor-pointer hover:border-brand-300 hover:bg-brand-50/40 transition-colors"
+                        >
+                          <input
+                            type="checkbox"
+                            className="w-4 h-4 accent-brand-600"
+                            checked={restrictionForm.cashAccountIds.includes(account.cashAccountId)}
+                            onChange={() => toggleRestriction('cashAccountIds', account.cashAccountId)}
+                          />
+                          <span className="flex-1 min-w-0 truncate">{account.name}</span>
+                          <span className="text-[10px] text-slate-400 shrink-0">{account.branchName}</span>
+                        </label>
+                      ))}
+                      {restrictionOptions.cashAccounts.length === 0 && <div className="text-xs text-slate-400 py-4 text-center">لا توجد صناديق</div>}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between gap-3 mt-4">
+                  <div className={`text-xs font-semibold ${restrictionNote.includes('تعذر') ? 'text-rose-600' : 'text-emerald-600'}`}>{restrictionNote}</div>
+                  <div className="flex gap-2">
+                    <button className="btn-soft" onClick={() => setRestrictionUser(null)}>إلغاء</button>
+                    <button className="btn-primary" onClick={saveRestrictions} disabled={restrictionBusy}>
+                      {restrictionBusy ? 'جارٍ الحفظ…' : 'حفظ القيود'}
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

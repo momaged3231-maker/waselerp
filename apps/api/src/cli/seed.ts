@@ -51,15 +51,18 @@ const ROLES: { name: string; nameEn: string; codes: string[] }[] = [
     name: 'محاسب', nameEn: 'Accountant',
     codes: ['dashboard.view', 'items.view', 'parties.view', 'parties.manage', 'parties.ledger',
       'sales.view', 'purchases.view', 'purchases.manage', 'stock.view', 'cash.view', 'cash.manage',
-      'reports.view', 'hr.view', 'accounting.view', 'accounting.manage', 'accounting.post'],
+      'reports.view', 'hr.view', 'accounting.view', 'accounting.manage', 'accounting.post',
+      'attachments.view', 'attachments.manage'],
   },
   {
     name: 'كاشير', nameEn: 'Cashier',
-    codes: ['dashboard.view', 'items.view', 'parties.view', 'sales.view', 'pos.operate', 'cash.view', 'cash.manage'],
+    codes: ['dashboard.view', 'items.view', 'parties.view', 'sales.view', 'pos.operate', 'cash.view', 'cash.manage',
+      'attachments.view', 'attachments.manage'],
   },
   {
     name: 'مندوب مبيعات', nameEn: 'SalesRep',
-    codes: ['dashboard.view', 'items.view', 'parties.view', 'sales.view', 'sales.manage', 'stock.view', 'cash.view'],
+    codes: ['dashboard.view', 'items.view', 'parties.view', 'sales.view', 'sales.manage', 'stock.view', 'cash.view',
+      'attachments.view', 'attachments.manage'],
   },
   {
     name: 'أمين مخزن', nameEn: 'StoreKeeper',

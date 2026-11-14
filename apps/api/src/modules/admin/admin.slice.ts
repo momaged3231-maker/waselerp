@@ -110,6 +110,71 @@ export class AdminService {
     return { userId: id, branchCount: (branchIds ?? []).length };
   }
 
+  // ---------------- user scope restrictions (P7) ---------------- //
+  async restrictionOptions() {
+    const warehouses = await this.db.query(
+      `SELECT w.warehouse_id AS "warehouseId", w.code, w.name, w.is_active AS "isActive",
+              b.branch_id AS "branchId", b.name AS "branchName"
+         FROM warehouses w JOIN branches b ON b.branch_id = w.branch_id
+        ORDER BY b.branch_id, w.name`,
+    );
+    const cashAccounts = await this.db.query(
+      `SELECT c.cash_account_id AS "cashAccountId", c.name, c.type, c.is_active AS "isActive",
+              b.branch_id AS "branchId", b.name AS "branchName"
+         FROM cash_accounts c JOIN branches b ON b.branch_id = c.branch_id
+        ORDER BY b.branch_id, c.name`,
+    );
+    return { warehouses, cashAccounts };
+  }
+
+  async userRestrictions(id: number) {
+    const warehouseRows = await this.db.query(
+      'SELECT warehouse_id AS "warehouseId" FROM user_warehouses WHERE user_id = $1::int ORDER BY warehouse_id',
+      [id],
+    );
+    const cashRows = await this.db.query(
+      'SELECT cash_account_id AS "cashAccountId" FROM user_cash_accounts WHERE user_id = $1::int ORDER BY cash_account_id',
+      [id],
+    );
+    return {
+      warehouseIds: warehouseRows.map((r: any) => Number(r.warehouseId)),
+      cashAccountIds: cashRows.map((r: any) => Number(r.cashAccountId)),
+    };
+  }
+
+  async setUserRestrictions(id: number, body: any, actor: AuthUser) {
+    const clean = (list: any) =>
+      [...new Set((Array.isArray(list) ? list : []).map(Number).filter((n) => Number.isFinite(n) && n > 0))];
+    const warehouseIds = clean(body?.warehouseIds);
+    const cashAccountIds = clean(body?.cashAccountIds);
+
+    const target = await this.db.one<any>('SELECT user_id FROM users WHERE user_id = $1::int', [id]);
+    if (!target) throw new BadRequestException('المستخدم غير موجود');
+
+    return this.db.transaction(async (client) => {
+      await client.query('DELETE FROM user_warehouses WHERE user_id = $1::int', [id]);
+      for (const warehouseId of warehouseIds) {
+        await client.query(
+          'INSERT INTO user_warehouses (user_id, warehouse_id) VALUES ($1::int,$2::int) ON CONFLICT DO NOTHING',
+          [id, warehouseId],
+        );
+      }
+      await client.query('DELETE FROM user_cash_accounts WHERE user_id = $1::int', [id]);
+      for (const cashAccountId of cashAccountIds) {
+        await client.query(
+          'INSERT INTO user_cash_accounts (user_id, cash_account_id) VALUES ($1::int,$2::int) ON CONFLICT DO NOTHING',
+          [id, cashAccountId],
+        );
+      }
+      await client.query(
+        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
+         VALUES ($1::int, NULL, 'user.restrictions', 'user', $2::int, $3)`,
+        [actor.userId, id, `تقييد القوائم — مخازن: ${warehouseIds.length}، صناديق/خزائن: ${cashAccountIds.length} (الفاضي = الكل مسموح)`],
+      );
+      return { userId: id, warehouseCount: warehouseIds.length, cashAccountCount: cashAccountIds.length };
+    });
+  }
+
   // ---------------- roles & permissions ---------------- //
   async roles() {
     const roles = await this.db.query(
@@ -223,6 +288,24 @@ export class AdminController {
   @Put('users/:id/branches')
   setUserBranches(@Param('id', ParseIntPipe) id: number, @Body() body: { branchIds: number[] }) {
     return this.service.setUserBranches(id, body.branchIds ?? []);
+  }
+
+  @RequirePermissions('users.manage')
+  @Get('restrictions/options')
+  restrictionOptions() {
+    return this.service.restrictionOptions();
+  }
+
+  @RequirePermissions('users.manage')
+  @Get('users/:id/restrictions')
+  userRestrictions(@Param('id', ParseIntPipe) id: number) {
+    return this.service.userRestrictions(id);
+  }
+
+  @RequirePermissions('users.manage')
+  @Put('users/:id/restrictions')
+  setUserRestrictions(@Param('id', ParseIntPipe) id: number, @Body() body: any, @CurrentUser() actor: AuthUser) {
+    return this.service.setUserRestrictions(id, body, actor);
   }
 
   @RequirePermissions('users.manage')
