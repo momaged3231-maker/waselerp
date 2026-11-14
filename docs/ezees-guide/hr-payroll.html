@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>الرواتب والبدلات والسلف والمكافآت | دليل Ezees ERP</title>
+<meta name="description" content="شرح الرواتب في Ezees ERP: تعريف الاستحقاقات والاستقطاعات وتخصيصها للأقسام والموظفين، الحوافز والبدلات والجزاءات، المكافآت الثابتة، حوافز الإنتاج، طريقة حساب صافي الراتب، صرف الرواتب فرديًا وجماعيًا، السلف، والقيد المحاسبي.">
+<meta name="keywords" content="صرف الرواتب, مسير الرواتب, البدلات, الاستقطاعات, الحوافز, الجزاءات, سلف الموظفين, المكافآت, حافز الإنتاج, قيد الرواتب, Ezees ERP">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/hr-payroll.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="الرواتب والسلف والمكافآت في Ezees ERP">
+<meta property="og:description" content="جهّز مفردات الراتب، واحسب الصافي، واصرف الرواتب والسلف مع القيد المحاسبي تلقائيًا.">
+<meta property="og:url" content="https://help.tebalink.com/hr-payroll.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"الرواتب والبدلات والسلف والمكافآت في Ezees ERP","inLanguage":"ar","dateModified":"2026-10-08","proficiencyLevel":"Beginner","mainEntityOfPage":"https://help.tebalink.com/hr-payroll.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"HowTo","name":"صرف راتب شهري لموظف","inLanguage":"ar","step":[
+{"@type":"HowToStep","position":1,"text":"افتح شاشة دفع مرتبات وسلفيات واضغط جديد."},
+{"@type":"HowToStep","position":2,"text":"اختر النوع مرتب ثم اختر الموظف، فيُحسب المبلغ تلقائيًا للشهر المحدد في عن شهر."},
+{"@type":"HowToStep","position":3,"text":"اختر الحساب الذي يُصرف منه (الخزينة أو البنك) وتاريخ الصرف والعملة."},
+{"@type":"HowToStep","position":4,"text":"اترك المفتاح على مرحل ليُنشأ القيد المحاسبي، ثم اضغط حفظ واطبع إقرار الاستلام."}]},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"لماذا لا أستطيع تعديل حافز أو سلفة لموظف؟","acceptedAnswer":{"@type":"Answer","text":"لأن راتب هذا الموظف عن نفس الشهر صُرف بالفعل، فيُقفل الشهر أمام الحوافز والجزاءات والسلف."}},
+{"@type":"Question","name":"هل تُخصم السلفة من الراتب تلقائيًا؟","acceptedAnswer":{"@type":"Answer","text":"نعم، تُخصم السلف المصروفة عن الشهر (أو أقساط السلف المستحقة فيه) من صافي راتب نفس الشهر، ويظهر ذلك في القيد."}},
+{"@type":"Question","name":"لماذا لا أستطيع حذف راتب مصروف؟","acceptedAnswer":{"@type":"Answer","text":"الراتب المرحّل لا يُعدل ولا يُحذف من شاشة دفع المرتبات. ألغِ صرفه من شاشة مرتبات الموظفين بزر الغاء سداد."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"الموارد البشرية","item":"https://help.tebalink.com/index.html#hr"},
+{"@type":"ListItem","position":3,"name":"الرواتب والسلف والمكافآت","item":"https://help.tebalink.com/hr-payroll.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#pos">نقاط البيع والمطاعم</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#hr">الموارد البشرية</a></li><li>الرواتب والسلف والمكافآت</li></ol>
+<article>
+<h1>الرواتب والبدلات والسلف والمكافآت</h1>
+<p class="lead">يشرح هذا الدليل دورة الرواتب كاملة في Ezees ERP: تعريف <strong>مفردات الراتب</strong> (البدلات والاستقطاعات)، وتسجيل الحوافز والجزاءات والمكافآت وحوافز الإنتاج، ثم <strong>حساب صافي الراتب</strong> وصرفه لموظف واحد أو لعدة موظفين، وصرف <strong>السلف</strong>، و<strong>القيد المحاسبي</strong> الذي يُنشأ تلقائيًا.</p>
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#cycle">دورة الرواتب الشهرية</a></li>
+  <li><a href="#items">الاستحقاقات والاستقطاعات</a></li>
+  <li><a href="#departments">تخصيصها للأقسام</a></li>
+  <li><a href="#employee-month">قيم خاصة لموظف في شهر</a></li>
+  <li><a href="#rewards">المكافآت الثابتة</a></li>
+  <li><a href="#incentives">الحوافز والبدلات والجزاءات</a></li>
+  <li><a href="#production">عمليات إنتاج الموظفين</a></li>
+  <li><a href="#calc">كيف يُحسب صافي الراتب</a></li>
+  <li><a href="#pay">دفع مرتبات وسلفيات</a></li>
+  <li><a href="#bulk">صرف الرواتب جماعيًا</a></li>
+  <li><a href="#loans">السلف</a></li>
+  <li><a href="#journal">القيد المحاسبي</a></li>
+  <li><a href="#locks">قفل الشهر بعد صرف الراتب</a></li>
+  <li><a href="#shortcuts">الأزرار والاختصارات</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+  <li><a href="#faq">أسئلة شائعة</a></li>
+</ol></nav>
+
+<section id="cycle">
+<h2>دورة الرواتب الشهرية</h2>
+<p>قبل البدء تأكد من تسجيل الموظفين وراتبهم الأساسي وقسمهم وتاريخ تعيينهم وعدد أيام العمل الشهرية في <a href="hr-employees.html">بطاقة الموظف</a>. ثم اتبع الترتيب التالي:</p>
+<ol class="steps">
+  <li><strong>مرة واحدة:</strong> عرّف بنود الاستحقاقات والاستقطاعات (مثل بدل سكن، تأمينات) من شاشة <a href="#items"><span class="ui">الاستحقاقات والاستقطاعات</span></a>، ثم خصصها لكل قسم من <a href="#departments"><span class="ui">تخصيص الاستحقاقات والاستقطاعات للاقسام</span></a>.</li>
+  <li><strong>خلال الشهر:</strong> سجّل الحوافز والبدلات والجزاءات من <a href="#incentives"><span class="ui">الحوافز والبدلات والجزاءات</span></a>، وحوافز الإنتاج من <a href="#production"><span class="ui">عمليات انتاج الموظفين</span></a>، والحضور والغياب والتأخير والإضافي من <a href="hr-attendance.html">شاشات الحضور والانصراف</a>. وتُصرف السلف عند الحاجة.</li>
+  <li><strong>عند الحاجة:</strong> عدّل قيم موظف معيّن لشهر معيّن من <a href="#employee-month"><span class="ui">أستحقاقات وأستقطاعات الموظفين</span></a>، أو أضف زيادة دائمة من <a href="#rewards"><span class="ui">مكأفات ثابتة</span></a>.</li>
+  <li><strong>نهاية الشهر:</strong> اصرف الرواتب من <a href="#pay"><span class="ui">دفع مرتبات وسلفيات</span></a> لموظف واحد، أو من <a href="#bulk"><span class="ui">مرتبات الموظفين</span></a> لعدة موظفين مرة واحدة. يُحسب الصافي تلقائيًا وتُخصم السلف، ويُنشأ القيد المحاسبي.</li>
+</ol>
+<div class="tip">سجّل كل الحوافز والجزاءات والغياب <strong>قبل</strong> صرف الراتب. بعد صرف راتب الشهر يُقفل هذا الشهر للموظف، ولا تُقبل حركات جديدة عليه (انظر <a href="#locks">قفل الشهر</a>).</div>
+</section>
+
+<section id="items">
+<h2>الاستحقاقات والاستقطاعات (تعريف البنود)</h2>
+<p>شاشة <span class="ui">الاستحقاقات والاستقطاعات</span> قائمة بأسماء البنود الثابتة في الراتب، مثل «بدل سكن» و«بدل مواصلات» (استحقاق) أو «تأمينات» و«اشتراك نقابة» (استقطاع). هنا تعرّف الاسم فقط، أما المبلغ فيُحدد لكل قسم أو موظف لاحقًا.</p>
+<!--shot:hr-payroll__items-->
+<figure class="shot" id="shot-hr-payroll__items">
+<div class="shot-frame"><a href="assets/screens/hr-payroll__items.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/hr-payroll__items.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: الاستحقاقات والاستقطاعات (تعريف البنود)"></a></div>
+<figcaption>شاشة «الاستحقاقات والاستقطاعات (تعريف البنود)» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>اضغط <span class="ui">جديد</span>، واكتب <span class="ui">الاسم</span>.</li>
+  <li>اختر <span class="ui">النوع</span>: <span class="ui">أستحقاقات</span> (تُضاف للراتب) أو <span class="ui">استقطاعات</span> (تُخصم منه).</li>
+  <li>أضف <span class="ui">ملاحظات</span> إن أردت، ثم اضغط <span class="ui">حفظ</span>.</li>
+</ol>
+<p>للتعديل اختر البند من الجدول، وعدّل ثم احفظ. يمكنك البحث بأول حروف الاسم من خانة <span class="ui">بحث</span>.</p>
+<div class="warn">لا تحذف بندًا مستخدمًا في الأقسام أو مسجلة له قيم للموظفين. أنشئ بندًا جديدًا بدلًا من تغيير معنى بند قديم.</div>
+</section>
+
+<section id="departments">
+<h2>تخصيص الاستحقاقات والاستقطاعات للأقسام</h2>
+<p>من شاشة <span class="ui">تخصيص الاستحقاقات والاستقطاعات للاقسام</span> تحدد البنود التي تنطبق على كل قسم وقيمتها. هذه هي القيم <strong>الافتراضية</strong> التي تدخل في راتب كل موظف في القسم كل شهر.</p>
+<!--shot:hr-payroll__departments-->
+<figure class="shot" id="shot-hr-payroll__departments">
+<div class="shot-frame"><a href="assets/screens/hr-payroll__departments.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/hr-payroll__departments.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: تخصيص الاستحقاقات والاستقطاعات للأقسام"></a></div>
+<figcaption>شاشة «تخصيص الاستحقاقات والاستقطاعات للأقسام» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>اختر <span class="ui">القسم</span>.</li>
+  <li>حدد بالمفتاح نوع البنود المعروضة: <span class="ui">استحقاقات</span> أو <span class="ui">استقطاعات</span>.</li>
+  <li>من جدول <span class="ui">الاستحقاقات المتوفره</span> اختر بندًا واضغط سهم الإضافة لينتقل إلى جدول <span class="ui">الاستحقاقات المضافه</span>. ولإزالة بند اختره واضغط السهم المعاكس.</li>
+  <li>أدخل القيمة في الجدول المضاف (انظر الجدول التالي).</li>
+  <li>اضغط زر الحفظ في الشاشة. كرر العملية للنوع الآخر (استقطاعات) إن لزم.</li>
+</ol>
+<div class="table-wrap"><table>
+<thead><tr><th>العمود</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td>القيمه</td><td>مبلغ ثابت شهري. عند كتابته تُصفَّر بقية الأعمدة.</td></tr>
+<tr><td>النسبه</td><td>نسبة مئوية من الراتب الأساسي (شاملًا المكافآت الثابتة). عند كتابتها تُصفَّر بقية الأعمدة.</td></tr>
+<tr><td>من مبلغ / الى مبلغ</td><td>الحد الأدنى والأقصى المسموح عند إدخال قيمة خاصة لموظف في <a href="#employee-month">شاشة الموظفين</a>. إذا تركت «القيمه» و«النسبه» صفرًا فلن يُضاف للموظف شيء تلقائيًا، وعليك إدخال قيمته شهريًا.</td></tr>
+<tr><td>مراعاة التقييم</td><td>إذا فعّلته تُضرب القيمة في نسبة تقييم الموظف في الشهر (درجته ÷ الدرجة الكاملة). إذا لم يُقيَّم الموظف تُحسب القيمة كاملة.</td></tr>
+</tbody></table></div>
+<p class="note">الحفظ يستبدل كل إعدادات القسم للنوع المعروض (استحقاقات أو استقطاعات) بما يظهر في الجدول المضاف.</p>
+</section>
+
+<section id="employee-month">
+<h2>قيم خاصة لموظف في شهر (أستحقاقات وأستقطاعات الموظفين)</h2>
+<p>إذا اختلفت قيمة بند لموظف في شهر معيّن عن قيمة قسمه، استخدم شاشة <span class="ui">أستحقاقات وأستقطاعات الموظفين</span>. تظهر في قائمة <span class="ui">الموظف</span> فقط الموظفون الذين خُصصت لأقسامهم بنود.</p>
+<!--shot:hr-payroll__employee-month-->
+<figure class="shot" id="shot-hr-payroll__employee-month">
+<div class="shot-frame"><a href="assets/screens/hr-payroll__employee-month.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/hr-payroll__employee-month.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: قيم خاصة لموظف في شهر (أستحقاقات وأستقطاعات الموظفين)"></a></div>
+<figcaption>شاشة «قيم خاصة لموظف في شهر (أستحقاقات وأستقطاعات الموظفين)» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>اختر <span class="ui">الموظف</span> و<span class="ui">شهر</span>.</li>
+  <li>حدد بالمفتاح <span class="ui">استحقاق</span> أو <span class="ui">استقطاع</span>. يظهر جدول ببنود قسمه مع <span class="ui">أقل قيمه</span> و<span class="ui">أعلى قيمه</span>.</li>
+  <li>اكتب المبلغ في عمود <span class="ui">القيمه</span>. إذا كان للبند حد أدنى وأقصى، فيجب أن تكون القيمة بينهما.</li>
+  <li>أضف <span class="ui">ملاحظات</span> واضغط <span class="ui">حفظ</span>. الحفظ يستبدل قيم الموظف لهذا الشهر وهذا النوع.</li>
+</ol>
+<div class="warn"><strong>مهم:</strong> بمجرد حفظ أي قيمة خاصة للموظف في شهر، يعتمد البرنامج على <strong>قيمه الخاصة فقط</strong> في ذلك الشهر لكل البنود (الاستحقاقات والاستقطاعات معًا)، ويتجاهل قيم القسم. لذلك إذا حفظت الاستحقاقات، احفظ الاستقطاعات أيضًا لنفس الشهر حتى لا تسقط من الراتب. القيم هنا مبالغ وليست نسبًا.</div>
+</section>
+
+<section id="rewards">
+<h2>المكافآت الثابتة</h2>
+<p>شاشة <span class="ui">مكأفات ثابتة</span> تسجل زيادة <strong>دائمة</strong> تُضاف إلى الراتب الأساسي للموظف من تاريخها وما بعده، مثل علاوة سنوية.</p>
+<!--shot:hr-payroll__rewards-->
+<figure class="shot" id="shot-hr-payroll__rewards">
+<div class="shot-frame"><a href="assets/screens/hr-payroll__rewards.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/hr-payroll__rewards.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: المكافآت الثابتة"></a></div>
+<figcaption>شاشة «المكافآت الثابتة» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>اختر <span class="ui">الموظف</span> وحدد <span class="ui">تاريخ</span> بدء المكافأة.</li>
+  <li>اكتب <span class="ui">المبلغ</span> الشهري و<span class="ui">ملاحظات</span>، ثم اضغط <span class="ui">حفظ</span>.</li>
+</ol>
+<ul>
+  <li>تدخل المكافأة في رواتب الشهور التي يبدأ أولها في تاريخ المكافأة أو بعده. لذلك اجعل التاريخ <strong>أول الشهر</strong> لتُحسب في نفس الشهر؛ مكافأة بتاريخ 15 مارس تبدأ من راتب أبريل.</li>
+  <li>المكافآت تتراكم: كل مكافأة جديدة تُضاف لما قبلها. لإيقاف مكافأة احذفها، فتُلغى من كل الرواتب التي لم تُصرف بعد.</li>
+  <li>لأنها تُضاف للأساسي، تؤثر أيضًا في البدلات المحسوبة كنسبة من الأساسي.</li>
+</ul>
+</section>
+
+<section id="incentives">
+<h2>الحوافز والبدلات والجزاءات</h2>
+<p>شاشة <span class="ui">الحوافز والبدلات والجزاءات</span> تسجل المبالغ <strong>المتغيرة</strong> لشهر واحد، ويحدد تاريخ الحركة الشهر الذي تدخل في راتبه.</p>
+<!--shot:hr-payroll__incentives-->
+<figure class="shot" id="shot-hr-payroll__incentives">
+<div class="shot-frame"><a href="assets/screens/hr-payroll__incentives.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/hr-payroll__incentives.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: الحوافز والبدلات والجزاءات"></a></div>
+<figcaption>شاشة «الحوافز والبدلات والجزاءات» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>اضغط <span class="ui">جديد</span> واختر <span class="ui">الموظف</span>.</li>
+  <li>اختر <span class="ui">النوع</span>: <span class="ui">حافز</span> أو <span class="ui">بدل</span> (يُضافان للراتب)، أو <span class="ui">جزاء</span> أو <span class="ui">أخرى</span> (يُخصمان منه).</li>
+  <li>اكتب القيمة، وحدد بالمفتاح هل هي <span class="ui">مبلغ</span> أو عدد <span class="ui">يوم</span>. عند اختيار «يوم» يحوّلها البرنامج إلى مبلغ = عدد الأيام × قيمة يوم الموظف (الراتب ÷ أيام العمل الشهرية).</li>
+  <li>حدد <span class="ui">التاريخ</span> واكتب السبب في <span class="ui">ملاحظات</span>، ثم اضغط <span class="ui">حفظ</span> أو <kbd>Enter</kbd>.</li>
+</ol>
+<ul>
+  <li>لا يُقبل تاريخ قبل تاريخ تعيين الموظف.</li>
+  <li>القائمة تعرض حركات الفترة المحددة في حقلي التاريخ (افتراضيًا الشهر الحالي)، ويمكن تصفيتها بالنوع (<span class="ui">حافز</span> / <span class="ui">بدل</span> / <span class="ui">خصم</span> / <span class="ui">الكل</span>) والبحث باسم الموظف. الألوان: الحافز أخضر، والجزاء وردي، و«أخرى» أزرق فاتح.</li>
+  <li>القيمة المحفوظة بالأيام تظهر عند فتحها مرة أخرى <strong>كمبلغ</strong>. عند تعديلها اترك المفتاح على «مبلغ».</li>
+  <li>لا يمكن إضافة أو تعديل أو حذف حركة لشهر صُرف فيه راتب الموظف.</li>
+</ul>
+</section>
+
+<section id="production">
+<h2>عمليات إنتاج الموظفين (حافز الإنتاج)</h2>
+<p>شاشة <span class="ui">عمليات انتاج الموظفين</span> تحسب حافز الإنتاج من الكمية المنتجة: يُسجل لكل موظف الصنف والكمية وسعر القطعة، ويُضاف الإجمالي إلى راتبه كـ«حافز إنتاج» في شهر تاريخ العملية.</p>
+<!--shot:hr-payroll__production-->
+<figure class="shot" id="shot-hr-payroll__production">
+<div class="shot-frame"><a href="assets/screens/hr-payroll__production.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/hr-payroll__production.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: عمليات إنتاج الموظفين (حافز الإنتاج)"></a></div>
+<figcaption>شاشة «عمليات إنتاج الموظفين (حافز الإنتاج)» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>اضغط <span class="ui">جديد</span>، وحدد <span class="ui">التاريخ :</span> واكتب <span class="ui">الوصف :</span>.</li>
+  <li>اختر من <span class="ui">الموظفين</span> الموظف، ومن <span class="ui">البند</span> الصنف، ثم أدخل الكمية والسعر. يُحسب الإجمالي تلقائيًا.</li>
+  <li>اضغط زر الإضافة (+) لينزل السطر إلى الجدول. كرر لكل موظف أو صنف. يظهر مجموع الأسطر في <span class="ui">الاجمالى :</span>.</li>
+  <li>اضغط <span class="ui">حفظ</span>.</li>
+</ol>
+<ul>
+  <li>تظهر في قائمة <span class="ui">البند</span> الأصناف المجمعة النشطة فقط.</li>
+  <li>للبحث عن عملية سابقة استخدم <span class="ui">بحث متقدم</span>: حدد الفترة (<span class="ui">من</span> / <span class="ui">الى</span>) و<span class="ui">الفرع</span> و<span class="ui">المستخدم</span> ثم زر البحث. يظهر <span class="ui">اجمالى</span> العمليات، وعند اختيار عملية تُفتح للتعديل. يمكنك أيضًا كتابة رقم العملية في خانة البحث.</li>
+  <li>عند تعديل عملية وحفظها تُستبدل حوافزها السابقة بالجديدة، وحذف العملية يحذف حوافزها من الرواتب.</li>
+</ul>
+<div class="warn">خيار <span class="ui">معتمد</span> لا يمنع احتساب الحافز؛ كل عملية محفوظة تدخل الراتب. كما أنه لا يظهر محددًا عند فتح عملية قديمة، فإذا أعدت حفظها <strong>أعد تحديده</strong>. وسجّل الإنتاج قبل صرف راتب الشهر، فالشاشة لا تمنع التسجيل بعد الصرف لكنه لن يدخل في الراتب المصروف.</div>
+</section>
+
+<section id="calc">
+<h2>كيف يُحسب صافي الراتب</h2>
+<p>يحسب البرنامج الراتب عن الشهر المحدد في <span class="ui">عن شهر</span> على مرحلتين:</p>
+<h3>1) الراتب الشامل</h3>
+<p><strong>الراتب الأساسي + المكافآت الثابتة + الاستحقاقات − الاستقطاعات</strong>. تؤخذ الاستحقاقات والاستقطاعات من قيم القسم، أو من القيم الخاصة للموظف إذا سُجلت له قيم في ذلك الشهر.</p>
+<h3>2) صافي الراتب المستحق</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>يُضاف إلى الراتب الشامل</th><th>يُخصم منه</th></tr></thead>
+<tbody>
+<tr><td>الحوافز</td><td>الجزاءات وبند «أخرى»</td></tr>
+<tr><td>البدلات</td><td>الغياب (أيام الغياب × قيمة اليوم)</td></tr>
+<tr><td>العمل الإضافي</td><td>التأخير والانصراف المبكر والأذونات</td></tr>
+<tr><td>قيمة التقييم الشهري</td><td>السلف المصروفة عن الشهر أو أقساط السلف المستحقة فيه</td></tr>
+<tr><td>حافز الإنتاج</td><td>خصومات الإنذارات، ومبلغ التأمين المسجل للموظف</td></tr>
+</tbody></table></div>
+<ul>
+  <li><strong>قيمة اليوم</strong> = الراتب ÷ أيام العمل الشهرية للموظف (30 إذا لم تُحدد). وتُحسب من الراتب الشامل أو من الأساسي فقط حسب طريقة حساب الغياب في بطاقة الموظف.</li>
+  <li><strong>شهر التعيين:</strong> إذا عُيّن الموظف خلال الشهر يُحسب راتبه بنسبة الأيام من تاريخ التعيين حتى نهاية الشهر.</li>
+  <li>لا يمكن صرف راتب عن شهر يسبق شهر التعيين.</li>
+  <li>إذا جاء الناتج سالبًا يُعتبر الصافي صفرًا.</li>
+  <li>التأخير والإضافي والغياب والأذونات تأتي من <a href="hr-attendance.html">الحضور والانصراف</a>، والتقييمات من شاشات التقييم.</li>
+</ul>
+<div class="warn">قد يختلف الصافي قليلًا بين شاشة <span class="ui">دفع مرتبات وسلفيات</span> وشاشة <span class="ui">مرتبات الموظفين</span> للموظف الذي له مبلغ تأمين أو انصراف مبكر، لأن الشاشتين لا تحتسبان هذين البندين بنفس الطريقة. راجع المبلغ قبل الصرف واعتمد شاشة واحدة لصرف رواتب الشهر.</div>
+</section>
+
+<section id="pay">
+<h2>دفع مرتبات وسلفيات (موظف واحد)</h2>
+<p>شاشة <span class="ui">دفع مرتبات وسلفيات</span> تصرف راتب موظف واحد أو سلفة له، وتعرض كل ما صُرف.</p>
+<!--shot:hr-payroll__pay-->
+<figure class="shot" id="shot-hr-payroll__pay">
+<div class="shot-frame"><a href="assets/screens/hr-payroll__pay.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/hr-payroll__pay.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: دفع مرتبات وسلفيات (موظف واحد)"></a></div>
+<figcaption>شاشة «دفع مرتبات وسلفيات (موظف واحد)» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<h3>صرف راتب</h3>
+<ol class="steps">
+  <li>اضغط <span class="ui">جديد</span> واختر <span class="ui">النوع</span> = <span class="ui">مرتب</span>. يصبح <span class="ui">عن شهر</span> افتراضيًا الشهر السابق.</li>
+  <li>اختر <span class="ui">الموظف</span>. يُحسب <span class="ui">المبلغ</span> تلقائيًا (ولا يمكن تعديله يدويًا)، ويُملأ <span class="ui">الفرع</span> و<span class="ui">مركز التكلفه</span> من بطاقة الموظف، وتظهر طريقة دفعه (<span class="ui">نوع الدفع</span> و<span class="ui">البنك</span> و<span class="ui">الحساب</span>).</li>
+  <li>غيّر <span class="ui">عن شهر</span> إن لزم، فيُعاد حساب المبلغ.</li>
+  <li>اختر <span class="ui">من حساب</span> (الخزينة أو البنك الذي يُصرف منه)، و<span class="ui">تاريخ الصرف</span>، و<span class="ui">العمله</span>. عند اختيار عملة أخرى يُعاد حساب المبلغ بسعر صرفها.</li>
+  <li>اترك المفتاح على <span class="ui">مرحل</span> ليُنشأ القيد المحاسبي، واكتب <span class="ui">ملاحظات</span> إن أردت.</li>
+  <li>اضغط <span class="ui">حفظ</span>. يسألك البرنامج هل تريد طباعة السجل؛ اختر «نعم» لطباعة <strong>إقرار استلام مرتب</strong>.</li>
+</ol>
+<h3>صرف سلفة</h3>
+<ol class="steps">
+  <li>اضغط <span class="ui">جديد</span> واختر <span class="ui">النوع</span> = <span class="ui">سلفية</span>. يصبح <span class="ui">عن شهر</span> الشهر الحالي، وهو الشهر الذي ستُخصم السلفة من راتبه.</li>
+  <li>اختر <span class="ui">الموظف</span> واكتب <span class="ui">المبلغ</span>.</li>
+  <li>اختر <span class="ui">من حساب</span> و<span class="ui">تاريخ الصرف</span> و<span class="ui">العمله</span>، ثم اضغط <span class="ui">حفظ</span>. تُراجع حدود السلف (انظر <a href="#loans">السلف</a>)، ثم يمكنك طباعة <strong>إقرار استلام سلفية</strong>.</li>
+</ol>
+<h3>حقول الشاشة</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>الحقل</th><th>الوصف</th></tr></thead>
+<tbody>
+<tr><td>النوع</td><td><span class="ui">مرتب</span> أو <span class="ui">سلفية</span>. لا يمكن تغييره بعد الحفظ.</td></tr>
+<tr><td>عن شهر</td><td>الشهر الذي يخصه المبلغ. للراتب يحدد الشهر المحسوب، وللسلفة يحدد شهر خصمها. قد يكون مقفلًا حسب صلاحياتك.</td></tr>
+<tr><td>تاريخ الصرف</td><td>تاريخ الدفع الفعلي وتاريخ القيد. يجب أن يقع داخل الفترة المحاسبية المفتوحة. قد يكون مقفلًا حسب صلاحياتك.</td></tr>
+<tr><td>المبلغ</td><td>للراتب: محسوب تلقائيًا. للسلفة: يُكتب يدويًا.</td></tr>
+<tr><td>من حساب</td><td>حساب الخزينة أو البنك الدائن في القيد. يرى المستخدم المقيد بفرعه خزينته فقط.</td></tr>
+<tr><td>الفرع / مركز التكلفه</td><td>يُملآن من بطاقة الموظف. مركز التكلفة يُستخدم للرواتب فقط.</td></tr>
+<tr><td>العمله</td><td>تُختار العملة المحلية افتراضيًا، ويظهر بجانبها سعر الصرف. لا يمكن تغيير العملة عند تعديل سجل.</td></tr>
+<tr><td>مرحل / غير مرحل</td><td>«مرحل» يُنشئ القيد المحاسبي ويمنع تعديل السجل أو حذفه لاحقًا.</td></tr>
+<tr><td>ملاحظات</td><td>نص حر يظهر مع السجل.</td></tr>
+</tbody></table></div>
+<h3>قائمة المصروفات</h3>
+<ul>
+  <li>تعرض الشهر المحدد في أعلى القائمة، أو كل الشهور عند تحديد <span class="ui">كل الشهور</span>. ويمكن تصفيتها: <span class="ui">مرتبات</span> / <span class="ui">سلفيات</span> / <span class="ui">الكل</span>.</li>
+  <li>البحث: اكتب رقم السجل للبحث به، أو أول حروف اسم الموظف.</li>
+  <li>السلف تظهر باللون الوردي. السلفة التي صُرف راتب شهرها تظهر رمادية بخط مائل ولا يمكن تعديلها.</li>
+  <li><strong>نقر مزدوج</strong> على سجل لإعادة طباعة الإقرار. وزر <span class="ui">طباعة</span> يطبع القائمة كما تظهر.</li>
+  <li>زر <span class="ui">قيد محاسبى</span> يعرض قيد السجل المحدد، وزر Attachment يفتح مرفقاته.</li>
+</ul>
+<div class="note">تعديل سجل غير مرحّل يحذف قيده القديم ويُنشئ قيدًا جديدًا بالبيانات المعدلة إذا جعلته «مرحل».</div>
+</section>
+
+<section id="bulk">
+<h2>صرف الرواتب جماعيًا (مرتبات الموظفين)</h2>
+<p>شاشة <span class="ui">مرتبات الموظفين</span> تعرض مسير الشهر لكل الموظفين بتفاصيل كل بند، وتصرف رواتب عدة موظفين بضغطة واحدة.</p>
+<!--shot:hr-payroll__bulk-->
+<figure class="shot" id="shot-hr-payroll__bulk">
+<div class="shot-frame"><a href="assets/screens/hr-payroll__bulk.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/hr-payroll__bulk.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: صرف الرواتب جماعيًا (مرتبات الموظفين)"></a></div>
+<figcaption>شاشة «صرف الرواتب جماعيًا (مرتبات الموظفين)» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>اترك <span class="ui">شهر</span> محددًا واختر الشهر. للتصفية حدد <span class="ui">الفرع</span> أو <span class="ui">القسم</span> أو <span class="ui">الاسم</span> واختر القيمة.</li>
+  <li>اجعل المفتاح على <span class="ui">غير مدفوع</span>، ثم اضغط زر العرض (أيقونة البحث). يظهر الموظفون الذين لم يُصرف راتبهم عن هذا الشهر.</li>
+  <li>حدد الموظفين في الجدول، أو حدد <span class="ui">SelectAll</span> لتحديد الكل.</li>
+  <li>اضغط <span class="ui">سداد</span>. تظهر لوحة <span class="ui">حساب</span>.</li>
+  <li>حدد <span class="ui">التاريخ</span> (افتراضيًا آخر الشهر)، واضغط خانة <span class="ui">الخزينة</span> أو <kbd>F9</kbd> لاختيار حساب الصرف، واختر <span class="ui">العمله</span>.</li>
+  <li>اضغط <span class="ui">تنفيذ</span>. يُسجل لكل موظف محدد راتب بقيمة <span class="ui">الراتب المستحق</span>، مرحّلًا ومعه قيده المحاسبي.</li>
+</ol>
+<h3>أعمدة المسير</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>العمود</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td>اساسى</td><td>الراتب الشامل: الأساسي + المكافآت الثابتة + الاستحقاقات − الاستقطاعات.</td></tr>
+<tr><td>استحقاق اضافى / استقطاع اضافى</td><td>للعلم فقط: مجموع الاستحقاقات والاستقطاعات الداخلة في «اساسى».</td></tr>
+<tr><td>حافز / بدل / ع اضافى / حافز انتاج</td><td>الإضافات المتغيرة للشهر.</td></tr>
+<tr><td>غياب / قرض / جزاء / انصراف مبكر / انذار / تأخير / انصراف</td><td>الخصومات. «قرض» هو السلف أو الأقساط المخصومة هذا الشهر.</td></tr>
+<tr><td>الراتب المستحق</td><td>الصافي الذي سيُصرف.</td></tr>
+<tr><td>نوع الدفع / البنك / الحساب</td><td>طريقة دفع راتب الموظف من بطاقته، مفيدة لتجهيز التحويلات البنكية.</td></tr>
+</tbody></table></div>
+<p>زر الطباعة يطبع المسير المعروض.</p>
+<h3>إلغاء صرف راتب</h3>
+<p>اجعل المفتاح على <span class="ui">مدفوع</span> واضغط العرض، ثم حدد الموظفين واضغط <span class="ui">الغاء سداد</span>. يُحذف سجل الراتب وقيده ومرفقاته.</p>
+<div class="warn"><span class="ui">الغاء سداد</span> ينفذ مباشرة <strong>دون رسالة تأكيد</strong>، فتأكد من التحديد قبل الضغط. وإذا كان على الموظف قسط سلفة في ذلك الشهر فراجع حالة القسط بعد الإلغاء، لأنه يبقى مسجلًا كمسدد.</div>
+<div class="tip">إذا ألغيت علامة <span class="ui">القسم</span> أو <span class="ui">الاسم</span> بعد اختيار قيمة، تبقى التصفية مطبقة. أغلق الشاشة وافتحها من جديد لعرض الجميع.</div>
+</section>
+
+<section id="loans">
+<h2>السلف</h2>
+<p>السلفة مبلغ يُصرف للموظف مقدمًا عن شهر معيّن، ويُخصم تلقائيًا من راتب ذلك الشهر. إذا كانت للموظف سلفة مقسطة لها أقساط مستحقة في الشهر، يُخصم القسط بدلًا من ذلك، ويُعلَّم القسط كمسدد عند صرف الراتب.</p>
+<!--shot:hr-payroll__loans-->
+<figure class="shot" id="shot-hr-payroll__loans">
+<div class="shot-frame"><a href="assets/screens/hr-payroll__loans.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/hr-payroll__loans.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: السلف"></a></div>
+<figcaption>شاشة «السلف» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<h3>شروط صرف السلفة</h3>
+<p>عند صرف سلفة جديدة يراجع البرنامج الحدود المضبوطة في إعدادات الموارد البشرية، ويرفض السلفة إذا:</p>
+<ul>
+  <li>تجاوز الموظف عدد السلف المسموح به في السنة أو في الشهر.</li>
+  <li>تجاوز المبلغ الحد الأقصى للسلفة (مبلغ ثابت أو نسبة من صافي الراتب).</li>
+  <li>توجد سلفة مقسطة لم تُسدد أقساطها بعد.</li>
+  <li>لم يمضِ على تعيين الموظف المدة المطلوبة.</li>
+  <li>تقييم الموظف أقل من الحد المطلوب، أو حصل على إنذارات خلال الأشهر الأخيرة.</li>
+  <li>صُرف راتب الشهر المحدد بالفعل.</li>
+</ul>
+<p>وإذا كانت السلفة أكبر من المتبقي من راتب الشهر يسألك البرنامج قبل المتابعة.</p>
+<h3>شاشة سلف الموظفين (صرف جماعي)</h3>
+<p>شاشة <span class="ui">سلف الموظفين</span> تعرض لكل موظف <span class="ui">اقصى مبلغ مستحق</span> حتى الآن في الشهر، محسوبًا من <span class="ui">ايام عمل</span> (أيام الحضور المسجلة) × قيمة اليوم = <span class="ui">قيمة ايام</span>، مع الإضافات والخصومات.</p>
+<ol class="steps">
+  <li>حدد <span class="ui">شهر</span> والتصفية المطلوبة (<span class="ui">الفرع</span> / <span class="ui">القسم</span> / <span class="ui">الاسم</span>) واضغط زر العرض.</li>
+  <li>حدد الموظف (أو عدة موظفين) واضغط <span class="ui">سداد</span>. تظهر لوحة <span class="ui">حساب</span> إذا كان المستحق أكبر من صفر.</li>
+  <li>اكتب <span class="ui">المبلغ</span> (لا يتجاوز مستحق أول موظف محدد)، وحدد <span class="ui">التاريخ</span>، واختر <span class="ui">الخزينة</span> (<kbd>F9</kbd>) و<span class="ui">العمله</span>.</li>
+  <li>اضغط <span class="ui">تنفيذ</span>. تُصرف السلفة بنفس المبلغ لكل موظف محدد، مرحّلة ومعها قيدها.</li>
+</ol>
+<div class="warn">السلفة المصروفة من شاشة <span class="ui">سلف الموظفين</span> تُسجل <strong>مرحّلة</strong>، فلا يمكن تعديلها أو حذفها من شاشة دفع المرتبات. راجع المبلغ والموظفين المحددين جيدًا قبل <span class="ui">تنفيذ</span>، ويُفضل الصرف لموظف واحد في كل مرة.</div>
+</section>
+
+<section id="journal">
+<h2>القيد المحاسبي للرواتب والسلف</h2>
+<p>إذا كان خيار <span class="ui">اضافة قيد محاسبى عند سداد المرتبات والسلفيات</span> مفعّلًا في <span class="ui">الاعدادات</span>، يُنشأ قيد تلقائي لكل راتب أو سلفة مرحّلة، بتاريخ الصرف، وبيان مثل «مرتب 09/2026 اسم الموظف». يستخدم القيد حسابَي الموظف في <a href="chart-of-accounts.html">الدليل المحاسبي</a>: حسابه تحت حساب الرواتب، وحسابه تحت حساب سلف الموظفين.</p>
+<h3>قيد صرف الراتب</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>الحساب</th><th>مدين</th><th>دائن</th></tr></thead>
+<tbody>
+<tr><td>حساب راتب الموظف (مع مركز التكلفة)</td><td>صافي الراتب المصروف</td><td></td></tr>
+<tr><td>الخزينة / البنك (من حساب)</td><td></td><td>صافي الراتب المصروف</td></tr>
+<tr><td>حساب راتب الموظف — «سداد سلفة مع...»</td><td>السلف المخصومة هذا الشهر</td><td></td></tr>
+<tr><td>حساب سلف الموظف</td><td></td><td>السلف المخصومة هذا الشهر</td></tr>
+</tbody></table></div>
+<p>السطران الأخيران يظهران فقط إذا خُصمت سلف من راتب الشهر، فيُغلق رصيد السلفة على حساب الراتب.</p>
+<h3>قيد صرف السلفة</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>الحساب</th><th>مدين</th><th>دائن</th></tr></thead>
+<tbody>
+<tr><td>حساب سلف الموظف</td><td>مبلغ السلفة</td><td></td></tr>
+<tr><td>الخزينة / البنك</td><td></td><td>مبلغ السلفة</td></tr>
+</tbody></table></div>
+<p>لعرض القيد افتح السجل في <span class="ui">دفع مرتبات وسلفيات</span> واضغط <span class="ui">قيد محاسبى</span>. وانظر <a href="journal-entry.html">القيود اليومية</a> لمراجعة القيود عمومًا.</p>
+<div class="tip">إذا ضغطت حفظ ولم يُحفظ الراتب ولم تظهر رسالة، فغالبًا لا يوجد للموظف حساب تحت حساب الرواتب أو حساب سلف الموظفين، أو لم تُضبط هذه الحسابات الرئيسية في إعدادات الحسابات الافتراضية. أكمل الإعداد ثم أعد المحاولة.</div>
+</section>
+
+<section id="locks">
+<h2>قفل الشهر بعد صرف الراتب</h2>
+<ul>
+  <li>لا يُصرف للموظف أكثر من راتب واحد عن نفس الشهر.</li>
+  <li>بعد صرف راتب الشهر لا يمكن إضافة أو تعديل حافز أو بدل أو جزاء بتاريخ داخل هذا الشهر، ولا صرف أو تعديل سلفة عنه.</li>
+  <li>السجل <span class="ui">مرحل</span> لا يُعدل ولا يُحذف من شاشة <span class="ui">دفع مرتبات وسلفيات</span>. لإلغاء راتب مرحّل استخدم <span class="ui">الغاء سداد</span> في <a href="#bulk">مرتبات الموظفين</a>، ثم سجّل التعديلات وأعد الصرف.</li>
+  <li>حذف راتب غير مرحّل يُعيد قسط السلفة الخاص بذلك الشهر إلى «غير مسدد».</li>
+</ul>
+</section>
+
+<section id="shortcuts">
+<h2>الأزرار والاختصارات</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الزر / المفتاح</th><th>الوظيفة</th></tr></thead>
+<tbody>
+<tr><td><span class="ui">جديد</span></td><td>تفريغ الحقول لإدخال سجل جديد.</td></tr>
+<tr><td><span class="ui">حفظ</span></td><td>حفظ السجل الجديد أو التعديل.</td></tr>
+<tr><td><span class="ui">حذف</span></td><td>حذف السجلات المحددة في الجدول بعد التأكيد.</td></tr>
+<tr><td><span class="ui">تحديث</span></td><td>إعادة تحميل القوائم والبيانات.</td></tr>
+<tr><td><kbd>Enter</kbd> داخل حقول الإدخال</td><td>حفظ مباشر في شاشات الاستحقاقات والاستقطاعات، والحوافز والبدلات والجزاءات، والمكافآت الثابتة.</td></tr>
+<tr><td><kbd>Delete</kbd> في الجدول</td><td>حذف السجل المحدد بعد التأكيد.</td></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>N</kbd> / <kbd>Ctrl</kbd>+<kbd>S</kbd> / <kbd>Ctrl</kbd>+<kbd>D</kbd> / <kbd>Ctrl</kbd>+<kbd>P</kbd> / <kbd>F5</kbd></td><td>في شاشة دفع مرتبات وسلفيات: جديد، حفظ، حذف، طباعة، تحديث البيانات.</td></tr>
+<tr><td><kbd>F9</kbd></td><td>في شاشتي مرتبات الموظفين وسلف الموظفين: اختيار حساب الخزينة.</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>إغلاق شاشتي مرتبات الموظفين وسلف الموظفين.</td></tr>
+</tbody></table></div>
+<p class="note">زر <span class="ui">طباعة</span> في شاشات الحوافز والإنتاج وتعريف البنود لا يطبع شيئًا حاليًا. استخدم <a href="reports-hr.html">تقارير الموارد البشرية</a> للطباعة.</p>
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى وما تفعله</th></tr></thead>
+<tbody>
+<tr><td><span class="msg">عفوا تأكد من بياناتك أولا</span></td><td>حقل إلزامي فارغ، أو قيمة خارج الحد الأدنى والأقصى للبند، أو لم تختر الخزينة في الصرف الجماعي.</td></tr>
+<tr><td><span class="msg">من فضلك اختر موظف وادخل مبلغ صحيح</span></td><td>لم تختر موظفًا، أو المبلغ صفر (مثل صافي راتب صفري).</td></tr>
+<tr><td><span class="msg">من فضلك اختر الحساب الدائن</span></td><td>اختر الخزينة أو البنك في «من حساب».</td></tr>
+<tr><td><span class="msg">هذا السجل موجود مسبقا</span></td><td>راتب هذا الموظف عن هذا الشهر مصروف بالفعل.</td></tr>
+<tr><td><span class="msg">لا يمكن اجراء تعديل لهذا السجل لاستخدامه من قبل اخر</span></td><td>الشهر مقفل لأن راتبه صُرف. لا يمكن إضافة حافز أو جزاء أو سلفة عليه.</td></tr>
+<tr><td><span class="msg">عفوا.هذا السجل مرحل لا يمكن تعديله او حذفه</span></td><td>السجل مرحّل. استخدم «الغاء سداد» في مرتبات الموظفين للرواتب.</td></tr>
+<tr><td><span class="msg">التاريخ المحدد خارج نطاق الفترة المحاسبية</span></td><td>تاريخ الصرف خارج الفترة المحاسبية المفتوحة.</td></tr>
+<tr><td><span class="msg">تاريخ تعيين الموظف اكبر من التاريخ الذى تم اختياره</span></td><td>التاريخ أو الشهر قبل تعيين الموظف.</td></tr>
+<tr><td><span class="msg">عفوا يوجد هناك بعض التقييمات الاجباريه لابد من ملئها أولا قبل صرف الراتب</span></td><td>أكمل تقييمات الموظف الإلزامية لهذا الشهر ثم اصرف.</td></tr>
+<tr><td><span class="msg">عفوا لقد تجاوز هذا الموظف حد عدد السلف المسموحه له...</span></td><td>وصل الموظف للحد الأقصى لعدد السلف في السنة أو الشهر.</td></tr>
+<tr><td><span class="msg">عفوا هذه القيمه تجاوزت القيمه المسموح بها للسلف...</span></td><td>خفّض مبلغ السلفة عن الحد الأقصى المذكور في الرسالة.</td></tr>
+<tr><td><span class="msg">قيمة السلفة تتجاوز المتبقى من الراتب . هل ترغب فى الاستمرار ؟</span></td><td>السلفة أكبر من صافي راتب الشهر. اختر «نعم» للمتابعة.</td></tr>
+<tr><td><span class="msg">عفوا هذا الموظف له سلفه قبل ذلك لم تسدد بعد</span></td><td>توجد أقساط سلف غير مسددة. سدّدها أولًا.</td></tr>
+<tr><td><span class="msg">عفوا هذا الموظف لم يمر عليه الفتره المحدده للحصول على السلفه</span></td><td>الموظف جديد ولم يكمل مدة الخدمة المطلوبة للسلفة.</td></tr>
+<tr><td><span class="msg">عفوا تقييم هذا الموظف لم يصل بعد الى الحد المسموح به لصرف السلفه</span></td><td>تقييم الموظف أقل من الحد المطلوب.</td></tr>
+<tr><td><span class="msg">عفوا هذا الموظف قد حصل على انذارات خلال ال ... اشهر الماضيه</span></td><td>لا تُصرف سلفة لموظف عليه إنذار حديث.</td></tr>
+<tr><td><span class="msg">عفوا فترة مالية مغلقة لا يمكن تنفيذ الاجراء</span></td><td>لا يمكن إلغاء صرف رواتب في فترة مالية مغلقة.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="faq">
+<h2>أسئلة شائعة</h2>
+<details><summary>ما الفرق بين المكافأة الثابتة والحافز؟</summary><p>المكافأة الثابتة تُضاف إلى الأساسي كل شهر من تاريخها وما بعده. الحافز مبلغ لمرة واحدة يدخل في راتب شهر تاريخه فقط.</p></details>
+<details><summary>ما الفرق بين «بدل» في شاشة الحوافز وبدلات الأقسام؟</summary><p>بدلات الأقسام ثابتة تتكرر كل شهر تلقائيًا. «بدل» في شاشة الحوافز والبدلات والجزاءات مبلغ إضافي لشهر واحد.</p></details>
+<details><summary>هل تُخصم السلفة من الراتب تلقائيًا؟</summary><p>نعم. السلفة المصروفة «عن شهر» معيّن تُخصم من راتب ذلك الشهر، وتظهر في عمود «قرض» في المسير وفي القيد المحاسبي.</p></details>
+<details><summary>صرفت الراتب ثم اكتشفت جزاءً لم يُسجل، ماذا أفعل؟</summary><p>ألغِ صرف الراتب من «مرتبات الموظفين» بزر «الغاء سداد» (أو احذفه من «دفع مرتبات وسلفيات» إن لم يكن مرحّلًا)، ثم سجّل الجزاء وأعد صرف الراتب.</p></details>
+<details><summary>لماذا لا يظهر موظف في شاشة أستحقاقات وأستقطاعات الموظفين؟</summary><p>لأن قسمه لم تُخصص له أي بنود. خصّص البنود للقسم أولًا من شاشة تخصيص الاستحقاقات والاستقطاعات للأقسام.</p></details>
+<details><summary>لماذا لا يظهر قيد محاسبي للراتب؟</summary><p>تأكد أن السجل «مرحل»، وأن خيار «اضافة قيد محاسبى عند سداد المرتبات والسلفيات» مفعّل في الإعدادات.</p></details>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="hr-employees.html">الموظفون</a> · <a href="hr-attendance.html">الحضور والانصراف والإجازات</a> · <a href="reports-hr.html">تقارير الموارد البشرية</a> · <a href="journal-entry.html">القيود اليومية</a> · <a href="chart-of-accounts.html">الدليل المحاسبي</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-08">8 أكتوبر 2026</time></div></footer>
+</body>
+</html>

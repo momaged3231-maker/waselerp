@@ -205,13 +205,13 @@ export class HrController {
   @Put('leaves/:id/status') updateLeaveStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: any) { return this.service.updateLeaveStatus(id, dto.status); }
 
   @RequirePermissions('hr.view')
-  @Get('salary') listSalaryPays(@CurrentBranch() branchId: number, @Query('employeeId') employeeId: string, @Query('month') month: string) {
+  @Get('salaries') listSalaryPays(@CurrentBranch() branchId: number, @Query('employeeId') employeeId: string, @Query('month') month: string) {
     return this.service.listSalaryPays({ branchId, employeeId: employeeId ? Number(employeeId) : undefined, month });
   }
   @RequirePermissions('hr.manage')
   @Post('salary') createSalaryPay(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) { return this.service.createSalaryPay(dto, user, branchId); }
   @RequirePermissions('hr.manage')
-  @Put('salary/:id/status') updateSalaryPayStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: any) { return this.service.updateSalaryPayStatus(id, dto.status); }
+  @Put('salaries/:id/status') updateSalaryPayStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: any) { return this.service.updateSalaryPayStatus(id, dto.status); }
 }
 
 @Module({

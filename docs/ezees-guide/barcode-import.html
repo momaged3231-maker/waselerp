@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>طباعة الباركود والجرد واستيراد Excel | دليل Ezees ERP</title>
+<meta name="description" content="شرح طباعة ملصقات الباركود في Ezees ERP على ورق A4 أو طابعة Zebra، والاستعلام عن أرصدة الأصناف في كل المخازن، والجرد الجماعي السريع، واستيراد الأصناف والعملاء والموردين من ملف Excel.">
+<meta name="keywords" content="طباعة باركود, ملصقات باركود, طابعة Zebra, أرصدة الأصناف, جرد المخزن, جرد جماعي, استيراد أصناف من Excel, استيراد عملاء من Excel, Ezees ERP">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/barcode-import.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="طباعة الباركود والجرد واستيراد Excel في Ezees ERP">
+<meta property="og:description" content="اطبع ملصقات الباركود، واستعلم عن أرصدة الأصناف، وجرد مخزنك، واستورد الأصناف والعملاء من Excel.">
+<meta property="og:url" content="https://help.tebalink.com/barcode-import.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"طباعة الباركود والجرد واستيراد Excel في Ezees ERP","inLanguage":"ar","dateModified":"2026-10-08","proficiencyLevel":"Beginner","mainEntityOfPage":"https://help.tebalink.com/barcode-import.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"HowTo","name":"استيراد الأصناف من ملف Excel","inLanguage":"ar","step":[
+{"@type":"HowToStep","position":1,"text":"افتح استيراد اصناف واضغط استعراض لاختيار ملف Excel ثم اختر الورقة واضغط عرض."},
+{"@type":"HowToStep","position":2,"text":"اربط كل عمود في الملف بالحقل المقابل في البرنامج واضغط اضف، وابدأ بـ ItemCode وItem Name وCategory وUnit."},
+{"@type":"HowToStep","position":3,"text":"اختر الفرع والتاريخ، وفعّل حصر الاصناف مع المخزن عند الحاجة."},
+{"@type":"HowToStep","position":4,"text":"اضغط حفظ وانتظر رسالة تم الحفظ بنجاح."}]},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"هل يحذف الجرد الجماعي رصيد الأصناف التي لم أعدّها؟","acceptedAnswer":{"@type":"Answer","text":"نعم. كل صنف يظهر في الجدول ويبقى رصيده الفعلي صفرًا يصبح رصيده صفرًا بعد الحفظ، لذلك اعرض فئة واحدة في كل مرة وأدخل الكمية لكل الأصناف."}},
+{"@type":"Question","name":"هل يحدّث الاستيراد الأصناف الموجودة؟","acceptedAnswer":{"@type":"Answer","text":"يُحدَّث الصنف فقط إذا تطابق الكود والاسم معًا، وإلا يُضاف صنفًا جديدًا."}},
+{"@type":"Question","name":"لماذا لا يُطبع الباركود على طابعة الملصقات؟","acceptedAnswer":{"@type":"Answer","text":"الطباعة المباشرة تعمل فقط إذا كانت طابعة Zebra مفعّلة ومحددة في إعدادات الباركود، وعندها يصبح الزر طباعه بدلًا من عرض."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"المخازن والأصناف","item":"https://help.tebalink.com/index.html#stock"},
+{"@type":"ListItem","position":3,"name":"الباركود والجرد والاستيراد","item":"https://help.tebalink.com/barcode-import.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#pos">نقاط البيع والمطاعم</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#stock">المخازن والأصناف</a></li><li>الباركود والجرد والاستيراد</li></ol>
+<article>
+<h1>طباعة الباركود، وأرصدة الأصناف والجرد السريع، واستيراد Excel</h1>
+<p class="lead">أدوات تساعدك في إدارة المخزون اليومية: <strong>طباعة ملصقات الباركود</strong> للأصناف، و<strong>الاستعلام عن رصيد</strong> الصنف في كل المخازن، و<strong>الجرد الجماعي</strong> لمخزن كامل، و<strong>استيراد</strong> الأصناف والعملاء والموردين من ملفات Excel بدلًا من إدخالهم يدويًا.</p>
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#barcode">طباعة الباركود</a></li>
+  <li><a href="#balance">الاستعلام عن أرصدة الأصناف</a></li>
+  <li><a href="#gard">الجرد الجماعي للأصناف</a></li>
+  <li><a href="#excel-before">قبل الاستيراد من Excel</a></li>
+  <li><a href="#items-import">استيراد الأصناف</a></li>
+  <li><a href="#customers-import">استيراد العملاء والموردين</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+  <li><a href="#faq">أسئلة شائعة</a></li>
+</ol></nav>
+
+<section id="barcode">
+<h2>طباعة الباركود</h2>
+<p>افتح <span class="ui">طباعة الباركود</span> من القائمة، أو اضغط زر <span class="ui">طباعة الباركود</span> في <a href="purchase-invoice.html">فاتورة الشراء</a> أو <a href="sales-invoice.html">فاتورة البيع</a> أو أذون التحويل والمخازن. عند الفتح من فاتورة تظهر أصنافها وكمياتها في الجدول جاهزة للطباعة.</p>
+<!--shot:barcode-import__barcode-->
+<figure class="shot" id="shot-barcode-import__barcode">
+<div class="shot-frame"><a href="assets/screens/barcode-import__barcode.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/barcode-import__barcode.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: طباعة الباركود"></a></div>
+<figcaption>شاشة «طباعة الباركود» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+
+<h3>إضافة الأصناف وطباعتها</h3>
+<ol class="steps">
+  <li>اختر <span class="ui">الفئة</span> لتصفية الأصناف (اختياري)، ثم اختر <span class="ui">الصنف</span>. يمكنك بدلًا من ذلك مسح الباركود أو كتابة الكود في <span class="ui">كود</span>، فيُختار الصنف ويصبح العدد 1.</li>
+  <li>اختر <span class="ui">الوحده</span>. يظهر بجانبها رصيد الصنف الحالي (Balance).</li>
+  <li>إذا كانت تواريخ الصلاحية مفعّلة، فعّل <span class="ui">ت الصلاحيه</span> واختر التاريخ ليُطبع مع الكود.</li>
+  <li>اكتب <span class="ui">العدد</span> (عدد الملصقات)، أو فعّل <span class="ui">ادراج الرصيد الحالى</span> لطباعة ملصق لكل قطعة في المخزن.</li>
+  <li>اختر <span class="ui">نوع السعر</span> المطبوع: <span class="ui">نقدى</span> أو <span class="ui">نصف جملة</span> أو <span class="ui">جملة</span>.</li>
+  <li>اضغط <span class="ui">اضف</span> أو <kbd>Enter</kbd> في خانة العدد. لإضافة كل أصناف الفئة مرة واحدة، اضغط زر الإضافة الصغير بجانب <span class="ui">الفئة</span>.</li>
+  <li>اضبط خيارات الملصق، ثم اضغط <span class="ui">عرض</span> لمعاينة صفحة A4 وطباعتها، أو <span class="ui">طباعه</span> عند استخدام طابعة الملصقات.</li>
+</ol>
+
+<h3>خيارات الملصق</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>الخيار</th><th>الوصف</th></tr></thead>
+<tbody>
+<tr><td>اخفاء اسم الشركة / اخفاء اسم الصنف / اخفاء السعر</td><td>إخفاء هذه البيانات من الملصق.</td></tr>
+<tr><td>السعر شامل الضريبة</td><td>يضيف ضريبة المبيعات إلى السعر المطبوع، ويكتب «السعر شامل الضريبة» في الملاحظات.</td></tr>
+<tr><td>ملاحظات</td><td>نص قصير يُطبع على الملصق.</td></tr>
+<tr><td>الجدول</td><td>يمكن تعديل <span class="ui">العدد</span> مباشرة. للحذف حدد الصفوف واضغط <span class="ui">حذف</span> أو مفتاح <kbd>Delete</kbd>، و<span class="ui">حذف الكل</span> يفرّغ الجدول.</td></tr>
+</tbody></table></div>
+<ul>
+  <li><strong>ورق A4:</strong> زر <span class="ui">عرض</span> يفتح معاينة بصفحة ملصقات، ملصق لكل قطعة حسب العدد. الهوامش والخطوط من إعدادات الباركود.</li>
+  <li><strong>طابعة Zebra:</strong> إذا كانت مفعّلة في الإعدادات يصبح الزر <span class="ui">طباعه</span>، فتُرسل الملصقات مباشرة إلى طابعة الباركود المحددة، ثم يُفرَّغ الجدول.</li>
+  <li>الكود المطبوع هو باركود الوحدة المختارة، ويضاف إليه تاريخ الصلاحية بعد شرطة «-» إن وُجد.</li>
+</ul>
+<p class="note">عمود <span class="ui">اضافة</span> في الجدول لا يؤثر على الطباعة، فكل صفوف الجدول تُطبع. لاستبعاد صنف احذفه من الجدول.</p>
+<p class="tip">الصنف الواحد يظهر في صف واحد. إذا أضفته مرة ثانية بوحدة أخرى أو عدد آخر، يُستبدل الصف السابق. لطباعة وحدتين لنفس الصنف، اطبع الأولى ثم أضف الثانية.</p>
+</section>
+
+<section id="balance">
+<h2>الاستعلام عن أرصدة الأصناف</h2>
+<p>شاشة <span class="ui">استعلام عن ارصده الأصناف</span> تعرض رصيد الصنف في <strong>كل مخزن</strong> في جدول واحد، مع البراند والبيانات الإضافية للصنف وأسعاره.</p>
+<!--shot:barcode-import__balance-->
+<figure class="shot" id="shot-barcode-import__balance">
+<div class="shot-frame"><a href="assets/screens/barcode-import__balance.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/barcode-import__balance.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: الاستعلام عن أرصدة الأصناف"></a></div>
+<figcaption>شاشة «الاستعلام عن أرصدة الأصناف» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>انقر خانة <span class="ui">الصنف</span> أو اضغط <kbd>F7</kbd>، واختر صنفًا أو أكثر من نافذة البحث.</li>
+  <li>أو انقر خانة <span class="ui">المجموعة</span> أو اضغط <kbd>F8</kbd> واختر فئة لعرض كل أصنافها.</li>
+  <li>يظهر لكل صنف صف لكل مخزن نشط: <span class="ui">المخزن</span> و<span class="ui">الرصيد الحالي</span> بالوحدة الأساسية.</li>
+</ol>
+<ul>
+  <li>أعمدة الأسعار (<span class="ui">سعر الشراء</span>، <span class="ui">سعر جمله</span>، <span class="ui">نصف جملة</span>، <span class="ui"> سعر نقدى</span>) تظهر حسب صلاحياتك.</li>
+  <li>ترى مخازن فرعك فقط، إلا إذا كانت لك صلاحية رؤية كل الفروع.</li>
+  <li>النقر على أي صف ينسخ كود الصنف، وتظهر رسالة <span class="msg">Copied to clipboard</span>. اضغط موافق ثم الصق الكود حيث تريد.</li>
+  <li><kbd>Esc</kbd> أو <span class="ui">اغلاق</span> لإغلاق الشاشة.</li>
+</ul>
+</section>
+
+<section id="gard">
+<h2>الجرد الجماعي للأصناف</h2>
+<p>شاشة <span class="ui">جرد جماعى للاصناف</span> تعرض رصيد البرنامج لأصناف مخزن معيّن، فتكتب بجانب كل صنف الكمية التي وجدتها فعلًا، ثم يُسجَّل البرنامج الفرق تلقائيًا في سند تسوية جرد معتمد.</p>
+<!--shot:barcode-import__gard-->
+<figure class="shot" id="shot-barcode-import__gard">
+<div class="shot-frame"><a href="assets/screens/barcode-import__gard.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/barcode-import__gard.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: الجرد الجماعي للأصناف"></a></div>
+<figcaption>شاشة «الجرد الجماعي للأصناف» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>اختر <span class="ui">المخزن</span> و<span class="ui">امين المخزن</span>، وحدد <span class="ui">التاريخ</span>.</li>
+  <li>اختر <span class="ui">جميع الاصناف</span>، أو فعّل <span class="ui">طبقا للفئة</span> واختر فئة.</li>
+  <li>اضغط <span class="ui">عرض</span>. يظهر لكل صنف <span class="ui">الرصيد</span> الحالي بالوحدة الأساسية، وخانة <span class="ui">الرصيد الفعلى</span> فارغة (صفر).</li>
+  <li>اكتب في <span class="ui">الرصيد الفعلى</span> الكمية المعدودة لكل صنف، بالوحدة الأساسية.</li>
+  <li>اضغط <span class="ui">حفظ</span> ووافق على التأكيد. تظهر رسالة <span class="msg">تم الحفظ بنجاح</span>.</li>
+</ol>
+<div class="warn"><strong>أدخل الرصيد الفعلي لكل صنف في الجدول.</strong> الصنف الذي تتركه صفرًا يُعتبر رصيده الفعلي صفرًا، فيُخصم رصيده كله من المخزن. الأفضل أن تجرد فئة واحدة في كل مرة باستخدام <span class="ui">طبقا للفئة</span>، وأن تكتب الرصيد الحالي نفسه للأصناف التي لم تتغير.</div>
+<ul>
+  <li>إذا كان العدد أكبر من رصيد البرنامج يُضاف الفرق للمخزن، وإذا كان أقل يُخصم.</li>
+  <li>السند يُعتمد فورًا ويؤثر على الرصيد مباشرة.</li>
+  <li>لا يمكن الحفظ إذا كان للمخزن أذون مخزنية أو تشغيل غير معتمدة، أو إذن جرد غير معتمد. اعتمدها أولًا من <a href="stores.html">شاشات المخازن</a>.</li>
+  <li>تظهر في القائمة أيضًا الأصناف غير النشطة والخدمية. اكتب رصيدها الحالي كما هو إن لم تكن تريد تعديله.</li>
+</ul>
+</section>
+
+<section id="excel-before">
+<h2>قبل الاستيراد من Excel</h2>
+<ul>
+  <li>يقبل البرنامج ملفات <code>.xls</code> و<code>.xlsx</code>. يجب أن يحتوي <strong>الصف الأول</strong> على عناوين الأعمدة، والبيانات تبدأ من الصف الثاني.</li>
+  <li>لقراءة ملفات Excel يجب تثبيت مكوّن <strong>Microsoft Access Database Engine</strong> على الجهاز. إذا ظهر خطأ عند اختيار الملف، ثبّت هذا المكوّن.</li>
+  <li>أغلق الملف في Excel قبل استيراده.</li>
+  <li>الاستيراد عملية واحدة: إذا ظهر خطأ في أي صف يُلغى الاستيراد كله ولا يُحفظ شيء. صحّح الصف وأعد الحفظ.</li>
+  <li>جرّب الاستيراد أولًا على ملف صغير، وخذ نسخة احتياطية من قاعدة البيانات قبل الاستيراد الكبير.</li>
+</ul>
+</section>
+
+<section id="items-import">
+<h2>استيراد الأصناف</h2>
+<!--shot:barcode-import__items-import-->
+<figure class="shot" id="shot-barcode-import__items-import">
+<div class="shot-frame"><a href="assets/screens/barcode-import__items-import.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/barcode-import__items-import.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: استيراد الأصناف"></a></div>
+<figcaption>شاشة «استيراد الأصناف» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>افتح <span class="ui">استيراد اصناف</span>. زر <span class="ui">?</span> يفتح ملف نموذج يمكنك البدء منه.</li>
+  <li>اضغط <span class="ui">استعراض</span> واختر الملف، ثم اختر الورقة واضغط <span class="ui">عرض</span>. تظهر بيانات الملف في الجدول الأول.</li>
+  <li>لكل حقل: اختر عمود الملف من القائمة الأولى، والحقل المقابل في البرنامج من القائمة الثانية، ثم اضغط <span class="ui">اضف</span>. يظهر العمود في جدول المعاينة. ابدأ بالحقول الإلزامية.</li>
+  <li>اختر <span class="ui">الفرع</span> (للمخازن الجديدة والرصيد الافتتاحي) و<span class="ui">التاريخ</span> (تاريخ سند الرصيد الافتتاحي).</li>
+  <li>فعّل <span class="ui">حصر الاصناف مع المخزن</span> إذا أردت ربط كل صنف بالمخزن المكتوب في عمود Store Name.</li>
+  <li>اضغط <span class="ui">حفظ</span>. يظهر التقدم وسجل الأصناف المضافة أسفل الشاشة، ثم رسالة <span class="msg">تم الحفظ بنجاح</span>.</li>
+</ol>
+<p class="tip">إذا أخطأت في الربط، اضغط <span class="ui">مسح</span> لتفريغ جدول المعاينة وابدأ الربط من جديد.</p>
+
+<h3>حقول الاستيراد</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>الحقل في البرنامج</th><th>الوصف</th></tr></thead>
+<tbody>
+<tr><td><code>ItemCode</code> / <code>Item Name</code></td><td><strong>إلزاميان.</strong> كود الصنف واسمه. الصفوف بلا كود تُتجاهل.</td></tr>
+<tr><td><code>Category</code></td><td><strong>إلزامي.</strong> اسم الفئة. إذا لم تكن موجودة تُنشأ فئة رئيسية جديدة.</td></tr>
+<tr><td><code>Unit</code></td><td><strong>إلزامي.</strong> اسم الوحدة الأساسية، ويُنشأ إن لم يكن موجودًا. اكتب الاسم بحرفين على الأقل.</td></tr>
+<tr><td><code>ItemCode2</code></td><td>كود إضافي (باركود ثانٍ).</td></tr>
+<tr><td><code>Purchase price</code> / <code>Sell price</code> / <code>WholeSale price</code> / <code>Half WholeSale price</code></td><td>سعر الشراء، والبيع النقدي، والجملة، ونصف الجملة.</td></tr>
+<tr><td><code>Price1</code> / <code>Price2</code> / <code>Price3</code> / <code>Customer price</code></td><td>الأسعار الإضافية وسعر الجمهور (إن كان مفعّلًا).</td></tr>
+<tr><td><code>Unit 2</code> / <code>UnitRate 2</code> / <code>PurchaseUnit 2</code> / <code>SellUnit 2</code></td><td>الوحدة الثانية ومعامل تحويلها وسعر شرائها وبيعها. الوحدة بلا معامل تحويل تُتجاهل. ونفسها للوحدة الثالثة <code>Unit 3</code>.</td></tr>
+<tr><td><code>Store Name</code> / <code>Begin Balance</code> / <code>Expire Date</code></td><td>المخزن والرصيد الافتتاحي وتاريخ الصلاحية. يُنشأ المخزن إن لم يكن موجودًا.</td></tr>
+<tr><td><code>Supplier</code></td><td>اسم المورد، ويجب أن يكون مسجلًا مسبقًا بنفس الاسم.</td></tr>
+<tr><td><code>Brand</code></td><td>البراند، ويُنشأ إن لم يكن موجودًا.</td></tr>
+<tr><td><code>Tax %</code> / <code>Sales Tax Include</code> / <code>Purchase Tax Include</code></td><td>نسبة الضريبة، وهل السعر شامل الضريبة في البيع والشراء. اكتب في عمودي «شامل الضريبة» <code>TRUE</code> أو <code>FALSE</code>.</td></tr>
+<tr><td><code>Item_request_point</code> / <code>Item_Max_point</code></td><td>حد الطلب والحد الأقصى، أرقام صحيحة.</td></tr>
+<tr><td><code>Item_name_en</code> وبيانات الفاتورة الإلكترونية</td><td>الاسم الإنجليزي وكود الضريبة والوصف ونوع الكود.</td></tr>
+<tr><td>الحقول الإضافية و<code>Notes</code></td><td>الحقول الإضافية الثلاثة بأسمائها في إعداداتك، والملاحظات.</td></tr>
+</tbody></table></div>
+
+<h3>قواعد الاستيراد</h3>
+<ul>
+  <li><strong>صنف موجود:</strong> يُحدَّث الصنف إذا تطابق <strong>الكود والاسم معًا</strong>. تتغير الحقول التي فيها قيمة فقط، والخلايا الفارغة أو الصفرية لا تمسح بياناته.</li>
+  <li><strong>صنف جديد:</strong> إذا اختلف الكود أو الاسم يُضاف صنف جديد.</li>
+  <li><strong>الرصيد الافتتاحي:</strong> يلزمه عمودا <code>Store Name</code> و<code>Purchase price</code>، وسعر شراء أكبر من صفر. يُنشأ لكل مخزن إذن «رصيد افتتاحى» معتمد بتاريخ <span class="ui">التاريخ</span>.</li>
+  <li>اكتب أرقامًا فقط في أعمدة الأسعار والكميات، و<code>0</code> بدلًا من الخلايا الفارغة في أعمدة حد الطلب والحد الأقصى والضريبة.</li>
+</ul>
+<div class="warn"><strong>لا تستخدم كودًا موجودًا لصنف باسم مختلف.</strong> البرنامج سيضيفه كصنف جديد بنفس الكود. إذا كنت تريد تحديث أسعار أصناف موجودة، اكتب اسمها وكودها كما هما في البرنامج تمامًا.</div>
+<p class="tip">اربط الحقول الإضافية الثلاثة (مثل المنشأ والبديل والموقع) <strong>في النهاية</strong> بعد كل الحقول الأخرى، حتى لا تمتلئ خلاياها الفارغة ببيانات عمود آخر.</p>
+</section>
+
+<section id="customers-import">
+<h2>استيراد العملاء والموردين</h2>
+<!--shot:barcode-import__customers-import-->
+<figure class="shot" id="shot-barcode-import__customers-import">
+<div class="shot-frame"><a href="assets/screens/barcode-import__customers-import.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/barcode-import__customers-import.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: استيراد العملاء والموردين"></a></div>
+<figcaption>شاشة «استيراد العملاء والموردين» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>افتح <span class="ui">استيراد عملاء - موردين</span>، واضغط <span class="ui">استعراض</span> واختر الملف، ثم اختر الورقة واضغط <span class="ui">عرض</span>.</li>
+  <li>اختر نوع السجلات: <span class="ui">عميل</span>، أو <span class="ui">مورد</span>، أو <span class="ui">مقاول باطن</span>، أو <span class="ui">مالك مشروع</span>، أو <span class="ui">عميل مستهدف</span>.</li>
+  <li>لكل حقل: اختر عمود الملف والحقل المقابل، ثم اضغط <span class="ui">اضافة</span>. <strong>حقل <span class="ui">الاسم</span> إلزامي.</strong></li>
+  <li>اختر <span class="ui">الفرع</span>. فعّل <span class="ui">قيد افتتاحى بالرصيد</span> إذا ربطت عمود <span class="ui">Balance</span> وتريد تسجيل الأرصدة الافتتاحية.</li>
+  <li>اضغط <span class="ui">حفظ</span>، وانتظر رسالة <span class="msg">تم الحفظ بنجاح</span>.</li>
+</ol>
+<p class="tip">زر <span class="ui">حذف</span> في هذه الشاشة يفرّغ جدول الربط فقط، ولا يحذف أي بيانات من البرنامج.</p>
+
+<h3>الحقول المتاحة</h3>
+<p><span class="ui">كود</span>، <span class="ui">الاسم</span>، <span class="ui">الشركة</span>، <span class="ui">العنوان</span>، <span class="ui">التليفون</span>، <span class="ui">محمول</span>، <span class="ui">الفاكس</span>، <span class="ui">الايميل</span>، <span class="ui">الحد الائتماني</span>، <span class="ui">ملاحظات</span>، <span class="ui">Balance</span>، <span class="ui">مندوب</span>، <span class="ui">المجموعة</span>، <span class="ui">التصنيف</span>، <span class="ui">النشاط</span>، <span class="ui">المصدر</span>، <span class="ui">Lat</span>/<span class="ui">Lon</span>، <span class="ui">الرقم الضريبى</span>، <span class="ui">السجل التجارى</span>، وأجزاء العنوان: <span class="ui">الحى</span>، <span class="ui">المجاورة</span>، <span class="ui">الشارع</span>، <span class="ui">المبنى</span>، <span class="ui">الدور</span>، <span class="ui">الشقة</span>.</p>
+
+<h3>ماذا يحدث عند الحفظ</h3>
+<ul>
+  <li>إذا لم تربط <span class="ui">كود</span> يُعطى كل سجل كودًا تلقائيًا.</li>
+  <li>يُنشأ لكل عميل أو مورد حساب في <a href="chart-of-accounts.html">الدليل المحاسبي</a> تحت الحساب الرئيسي لنوعه (عدا العميل المستهدف).</li>
+  <li>المندوب والمجموعة والتصنيف والنشاط والمصدر تُنشأ تلقائيًا إذا لم تكن موجودة بنفس الاسم. المندوب الجديد يُضاف كموظف مندوب.</li>
+  <li>تُوضع للسجلات دولة ومحافظة ومدينة افتراضية، فأكمل العنوان من <a href="customers.html">بطاقة العميل</a>.</li>
+  <li><span class="ui">قيد افتتاحى بالرصيد</span>: يُنشأ قيد افتتاحي <strong>غير مرحّل</strong> بأرصدة السجلات الجديدة مقابل حساب رأس المال. الرصيد الموجب مدين للعميل ودائن للمورد. راجع القيد من <a href="journal-entry.html">القيود اليومية</a> ثم رحّله.</li>
+</ul>
+<div class="warn"><strong>استخدم هذه الشاشة لإضافة سجلات جديدة فقط.</strong> إذا كان في الملف اسم موجود مسبقًا بنفس النوع، يُحدَّث السجل الموجود: يتغير كوده، وتُمسح بياناته التي لم تربطها في الملف (مثل العنوان والهواتف والرقم الضريبي والمندوب). احذف هذه الأسماء من الملف قبل الاستيراد.</div>
+<p class="note">لا تكرر الاسم نفسه داخل الملف، فالصف الثاني يُحدّث الأول بدلًا من إضافة سجل جديد. الأسماء الأطول من 80 حرفًا تُختصر.</p>
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td><span class="msg">من فضلك اختر اسم صنف صحيح وادخل العدد بشكل صحيح</span></td><td>في الباركود: اختر الصنف واكتب عددًا أكبر من صفر، أو اختر فئة قبل إضافة أصنافها.</td></tr>
+<tr><td><span class="msg">يرجى اختيار الاصناف التى تريد حذفها</span></td><td>حدد صفًا في جدول الباركود قبل الحذف.</td></tr>
+<tr><td><span class="msg">عفوا لابد من أدخال قيم أكبر من الصفر</span></td><td>العدد في جدول الباركود غير صحيح، ويعود لقيمته السابقة.</td></tr>
+<tr><td><span class="msg">عفوا قم باستكمال بياناتك بطريقه صحيحه</span></td><td>في الجرد: اختر المخزن وأمين المخزن.</td></tr>
+<tr><td><span class="msg">عفوا يوجد سجلات غير معتمدة يجب اغلاقها اولا</span></td><td>للمخزن أذون مخزنية أو تشغيل غير معتمدة.</td></tr>
+<tr><td><span class="msg">عفوا لديك اذن جرد غير معتمد يجب اعتماده اولا</span></td><td>اعتمد إذن الجرد السابق لهذا المخزن أولًا.</td></tr>
+<tr><td><span class="msg">لايوجد كود الصنف</span> / <span class="msg">لايوجد اسم الصنف</span> / <span class="msg">لايوجد المجموعة</span> / <span class="msg">لايوجد الوحدة</span></td><td>لم تربط أحد الحقول الإلزامية: ItemCode أو Item Name أو Category أو Unit.</td></tr>
+<tr><td><span class="msg">صيغة سعر البيع غير صحيحة للصنف ...</span></td><td>خلية سعر فيها نص أو رمز. ورسائل مشابهة لباقي الأسعار.</td></tr>
+<tr><td><span class="msg">تاكد من رصيد الصنف</span> / <span class="msg">تاكد من المخزن</span> / <span class="msg">تاكد من سعر شراء الصنف</span></td><td>الرصيد الافتتاحي يحتاج ربط Store Name وBegin Balance وPurchase price معًا.</td></tr>
+<tr><td><span class="msg">سعر التكلفة اجبارى مع الرصيد</span></td><td>صنف له رصيد افتتاحي وسعر شرائه صفر.</td></tr>
+<tr><td><span class="msg">يرجى التاكد من صحة البيانات المدرجة</span></td><td>مسار الملف غير صحيح، أعد اختيار الملف.</td></tr>
+<tr><td><span class="msg">تاكد من اختيارك لملف بامتداد اكسيل xls</span></td><td>الملف ليس Excel، أو تعذرت قراءته.</td></tr>
+<tr><td><span class="msg">عفوا حدث خطأ أثناء حفظ بيانات العميل فى الدليل المحاسبى تأكد من تخصيص حساب العملاء والموردين</span></td><td>حدد الحساب الرئيسي للعملاء أو الموردين في إعدادات الحسابات الافتراضية.</td></tr>
+<tr><td><span class="msg">تم اضافة قيد افتتاحى باللارصدة غير مرحل يمكنك فحصه اولا</span></td><td>تم إنشاء القيد الافتتاحي، راجعه ثم رحّله.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="faq">
+<h2>أسئلة شائعة</h2>
+<details><summary>هل يمسح الجرد الجماعي رصيد الأصناف التي لم أعدّها؟</summary><p>نعم. كل صنف ظاهر في الجدول ويبقى <span class="ui">الرصيد الفعلى</span> له صفرًا يصبح رصيده صفرًا. اعرض فئة واحدة في كل مرة، وأدخل الكمية لكل الأصناف.</p></details>
+<details><summary>لماذا يظهر الزر «طباعه» بدلًا من «عرض» في الباركود؟</summary><p>لأن طابعة Zebra مفعّلة في الإعدادات، فتُطبع الملصقات مباشرة على طابعة الباركود دون معاينة.</p></details>
+<details><summary>هل يمكن تحديث أسعار الأصناف الموجودة بالاستيراد؟</summary><p>نعم، إذا كان الكود والاسم في الملف مطابقين تمامًا للصنف في البرنامج. للتعديل الجماعي للأسعار يمكنك أيضًا استخدام <a href="pricing.html#bulk">ادارة اسعار الاصناف</a>.</p></details>
+<details><summary>لم تظهر رسالة النجاح بعد استيراد العملاء، ماذا حدث؟</summary><p>غالبًا لم تربط حقل <span class="ui">الاسم</span>، أو حدث خطأ في أحد الصفوف فأُلغي الاستيراد كله. اربط الاسم وتأكد من البيانات ثم احفظ مرة أخرى.</p></details>
+<details><summary>أين أرى رصيد صنف في كل الفروع؟</summary><p>في <a href="#balance">استعلام عن ارصده الأصناف</a>، إذا كانت لديك صلاحية رؤية مخازن كل الفروع.</p></details>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="items.html">الأصناف</a> · <a href="stores.html">المخازن</a> · <a href="pricing.html">الأسعار وقوائم الأسعار</a> · <a href="sales-invoice.html">فاتورة البيع</a> · <a href="customers.html">العملاء</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-08">8 أكتوبر 2026</time></div></footer>
+</body>
+</html>

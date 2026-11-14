@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>التقارير المالية والمحاسبية: ميزان المراجعة والأرباح والميزانية | دليل Ezees ERP</title>
+<meta name="description" content="دليل التقارير المالية في Ezees ERP: ميزان المراجعة، الأرباح والخسائر، حساب المتاجرة، الميزانية العمومية، قائمة الدخل، دفتر الأستاذ، اليومية، الخزينة والبنوك، سندات القبض والصرف، الأوراق المستحقة، مراكز التكلفة، الأصول الثابتة والإقرار الضريبي.">
+<meta name="keywords" content="ميزان المراجعة, الأرباح والخسائر, الميزانية العمومية, قائمة الدخل, دفتر الأستاذ, تقرير الخزينة, كشف حساب بنكي, مراكز التكلفة, الإقرار الضريبي, ضريبة القيمة المضافة, تقارير محاسبية, Ezees ERP">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/reports-accounts.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="التقارير المالية والمحاسبية في Ezees ERP">
+<meta property="og:description" content="شرح كل تقرير مالي: ماذا يعرض، وما فلاتره، وكيف تُحسب أرقامه.">
+<meta property="og:url" content="https://help.tebalink.com/reports-accounts.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"التقارير المالية والمحاسبية في Ezees ERP","inLanguage":"ar","dateModified":"2026-10-08","proficiencyLevel":"Beginner","mainEntityOfPage":"https://help.tebalink.com/reports-accounts.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"HowTo","name":"عرض تقرير مالي وطباعته أو تصديره إلى Excel","inLanguage":"ar","step":[
+{"@type":"HowToStep","position":1,"text":"افتح التقرير من قائمة التقارير، ثم افتح لوحة تصفيه البيانات."},
+{"@type":"HowToStep","position":2,"text":"فعّل خانة الفلتر الذي تريده (الفرع، الحساب، التاريخ...) ثم اختر قيمته."},
+{"@type":"HowToStep","position":3,"text":"اضغط زر العرض (أيقونة البحث) لتظهر النتائج في الجدول."},
+{"@type":"HowToStep","position":4,"text":"اضغط زر الطباعة، ثم أجب بنعم على سؤال المعاينة لتختار الطباعة أو المعاينة أو التصدير إلى Excel أو Pivot."}]},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"لماذا لا تظهر بعض القيود في التقارير المالية؟","acceptedAnswer":{"@type":"Answer","text":"التقارير المعتمدة على القيود تحسب القيود المرحّلة فقط وضمن الفترة المالية الحالية. رحّل القيد أولًا ثم أعد عرض التقرير."}},
+{"@type":"Question","name":"لماذا تظهر رسالة عدم تحديد قيمة مخزون نهاية المدة عند فتح الأرباح والخسائر؟","acceptedAnswer":{"@type":"Answer","text":"يجب ضبط طريقة احتساب مخزون آخر المدة من شاشة اعداد تقييم مخزون اخر الفترة، أو تسجيل قيد بضاعة آخر المدة إذا كانت الطريقة من قيود اليومية."}},
+{"@type":"Question","name":"كيف يُحسب صافي الضريبة في الإقرار الضريبي؟","acceptedAnswer":{"@type":"Answer","text":"صافي الضريبة = ضريبة المبيعات ناقص ضريبة مرتجع المبيعات، ناقص (ضريبة المشتريات ناقص ضريبة مرتجع المشتريات)، ناقص صافي القيود اليدوية على حساب ضريبة القيمة المضافة."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"التقارير","item":"https://help.tebalink.com/index.html#reports"},
+{"@type":"ListItem","position":3,"name":"التقارير المالية والمحاسبية","item":"https://help.tebalink.com/reports-accounts.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#pos">نقاط البيع والمطاعم</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#reports">التقارير</a></li><li>التقارير المالية والمحاسبية</li></ol>
+<article>
+<h1>التقارير المالية والمحاسبية</h1>
+<p class="lead">تجمع هذه الصفحة كل تقارير الحسابات في Ezees ERP: <span class="ui">ميزان المراجعه</span>، و<span class="ui">ارباح وخسائر</span>، و<span class="ui">الميزانيه العموميه</span>، و<span class="ui">قائمه الدخل</span>، ودفتر الأستاذ واليومية، والخزينة والبنوك، والسندات والأوراق المالية، ومراكز التكلفة، والأصول الثابتة، و<span class="ui">الاقرار الضريبيى</span>. لكل تقرير ستجد: السؤال الذي يجيب عنه، وفلاتره، وأعمدته، وطريقة حساب أرقامه.</p>
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#how">كيف تعمل شاشات التقارير</a></li>
+  <li><a href="#index">فهرس سريع للتقارير</a></li>
+  <li><a href="#statements">القوائم المالية</a></li>
+  <li><a href="#journals">اليومية ودفتر الأستاذ</a></li>
+  <li><a href="#cash">الخزينة والبنوك والسندات</a></li>
+  <li><a href="#analysis">تحليل الحسابات</a></li>
+  <li><a href="#costcenters">مراكز التكلفة</a></li>
+  <li><a href="#tax">الإقرار الضريبي</a></li>
+  <li><a href="#assets">الأصول وتقييم المخزون</a></li>
+  <li><a href="#cards">تقارير كروت التصنيع</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+</ol></nav>
+
+<section id="how">
+<h2>كيف تعمل شاشات التقارير</h2>
+<p>كل شاشات التقارير تتبع نفس الطريقة تقريبًا:</p>
+<ol class="steps">
+  <li><strong>لوحة <span class="ui">تصفيه البيانات</span>:</strong> في أعلى الشاشة. أغلب الفلاتر لها <strong>خانة اختيار</strong> بجوارها، مثل <span class="ui">الفرع</span> أو <span class="ui">الحساب</span> أو <span class="ui">مركز تكلفة</span> أو <span class="ui">المشروع</span>. فعّل الخانة لتعمل القائمة بجوارها، وإذا تركتها فارغة يشمل التقرير الكل.</li>
+  <li><strong>التاريخ:</strong> حقلا <span class="ui">من</span> و<span class="ui">الى</span>. القيمة الافتراضية غالبًا هي الشهر الحالي، وفي القوائم الختامية هي الفترة المالية كاملة. في بعض التقارير تكون <span class="ui">من</span> خانة اختيار، وإذا لم تفعّلها يعرض التقرير كل التواريخ.</li>
+  <li><strong>زر العرض</strong> (أيقونة البحث <code>🔍</code>): ينفّذ التقرير ويملأ الجدول، ثم تُطوى لوحة الفلاتر تلقائيًا. تظهر الإجماليات أسفل الجدول.</li>
+  <li><strong>زر الطباعة</strong> (أيقونة الطابعة): يسألك <span class="msg">هل تريد معاينة التقرير قبل الطباعة؟</span>
+    <ul>
+      <li><strong>لا:</strong> يُطبع التقرير مباشرة على الطابعة الافتراضية.</li>
+      <li><strong>نعم:</strong> تفتح نافذة <span class="ui">طباعة تقرير</span>، وفيها اختيار <span class="ui">الطابعة</span> وعدد <span class="ui">نسخ</span>، وأزرار: <span class="ui">Print</span> للطباعة، و<span class="ui">Preview</span> للمعاينة على الشاشة، و<span class="ui">Export Excel</span> لحفظ الجدول كملف ‎.xlsx، و<span class="ui">Pivot</span> لتحليل الجدول في جدول محوري. وتجد أيضًا الإرسال بالبريد (<span class="ui">Email</span>) أو <span class="ui">WhatsApp</span> إذا كانت مفعّلة لديك.</li>
+    </ul>
+  </li>
+</ol>
+<div class="table-wrap"><table>
+<thead><tr><th>ميزة</th><th>ما يجب معرفته</th></tr></thead>
+<tbody>
+<tr><td>القيود المحتسبة</td><td>التقارير المعتمدة على القيود (الميزان، والأستاذ، والخزينة، ومراكز التكلفة...) تحتسب <strong>القيود المرحّلة فقط</strong> ضمن <strong>الفترة المالية المفتوحة حاليًا</strong>. راجع <a href="journal-entry.html">القيد اليومي</a>.</td></tr>
+<tr><td>ع.م</td><td>اختصار «العملة المحلية». الأعمدة التي تحمل «ع.م» هي المبلغ مضروبًا في سعر الصرف المسجل في القيد.</td></tr>
+<tr><td>Pivot</td><td>متاح فقط للجداول التي لا يزيد عدد صفوفها عن 200 صف.</td></tr>
+<tr><td>Export Excel وPivot</td><td>يعملان فقط في التقارير التي لها جدول على الشاشة. التقارير التي تُعرض مباشرة كتقرير مطبوع داخل الشاشة (قائمة الدخل، والإقرار الضريبي، وتقرير كروت التصنيع المجمع) تُطبع وتُصدَّر من أزرار شريط العارض نفسه.</td></tr>
+<tr><td>الفرع</td><td>إذا لم يكن لديك صلاحية رؤية كل الفروع، يُثبَّت الفرع على فرع واحد ولا يمكنك تغييره.</td></tr>
+<tr><td>النقر المزدوج</td><td>في تقارير القيود: النقر المزدوج على عمود <span class="ui">القيد</span> يفتح القيد، وعلى عمود <span class="ui">الوصف</span> أو <span class="ui">البيان</span> يفتح المستند الأصلي (فاتورة، سند...).</td></tr>
+<tr><td>الإغلاق</td><td><kbd>Esc</kbd> يغلق شاشة التقرير. ويفتح <kbd>F9</kbd> نافذة اختيار الحساب في التقارير التي فيها حقل حساب مكتوب عليه «Press F9».</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="index">
+<h2>فهرس سريع للتقارير</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>التقرير (عنوان الشاشة)</th><th>يجيب عن سؤال</th></tr></thead>
+<tbody>
+<tr><td><a href="#trial-balance">ميزان المراجعه</a></td><td>هل الدفاتر متوازنة؟ وما رصيد كل حساب؟</td></tr>
+<tr><td><a href="#trading">حساب المتاجره</a></td><td>كم مجمل الربح من البيع والشراء؟</td></tr>
+<tr><td><a href="#pl">ارباح وخسائر</a></td><td>كم صافي الربح أو الخسارة في الفترة؟</td></tr>
+<tr><td><a href="#income">قائمه الدخل</a></td><td>قائمة الدخل بالشكل المحاسبي، سنويًا أو شهريًا.</td></tr>
+<tr><td><a href="#balance-sheet">الميزانيه العموميه</a></td><td>ما الأصول والخصوم وحقوق الملكية في تاريخ معين؟</td></tr>
+<tr><td><a href="#fin-position">تقرير المركز المالي الشهرى</a></td><td>كيف تتغير المبيعات والتكلفة والربحية شهرًا بشهر؟</td></tr>
+<tr><td><a href="#daily">تقرير قيود يومية</a></td><td>ما القيود المسجلة في فترة، بكل تفاصيلها؟</td></tr>
+<tr><td><a href="#ledger">تقرير دفتر الاستاذ العام</a></td><td>ما حركة حساب معين ورصيده بعد كل عملية؟</td></tr>
+<tr><td><a href="#treasury">تقرير الخزينة</a></td><td>ما حركة الصندوق ورصيده؟</td></tr>
+<tr><td><a href="#banks">الحسابات البنكيه</a></td><td>ما حركة الحساب البنكي ورصيده؟</td></tr>
+<tr><td><a href="#vouchers">تقرير سندات القبض والصرف</a></td><td>ما السندات الصادرة في فترة، ولمن، وبكم؟</td></tr>
+<tr><td><a href="#papers">تقرير الاوراق المالية المستحقة</a></td><td>ما الشيكات المستحقة للتحصيل أو الدفع؟</td></tr>
+<tr><td><a href="#deficit">تقرير عجز تحويلات الخزينة</a></td><td>كم العجز أو الزيادة في خزينة كل مستخدم؟</td></tr>
+<tr><td><a href="#main-analysis">التحليل المالي للحسابات الرئيسيه</a></td><td>ما توزيع رصيد حساب رئيسي على فروعه بالنسبة؟</td></tr>
+<tr><td><a href="#expenses">تحليل المصروفات الرئيسيه</a></td><td>ما نسبة كل بند مصروفات من الإجمالي؟</td></tr>
+<tr><td><a href="#monthly">تحليل الحسابات شهريا</a> (والعملاء/الموردين)</td><td>ما حركة الحسابات في كل شهر من السنة؟</td></tr>
+<tr><td><a href="#cc-report">تقرير مراكز التكلفه</a></td><td>ما القيود المحمّلة على مركز تكلفة؟</td></tr>
+<tr><td><a href="#cc-grouped">تقرير ارصدة مراكز التكلفه مجمع</a></td><td>ما رصيد كل حساب في كل مركز تكلفة؟</td></tr>
+<tr><td><a href="#cc-annual">تقرير ارصدة مراكز التكلفه سنوي</a></td><td>ما رصيد كل مركز تكلفة في كل شهر؟</td></tr>
+<tr><td><a href="#vat">الاقرار الضريبيى</a></td><td>كم ضريبة القيمة المضافة المستحقة عن الفترة؟</td></tr>
+<tr><td><a href="#fixed-assets">تقرير الاصول الثابتة</a></td><td>ما قيمة الأصول وإهلاكها وقيمتها الحالية؟</td></tr>
+<tr><td><a href="#end-stock">اعداد تقييم مخزون اخر الفترة</a></td><td>كيف يُحسب مخزون آخر المدة في القوائم الختامية؟</td></tr>
+<tr><td><a href="#card-detail">تقرير اذونات كارت تصنيع</a> (تفصيلي ومجمع)</td><td>ماذا أُنتج بكروت التصنيع وما الخامات المستهلكة؟</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="statements">
+<h2>القوائم المالية</h2>
+<!--shot:reports-accounts__statements-->
+<figure class="shot" id="shot-reports-accounts__statements">
+<div class="shot-frame"><a href="assets/screens/reports-accounts__statements.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/reports-accounts__statements.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: القوائم المالية"></a></div>
+<figcaption>شاشة «القوائم المالية» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+
+<h3 id="trial-balance">ميزان المراجعه</h3>
+<p><strong>يجيب عن:</strong> رصيد كل حساب في <a href="chart-of-accounts.html">الدليل المحاسبي</a> بشكل شجري، وهل مجموع المدين يساوي مجموع الدائن.</p>
+<p><strong>الفلاتر:</strong> <span class="ui">الفرع</span>، و<span class="ui">الحساب</span> (لعرض حساب رئيسي وفروعه فقط)، و<span class="ui">من</span> / <span class="ui">الى</span>، و<span class="ui">مستوى</span> (عمق الشجرة)، و<span class="ui">قائمه ماليه</span> (مجموعة حسابات محفوظة)، و<span class="ui">اخفاء الارصدة الصفرية</span>.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>العمود</th><th>طريقة الحساب</th></tr></thead>
+<tbody>
+<tr><td>افتتاحى م / افتتاحى د</td><td>مبالغ القيد الافتتاحي للحساب.</td></tr>
+<tr><td>سابق م / سابق د</td><td>الحركات قبل تاريخ <span class="ui">من</span>، دون القيد الافتتاحي.</td></tr>
+<tr><td>مجموع م / مجموع د</td><td>حركة الحساب بين <span class="ui">من</span> و<span class="ui">الى</span>.</td></tr>
+<tr><td>رصيد م / رصيد د</td><td>الافتتاحي + السابق + حركة الفترة. يظهر الصافي في جهة واحدة فقط.</td></tr>
+</tbody></table></div>
+<p>المبالغ كلها بالعملة المحلية. الحسابات الرئيسية بخط عريض، ورصيدها مجموع فروعها. والإجماليات أسفل الجدول هي مجموع حسابات المستوى الأول.</p>
+<p class="tip">انقر نقرًا مزدوجًا على أي حساب لفتح <a href="#ledger">دفتر الأستاذ</a> الخاص به مباشرة.</p>
+
+<h3 id="trading">حساب المتاجره</h3>
+<p><strong>يجيب عن:</strong> مجمل الربح أو الخسارة من النشاط التجاري: المبيعات والمشتريات ومرتجعاتهما، وبضاعة أول وآخر المدة.</p>
+<p><strong>الفلاتر:</strong> <span class="ui">الفرع</span>، و<span class="ui">من</span> / <span class="ui">الى</span> (الافتراضي السنة الحالية)، و<span class="ui">قائمه ماليه</span>، و<span class="ui">مستوى الحسابات</span>.</p>
+<p><strong>الأعمدة:</strong> <span class="ui">مدين</span> و<span class="ui">الحساب المدين</span>، و<span class="ui">دائن</span> و<span class="ui">الحساب الدائن</span>. الصف الأخير بخلفية داكنة، وهو الإجمالي.</p>
+<p>يُحسب مخزون آخر المدة حسب الطريقة المحددة في <a href="#end-stock">اعداد تقييم مخزون اخر الفترة</a>: آليًا من حركة الأصناف، أو من قيد بضاعة آخر المدة.</p>
+<p class="note">الطباعة من هذه الشاشة لا تتيح التصدير إلى Excel، فهي تطبع التقرير فقط.</p>
+
+<h3 id="pl">ارباح وخسائر</h3>
+<p><strong>يجيب عن:</strong> صافي ربح أو خسارة الفترة.</p>
+<p><strong>الفلاتر:</strong> <span class="ui">فرع</span> (اختر فرعًا)، و<span class="ui">من</span> / <span class="ui">الى</span> (الافتراضي الفترة المالية كاملة)، و<span class="ui">قائمه ماليه</span>، و<span class="ui">المستوى</span>، و<span class="ui">اخفاء الارصدة الصفرية</span>.</p>
+<p><strong>طريقة الحساب:</strong></p>
+<ol>
+  <li>الصف الأول هو نتيجة المتاجرة: <span class="ui">المتاجره - مجمل ربح</span> في جهة الدائن، أو <span class="ui">المتاجره - مجمل خسارة</span> في جهة المدين.
+    <ul>
+      <li>في <strong>الجرد الدوري:</strong> مجمل الربح = صافي المبيعات (المبيعات − المرتجعات − المسموحات − الخصم المسموح به) − تكلفة المبيعات (بضاعة أول المدة + المشتريات ومصاريفها − مرتجعات ومسموحات المشتريات والخصم المكتسب − بضاعة آخر المدة).</li>
+      <li>في <strong>الجرد المستمر:</strong> مجمل الربح = صافي المبيعات − حساب تكلفة البضاعة المباعة.</li>
+    </ul>
+  </li>
+  <li>بعده تظهر حسابات المصروفات في عمود المدين، وحسابات الإيرادات في عمود الدائن، بشكل شجري.</li>
+  <li>في النهاية يظهر <span class="ui">ارباح وخسائر - صافي الربح</span> أو <span class="ui">صافي الخسارة</span>، ثم <span class="ui">اجمالي المدين</span> و<span class="ui">اجمالي الدائن</span>.</li>
+</ol>
+<div class="warn">قبل العرض يتحقق البرنامج من تحديد حسابات المشتريات والمبيعات ومرتجعاتهما وبضاعة أول وآخر المدة، ومن ضبط مخزون آخر المدة. إذا ظهرت رسالة نقص، راجع الحسابات الافتراضية وشاشة <a href="#end-stock">تقييم مخزون آخر الفترة</a>.</div>
+
+<h3 id="income">قائمه الدخل</h3>
+<p><strong>يجيب عن:</strong> قائمة الدخل بالشكل المحاسبي، وتُعرض كتقرير جاهز للطباعة داخل الشاشة.</p>
+<p><strong>الفلاتر:</strong> <span class="ui">الفرع</span>، ومفتاح <span class="ui">سنوى</span> / <span class="ui">شهرى</span>، و<span class="ui">لعام</span>.</p>
+<ul>
+  <li><strong>سنوى:</strong> قائمة واحدة للسنة المختارة. ويمكنك تفعيل <span class="ui">من</span> / <span class="ui">الى</span> لتحديد فترة بدلًا من السنة. تعرض: المبيعات ومرتجعاتها ومسموحاتها والخصم المسموح به، وبضاعة أول المدة، والمشتريات ومصاريفها ومرتجعاتها والخصم المكتسب، وبضاعة آخر المدة (أو تكلفة البضاعة المباعة في الجرد المستمر)، ثم الإيرادات والمصروفات الأخرى.</li>
+  <li><strong>شهرى:</strong> نفس البنود موزّعة على شهور السنة المختارة.</li>
+</ul>
+<p class="note">تختار الشاشة نموذج القائمة تلقائيًا حسب نوع الجرد في الفترة (دوري أو مستمر). اطبع أو صدّر من شريط أدوات العارض.</p>
+
+<h3 id="balance-sheet">الميزانيه العموميه</h3>
+<p><strong>يجيب عن:</strong> المركز المالي للمنشأة: الأصول والخصوم وحقوق الملكية.</p>
+<p><strong>الفلاتر:</strong> <span class="ui">الفرع</span>، و<span class="ui">من</span> / <span class="ui">الى</span>، و<span class="ui">المستوى</span>، و<span class="ui">اخفاء الارصدة الصفرية</span>.</p>
+<p><strong>الأعمدة:</strong> <span class="ui">كود</span>، و<span class="ui">الحساب</span>، و<span class="ui">جزئى</span> (رصيد الحساب التفصيلي)، و<span class="ui">كلى</span> (إجمالي المجموعة).</p>
+<p><strong>ترتيب الأقسام وطريقة الحساب:</strong></p>
+<ol>
+  <li><span class="ui">الاصول الثابته</span> ثم <span class="ui">المجمعات الاهلاكيه</span> (تظهر بعلامة (-))، ثم <span class="ui">صافى الاصول الثابته</span> = إجمالي الأصول الثابتة − إجمالي مجمع الإهلاك.</li>
+  <li><span class="ui">الاصول المتداوله</span>. في الجرد الدوري يُستبدل رصيد حساب بضاعة آخر المدة بقيمة المخزون المحسوبة حتى تاريخ <span class="ui">الى</span>.</li>
+  <li><span class="ui">الارصده المدينه الاخرى</span>: حسابات الأصول الأخرى ذات الطبيعة المدينة.</li>
+  <li><span class="ui">حقوق الملكية</span> ثم <span class="ui">الالتزامات والخصومات</span> ثم <span class="ui">الارصده الدائنه الاخرى</span>.</li>
+  <li>الفرق بين إجمالي الجانب المدين والجانب الدائن يظهر كسطر <span class="ui">الربح</span> أو <span class="ui">الخسارة</span>، ثم سطر <span class="ui">الاجمالى</span>.</li>
+</ol>
+<div class="warn">تعتمد الميزانية على تحديد الحسابات الرئيسية (الأصول، والخصوم، والأصول الثابتة، ومجمع الإهلاك، وحقوق الملكية، والأصول المتداولة، والالتزامات) في الحسابات الافتراضية. وإذا نقص أحدها تظهر رسالة مثل <span class="msg">عفوا لم يتم تحديد حساب حقوق الملكية</span>.</div>
+<p class="tip">خيار <span class="ui">اخفاء الارصدة الصفرية</span> يعمل بشكل صحيح فقط مع تفعيل <span class="ui">المستوى</span>. إذا أردت إخفاء الأصفار في كل المستويات، فعّل <span class="ui">المستوى</span> واختر أعلى رقم.</p>
+
+<h3 id="fin-position">تقرير المركز المالي الشهرى</h3>
+<p><strong>يجيب عن:</strong> تطور الربحية شهرًا بشهر خلال سنة. (رغم اسمه، هو تحليل شهري للربحية وليس ميزانية).</p>
+<p><strong>الفلاتر:</strong> <span class="ui">الفرع</span> (<strong>اختر فرعًا</strong>، فالتقرير لا يعمل على كل الفروع)، و<span class="ui">العام</span>، و<span class="ui">اخفاء الارصدة الصفرية</span>.</p>
+<p><strong>الصفوف:</strong> صافي المبيعات، وصافي الإيرادات، وإجمالي المبيعات والإيرادات. في الجرد الدوري فقط: إجمالي تكلفة البضاعة المتاحة، وإجمالي مخزون آخر الفترة. ثم إجمالي تكلفة البضاعة المباعة، وصافي المصروفات، وإجمالي التكلفة والمصروفات، وأخيرًا <span class="ui">الربحيه</span> = إجمالي المبيعات والإيرادات − (تكلفة البضاعة المباعة + المصروفات).</p>
+<p><strong>الأعمدة:</strong> <span class="ui">البيان</span>، وشهور السنة من يناير إلى ديسمبر، و<span class="ui">الأجمالي</span>. عمود الشهر الذي فيه ربحية سالبة يظهر بلون وردي. وإجمالي صفوف التكلفة المتاحة والمخزون وتكلفة المبيعات يظهر صفرًا، لأن جمع أرصدة المخزون عبر الشهور لا معنى له.</p>
+</section>
+
+<section id="journals">
+<h2>اليومية ودفتر الأستاذ</h2>
+<!--shot:reports-accounts__journals-->
+<figure class="shot" id="shot-reports-accounts__journals">
+<div class="shot-frame"><a href="assets/screens/reports-accounts__journals.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/reports-accounts__journals.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: اليومية ودفتر الأستاذ"></a></div>
+<figcaption>شاشة «اليومية ودفتر الأستاذ» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+
+<h3 id="daily">تقرير قيود يومية</h3>
+<p><strong>يجيب عن:</strong> ما القيود المرحّلة في فترة، سطرًا بسطر.</p>
+<p><strong>الفلاتر:</strong> <span class="ui">الفرع</span>، و<span class="ui">يوزر</span> (المستخدم الذي سجّل القيد)، و<span class="ui">المصدر</span> (قيد يدوي، فاتورة، سند...)، و<span class="ui">م تكلفة</span>، و<span class="ui">المشروع</span>، و<span class="ui">الحساب</span> (اضغط <kbd>F9</kbd> للاختيار)، و<span class="ui">من رقم</span> / <span class="ui">الى رقم</span> (نطاق أرقام القيود)، و<span class="ui">من</span> / <span class="ui">الى</span>.</p>
+<p><strong>الأعمدة:</strong> <span class="ui">كود</span> و<span class="ui">الحساب</span>، و<span class="ui">مدين</span> و<span class="ui">دائن</span>، ومقابلهما بالعملة المحلية، و<span class="ui">العمله</span>، و<span class="ui">سعر الصرف</span>، و<span class="ui">البيان</span>، و<span class="ui">التاريخ</span>، و<span class="ui">م.دفترى</span>، و<span class="ui">القيد</span>، و<span class="ui">م تكلفة</span>، و<span class="ui">مشروع</span>، وبيانات من أضاف القيد ومن عدّله. وأسفل الجدول <span class="ui">اجمالي مدين</span> و<span class="ui">اجمالي دائن</span> وما يقابلهما بالعملة المحلية.</p>
+
+<h3 id="ledger">تقرير دفتر الاستاذ العام</h3>
+<p><strong>يجيب عن:</strong> حركة حساب واحد (أو حساب رئيسي مع كل فروعه)، والرصيد التراكمي بعد كل عملية.</p>
+<p><strong>الفلاتر:</strong></p>
+<ul>
+  <li><span class="ui">الرئيسي</span>: اختصار لنوع الحساب، مثل <span class="ui">صناديق</span> و<span class="ui">بنوك</span> و<span class="ui">عملاء</span> و<span class="ui">موردين</span> و<span class="ui">مبيعات</span> و<span class="ui">مشتريات</span> ومرتجعاتهما و<span class="ui">رواتب وأجور</span> و<span class="ui">الصيانات</span>. اختياره يحصر قائمة <span class="ui">الفرعي</span> في حسابات هذا النوع، أما <span class="ui">الفروع الرئيسيه</span> فيعرض كل الحسابات.</li>
+  <li><span class="ui">الفرعي</span>: الحساب المطلوب. إذا كان حسابًا رئيسيًا تُعرض حركة كل الحسابات التابعة له.</li>
+  <li><span class="ui">الفرع</span>، و<span class="ui">مركز تكلفة</span>، و<span class="ui">المصدر</span>، و<span class="ui">من</span> / <span class="ui">الى</span>.</li>
+  <li><span class="ui">نمط متطور</span>: يُظهر أعمدة المدين والدائن والرصيد بالعملة المحلية.</li>
+</ul>
+<p><strong>الأعمدة:</strong> <span class="ui">مدين</span>، و<span class="ui">دائن</span>، و<span class="ui">الرصيد</span> (تراكمي: الموجب مدين والسالب دائن)، و<span class="ui">العمله</span>، و<span class="ui">سعر الصرف</span>، و<span class="ui">الوصف</span>، و<span class="ui">التاريخ</span>، و<span class="ui">المسلسل</span>، و<span class="ui">مصدر القيد</span>، و<span class="ui">القيد</span>، و<span class="ui">User</span>.</p>
+<p><strong>طريقة الحساب:</strong> عند تحديد فترة، يظهر أول سطر بعنوان <span class="ui">رصيد سابق</span>، وهو رصيد الحساب قبل تاريخ <span class="ui">من</span>. ثم يبدأ الرصيد التراكمي منه. وأسفل الجدول:</p>
+<ul>
+  <li><span class="ui">اجمالي م</span> و<span class="ui">اجمالي د</span>: المجاميع، وتشمل سطر الرصيد السابق.</li>
+  <li><span class="ui">الرصيد</span>: الرصيد الختامي مع حالته (مدين أو دائن).</li>
+  <li><span class="ui">الفترة</span>: صافي حركة الفترة وحدها، دون الرصيد السابق.</li>
+</ul>
+<p class="tip">يمكنك فتح دفتر الأستاذ مباشرة بالنقر المزدوج على حساب في <a href="#trial-balance">ميزان المراجعة</a>.</p>
+</section>
+
+<section id="cash">
+<h2>الخزينة والبنوك والسندات</h2>
+<!--shot:reports-accounts__cash-->
+<figure class="shot" id="shot-reports-accounts__cash">
+<div class="shot-frame"><a href="assets/screens/reports-accounts__cash.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/reports-accounts__cash.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: الخزينة والبنوك والسندات"></a></div>
+<figcaption>شاشة «الخزينة والبنوك والسندات» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+
+<h3 id="treasury">تقرير الخزينة</h3>
+<p><strong>يجيب عن:</strong> حركة صندوق نقدي ورصيده.</p>
+<p><strong>الفلاتر:</strong> <span class="ui">الصندوق</span>، و<span class="ui">العمله</span> (إلزامي، ويعرض حركة هذه العملة فقط)، و<span class="ui">يوزر</span>، و<span class="ui">من</span> / <span class="ui">الى</span> (إذا لم تفعّل <span class="ui">من</span> تُعرض كل التواريخ)، و<span class="ui">اخفاء القيم الصفريه</span>.</p>
+<p><strong>الأعمدة:</strong> <span class="ui">مدين</span> (المقبوض)، و<span class="ui">دائن</span> (المدفوع)، و<span class="ui">الرصيد</span> التراكمي، ومقابلها بالعملة المحلية، و<span class="ui">تاريخ القيد</span>، و<span class="ui">الوصف</span>، و<span class="ui">الصندوق</span>، و<span class="ui">العمله</span>، و<span class="ui">سعر الصرف</span>، و<span class="ui">القيد</span>، و<span class="ui">المستخدم</span>.</p>
+<p><strong>الإجماليات:</strong> <span class="ui">رصيد سابق</span> قبل بداية الفترة، و<span class="ui">اجمالي مدين</span> / <span class="ui">اجمالي دائن</span>، و<span class="ui">اجمالى الرصيد</span> مع حالته، ونفس الأرقام بالعملة المحلية (ع.م).</p>
+<p class="note">عند فتح التقرير من شاشة الكاشير يُثبَّت على صندوق الوردية الحالية وعلى المستخدم الحالي.</p>
+
+<h3 id="banks">الحسابات البنكيه</h3>
+<p><strong>يجيب عن:</strong> كشف حركة حساب بنكي ورصيده.</p>
+<p><strong>الفلاتر:</strong> <span class="ui">البنك</span>، ثم <span class="ui">الفرع</span> (فرع البنك)، ثم <span class="ui">الحساب</span> (رقم الحساب البنكي). الثلاثة إلزامية. ثم <span class="ui">من</span> / <span class="ui">الى</span>.</p>
+<p><strong>الأعمدة:</strong> <span class="ui">مدين</span>، و<span class="ui">دائن</span>، ومقابلهما بالعملة المحلية، و<span class="ui">الرصيد</span>، و<span class="ui">الرصيد ع.م</span>، و<span class="ui">تاريخ القيد</span>، و<span class="ui">الوصف</span>، و<span class="ui">العمله</span>، و<span class="ui">سعر الصرف</span>، و<span class="ui">القيد</span>.</p>
+<p>عند تحديد فترة يظهر سطر <span class="ui">رصيد سابق</span> في أول الجدول، ويدخل في الإجماليات. أما <span class="ui">اجمالى الرصيد</span> أسفل الشاشة فهو الرصيد الختامي مع حالته.</p>
+<p class="warn">حقلا <span class="ui">السابق</span> أسفل الشاشة يظهران دائمًا صفرًا. اعتمد على سطر <span class="ui">رصيد سابق</span> في الجدول.</p>
+
+<h3 id="vouchers">تقرير سندات القبض والصرف</h3>
+<p><strong>يجيب عن:</strong> قائمة <a href="vouchers.html">سندات القبض والصرف</a> في فترة.</p>
+<p><strong>الفلاتر:</strong> <span class="ui">النوع</span> (<span class="ui">قبض</span> / <span class="ui">صرف</span>)، و<span class="ui">النوع</span> الثاني لطريقة الدفع (<span class="ui">نقدي</span> / <span class="ui">شيك</span> / <span class="ui">تحويل</span> / <span class="ui">سند ضمان بدون قيد</span>)، و<span class="ui">الحساب</span> (<kbd>F9</kbd>، طرف من أو إلى)، و<span class="ui">م تكلفة</span>، و<span class="ui">المشروع</span>، و<span class="ui">الفرع</span>، و<span class="ui">المندوب</span>، و<span class="ui">مرحل</span> (<span class="ui">مرحل</span> / <span class="ui">غير مرحل</span>)، و<span class="ui">من</span> / <span class="ui">الى</span> لتاريخ السند.</p>
+<p><strong>الأعمدة:</strong> <span class="ui">رقم</span>، و<span class="ui">من</span>، و<span class="ui">الى</span>، و<span class="ui">ت السند</span>، و<span class="ui">ت الاصدار</span>، و<span class="ui">ت الاستحقاق</span>، و<span class="ui">الغرض</span>، و<span class="ui">المبلغ</span>، و<span class="ui">الضريبة</span>، و<span class="ui">الاجمالى</span>، و<span class="ui">العملة</span>، و<span class="ui">سعر الصرف</span>، و<span class="ui">قيمة م.ع</span>، و<span class="ui">القيد</span>، و<span class="ui">المندوب</span>، و<span class="ui">فاتورة</span>، و<span class="ui">م تكلفة</span>، و<span class="ui">المشروع</span>. وأسفل الجدول <span class="ui">اجمالى ع.م</span>.</p>
+<p class="tip">انقر نقرًا مزدوجًا على عمود <span class="ui">رقم</span> لفتح السند نفسه.</p>
+<p class="note">قد يظهر عمود <span class="ui">القيد</span> فارغًا في بعض الفترات المالية. للوصول إلى القيد افتح السند نفسه.</p>
+
+<h3 id="papers">تقرير الاوراق المالية المستحقة</h3>
+<p><strong>يجيب عن:</strong> ما <a href="checks.html">الشيكات</a> (أوراق القبض والدفع) المستحقة في فترة، وحالة تحصيلها. يعرض السندات التي طريقة دفعها <strong>شيك</strong> فقط.</p>
+<p><strong>الفلاتر:</strong></p>
+<ul>
+  <li><span class="ui">نوع الورقة</span>: <span class="ui">قبض</span> (شيكات واردة) أو <span class="ui">صرف</span> (شيكات صادرة).</li>
+  <li><span class="ui">البنك</span>: حساب البنك أو الصندوق أو حساب أوراق القبض/الدفع.</li>
+  <li><span class="ui">الحساب</span>: الطرف الآخر (<kbd>F9</kbd>)، و<span class="ui">رقم الشيك</span>، و<span class="ui">الفرع</span>.</li>
+  <li><span class="ui">الحالة</span>: <span class="ui">تم التحصيل</span> أو <span class="ui">غير محصل</span>، وخانة <span class="ui">مرفوض</span>.</li>
+  <li><span class="ui">الكل</span>: لعرض المرحّل وغير المرحّل معًا. ألغِ تفعيلها لتختار <span class="ui">مرحل</span> أو <span class="ui">غير مرحل</span>.</li>
+  <li><span class="ui">من</span> / <span class="ui">الى</span>: تُطبَّق على <strong>تاريخ الاستحقاق</strong>.</li>
+  <li><span class="ui">ترتيب</span>: حسب <span class="ui">تاريخ التحرير</span> أو <span class="ui">تاريخ الاستحقاق</span>.</li>
+</ul>
+<p><strong>الأعمدة:</strong> <span class="ui">رقم</span>، و<span class="ui">البنك</span>، و<span class="ui">الحساب</span>، و<span class="ui">رقم الورقة</span>، والتواريخ، و<span class="ui">الغرض</span>، و<span class="ui">المبلغ</span>، و<span class="ui">الضريبة</span>، و<span class="ui">الاجمالى</span>، و<span class="ui">حساب التحصيل</span>. وأسفل الجدول <span class="ui">الاجمالى</span> و<span class="ui">الضريبة</span> و<span class="ui">الصافى</span> بالعملة المحلية.</p>
+<div class="warn">إذا لم تفعّل <span class="ui">تم التحصيل</span> ولا <span class="ui">غير محصل</span>، يعرض التقرير الشيكات <strong>غير المحصلة</strong>. ويستبعد الشيكات المرفوضة ما لم تفعّل <span class="ui">مرفوض</span>.</div>
+
+<h3 id="deficit">تقرير عجز تحويلات الخزينة</h3>
+<p><strong>يجيب عن:</strong> الفروق المسجلة عند تسليم خزائن المستخدمين، سواء عجز أو زيادة.</p>
+<p><strong>الفلاتر:</strong> <span class="ui">المستخدم</span> (إلزامي)، و<span class="ui">العمله</span>. لا يوجد فلتر تاريخ، فيعرض التقرير كل الفروق المسجلة لهذا المستخدم.</p>
+<p><strong>الأعمدة:</strong> <span class="ui">الخزينة</span>، و<span class="ui">المبلغ</span>، و<span class="ui">العملة</span>، و<span class="ui">المعامل</span>، و<span class="ui">التاريخ</span>، و<span class="ui">الحالة</span> (<span class="ui">زائد</span> إذا كان المبلغ موجبًا، و<span class="ui">عجز</span> إذا كان سالبًا). وأسفل الجدول <span class="ui">اجمالى رصيد</span>.</p>
+</section>
+
+<section id="analysis">
+<h2>تحليل الحسابات</h2>
+<!--shot:reports-accounts__analysis-->
+<figure class="shot" id="shot-reports-accounts__analysis">
+<div class="shot-frame"><a href="assets/screens/reports-accounts__analysis.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/reports-accounts__analysis.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: تحليل الحسابات"></a></div>
+<figcaption>شاشة «تحليل الحسابات» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+
+<h3 id="main-analysis">التحليل المالي للحسابات الرئيسيه</h3>
+<p><strong>يجيب عن:</strong> كيف يتوزع رصيد حساب رئيسي على حساباته الفرعية، وما نسبة كل حساب.</p>
+<p><strong>الفلاتر:</strong> <span class="ui">الحساب الرئيسي</span>، و<span class="ui">الفرع</span>، و<span class="ui">مركز تكلفة</span>، و<span class="ui">المشروع</span>، و<span class="ui">من</span> / <span class="ui">الى</span>، و<span class="ui">اخفاء الارصدة الصفرية</span>.</p>
+<p><strong>الأعمدة:</strong> <span class="ui">كود الحساب</span>، و<span class="ui">الحساب</span>، و<span class="ui">الرصيد</span>، و<span class="ui">النسبة %</span>. وأسفل الجدول <span class="ui">الاجمالى</span>، وهو مجموع حسابات المستوى الأول.</p>
+
+<h3 id="expenses">تحليل المصروفات الرئيسيه</h3>
+<p><strong>يجيب عن:</strong> أين تذهب المصروفات؟ يعرض الحسابات الفرعية المباشرة لحساب المصروفات الرئيسي، مع رصيد كل منها ونسبته من الإجمالي.</p>
+<p><strong>الفلاتر:</strong> <span class="ui">الفرع</span>، و<span class="ui">مركز تكلفة</span>، و<span class="ui">المشروع</span>، و<span class="ui">من</span> / <span class="ui">الى</span>، و<span class="ui">اخفاء الارصدة الصفرية</span>.</p>
+<p><strong>الأعمدة:</strong> <span class="ui">رقم الحساب</span>، و<span class="ui">الحساب</span>، و<span class="ui">الرصيد</span> (يشمل كل الحسابات التابعة)، و<span class="ui">النسبة %</span>. لا تدخل حسابات المتاجرة (مثل المشتريات) في هذا التحليل.</p>
+
+<h3 id="monthly">تحليل الحسابات شهريا</h3>
+<p><strong>يجيب عن:</strong> كم تحرك كل حساب في كل شهر من السنة. للتقرير ثلاث نسخ بنفس الشاشة:</p>
+<ul>
+  <li><span class="ui">تحليل الحسابات شهريا</span>: اختر حسابًا رئيسيًا من <span class="ui">الحساب</span> لتظهر فروعه.</li>
+  <li><span class="ui">تحليل حسابات العملاء شهرى</span> و<span class="ui">تحليل حسابات الموردين شهرى</span>: بدون تفعيل <span class="ui">الحساب</span> تظهر كل الحسابات. فعّله لاختيار عميل أو مورد واحد.</li>
+</ul>
+<p><strong>الفلاتر الأخرى:</strong> <span class="ui">الفرع</span>، و<span class="ui">عام</span> (الافتراضي السنة الحالية)، و<span class="ui">مستوى</span>، و<span class="ui">اخفاء الارصدة الصفرية</span>.</p>
+<p><strong>طريقة الحساب:</strong> قيمة كل شهر هي صافي حركة الشهر (وليست رصيدًا تراكميًا). للحسابات المدينة الطبيعة: المدين − الدائن. وللدائنة الطبيعة: الدائن − المدين. و<span class="ui">الأجمالي</span> مجموع الشهور الاثني عشر. الحسابات الرئيسية تجمع حركة فروعها.</p>
+</section>
+
+<section id="costcenters">
+<h2>مراكز التكلفة</h2>
+<p>تعتمد هذه التقارير على تحميل القيود على <a href="cost-centers.html">مراكز التكلفة</a> عند تسجيلها.</p>
+<!--shot:reports-accounts__costcenters-->
+<figure class="shot" id="shot-reports-accounts__costcenters">
+<div class="shot-frame"><a href="assets/screens/reports-accounts__costcenters.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/reports-accounts__costcenters.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: مراكز التكلفة"></a></div>
+<figcaption>شاشة «مراكز التكلفة» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+
+<h3 id="cc-report">تقرير مراكز التكلفه</h3>
+<p><strong>يجيب عن:</strong> ما القيود المحمّلة على مركز تكلفة معين.</p>
+<p><strong>الفلاتر:</strong> <span class="ui">مركز التكلفه</span> (إلزامي)، و<span class="ui">الفرع</span>، و<span class="ui">المشروع</span>، و<span class="ui">من</span> / <span class="ui">الى</span>.</p>
+<p><strong>الأعمدة:</strong> <span class="ui">مدين</span>، و<span class="ui">دائن</span>، ومقابلهما بالعملة المحلية، و<span class="ui">العملة</span>، و<span class="ui">سعر الصرف</span>، و<span class="ui">الحساب</span>، و<span class="ui">الوصف</span>، و<span class="ui">التاريخ</span>، و<span class="ui">رقم القيد</span>، و<span class="ui">المصدر</span>. وأسفل الجدول الإجماليات، والرصيد مع حالته (مدين أو دائن).</p>
+
+<h3 id="cc-grouped">تقرير ارصدة مراكز التكلفه مجمع</h3>
+<p><strong>يجيب عن:</strong> رصيد كل حساب في كل مركز تكلفة، في جدول واحد.</p>
+<p><strong>الفلاتر:</strong> <span class="ui">مركز تكلفة</span> (فعّل الخانة واختر المركز، فهو إلزامي)، و<span class="ui">الحساب</span>، و<span class="ui">الفرع</span>، و<span class="ui">المشروع</span>، و<span class="ui">من</span> / <span class="ui">الى</span>.</p>
+<p><strong>الناتج:</strong> الصفوف هي الحسابات المسموح تحميلها على مراكز التكلفة، والأعمدة هي المركز المختار وفروعه. وكل خلية فيها رصيد الحساب في هذا المركز.</p>
+<p class="note">زر الطباعة في هذه الشاشة يفتح نافذة <span class="ui">طباعة تقرير</span> للتصدير إلى Excel أو Pivot فقط، ولا يوجد نموذج طباعة جاهز.</p>
+
+<h3 id="cc-annual">تقرير ارصدة مراكز التكلفه سنوي</h3>
+<p><strong>يجيب عن:</strong> رصيد كل مركز تكلفة في كل شهر من السنة.</p>
+<p><strong>الفلاتر:</strong> <span class="ui">مركز تكلفة</span> (اتركه فارغًا لعرض كل المراكز الرئيسية)، و<span class="ui">الفرع</span>، و<span class="ui">المشروع</span>، و<span class="ui">عام</span>، و<span class="ui">اخفاء الارصدة الصفرية</span>.</p>
+<p><strong>الأعمدة:</strong> <span class="ui">البيان</span>، وشهور السنة، و<span class="ui">الأجمالي</span>. المركز الرئيسي يظهر بلون أخضر، وتحته فروعه المباشرة. ورصيد كل منها هو مجموع أرصدة المراكز الفرعية الأخيرة التابعة له.</p>
+</section>
+
+<section id="tax">
+<h2>الإقرار الضريبي</h2>
+<!--shot:reports-accounts__tax-->
+<figure class="shot" id="shot-reports-accounts__tax">
+<div class="shot-frame"><a href="assets/screens/reports-accounts__tax.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/reports-accounts__tax.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: الإقرار الضريبي"></a></div>
+<figcaption>شاشة «الإقرار الضريبي» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<h3 id="vat">الاقرار الضريبيى</h3>
+<p><strong>يجيب عن:</strong> كم ضريبة القيمة المضافة المستحقة عن فترة. يُعرض كتقرير جاهز للطباعة داخل الشاشة.</p>
+<p><strong>الفلاتر:</strong> <span class="ui">الفرع</span>، و<span class="ui">من</span> / <span class="ui">الى</span> (الافتراضي الشهر الحالي).</p>
+<div class="table-wrap"><table>
+<thead><tr><th>البند</th><th>طريقة الحساب</th></tr></thead>
+<tbody>
+<tr><td>المبيعات / مرتجع المبيعات</td><td>صافي قيمة عمليات البيع والمرتجع <strong>الخاضعة للضريبة فقط</strong>، بالعملة المحلية.</td></tr>
+<tr><td>المشتريات / مرتجع المشتريات</td><td>بنفس الطريقة لعمليات الشراء ومرتجعها الخاضعة للضريبة.</td></tr>
+<tr><td>ضريبة كل نوع</td><td>مجموع ضريبة الفواتير من هذا النوع في الفترة.</td></tr>
+<tr><td>صافي ضريبة المبيعات</td><td>ضريبة المبيعات − ضريبة مرتجع المبيعات.</td></tr>
+<tr><td>صافي ضريبة المشتريات</td><td>ضريبة المشتريات − ضريبة مرتجع المشتريات.</td></tr>
+<tr><td>تسويات القيود</td><td>صافي (المدين − الدائن) على حساب ضريبة القيمة المضافة من القيود المرحّلة التي لم تصدر من الفواتير، مثل القيود اليدوية والسندات.</td></tr>
+<tr><td>صافي الضريبة</td><td>صافي ضريبة المبيعات − صافي ضريبة المشتريات − تسويات القيود.</td></tr>
+</tbody></table></div>
+<div class="warn">إذا لم توجد أي ضريبة مشتريات في الفترة، قد يظهر بند <strong>المشتريات</strong> صفرًا، وقد تُهمل ضريبة مرتجع المشتريات. راجع الأرقام مع <a href="#daily">تقرير القيود</a> قبل تقديم الإقرار.</div>
+<p class="note">ضريبة الفواتير تُحسب من الفواتير نفسها، أما التسويات فتُحسب من القيود المرحّلة فقط. تأكد من تحديد حساب ضريبة القيمة المضافة في الحسابات الافتراضية.</p>
+</section>
+
+<section id="assets">
+<h2>الأصول وتقييم المخزون</h2>
+<!--shot:reports-accounts__assets-->
+<figure class="shot" id="shot-reports-accounts__assets">
+<div class="shot-frame"><a href="assets/screens/reports-accounts__assets.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/reports-accounts__assets.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: الأصول وتقييم المخزون"></a></div>
+<figcaption>شاشة «الأصول وتقييم المخزون» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+
+<h3 id="fixed-assets">تقرير الاصول الثابتة</h3>
+<p><strong>يجيب عن:</strong> ما الأصول المشتراة، وكم أُهلك منها، وما قيمتها الحالية.</p>
+<p><strong>الفلاتر:</strong> <span class="ui">الفرع</span>، و<span class="ui">التصنيف</span>، و<span class="ui">الموقع</span>، و<span class="ui">الاصل</span>، و<span class="ui">من</span> / <span class="ui">الى</span> (تُطبَّق على تاريخ الشراء).</p>
+<p><strong>الأعمدة:</strong> <span class="ui">كود</span>، و<span class="ui">الاسم</span>، و<span class="ui">الحساب</span>، و<span class="ui">تاريخ االشراء</span>، و<span class="ui">القيمه الدفتريه</span>، و<span class="ui">عدد اقساط</span>، و<span class="ui">قيمه القسط</span>، و<span class="ui">القيمه الحاليه</span>، و<span class="ui">رصيد اهلاك</span> (= القيمة الدفترية − القيمة الحالية)، و<span class="ui">قيد</span>، و<span class="ui">التصنيف</span>، و<span class="ui">الموقع</span>، و<span class="ui">الفرع</span>، و<span class="ui">اقساط منفذة</span> (عدد قيود الإهلاك المسجلة)، و<span class="ui">اقساط متبقية</span>. وأسفل الجدول <span class="ui">اجمالى القيمة</span> و<span class="ui">اجمالي الاقساط</span> و<span class="ui">القيمة الحالية</span> و<span class="ui">رصيد اهلاك</span>.</p>
+
+<h3 id="end-stock">اعداد تقييم مخزون اخر الفترة</h3>
+<p>هذه ليست تقريرًا بل شاشة إعداد، لكنها <strong>شرط</strong> لعمل <a href="#trading">حساب المتاجرة</a> و<a href="#pl">الأرباح والخسائر</a> و<a href="#balance-sheet">الميزانية</a>.</p>
+<p><strong>قسم <span class="ui">احتساب قيمه رصيد أخر المده</span>:</strong></p>
+<ul>
+  <li><span class="ui">بطريقه آليه</span>: يحسب البرنامج قيمة المخزون من حركة الأصناف، حسب <span class="ui">طريقه التسعير</span>: <span class="ui">السعر الأساسي</span> أو <span class="ui">المتوسط المرجح</span> أو <span class="ui">أول سعر شراء</span> أو <span class="ui">أخر سعر شراء</span>.</li>
+  <li><span class="ui">قيود يومية</span>: تؤخذ القيمة من قيد بضاعة آخر المدة الذي تسجله بنفسك.</li>
+  <li><span class="ui">بطريقه يدويه</span>: انظر التحذير أدناه.</li>
+</ul>
+<p>اضغط <span class="ui">حفظ</span> لتثبيت الطريقة.</p>
+<p><strong>قسم <span class="ui">اعادة تقييم الاصناف</span>:</strong> يعيد حساب تكلفة الأصناف لكل حركات الفترة الحالية بالترتيب الزمني. فعّل <span class="ui">اعادة تقييم تكلفة المبيعات</span> و/أو <span class="ui">اعادة تقييم عمليات المخازن</span> حسب الحاجة، ثم اضغط <span class="ui">تقييم</span>. يظهر شريط التقدم، ويمكنك الضغط على <span class="ui">ايقاف</span> لإلغاء العملية دون حفظ أي تغيير.</p>
+<div class="warn"><strong>خذ نسخة احتياطية</strong> قبل <span class="ui">تقييم</span>، فهي تعدّل تكلفة وربح العمليات المسجلة. لا تختر <span class="ui">بطريقه يدويه</span>: الشاشة لا تتيح حاليًا إدخال قيمة المخزون يدويًا، فيرفض تقرير الأرباح والخسائر العرض برسالة عدم تحديد مخزون نهاية المدة.</div>
+</section>
+
+<section id="cards">
+<h2>تقارير كروت التصنيع</h2>
+<!--shot:reports-accounts__cards-->
+<figure class="shot" id="shot-reports-accounts__cards">
+<div class="shot-frame"><a href="assets/screens/reports-accounts__cards.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/reports-accounts__cards.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: تقارير كروت التصنيع"></a></div>
+<figcaption>شاشة «تقارير كروت التصنيع» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+
+<h3 id="card-detail">تقرير اذونات كارت تصنيع (تفصيلي)</h3>
+<p><strong>يجيب عن:</strong> ما الكروت المنتجة، والكمية المتوقعة مقابل الفعلية، وتكلفتها.</p>
+<p><strong>الفلاتر:</strong> <span class="ui">الفرع</span>، و<span class="ui">مخزن الوارد</span>، و<span class="ui">الصنف</span> (<kbd>F7</kbd>)، و<span class="ui">الحساب</span> للعميل (<kbd>F9</kbd>)، و<span class="ui">مندوب</span>، و<span class="ui">تاريخ</span> ليوم واحد، أو <span class="ui">من</span> / <span class="ui">الى</span>.</p>
+<p><strong>الأعمدة:</strong> <span class="ui">No</span>، و<span class="ui">التاريخ</span>، و<span class="ui">مخزن وارد</span>، و<span class="ui">مخزن صادر</span>، و<span class="ui">البند</span>، و<span class="ui">وحدة</span>، و<span class="ui">ك متوقعة</span>، و<span class="ui">ك فعلية</span>، و<span class="ui">الفارق</span> (= المتوقعة − الفعلية)، و<span class="ui">اجمالى</span>، و<span class="ui">خصم</span>، و<span class="ui">ضريبة</span>، و<span class="ui">الصافى</span>، و<span class="ui">العميل</span>، و<span class="ui">مندوب</span>.</p>
+<p class="tip">فعّل <span class="ui">تقرير مفصل</span> قبل الطباعة ليظهر تحت كل كارت تفصيل الخامات. والنقر المزدوج على أي سطر يفتح الكارت نفسه.</p>
+
+<h3 id="card-collect">تقرير اذونات كارت تصنيع (مجمع)</h3>
+<p><strong>يجيب عن:</strong> إجمالي ما أُنتج من كل صنف، وإجمالي الخامات المستهلكة، مع الرصيد الحالي لكل منهما. يُعرض كتقرير جاهز داخل الشاشة.</p>
+<p><strong>الفلاتر:</strong> <span class="ui">الفرع</span>، و<span class="ui">مخزن الوارد</span> (للمنتج التام)، و<span class="ui">مخزن الخامات</span>، و<span class="ui">الصنف</span> (<kbd>F7</kbd>)، و<span class="ui">تاريخ</span> أو <span class="ui">من</span> / <span class="ui">الى</span>.</p>
+<p class="note">اختيار <span class="ui">مخزن الخامات</span> يحدد المخزن الذي يُقرأ منه رصيد الخامات فقط، ولا يقصر الكميات المستهلكة على هذا المخزن. والرصيد المعروض هو الرصيد حتى اليوم.</p>
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td><span class="msg">لايوجد بيانات متاحة</span></td><td>لا توجد نتائج للفلاتر المختارة. وسّع الفترة أو ألغِ بعض الفلاتر، وتأكد من ترحيل القيود.</td></tr>
+<tr><td><span class="msg">عفوا تأكد من بياناتك أولا</span></td><td>فلتر إلزامي فارغ، مثل الصندوق أو مركز التكلفة أو المستخدم أو بيانات البنك.</td></tr>
+<tr><td><span class="msg">هل تريد معاينة التقرير قبل الطباعة؟</span></td><td>«نعم» تفتح نافذة الطباعة والتصدير، و«لا» تطبع مباشرة.</td></tr>
+<tr><td><span class="msg">عفوا لم يتم تحديد قيمة مخزون نهايه المده...</span></td><td>اضبط الطريقة في <a href="#end-stock">اعداد تقييم مخزون اخر الفترة</a>، أو سجّل قيد بضاعة آخر المدة.</td></tr>
+<tr><td><span class="msg">حساب المشتريات غير موجود في شجرة الحسابات حتى الآن</span> (وما يشبهها للمبيعات والمرتجعات وبضاعة أول وآخر المدة والمصروفات والإيرادات وتكلفة البضاعة)</td><td>الحساب الافتراضي المذكور غير محدد. حدده في إعدادات الحسابات الافتراضية في <a href="chart-of-accounts.html">الدليل المحاسبي</a>.</td></tr>
+<tr><td><span class="msg">حساب الصندوق غير موجود في شجرة الحسابات حتى الآن</span></td><td>في تقرير الخزينة: حساب الصناديق الرئيسي غير محدد.</td></tr>
+<tr><td><span class="msg">عفوا لم يتم تحديد حساب ...</span> (للأصول أو الخصوم أو حقوق الملكية...)</td><td>في الميزانية: أحد الحسابات الرئيسية للميزانية غير محدد.</td></tr>
+<tr><td><span class="msg">عدد الصفوف يتجاوز 100 صف لا يمكن استخدام هذا الاختيار</span></td><td>زر Pivot لا يعمل مع الجداول الكبيرة (أكثر من 200 صف فعليًا). ضيّق الفلاتر أو صدّر إلى Excel.</td></tr>
+</tbody></table></div>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="chart-of-accounts.html">الدليل المحاسبي</a> · <a href="journal-entry.html">القيد اليومي</a> · <a href="cost-centers.html">مراكز التكلفة</a> · <a href="custom-reports.html">التقارير المخصصة</a> · <a href="vouchers.html">سندات القبض والصرف</a> · <a href="checks.html">الشيكات</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-08">8 أكتوبر 2026</time></div></footer>
+</body>
+</html>

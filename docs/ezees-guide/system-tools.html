@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>أدوات النظام: النسخ الاحتياطي والمرفقات والخرائط والمفكرة | دليل Ezees ERP</title>
+<meta name="description" content="شرح أدوات النظام في Ezees ERP: النسخ الاحتياطي واستعادة البيانات، العمل بدون إنترنت ومصادقة بيانات الخادم، ربط واتساب، الإشعارات، المرفقات، سجل المستخدمين، المفكرة اليومية، الخرائط، الجداول المحورية وترتيب الأعمدة.">
+<meta name="keywords" content="النسخ الاحتياطي, استعادة قاعدة البيانات, العمل بدون إنترنت, مصادقة بيانات الخادم, ربط واتساب, المرفقات, سجل المستخدمين, المفكرة اليومية, خرائط العملاء, الجدول المحوري, Ezees ERP">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/system-tools.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="أدوات النظام في Ezees ERP">
+<meta property="og:description" content="احمِ بياناتك بالنسخ الاحتياطي، واعمل بدون إنترنت، واربط واتساب، وأدر المرفقات والمواعيد والخرائط والتقارير المحورية.">
+<meta property="og:url" content="https://help.tebalink.com/system-tools.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"أدوات النظام في Ezees ERP","inLanguage":"ar","dateModified":"2026-10-08","proficiencyLevel":"Beginner","mainEntityOfPage":"https://help.tebalink.com/system-tools.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"HowTo","name":"أخذ نسخة احتياطية من قاعدة البيانات","inLanguage":"ar","step":[
+{"@type":"HowToStep","position":1,"text":"حدد مسار النسخ الاحتياطي من الاعدادات، تبويب اعدادات السيرفر، زر استعراض."},
+{"@type":"HowToStep","position":2,"text":"افتح شاشة النسخ الاحتياطي واختر Local أو FTP."},
+{"@type":"HowToStep","position":3,"text":"اضغط Create Backup وانتظر حتى يظهر إشعار اكتمال النسخ."},
+{"@type":"HowToStep","position":4,"text":"اضغط Refresh للتأكد من ظهور الملف الجديد في القائمة."}]},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"أين تُحفظ النسخة الاحتياطية؟","acceptedAnswer":{"@type":"Answer","text":"في مسار النسخ الاحتياطي المحدد في الاعدادات، كملف مضغوط zip يحمل اسم قاعدة البيانات والتاريخ والوقت. وإذا فعّلت النسخ الاحتياطي الخارجي يُرفع الملف أيضًا إلى سيرفر FTP."}},
+{"@type":"Question","name":"هل تطلب استعادة النسخة تأكيدًا؟","acceptedAnswer":{"@type":"Answer","text":"لا. زر Restore Backup يستبدل كل بيانات قاعدة البيانات الحالية مباشرة، لذلك خذ نسخة جديدة أولًا وتأكد من اختيار الملف الصحيح."}},
+{"@type":"Question","name":"لماذا لا يعمل زر المرفقات؟","acceptedAnswer":{"@type":"Answer","text":"يجب حفظ السجل أولًا، ويجب ضبط مسار المرفقات في الاعدادات، تبويب المرفقات."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"الإعدادات والأدوات","item":"https://help.tebalink.com/index.html#setup"},
+{"@type":"ListItem","position":3,"name":"أدوات النظام","item":"https://help.tebalink.com/system-tools.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#pos">نقاط البيع والمطاعم</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#setup">الإعدادات والأدوات</a></li><li>أدوات النظام</li></ol>
+<article>
+<h1>أدوات النظام</h1>
+<p class="lead">تجمع هذه الصفحة الأدوات المساعدة في Ezees ERP: <strong>حماية بياناتك</strong> بالنسخ الاحتياطي، والعمل في فرع <strong>بدون اتصال دائم</strong> بالسيرفر الرئيسي، وربط واتساب، وإرفاق المستندات بالسجلات، ومتابعة ما يفعله المستخدمون، وتنظيم المواعيد، وعرض العملاء على الخريطة، وتحليل التقارير في جدول محوري.</p>
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#backup">النسخ الاحتياطي والاستعادة</a></li>
+  <li><a href="#offline">العمل بدون إنترنت (مصادقة بيانات الخادم)</a></li>
+  <li><a href="#whatsapp">ربط واتساب</a></li>
+  <li><a href="#notifications">الإشعارات</a></li>
+  <li><a href="#attachments">المرفقات</a></li>
+  <li><a href="#users-log">سجل المستخدمين</a></li>
+  <li><a href="#schedule">المفكرة اليومية (جدول المستخدمين)</a></li>
+  <li><a href="#maps">الخرائط</a></li>
+  <li><a href="#pivot">الجدول المحوري</a></li>
+  <li><a href="#reorder">ترتيب الأعمدة والصفوف</a></li>
+  <li><a href="#lookup">نافذة الاختيار السريع</a></li>
+  <li><a href="#contact">رسائل العملاء</a></li>
+  <li><a href="#support">الدعم الفني ومعالج الأخطاء</a></li>
+  <li><a href="#admin">أدوات مدير النظام</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+  <li><a href="#faq">أسئلة شائعة</a></li>
+</ol></nav>
+
+<section id="backup">
+<h2>النسخ الاحتياطي واستعادة البيانات</h2>
+<p>النسخة الاحتياطية هي صورة كاملة من قاعدة بياناتك في لحظة معينة: الفواتير والحسابات والأصناف والعملاء وكل شيء. افتحها من قائمة <span class="ui">النسخ الاحتياطي</span> أو زر <span class="ui">اداره قواعد البيانات</span>.</p>
+<p class="note">النسخ الاحتياطي غير متاح في النسخة التجريبية من البرنامج.</p>
+
+<h3>قبل البدء: حدد مسار الحفظ</h3>
+<ol class="steps">
+  <li>افتح <span class="ui">الاعدادات</span>، ثم تبويب <span class="ui">اعدادات السيرفر</span>.</li>
+  <li>اضغط <span class="ui">استعراض</span> واختر مجلدًا على جهاز السيرفر (الجهاز المثبت عليه قاعدة البيانات).</li>
+  <li>إذا كان لديك سيرفر FTP خارجي، فعّل <span class="ui">تفعيل النسخ الاحتياطى الخارجى Cloud Backup</span> وأدخل بيانات <span class="ui">سيرفر FTP</span> و<span class="ui">مسار FTP</span>، ثم احفظ الإعدادات.</li>
+</ol>
+<div class="tip">يكتب السيرفر ملف النسخة بنفسه، لذلك يجب أن يكون المسار موجودًا <strong>على جهاز السيرفر</strong>. الأفضل أن تأخذ النسخة من جهاز السيرفر نفسه.</div>
+
+<h3>أخذ نسخة احتياطية</h3>
+<ol class="steps">
+  <li>في شاشة <span class="ui">النسخ الاحتياطى</span> اختر من المفتاح أعلى الشاشة: <span class="ui">Local</span> (المجلد المحلي) أو <span class="ui">FTP</span> (السيرفر الخارجي).</li>
+  <li>اضغط <span class="ui">Create Backup</span>. يُنشئ البرنامج ملفًا مضغوطًا <code>.zip</code> يحمل اسم قاعدة البيانات ورقم الإصدار والتاريخ والوقت.</li>
+  <li>إذا كان النسخ الخارجي مفعّلًا، يُرفع الملف إلى سيرفر FTP تلقائيًا.</li>
+  <li>يظهر إشعار بجوار الساعة في شريط المهام: <span class="msg">Backup completed successfully</span>. اضغط <span class="ui">Refresh</span> لترى الملف الجديد في أعلى القائمة.</li>
+</ol>
+<div class="warn">إذا ضغطت <span class="ui">Create Backup</span> ولم يظهر أي إشعار ولم يُضَف ملف للقائمة، فغالبًا <strong>مسار النسخ الاحتياطي غير محدد أو غير صحيح</strong>. لا تظهر رسالة خطأ في هذه الحالة، فراجع المسار في الإعدادات وجرّب مرة أخرى.</div>
+
+<h3>قائمة النسخ: التنزيل والحذف</h3>
+<ul>
+  <li>اضغط <span class="ui">Refresh</span> لعرض النسخ الموجودة: في المجلد المحلي (ملفات zip فقط) أو على سيرفر FTP، مرتبة من الأحدث.</li>
+  <li><span class="ui">Download</span>: يحفظ نسخة من سيرفر FTP على جهازك. يعمل في وضع <span class="ui">FTP</span> فقط.</li>
+  <li><span class="ui">Delete</span>: يحذف ملف النسخة من المجلد أو من سيرفر FTP.</li>
+</ul>
+<div class="warn">زر <span class="ui">Delete</span> يحذف الملف <strong>فورًا وبدون رسالة تأكيد</strong>. تأكد من الصف قبل الضغط.</div>
+
+<h3>استعادة نسخة احتياطية</h3>
+<div class="warn"><strong>الاستعادة تستبدل كل البيانات الحالية بمحتوى النسخة.</strong> أي فاتورة أو قيد أُدخل بعد تاريخ النسخة سيضيع. الزر لا يطلب تأكيدًا، لذلك:
+<ol>
+  <li>خذ نسخة احتياطية جديدة من الوضع الحالي أولًا.</li>
+  <li>اطلب من كل المستخدمين الخروج من البرنامج.</li>
+  <li>تأكد من اسم الملف وتاريخه قبل الضغط.</li>
+</ol></div>
+<ol class="steps">
+  <li>اختر <span class="ui">Local</span> أو <span class="ui">FTP</span> ثم اضغط <span class="ui">Refresh</span>.</li>
+  <li>حدد صف النسخة المطلوبة.</li>
+  <li>اضغط <span class="ui">Restore Backup</span>. في وضع FTP يُنزَّل الملف أولًا إلى مجلد النسخ.</li>
+  <li>إذا كانت النسخة لقاعدة بيانات باسم مختلف تظهر رسالة تسألك عن المتابعة. اضغط <span class="ui">No</span> إن لم تكن متأكدًا.</li>
+  <li>بعد ظهور <span class="msg">تمت عملية استعادة البيانات بنجاح</span> تُغلق كل النوافذ المفتوحة ويطلب البرنامج تسجيل الدخول من جديد.</li>
+</ol>
+</section>
+
+<section id="offline">
+<h2>العمل بدون إنترنت (مصادقة بيانات الخادم)</h2>
+<p>إذا كان فرعك يعمل على قاعدة بيانات محلية لأن الاتصال بالسيرفر الرئيسي غير مستقر، فاستخدم شاشة <span class="ui">مصادقة بيانات الخادم</span> لـ:</p>
+<ul>
+  <li><strong>استيراد البيانات</strong> الأساسية من السيرفر الرئيسي إلى الفرع: الأصناف، والعملاء والموردين، والمخازن، وغيرها.</li>
+  <li><strong>تصدير الحركات</strong> التي سُجّلت في الفرع إلى السيرفر الرئيسي: الفواتير والسندات وأذون التصنيع.</li>
+</ul>
+
+<h3>الاتصال بالسيرفر الرئيسي</h3>
+<ol class="steps">
+  <li>في تبويب <span class="ui">بيانات السيرفر</span> اكتب <span class="ui">عنوان السيرفر</span> و<span class="ui">اسم قاعدة البيانات</span>.</li>
+  <li>اختر <span class="ui">مصادقة بهذه المعلومات</span> وأدخل <span class="ui">اسم المستخدم</span> و<span class="ui">كلمة المرور</span> اللذين حصلت عليهما من مسؤول النظام. أو اختر <span class="ui">مصادقة بمعلومات الويندوز</span> إذا كان السيرفر داخل شبكتك.</li>
+  <li>اضغط <span class="ui">اتصال</span>. إذا نجح الاتصال يتغير اسم الزر إلى <span class="ui">قطع الإتصال</span>، ويظهر تبويبا <span class="ui">استيراد البيانات</span> و<span class="ui">تصدير البيانات</span>.</li>
+</ol>
+
+<h3>استيراد البيانات من السيرفر</h3>
+<div class="warn"><strong>أول استيراد على جهاز الفرع يمسح بياناته المحلية بالكامل</strong> (الحركات والبيانات الأساسية) ثم يملؤها من السيرفر. لا تبدأ أول استيراد على جهاز فيه حركات لم تُصدَّر، وخذ <a href="#backup">نسخة احتياطية</a> قبله.</div>
+<ol class="steps">
+  <li>في تبويب <span class="ui">استيراد البيانات</span> حدد ما تريد استيراده: <span class="ui">المستخدمين</span>، و<span class="ui">الفروع</span>، و<span class="ui">الصناديق</span>، و<span class="ui">المخازن</span>، و<span class="ui">العملات</span>، و<span class="ui">البنوك</span>، و<span class="ui">العملاء - الموردين</span>، و<span class="ui">الوحدات</span>، و<span class="ui">المجموعات</span>، و<span class="ui">الموظفين</span>، و<span class="ui">الاصناف</span>، و<span class="ui">الصيانات</span>.</li>
+  <li>اضغط <span class="ui">استيراد البيانات</span>. يظهر سير العملية في مربع الرسائل، وتعود الأزرار للعمل عند الانتهاء.</li>
+</ol>
+<p class="note">بعد أول استيراد يجلب البرنامج في كل مرة التغييرات الجديدة فقط منذ آخر مصادقة.</p>
+
+<h3>تصدير الحركات إلى السيرفر</h3>
+<ol class="steps">
+  <li>افتح تبويب <span class="ui">تصدير البيانات</span>. يظهر بجانب كل نوع عدد السجلات التي لم تُرسَل بعد، مثل <span class="ui">فواتير المبيعات</span> (5).</li>
+  <li>حدد الأنواع: <span class="ui">فواتير المبيعات</span>، و<span class="ui">فواتير مردودات المبيعات</span>، و<span class="ui">فواتير المشتريات</span>، و<span class="ui">فواتير مردودات المشتريات</span>، و<span class="ui">سندات القبض</span>، و<span class="ui">سندات الصرف</span>، و<span class="ui">اذن تصنيع</span>.</li>
+  <li>اضغط <span class="ui">تصدير البيانات</span> وانتظر. قد تبدو الشاشة متوقفة أثناء التصدير، فلا تغلقها حتى تتحدث الأعداد وتظهر النتيجة في مربع الرسائل.</li>
+</ol>
+<div class="tip">اضغط <span class="ui">Help ?</span> لمعرفة القاعدة المهمة: إذا وُجد على السيرفر سجل بنفس الرقم والنوع والتاريخ، فإنه <strong>لا يُرسَل مرة أخرى</strong> ويُعتبر مُرسلًا من قبل، ولا يُعدَّل السجل الموجود على السيرفر.</div>
+<ul>
+  <li>يجب أن يكون <strong>إصدار البرنامج في الفرع مطابقًا لإصدار السيرفر</strong>، وإلا تتوقف العملية.</li>
+  <li>لا يمكن تصدير حركات تخص فترة مالية مغلقة على السيرفر.</li>
+</ul>
+</section>
+
+<section id="whatsapp">
+<h2>ربط واتساب (WhatsApp Business)</h2>
+<p>يربط البرنامج حساب واتساب للأعمال لديك، لتتمكن من إرسال الفواتير وأوامر البيع ورسائل الترحيب للعملاء.</p>
+<ol class="steps">
+  <li>افتح <span class="ui">الاعدادات</span>، ثم تبويب <span class="ui">EMail-SMS</span>، ثم مجموعة <span class="ui">WhatsApp</span>.</li>
+  <li>اضغط <span class="ui">Link</span>. تفتح نافذة صفحة الربط (تحتاج اتصالًا بالإنترنت).</li>
+  <li>سجّل الدخول بحساب Meta (فيسبوك) الخاص بنشاطك، واختر حساب واتساب للأعمال والرقم، ثم أكمل خطوات الموافقة.</li>
+  <li>عند النجاح تُغلق النافذة وتظهر رسالة <span class="msg">تم ربط حساب WhatsApp بنجاح. راجع البيانات ثم اضغط حفظ.</span>، وتُملأ الحقول (<span class="ui">Waba_ID</span>، و<span class="ui">YOUR_ACCESS_Token</span>، ورقم الهاتف) تلقائيًا.</li>
+  <li>راجع البيانات واضغط <span class="ui">حفظ</span> في شاشة الإعدادات. <strong>إذا أغلقت الإعدادات بدون حفظ يضيع الربط.</strong></li>
+</ol>
+<p class="tip">إذا ظهرت رسالة <span class="msg">فشل استلام إعدادات WhatsApp</span> أو أُغلقت النافذة بدون رسالة نجاح، فأعد المحاولة وتأكد من اختيار رقم مفعّل في حساب واتساب للأعمال.</p>
+</section>
+
+<section id="notifications">
+<h2>الإشعارات</h2>
+<p>يعرض البرنامج بعض التنبيهات كإشعار يظهر بجوار الساعة في شريط مهام ويندوز، باسم <strong>Ezees ERP</strong>:</p>
+<ul>
+  <li><strong>تذكير المواعيد</strong>: قبل موعدك في <a href="#schedule">المفكرة اليومية</a> بـ 30 دقيقة.</li>
+  <li><strong>اكتمال النسخ الاحتياطي</strong>: بعد <span class="ui">Create Backup</span>، أو رسالة الخطأ إذا فشل الرفع إلى FTP.</li>
+</ul>
+<p>اضغط على أيقونة الإشعار لإخفائها.</p>
+<p class="note">لا تظهر الإشعارات إذا كانت إشعارات ويندوز معطلة أو كان وضع «عدم الإزعاج» مفعّلًا.</p>
+</section>
+
+<section id="attachments">
+<h2>المرفقات</h2>
+<p>أرفق صورة فاتورة المورد، أو عقدًا، أو إيصالًا بأي سجل. يظهر زر <span class="ui">Attachment</span> في شريط الأدوات أعلى شاشات الحركات، مثل الفواتير والسندات والقيود وأذون المخزن والعقود.</p>
+
+<h3>الإعداد لأول مرة</h3>
+<p>في <span class="ui">الاعدادات</span> ← تبويب <span class="ui">المرفقات</span> حدد:</p>
+<ul>
+  <li><span class="ui">المسار الافتراضى</span>: مجلد حفظ الملفات. يُفضّل أن يكون مجلدًا مشتركًا على الشبكة يصل إليه كل المستخدمين.</li>
+  <li>طريقة الحفظ: محلي (المجلد) أو FTP (سيرفر خارجي، وتُحذف النسخة المحلية بعد الرفع).</li>
+  <li><span class="ui">اقصى حجم للملف</span> بالكيلوبايت، وعدد المرفقات المسموح لكل سجل. القيم الافتراضية 5000 كيلوبايت (نحو 5 ميجابايت) و3 مرفقات.</li>
+</ul>
+
+<h3>إضافة مرفق</h3>
+<ol class="steps">
+  <li><strong>احفظ السجل أولًا</strong>، ثم اضغط <span class="ui">Attachment</span>. تفتح شاشة <span class="ui">ادارة المرفقات</span>، وتعرض في الأعلى رقم السجل ومصدره.</li>
+  <li>اكتب وصفًا للملف في <span class="ui">Note</span> (اختياري).</li>
+  <li>اختر طريقة الإضافة:
+    <ul>
+      <li><span class="ui">Browse File</span>: اختر ملفًا من جهازك. الأنواع المسموح بها: الصور (jpg, jpeg, png, gif, bmp)، وPDF، وExcel (xls, xlsx)، وWord بصيغة doc.</li>
+      <li><span class="ui">WebCam</span>: اختر الكاميرا، واضغط <span class="ui">Start</span> لعرض الصورة، ثم <span class="ui">Take</span> لالتقاطها وحفظها.</li>
+      <li><span class="ui">Scanner</span>: اختر الماسح الضوئي، واضغط <span class="ui">Start</span> للمسح، ثم <span class="ui">Take</span> للحفظ.</li>
+    </ul>
+  </li>
+  <li>يظهر الملف في الجدول مع <span class="ui">النوع</span> و<span class="ui">الملف</span> و<span class="ui">التاريخ</span> والحجم و<span class="ui">ملاحظة</span>.</li>
+</ol>
+<div class="tip">
+<ul>
+  <li>إذا لم يحدث شيء عند الضغط على <span class="ui">Attachment</span>، فالسجل لم يُحفظ بعد.</li>
+  <li>ملفات Word الحديثة (docx) غير مقبولة. احفظها بصيغة PDF قبل إرفاقها.</li>
+  <li><strong>أعطِ كل ملف اسمًا مميزًا</strong> قبل إرفاقه، مثل <code>فاتورة-مورد-1520.pdf</code>. إذا وُجد في مجلد المرفقات ملف بنفس الاسم يبقى الملف القديم ولا يُستبدل بالجديد.</li>
+  <li>اضغط <span class="ui">Close</span> لإغلاق لوحة الكاميرا أو الماسح بدون حفظ.</li>
+</ul>
+</div>
+
+<h3>تنزيل مرفق أو حذفه</h3>
+<ul>
+  <li><span class="ui">Download</span>: اختر مكان حفظ نسخة من الملف على جهازك.</li>
+  <li><span class="ui">Delete</span>: يحذف المرفق من السجل ومن مكان التخزين.</li>
+</ul>
+<div class="warn">زر <span class="ui">Delete</span> في المرفقات يحذف <strong>فورًا وبدون تأكيد</strong>، ولا يمكن التراجع. نزّل نسخة من الملف أولًا إن كنت قد تحتاجه.</div>
+</section>
+
+<section id="users-log">
+<h2>سجل المستخدمين</h2>
+<p>شاشة <span class="ui">تقرير سجلات المستخدمين</span> (من قائمة <span class="ui">سجل المستخدمين</span>) تعرض ما فعله كل مستخدم: إضافة وتعديل وحذف الفواتير والسندات والأصناف والمخازن وغيرها، مع الوقت واسم الجهاز.</p>
+<!--shot:system-tools__users-log-->
+<figure class="shot" id="shot-system-tools__users-log">
+<div class="shot-frame"><a href="assets/screens/system-tools__users-log.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/system-tools__users-log.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: سجل المستخدمين"></a></div>
+<figcaption>شاشة «سجل المستخدمين» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>لمستخدم معين: فعّل <span class="ui">المستخدم</span> واختره من القائمة. اتركه بدون تفعيل لعرض كل المستخدمين.</li>
+  <li>لفترة معينة: فعّل <span class="ui">من</span>، فيظهر الشهر الحالي تلقائيًا، ثم عدّل التاريخين.</li>
+  <li>للبحث عن نوع حركة: اختر من قائمة <span class="ui">بحث</span> نوعًا جاهزًا مثل <span class="ui">حذف فاتورة بيع</span>، أو اكتب كلمة في مربع البحث مثل رقم الفاتورة.</li>
+  <li>اضغط زر العرض (أيقونة العدسة).</li>
+</ol>
+<div class="table-wrap"><table>
+<thead><tr><th>العمود</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td>المستخدم</td><td>من قام بالعملية.</td></tr>
+<tr><td>وصف الحركة</td><td>نوع العملية ورقم السجل. عند تعديل فاتورة تظهر القيم قبل التعديل وبعده.</td></tr>
+<tr><td>الوقت</td><td>تاريخ ووقت العملية.</td></tr>
+<tr><td>الجهاز</td><td>اسم الكمبيوتر الذي نُفّذت منه.</td></tr>
+</tbody></table></div>
+<ul>
+  <li>يعرض السجل حركات <strong>الفترة المالية الحالية</strong> فقط.</li>
+  <li>إذا لم تجد نتيجة بالقائمة الجاهزة فاكتب كلمة أقصر في مربع البحث، مثل «حذف» أو «سند».</li>
+</ul>
+<p class="tip">زر الطباعة (أيقونة الطابعة) يطبع <strong>كل نتائج العرض</strong> حتى لو بحثت بكلمة. لطباعة نتيجة بحث محدد، ضيّق الفترة والمستخدم بدلًا من البحث.</p>
+</section>
+
+<section id="schedule">
+<h2>المفكرة اليومية (جدول مواعيد المستخدمين)</h2>
+<p>شاشة <span class="ui">المفكرة اليومية</span> (من قائمة <span class="ui">مفكرة يومية</span> أو <span class="ui">Calendar</span>) تقويم لتسجيل المواعيد والمهام لكل مستخدم. يرى المستخدم مواعيده فقط، ويرى المسؤول المصرح له مواعيد كل المستخدمين كأعمدة متجاورة.</p>
+
+<h3>إضافة موعد</h3>
+<ol class="steps">
+  <li>اضغط <span class="ui">اضافة موعد</span>. تظهر لوحة الإدخال.</li>
+  <li>اختر <span class="ui">المستخدم</span> و<span class="ui">التاريخ</span>، ثم وقت البداية في <span class="ui">مـن</span> ووقت النهاية في <span class="ui">الى</span>.</li>
+  <li>اكتب عنوان الموعد في <span class="ui">الحدث</span>، وأي تفاصيل في <span class="ui">ملاحظات</span>.</li>
+  <li>اضغط <span class="ui">حفظ</span>. أو <span class="ui">الغاء</span> لإغلاق اللوحة بدون حفظ.</li>
+</ol>
+<div class="warn">تأكد أن وقت <span class="ui">الى</span> بعد وقت <span class="ui">مـن</span>، وأن <span class="ui">الحدث</span> غير فارغ، لأن الشاشة لا تتحقق من ذلك. لا يمكن حفظ موعدين متداخلين لنفس المستخدم، وتظهر الرسالة <span class="msg">هذا السجل موجود مسبقا</span>.</div>
+
+<h3>العرض والألوان</h3>
+<ul>
+  <li>أزرار العرض: <span class="ui">يوم</span>، و<span class="ui">أسبوع</span> (الافتراضي)، و<span class="ui">شهر</span>، و<span class="ui">سنة</span>. وزر <span class="ui">مواعيد اليوم</span> يعرض اليوم الحالي.</li>
+  <li>الألوان: <strong>بنفسجي</strong> موعد قادم، و<strong>أحمر</strong> موعد جارٍ الآن، و<strong>أخضر</strong> موعد انتهى.</li>
+  <li>مرّر الفأرة فوق الموعد لرؤية تفاصيله وملاحظاته.</li>
+  <li><strong>التذكير:</strong> قبل مواعيدك القادمة بـ 30 دقيقة يظهر <a href="#notifications">إشعار</a>، بشرط أن تكون المفكرة مفتوحة.</li>
+</ul>
+
+<h3>حذف أو تعديل موعد</h3>
+<p>اضغط على الموعد لتحديده، ثم اضغط <span class="ui">حذف</span> في شريط الأدوات. يُحذف فورًا بدون تأكيد. لا يمكن سحب الموعد أو تغيير مدته بالفأرة، فلتعديله احذفه ثم أضفه من جديد.</p>
+</section>
+
+<section id="maps">
+<h2>الخرائط</h2>
+<p>تعتمد الخرائط على خرائط Google وتحتاج اتصالًا بالإنترنت. اسحب بزر الفأرة الأيسر للتنقل، واستخدم عجلة الفأرة للتكبير والتصغير.</p>
+
+<h3>تحديد موقع عميل أو مندوب</h3>
+<ol class="steps">
+  <li>في بطاقة العميل أو المندوب اضغط <span class="ui">Map</span>.</li>
+  <li>انقر <strong>بزر الفأرة الأيمن</strong> على الموقع الصحيح في الخريطة، فيوضع دبوس وتُملأ خانتا <span class="ui">Lat</span> و<span class="ui">Lon</span>.<br>أو اكتب الإحداثيات بنفسك (مثل 29.965302 و31.095933) واضغط <span class="ui">Load</span>.</li>
+  <li>أغلق نافذة الخريطة، فتنتقل الإحداثيات إلى البطاقة. ثم <strong>احفظ البطاقة</strong>.</li>
+</ol>
+
+<h3>عرض مجموعة على الخريطة</h3>
+<ul>
+  <li><strong>العملاء</strong>: زر <span class="ui">Map</span> في قائمة العملاء وبعض تقارير العملاء والمبيعات يعرض كل عميل له موقع مسجّل بدبوس أحمر. مرّر الفأرة فوق الدبوس لرؤية الاسم والعنوان والهاتف.</li>
+  <li><strong>تقارير العميل من الخريطة</strong>: انقر على دبوس العميل لتظهر قائمة فيها: <span class="ui">كشف حساب تفصيلى</span>، و<span class="ui">تقرير مقبوضات سنوى</span>، و<span class="ui">تقرير سداد متاخرات</span>، و<span class="ui">تقرير مقارنة مبيعات سنوى</span>، و<span class="ui">تقرير فواتير مبيعات ومرتجعات</span>.</li>
+  <li><strong>المستخدمون والمندوبون</strong>: زر <span class="ui">Map</span> في <span class="ui">شاشة المستخدمين</span> يعرض آخر موقع دخول لكل مستخدم مع وقته. وفي خريطة متابعة المندوبين، انقر على دبوس المندوب لتظهر فواتير مبيعاته في تبويب <span class="ui">فواتير مبيعات</span>، ثم انقر مرتين على أي فاتورة لفتحها.</li>
+</ul>
+<p class="note">العميل الذي ليس له موقع مسجل لا يظهر على الخريطة. سجّل مواقع عملائك أولًا من بطاقاتهم.</p>
+</section>
+
+<section id="pivot">
+<h2>الجدول المحوري (Pivot Table)</h2>
+<p>يحوّل نتيجة أي تقرير إلى جدول تبادلي، فتصبح الصفوف أعمدة أو العكس. هذا يسهّل المقارنة، مثل مقارنة الأصناف عبر الشهور.</p>
+<ol class="steps">
+  <li>اعرض التقرير، وفي نافذة <span class="ui">طباعة تقرير</span> اضغط زر <span class="ui">Pivot</span>.</li>
+  <li>اختر اتجاه التحويل: <span class="ui">Horizontal</span> أو <span class="ui">Vertical</span>.</li>
+  <li>اضغط زر العرض (أيقونة العدسة) لبناء الجدول.</li>
+  <li>لإخفاء صفوف أو أعمدة أو تغيير ترتيبها اضغط <span class="ui">Grid Filter</span> (انظر <a href="#reorder">ترتيب الأعمدة والصفوف</a>).</li>
+  <li>اضغط <span class="ui">Export Excel</span> لحفظ الجدول كملف Excel (xlsx).</li>
+</ol>
+<p class="tip">الجدول المحوري مخصص للتقارير الصغيرة: إذا زاد عدد صفوف التقرير عن 200 صف تظهر رسالة تمنع الاستخدام. ضيّق فلاتر التقرير (الفترة، أو الفرع، أو المجموعة) ثم أعد المحاولة.</p>
+</section>
+
+<section id="reorder">
+<h2>ترتيب الأعمدة والصفوف</h2>
+<p>نافذة <span class="ui">Grid Reorder Column</span> فيها قائمتان: الصفوف والأعمدة. كل عنصر له مربع اختيار.</p>
+<ul>
+  <li><strong>إظهار وإخفاء:</strong> علّم العنصر ليظهر، أو ألغِ العلامة ليختفي. ولكل قائمة زرّان لتحديد كل عناصرها أو إلغاء تحديدها دفعة واحدة.</li>
+  <li><strong>الترتيب:</strong> حدد عنصرًا واضغط سهم الأعلى أو الأسفل لنقله.</li>
+  <li>اضغط <span class="ui">OK</span> لتطبيق التغييرات.</li>
+</ul>
+<p class="note">يتذكر البرنامج اختياراتك ما دامت نافذة الجدول المحوري مفتوحة، وتعود للوضع الافتراضي عند إغلاقها.</p>
+</section>
+
+<section id="lookup">
+<h2>نافذة الاختيار السريع</h2>
+<p>تظهر نافذة <span class="ui">اختيار</span> عند البحث عن قيمة من قائمة طويلة، مثل الموردين أو الماركات في بطاقة الصنف، أو العملات، أو الدول.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>الإجراء</th><th>الطريقة</th></tr></thead>
+<tbody>
+<tr><td>البحث</td><td>اكتب في <span class="ui">بحث:</span>. تتصفّى القائمة فورًا بأي جزء من الكلمة.</td></tr>
+<tr><td>الانتقال للقائمة</td><td><kbd>↓</kbd> من مربع البحث.</td></tr>
+<tr><td>اختيار أول نتيجة</td><td><kbd>Enter</kbd> في مربع البحث.</td></tr>
+<tr><td>اختيار صف</td><td>نقر مزدوج، أو <kbd>Enter</kbd>، أو زر <span class="ui">اختيار</span>.</td></tr>
+<tr><td>الإغلاق بدون اختيار</td><td><kbd>Esc</kbd> أو <span class="ui">إلغاء</span>.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="contact">
+<h2>رسائل العملاء</h2>
+<p>شاشة <span class="ui">رسائل العملاء</span> تعرض الرسائل التي أرسلها العملاء من المتجر أو التطبيق، وتتيح الرد عليها بالبريد الإلكتروني أو SMS.</p>
+<ol class="steps">
+  <li>حدد الفترة. يظهر الشهر الحالي تلقائيًا.</li>
+  <li>صفِّ حسب الحالة: <span class="ui">All</span>، أو <span class="ui">New</span> (جديدة، بخط عريض)، أو <span class="ui">Read</span> (مقروءة)، أو <span class="ui">Replied</span> (تم الرد، بخط مسطّر). أو ابحث باسم العميل أو هاتفه أو بريده أو عنوان الرسالة.</li>
+  <li>انقر مرتين على الرسالة. تظهر في لوحة الرد: <span class="ui">البريد الالكتروني</span>، و<span class="ui">عنوان الرساله</span>، و<span class="ui">نص الرساله</span>، وتتحول حالتها إلى «مقروءة».</li>
+  <li>للرد بالبريد: استبدل نص الرسالة بردّك، واختر <span class="ui">نوع الرساله</span>، ثم اضغط <span class="ui">Send Email</span>. عند النجاح تظهر <span class="msg">تم ارسال رسالتك بنجاح</span> وتتحول الحالة إلى «تم الرد».</li>
+  <li>للرد برسالة SMS: اكتب رقم العميل في <span class="ui">الهاتف</span> بنفسك، ثم اضغط <span class="ui">Send SMS</span>.</li>
+</ol>
+<ul>
+  <li>يحتاج الإرسال إلى ضبط إعدادات البريد أو مزود الرسائل القصيرة في <span class="ui">الاعدادات</span> ← <span class="ui">EMail-SMS</span>.</li>
+  <li><span class="ui">جديد</span> يفرّغ لوحة الرد لكتابة رسالة جديدة. و<span class="ui">حذف</span> يحذف الرسائل المحددة بعد التأكيد.</li>
+</ul>
+<p class="tip">البحث بالنص يلغي تصفية الحالة. وإذا لم تتحدث القائمة بعد تغيير الحالة، فاضغط <span class="ui">تحديث</span>.</p>
+</section>
+
+<section id="support">
+<h2>الدعم الفني ومعالج الأخطاء</h2>
+<!--shot:system-tools__support-->
+<figure class="shot" id="shot-system-tools__support">
+<div class="shot-frame"><a href="assets/screens/system-tools__support.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/system-tools__support.png" width="1650" height="859" loading="lazy" decoding="async" alt="صورة شاشة: الدعم الفني ومعالج الأخطاء"></a></div>
+<figcaption>شاشة «الدعم الفني ومعالج الأخطاء» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<h3>اعدادات الدعم الفنى</h3>
+<p>من قائمة <span class="ui">اعداد الدعم الفنى</span> أدخل <span class="ui">كود العميل</span> و<span class="ui">كلمة المرور</span> اللذين حصلت عليهما من فريق الدعم، ثم اضغط <span class="ui">حفظ</span>. إذا كان الإنترنت متاحًا يتحقق البرنامج من حالة اشتراكك في الدعم ويعرض رسالة بالنتيجة. إذا لم تكن لديك هذه البيانات فاتصل بخدمة الدعم الفني.</p>
+<h3>معالج الاخطاء</h3>
+<p>عند حدوث خطأ غير متوقع تظهر نافذة <span class="ui">معالج الاخطاء</span> بتفاصيل الخطأ:</p>
+<ul>
+  <li><span class="ui">ارسال</span>: يرسل التفاصيل لفريق الدعم الفني (يحتاج إنترنت وكود عميل صحيحًا).</li>
+  <li><span class="ui">نسخ</span>: ينسخ نص الخطأ لتلصقه في رسالة للدعم.</li>
+  <li><span class="ui">اغلاق</span>: يغلق النافذة.</li>
+</ul>
+<p class="tip">إذا ضغطت <span class="ui">ارسال</span> ولم تظهر رسالة تأكيد، فاستخدم <span class="ui">نسخ</span> وأرسل النص للدعم الفني بنفسك.</p>
+<h3>عارض التقارير</h3>
+<p>تفتح التقارير المطبوعة في نافذة معاينة فيها أزرار الطباعة والتصدير والتنقل بين الصفحات. اضغط <kbd>Esc</kbd> لإغلاقها.</p>
+</section>
+
+<section id="admin">
+<h2>أدوات مدير النظام</h2>
+<div class="warn"><strong>هذا القسم موجّه لمدير النظام فقط.</strong> الأدوات التالية تحذف بيانات أو تغيّر طريقة عمل السيرفر، ولا يمكن التراجع عنها. <strong>خذ <a href="#backup">نسخة احتياطية</a> وانسخها إلى مكان آخر قبل استخدام أي منها</strong>، وتأكد أن باقي المستخدمين خارج البرنامج.</div>
+
+<h3>تصفية البيانات</h3>
+<p>شاشة <span class="ui">تصفية بيانات</span> (من قائمة <span class="ui">تصفيه البيانات</span>) تُستخدم عادة بعد فترة تجريبية لبدء العمل الفعلي. تعمل لحساب المدير الرئيسي للنظام فقط، ولا تعمل في فترة مالية مغلقة.</p>
+<ul>
+  <li><strong>تبويب <span class="ui">تصفية الحركات</span>:</strong> يعرض عدد السجلات بجانب كل نوع، مثل <span class="ui">فواتير المبيعات</span>، و<span class="ui">سندات القبض</span>، و<span class="ui">اذن مخزن وارد</span>، و<span class="ui">رصيد افتتاحى</span>، و<span class="ui">عرض اسعار</span>. حدد الأنواع، أو <span class="ui">تحديد الكل</span>، ثم <span class="ui">حذف</span>، ثم أكّد. يُحذف ما يخص <strong>الفترة المالية الحالية</strong> مع قيوده.</li>
+  <li><strong>تبويب <span class="ui">قاعدة البيانات</span>:</strong> خيارا <span class="ui">حذف الحركات</span> و<span class="ui">حذف البيانات الاساسية</span> (الذي يشمل الحركات أيضًا) ثم <span class="ui">تنفيذ الحذف</span>.</li>
+</ul>
+<div class="warn">زر <span class="ui">تنفيذ الحذف</span> <strong>يبدأ الحذف فورًا بدون رسالة تأكيد</strong>. «حذف البيانات الاساسية» يمسح الأصناف والعملاء والموردين والمخازن والمستخدمين (عدا المدير) والحسابات غير الأساسية. لا تضغطه إلا بعد نسخة احتياطية وبتوجيه من الدعم الفني.</div>
+<p>على السيرفر المحلي تظهر أيضًا قائمة قواعد البيانات، مع <span class="ui">انشاء قاعدة بيانات جديدة</span> (باسم من حروف إنجليزية وأرقام فقط في <span class="ui">اسم قاعدة البيانات</span>) و<span class="ui">حذف قاعدة بيانات</span>. لا يمكن حذف القاعدة التي تعمل عليها حاليًا.</p>
+
+<h3>اعداد السيرفر</h3>
+<p>شاشة <span class="ui">اعداد السيرفر</span> تسمح للأجهزة الأخرى بالاتصال بالسيرفر عن بُعد أو تمنعها:</p>
+<ul>
+  <li><span class="ui">اعداد السيرفر الحالى لاستقبال الاتصالات عن بعد</span>: أدخل <span class="ui">كلمة مرور السيرفر</span> و<span class="ui">تاكيد كلمة المرور</span>، واحتفظ بها في مكان آمن لأن الأجهزة الأخرى ستحتاجها.</li>
+  <li><span class="ui">اعداد السيرفر الحالى لمنع استقبال الاتصالات عن بعد</span>: يوقف الاتصالات الخارجية.</li>
+</ul>
+<p>اضغط <span class="ui">موافق</span>، ثم <strong>أعد تشغيل جهاز السيرفر</strong> لتفعيل الإعداد. تعمل هذه الشاشة على جهاز السيرفر بالترخيص الرئيسي فقط.</p>
+
+<h3>Sql Command</h3>
+<p>أداة <span class="ui">Sql Command</span> مخصصة <strong>لفريق الدعم الفني فقط</strong>، ومحمية بكلمة مرور خاصة به. لا تنفّذ فيها أي أوامر أو ملفات وصلتك من مصدر غير الدعم الفني الرسمي، فقد يؤدي ذلك إلى تلف البيانات بشكل دائم.</p>
+
+<h3>النسخ والاستعادة اليدوية</h3>
+<p>في شاشة <span class="ui">النسخ الاحتياطى</span> يُظهر الضغط على <kbd>F12</kbd> زرين إضافيين: <span class="ui">Manual Backup</span> لحفظ نسخة بصيغة <code>.bak</code> في مكان تختاره، و<span class="ui">Browse Restore</span> لاستعادة ملف <code>.bak</code>. ينطبق عليهما نفس <a href="#backup">تحذير الاستعادة</a>.</p>
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى وما تفعله</th></tr></thead>
+<tbody>
+<tr><td><span class="msg">لا يمكن استخدام النسخ الاحتياطى فى النسخة التجريبية</span></td><td>فعّل ترخيص البرنامج أولًا.</td></tr>
+<tr><td><span class="msg">DB is different... Are you sure to continue ?</span></td><td>ملف النسخة يخص قاعدة بيانات أخرى. اضغط No إن لم تكن متأكدًا.</td></tr>
+<tr><td><span class="msg">يجب ضبط اعداد مسار المرفقات اولا من الاعدادات العامة</span></td><td>حدد مسار المرفقات في الإعدادات، تبويب المرفقات.</td></tr>
+<tr><td><span class="msg">لقد تخطيت عدد المرفقات المسموح</span></td><td>وصلت للحد الأقصى من المرفقات لهذا السجل. احذف مرفقًا أو اطلب من المسؤول رفع الحد.</td></tr>
+<tr><td><span class="msg">عفوا حجم الملف لا يزيد عن ... كيلوا بايت للملف الواحد</span></td><td>الملف أكبر من المسموح. اضغطه أو قلل دقة المسح.</td></tr>
+<tr><td><span class="msg">تاكد من عنوان السيرفر وقاعدة البيانات</span></td><td>في مصادقة بيانات الخادم: الحقلان إلزاميان.</td></tr>
+<tr><td><span class="msg">بيانات الاتصال خاطئة</span></td><td>عنوان السيرفر أو اسم المستخدم أو كلمة المرور غير صحيحة، أو السيرفر غير متاح.</td></tr>
+<tr><td><span class="msg">The version of this device not the same of server version...</span></td><td>حدّث البرنامج في الفرع ليطابق إصدار السيرفر.</td></tr>
+<tr><td><span class="msg">Period Closed in Server Error</span></td><td>الحركات تخص فترة مالية مغلقة على السيرفر.</td></tr>
+<tr><td><span class="msg">هذا السجل موجود مسبقا</span></td><td>في المفكرة: يوجد موعد آخر لنفس المستخدم في نفس الوقت.</td></tr>
+<tr><td><span class="msg">لايوجد بيانات متاحة</span></td><td>لا توجد نتائج للفلاتر المختارة في سجل المستخدمين.</td></tr>
+<tr><td><span class="msg">عفوا هذا الاجراء يتطلب صلاحية مدير النظام</span></td><td>أدوات التصفية تعمل لحساب المدير الرئيسي فقط.</td></tr>
+<tr><td><span class="msg">عفوا فترة مالية مغلقة لا يمكن تنفيذ الاجراء</span></td><td>افتح فترة مالية مفتوحة قبل التصفية.</td></tr>
+<tr><td><span class="msg">هل تريد فعلا تنفيذ الأمر؟</span></td><td>تأكيد قبل الحذف. اضغط No إن لم تكن متأكدًا.</td></tr>
+<tr><td><span class="msg">كلمة المرور فارغة او غير متطابقة</span></td><td>في إعداد السيرفر: أدخل كلمة المرور نفسها في الخانتين.</td></tr>
+<tr><td><span class="msg">من فضلك اعد تشغيل الجهاز لتفعيل الاعدادات</span></td><td>تم حفظ إعداد السيرفر، وأعد تشغيل الجهاز.</td></tr>
+<tr><td><span class="msg">لم يتم استلام بيانات حساب WhatsApp.</span></td><td>لم تكتمل خطوات الربط. أعد الضغط على Link.</td></tr>
+<tr><td><span class="msg">عدد الصفوف يتجاوز 100 صف لا يمكن استخدام هذا الاختيار</span></td><td>التقرير كبير على الجدول المحوري (الحد الفعلي 200 صف). ضيّق الفلاتر.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="faq">
+<h2>أسئلة شائعة</h2>
+<details><summary>كم مرة يجب أن آخذ نسخة احتياطية؟</summary>
+<p>يوميًا على الأقل في نهاية العمل، وقبل أي عملية كبيرة مثل إقفال السنة أو التصفية أو تحديث البرنامج. احتفظ بنسخة خارج جهاز السيرفر أيضًا (FTP أو قرص خارجي).</p></details>
+<details><summary>أين تُحفظ النسخة الاحتياطية؟</summary>
+<p>في مسار النسخ الاحتياطي المحدد في الإعدادات، كملف zip يحمل اسم قاعدة البيانات والتاريخ والوقت. وإذا فعّلت النسخ الخارجي يُرفع الملف أيضًا إلى سيرفر FTP.</p></details>
+<details><summary>هل تطلب استعادة النسخة تأكيدًا؟</summary>
+<p>لا. زر <span class="ui">Restore Backup</span> يبدأ الاستعادة فورًا ويستبدل كل البيانات الحالية. خذ نسخة جديدة أولًا.</p></details>
+<details><summary>لماذا لا يعمل زر المرفقات؟</summary>
+<p>احفظ السجل أولًا، وتأكد من ضبط مسار المرفقات في الإعدادات.</p></details>
+<details><summary>لماذا لم يصلني تذكير بموعدي؟</summary>
+<p>التذكير يظهر قبل الموعد بـ 30 دقيقة فقط إذا كانت <span class="ui">المفكرة اليومية</span> مفتوحة، وكان الموعد باسمك، وكانت إشعارات ويندوز مفعّلة.</p></details>
+<details><summary>هل يمكنني معرفة من حذف فاتورة؟</summary>
+<p>نعم، من <a href="#users-log">سجل المستخدمين</a>: اختر <span class="ui">حذف فاتورة بيع</span> من قائمة البحث، أو اكتب رقم الفاتورة.</p></details>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="index.html">مركز المساعدة</a> · <a href="customers.html">العملاء</a> · <a href="reports-accounts.html">التقارير المحاسبية</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-08">8 أكتوبر 2026</time></div></footer>
+</body>
+</html>

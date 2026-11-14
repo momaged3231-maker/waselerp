@@ -26,6 +26,9 @@ const NAV: NavItem[] = [
   { href: '/accounting', label: 'المحاسبة', icon: '📚', permission: 'accounting.view' },
   { href: '/reports', label: 'التقارير', icon: '📊', permission: 'reports.view' },
   { href: '/hr', label: 'شئون العاملين', icon: '👔', permission: 'hr.view' },
+  { href: '/labels', label: 'ملصقات الأصناف', icon: '🏷️', permission: 'stock.view' },
+  { href: '/mobile-stocktake', label: 'جرد موبايل', icon: '📱', permission: 'stock.manage' },
+  { href: '/reminders', label: 'التذكيرات', icon: '🔔', permission: 'dashboard.view' },
   { href: '/admin', label: 'الإعدادات', icon: '⚙️', permission: 'users.manage' },
 ];
 

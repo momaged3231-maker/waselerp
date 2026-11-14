@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>التقارير المخصصة: بناء تقارير مالية بالمعادلات والقيم والحسابات | دليل Ezees ERP</title>
+<meta name="description" content="شرح مصمم التقارير الإضافية في Ezees ERP: إنشاء قائمة مالية مخصصة (مثل قائمة الدخل) من أسطر عناوين وحسابات ومدى حسابات ومعادلات وقيم ثابتة واستيراد من تقرير آخر، ثم عرضها بالفترة والفرع ومركز التكلفة وطباعتها.">
+<meta name="keywords" content="التقارير المخصصة, مصمم التقارير, القوائم المالية, قائمة الدخل, معادلة تقرير, مدى حسابات, تقارير القوائم المالية, Ezees ERP">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/custom-reports.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="التقارير المخصصة في Ezees ERP">
+<meta property="og:description" content="صمّم قوائمك المالية بنفسك من حسابات ومعادلات وقيم، واعرضها لأي فترة وفرع ومركز تكلفة.">
+<meta property="og:url" content="https://help.tebalink.com/custom-reports.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"التقارير المخصصة: بناء تقارير مالية بالمعادلات والقيم والحسابات","inLanguage":"ar","dateModified":"2026-10-08","proficiencyLevel":"Intermediate","mainEntityOfPage":"https://help.tebalink.com/custom-reports.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"HowTo","name":"إنشاء تقرير مالي مخصص","inLanguage":"ar","step":[
+{"@type":"HowToStep","position":1,"text":"افتح مصمم التقارير الاضافية واكتب رقم التقرير واسمه بالعربي والإنجليزي."},
+{"@type":"HowToStep","position":2,"text":"أضف أسطر التقرير بالترتيب: اكتب العنوان واختر طبيعة السطر ويظهر فى ثم اضغط زر الإضافة."},
+{"@type":"HowToStep","position":3,"text":"اضغط زر Action في كل سطر غير العناوين لتحديد حساباته أو معادلته أو قيمته ثم اضغط حفظ في النافذة الصغيرة."},
+{"@type":"HowToStep","position":4,"text":"من تبويب الصلاحيات حدد المستخدمين الذين يرون التقرير."},
+{"@type":"HowToStep","position":5,"text":"اضغط حفظ، ثم افتح التقرير من قائمة تقارير القوائم المالية واختر الفترة واضغط عرض."}]},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"لماذا تظهر قيمة المعادلة صفرًا؟","acceptedAnswer":{"@type":"Answer","text":"المعادلة تستخدم فقط الأسطر التي تسبقها في التقرير. تأكد أن أرقام الأسطر المستخدمة أعلى من سطر المعادلة، وأنها ليست أسطر عناوين."}},
+{"@type":"Question","name":"لماذا لا تُغلق نافذة المعادلة عند الحفظ؟","acceptedAnswer":{"@type":"Answer","text":"صيغة المعادلة غير مقبولة. اكتبها بدون مسافات وبدون أقواس، مثل {1}+{2}-{3}."}},
+{"@type":"Question","name":"لماذا لا يظهر التقرير في القائمة؟","acceptedAnswer":{"@type":"Answer","text":"يظهر التقرير فقط للمستخدمين المحددين في تبويب الصلاحيات، وبشرط أن تكون حالته نشط."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"التقارير","item":"https://help.tebalink.com/index.html#reports"},
+{"@type":"ListItem","position":3,"name":"التقارير المخصصة","item":"https://help.tebalink.com/custom-reports.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#pos">نقاط البيع والمطاعم</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#reports">التقارير</a></li><li>التقارير المخصصة</li></ol>
+<article>
+<h1>التقارير المخصصة: بناء تقارير مالية بالمعادلات والقيم والحسابات</h1>
+<p class="lead">من شاشة <span class="ui">انشاء التقارير</span> (قائمة <span class="ui">مصمم التقارير الاضافية</span>) تصمم قوائمك المالية بنفسك، مثل قائمة الدخل أو ملخص المصروفات. يتكون التقرير من <strong>أسطر مرتبة</strong>: عناوين، وأرصدة حسابات من <a href="chart-of-accounts.html">الدليل المحاسبي</a>، ومعادلات تجمع أو تطرح أسطرًا سابقة، وقيم ثابتة. بعد الحفظ يظهر التقرير في قائمة <span class="ui">تقارير القوائم المالية</span> للمستخدمين المسموح لهم، وتعرضه لأي فترة.</p>
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#how">كيف يُحسب التقرير</a></li>
+  <li><a href="#create">إنشاء تقرير جديد</a></li>
+  <li><a href="#header">بيانات التقرير</a></li>
+  <li><a href="#lines">أسطر التقرير</a></li>
+  <li><a href="#accounts">سطر تحديد الحسابات</a></li>
+  <li><a href="#range">سطر مدى حسابات من الى</a></li>
+  <li><a href="#equation">سطر المعادلة</a></li>
+  <li><a href="#value">سطر القيمة</a></li>
+  <li><a href="#import">استيراد قيمة من تقرير آخر</a></li>
+  <li><a href="#permissions">الصلاحيات</a></li>
+  <li><a href="#edit">تعديل تقرير أو حذفه</a></li>
+  <li><a href="#run">عرض التقرير وطباعته</a></li>
+  <li><a href="#example">مثال: قائمة دخل مبسطة</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+  <li><a href="#faq">أسئلة شائعة</a></li>
+</ol></nav>
+
+<section id="how">
+<h2>كيف يُحسب التقرير</h2>
+<ul>
+  <li>تُحسب الأسطر <strong>بالترتيب من أعلى لأسفل</strong>، وكل سطر يُعطي رقمًا واحدًا.</li>
+  <li>رصيد الحساب = حركته خلال الفترة المختارة فقط، من <strong>القيود المرحلة</strong> في السنة المالية الحالية. يُحسب حسب طبيعة الحساب في الدليل: الحساب المدين = مدين − دائن، والحساب الدائن = دائن − مدين.</li>
+  <li>تظهر قيمة كل سطر في أحد عمودين: <span class="ui">جزئى</span> (للتفاصيل) أو <span class="ui">كلى</span> (للإجماليات)، حسب اختيارك في <span class="ui">يظهر فى</span>.</li>
+  <li>سطر <span class="ui">عنوان</span> لا يحمل قيمة، ويظهر بخلفية رمادية وخط عريض.</li>
+</ul>
+</section>
+
+<section id="create">
+<h2>إنشاء تقرير جديد</h2>
+<!--shot:custom-reports__create-->
+<figure class="shot" id="shot-custom-reports__create">
+<div class="shot-frame"><a href="assets/screens/custom-reports__create.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/custom-reports__create.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: إنشاء تقرير جديد"></a></div>
+<details class="shot-tabs"><summary>باقي تبويبات الشاشة (1)</summary><div class="shot-thumbs"><a href="assets/screens/custom-reports__create--tab2.png" target="_blank" rel="noopener"><img src="assets/screens/custom-reports__create--tab2.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: إنشاء تقرير جديد - التبويب 2"></a></div></details>
+<figcaption>شاشة «إنشاء تقرير جديد» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>افتح <span class="ui">مصمم التقارير الاضافية</span>. يظهر رقم جديد تلقائيًا في <span class="ui">م دفترى</span>.</li>
+  <li>اكتب <span class="ui">اسم القائمة عربى</span> و<span class="ui">اسم القائمة انجليزى</span>، والوصف إن أردت.</li>
+  <li>أضف الأسطر بالترتيب: اكتب <span class="ui">العنوان</span>، واختر <span class="ui">طبيعة السطر</span> و<span class="ui">يظهر فى</span>، ثم اضغط زر الإضافة (<strong>+</strong>). يأخذ السطر الرقم التالي تلقائيًا في عمود <span class="ui">م</span>.</li>
+  <li>لكل سطر غير العناوين اضغط زر <span class="ui">Action</span> في نهاية السطر، وحدد الحسابات أو المعادلة أو القيمة، ثم اضغط <span class="ui">حفظ</span> في النافذة الصغيرة لتُغلق.</li>
+  <li>من تبويب <span class="ui">الصلاحيات</span> ضع علامة أمام المستخدمين الذين يرون التقرير.</li>
+  <li>اضغط <span class="ui">حفظ</span> في شريط الأدوات. تظهر رسالة <span class="msg">تم الحفظ بنجاح</span>، ويُضاف التقرير إلى القائمة الجانبية وإلى قائمة <span class="ui">تقارير القوائم المالية</span>.</li>
+</ol>
+<div class="warn">ما تضبطه في نوافذ <span class="ui">Action</span> يُحفظ مؤقتًا فقط، ولا يُسجَّل إلا عند الضغط على <span class="ui">حفظ</span> في الشاشة الرئيسية. إذا أغلقت الشاشة قبل الحفظ تضيع التعديلات.</div>
+</section>
+
+<section id="header">
+<h2>بيانات التقرير (تبويب بيانات التقرير)</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الحقل</th><th>الوصف</th></tr></thead>
+<tbody>
+<tr><td>م دفترى</td><td>رقم التقرير، يُقترح تلقائيًا ولا يُكرر. يُستخدم أيضًا للبحث.</td></tr>
+<tr><td>اسم القائمة عربى / انجليزى</td><td>إلزاميان. يظهر الاسم في القائمة حسب لغة البرنامج، ولا يُسمح بتكرار الاسم العربي.</td></tr>
+<tr><td>وصف القائمة عربى / انجليزى</td><td>ملاحظات اختيارية.</td></tr>
+<tr><td>قائمة الحركة</td><td>القوائم المالية.</td></tr>
+<tr><td>طبيعة التاريخ</td><td>من الى تاريخ: يُعرض التقرير لفترة تختارها.</td></tr>
+<tr><td>تقرير *Rpt</td><td>اسم ملف تصميم الطباعة. اتركه فارغًا إذا كنت ستكتفي بالعرض على الشاشة. انظر <a href="#run">الطباعة</a>.</td></tr>
+<tr><td>نشط / غير نشط</td><td>التقرير غير النشط يختفي من القوائم ولا يمكن عرضه أو الاستيراد منه.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="lines">
+<h2>أسطر التقرير</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الحقل</th><th>الوصف</th></tr></thead>
+<tbody>
+<tr><td>العنوان</td><td>النص الذي يظهر في التقرير، مثل «المبيعات» أو «صافي الربح». إلزامي.</td></tr>
+<tr><td>طبيعة السطر</td><td>طريقة حساب السطر، انظر الجدول التالي.</td></tr>
+<tr><td>طبيعة الحساب</td><td>مدين / دائن. للتوضيح فقط، ولا يغيّر الحساب.</td></tr>
+<tr><td>يظهر فى</td><td><span class="ui">جزئى</span> أو <span class="ui">كلى</span>: العمود الذي تظهر فيه القيمة.</td></tr>
+<tr><td>طباعة / لا يظهر</td><td>هل يظهر السطر عند الطباعة. يمكنك تغييره أيضًا بالنقر على خانة <span class="ui">الطباعة</span> في الجدول.</td></tr>
+</tbody></table></div>
+
+<h3>أنواع الأسطر</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>طبيعة السطر</th><th>القيمة</th></tr></thead>
+<tbody>
+<tr><td>عنوان</td><td>بدون قيمة؛ للتقسيم فقط.</td></tr>
+<tr><td>تحديد الحسابات</td><td>مجموع أرصدة حسابات تختارها واحدًا واحدًا.</td></tr>
+<tr><td>مدى حسابات من الى</td><td>مجموع أرصدة الحسابات الفرعية الواقعة بين حسابين تحت حساب رئيسي.</td></tr>
+<tr><td>معادلة</td><td>عملية حسابية على أسطر سابقة، مثل <code>{1}-{2}</code>.</td></tr>
+<tr><td>قيمة</td><td>رقم ثابت تكتبه.</td></tr>
+<tr><td>استيراد قيمة من تقرير اخر</td><td>قيمة سطر من تقرير مخصص آخر، لنفس الفترة.</td></tr>
+</tbody></table></div>
+
+<h3>التعامل مع جدول الأسطر</h3>
+<ul>
+  <li><strong>تعديل سطر:</strong> انقر على السطر فتُنقل بياناته إلى الحقول. عدّلها ثم اضغط زر الإضافة (<strong>+</strong>) لتحديث السطر نفسه.</li>
+  <li><strong>إعدادات السطر:</strong> زر <span class="ui">Action</span> يفتح النافذة المناسبة لنوع السطر. سطر العنوان ليس له إعدادات.</li>
+  <li><strong>حذف سطر:</strong> حدده ثم اضغط زر الحذف بجانب زر الإضافة، ووافق على التأكيد.</li>
+</ul>
+<div class="warn">
+  <ul>
+    <li>أرقام الأسطر <strong>لا يُعاد ترقيمها</strong> بعد الحذف. راجع كل المعادلات التي تستخدم أرقام الأسطر بعد أي حذف.</li>
+    <li>حذف سطر <span class="ui">عنوان</span> أو سطر لم تُضبط إعداداته قد يُظهر رسالة خطأ. إذا حدث ذلك اضغط <span class="ui">حفظ</span>، ثم افتح التقرير مرة أخرى وتأكد من الأسطر.</li>
+    <li>إذا غيّرت <span class="ui">طبيعة السطر</span> لسطر مضبوط سابقًا، اضغط <span class="ui">Action</span> واضبط إعداداته من جديد.</li>
+  </ul>
+</div>
+</section>
+
+<section id="accounts">
+<h2>سطر تحديد الحسابات (نافذة حسابات التقرير)</h2>
+<ol class="steps">
+  <li>اختر نوع الحساب من المفتاح: <span class="ui">حساب فرعى</span> أو <span class="ui">حساب رئيسى</span>. يُحسب الحساب الرئيسي بمجموع كل الحسابات التي تحته.</li>
+  <li>اختر <span class="ui">الحساب</span> من القائمة.</li>
+  <li>اختر <span class="ui">المصدر</span> لاحتساب الحركة القادمة من نوع مستند معيّن فقط، أو اتركه <span class="ui">--All--</span> لكل الحركات.</li>
+  <li>اضغط زر الإضافة (<strong>+</strong>). كرر للحسابات الأخرى.</li>
+  <li>اضغط <span class="ui">حفظ</span> لإغلاق النافذة.</li>
+</ol>
+<ul>
+  <li>إضافة الحساب نفسه مرة ثانية تحدّث بياناته (النوع والمصدر) بدلًا من تكراره.</li>
+  <li>لإزالة حساب: حدده في الجدول واضغط زر الحذف.</li>
+</ul>
+</section>
+
+<section id="range">
+<h2>سطر مدى حسابات من الى (نافذة مدي الحسابات)</h2>
+<ol class="steps">
+  <li>اختر <span class="ui">الحساب الرئيسي</span>. تمتلئ القائمتان <span class="ui">من</span> و<span class="ui">الى</span> بالحسابات الفرعية المباشرة تحته.</li>
+  <li>اختر الحساب الأول في <span class="ui">من</span> والأخير في <span class="ui">الى</span>.</li>
+  <li>اختر <span class="ui">المصدر</span> أو اتركه <span class="ui">--All--</span>، ثم اضغط <span class="ui">حفظ</span>.</li>
+</ol>
+<p class="tip">يشمل المدى الحسابين المختارين وكل ما بينهما <strong>بترتيب ظهورها في القائمة</strong> (ترتيب إنشائها)، وليس بالضرورة بترتيب أرقامها. إذا كان الترتيب غير مناسب، استخدم سطر <a href="#accounts">تحديد الحسابات</a> بدلًا منه.</p>
+<p class="note">لا تُغلق النافذة ولا يُحفظ شيء إذا ترك أحد الحقول الثلاثة فارغًا.</p>
+</section>
+
+<section id="equation">
+<h2>سطر المعادلة (نافذة قيمة السطر)</h2>
+<p>اكتب في <span class="ui">المعادلة</span> أرقام الأسطر بين قوسين معقوفين، مع العمليات <code>+</code> و<code>-</code> و<code>*</code> و<code>/</code>، ثم اضغط <span class="ui">حفظ</span>. يظهر رقم السطر الحالي في <span class="ui">رقم السطر</span> للتذكير.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>المعادلة</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td><code>{1}-{2}</code></td><td>السطر 1 ناقص السطر 2.</td></tr>
+<tr><td><code>{3}+{4}+{5}</code></td><td>مجموع ثلاثة أسطر.</td></tr>
+<tr><td><code>{6}*0.14</code></td><td>14% من السطر 6.</td></tr>
+<tr><td><code>{7}/{1}*100</code></td><td>السطر 7 كنسبة مئوية من السطر 1.</td></tr>
+</tbody></table></div>
+<div class="warn">
+  <ul>
+    <li>اكتب المعادلة <strong>بدون مسافات وبدون أقواس عادية</strong>. إذا كانت الصيغة غير مقبولة لا تُغلق النافذة عند الحفظ.</li>
+    <li>استخدم فقط أسطرًا <strong>أعلى</strong> من سطر المعادلة؛ الأسطر التي تحتها لم تُحسب بعد فتُعامل كصفر.</li>
+    <li>يُؤخذ من كل سطر رقمه في عمود <span class="ui">جزئى</span>، فإن كان صفرًا يؤخذ من <span class="ui">كلى</span>.</li>
+    <li>إذا تعذر حساب المعادلة (مثل القسمة على صفر) يظهر السطر بقيمة صفر.</li>
+  </ul>
+</div>
+</section>
+
+<section id="value">
+<h2>سطر القيمة</h2>
+<p>اكتب الرقم في <span class="ui">القيمة</span> واضغط <span class="ui">حفظ</span>. يظهر الرقم نفسه في التقرير لأي فترة، ويمكن استخدامه في المعادلات (مثل نسبة ثابتة أو هدف مبيعات).</p>
+</section>
+
+<section id="import">
+<h2>استيراد قيمة من تقرير آخر</h2>
+<ol class="steps">
+  <li>اختر <span class="ui">التقرير</span> المصدر. تظهر التقارير النشطة فقط، عدا التقرير الحالي.</li>
+  <li>اختر من <span class="ui">رقم السطر</span> عنوان السطر المطلوب.</li>
+  <li>اضغط <span class="ui">حفظ</span>.</li>
+</ol>
+<p>يُحسب التقرير المصدر بنفس الفترة والفرع ومركز التكلفة والمشروع المختارة عند العرض.</p>
+<div class="warn">
+  <ul>
+    <li>اختر سطرًا له قيمة، وليس سطر <span class="ui">عنوان</span>؛ وإلا قد لا تظهر نتائج عند الضغط على عرض.</li>
+    <li>لا تجعل تقريرين يستوردان من بعضهما (أ من ب، و ب من أ)، فهذا يجعل البرنامج يتوقف عن الاستجابة.</li>
+  </ul>
+</div>
+</section>
+
+<section id="permissions">
+<h2>الصلاحيات</h2>
+<p>تبويب <span class="ui">الصلاحيات</span> يعرض المستخدمين النشطين. ضع علامة أمام كل مستخدم يُسمح له برؤية التقرير في قائمة <span class="ui">تقارير القوائم المالية</span>. المستخدم غير المحدد لا يرى التقرير إطلاقًا.</p>
+<p class="tip">قبل الضغط على <span class="ui">حفظ</span> افتح تبويب <span class="ui">الصلاحيات</span> وتأكد أن العلامات كما تريد، فقد تعود الشاشة أحيانًا لتحديد المستخدم الأول فقط.</p>
+</section>
+
+<section id="edit">
+<h2>تعديل تقرير أو حذفه</h2>
+<ul>
+  <li><strong>فتح تقرير:</strong> انقر على اسمه في القائمة الجانبية، أو اكتب رقمه في مربع <span class="ui">بحث</span> بشريط الأدوات.</li>
+  <li>عدّل ما تريد ثم اضغط <span class="ui">حفظ</span>. تُحفظ الأسطر وإعداداتها والصلاحيات من جديد.</li>
+  <li><span class="ui">جديد</span>: تفريغ الشاشة لتقرير جديد. <span class="ui">تحديث</span>: اقتراح رقم جديد.</li>
+  <li><span class="ui">حذف</span>: يحذف التقرير بكل أسطره بعد التأكيد. إذا لم يكن هناك تقرير مفتوح تظهر <span class="msg">من فضلك قم باختيار السجل اولا</span>.</li>
+</ul>
+<p class="tip">بدلًا من الحذف يمكنك جعل التقرير <span class="ui">غير نشط</span> فيختفي من القوائم ويبقى تصميمه محفوظًا.</p>
+</section>
+
+<section id="run">
+<h2>عرض التقرير وطباعته</h2>
+<ol class="steps">
+  <li>من قائمة <span class="ui">تقارير القوائم المالية</span> اختر اسم التقرير. تفتح شاشة تحمل اسمه.</li>
+  <li>حدد الفترة في <span class="ui">من</span> و<span class="ui">الى</span>. القيمة الافتراضية هي الشهر الحالي.</li>
+  <li>اختر الفلاتر إن أردت (انظر الجدول)، ثم اضغط زر العرض (أيقونة البحث).</li>
+  <li>للطباعة اضغط زر الطباعة (أيقونة الطابعة)، ثم أجب عن سؤال <span class="msg">هل تريد معاينة التقرير قبل الطباعة؟</span>. شرح نافذة الطباعة والتصدير في <a href="common-dialogs.html#report-print">النوافذ المشتركة</a>.</li>
+</ol>
+<div class="table-wrap"><table>
+<thead><tr><th>الفلتر</th><th>الوصف</th></tr></thead>
+<tbody>
+<tr><td>الفرع</td><td>مفعّل افتراضيًا على أول فرع. اختر الفرع المطلوب، أو <strong>ألغِ العلامة</strong> لعرض كل الفروع. إذا لم تكن لديك صلاحية على كل الفروع يُعرض فرعك فقط.</td></tr>
+<tr><td>م تكلفة</td><td>ضع العلامة واختر مركز التكلفة لحصر الحركة عليه.</td></tr>
+<tr><td>المشروع</td><td>ضع العلامة واختر المشروع لحصر الحركة عليه.</td></tr>
+</tbody></table></div>
+<p>أعمدة النتيجة: <span class="ui">الحساب</span> (عنوان السطر)، <span class="ui">جزئى</span>، <span class="ui">كلى</span>. اضغط <kbd>Esc</kbd> لإغلاق الشاشة.</p>
+<div class="note">الطباعة تحتاج ملف تصميم مكتوبًا اسمه في <span class="ui">تقرير *Rpt</span> وموجودًا في مجلد التقارير بالبرنامج. إذا لم يكن موجودًا تظهر <span class="msg">عفوا . ملف التقرير غير متاح</span>. الأسطر المضبوطة على <span class="ui">لا يظهر</span> تُخفى في الطباعة حسب ملف التصميم.</div>
+</section>
+
+<section id="example">
+<h2>مثال: قائمة دخل مبسطة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>م</th><th>العنوان</th><th>طبيعة السطر</th><th>الإعداد</th><th>يظهر فى</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>الإيرادات</td><td>عنوان</td><td>—</td><td>—</td></tr>
+<tr><td>2</td><td>المبيعات</td><td>تحديد الحسابات</td><td>حساب المبيعات</td><td>جزئى</td></tr>
+<tr><td>3</td><td>مردودات المبيعات</td><td>تحديد الحسابات</td><td>حساب مردود المبيعات</td><td>جزئى</td></tr>
+<tr><td>4</td><td>صافي المبيعات</td><td>معادلة</td><td><code>{2}-{3}</code></td><td>كلى</td></tr>
+<tr><td>5</td><td>تكلفة المبيعات</td><td>تحديد الحسابات</td><td>حساب تكلفة البضاعة</td><td>جزئى</td></tr>
+<tr><td>6</td><td>مجمل الربح</td><td>معادلة</td><td><code>{4}-{5}</code></td><td>كلى</td></tr>
+<tr><td>7</td><td>المصروفات</td><td>تحديد الحسابات</td><td>حساب المصروفات (رئيسى)</td><td>جزئى</td></tr>
+<tr><td>8</td><td>صافي الربح</td><td>معادلة</td><td><code>{6}-{7}</code></td><td>كلى</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td><span class="msg">عفوا تأكد من بياناتك أولا</span></td><td>لم تُضف أي سطر، أو الرقم أو أحد الاسمين فارغ.</td></tr>
+<tr><td><span class="msg">هذا السجل موجود مسبقا</span></td><td>رقم التقرير أو اسمه العربي مستخدم في تقرير آخر.</td></tr>
+<tr><td><span class="msg">من فضلك قم باختيار السجل اولا</span></td><td>عند إضافة سطر بدون عنوان، أو الحذف بدون فتح تقرير.</td></tr>
+<tr><td><span class="msg">نوع السطر عنوان لا يمكن فتح الاعدادات الخاصة به</span></td><td>ضغطت <span class="ui">Action</span> على سطر عنوان.</td></tr>
+<tr><td><span class="msg">هل تريد فعلا تنفيذ الأمر؟</span></td><td>تأكيد قبل حذف سطر أو تقرير.</td></tr>
+<tr><td><span class="msg">عفوا فترة مالية مغلقة لا يمكن تنفيذ الاجراء</span></td><td>لا يمكن الحفظ أثناء العمل على فترة مالية مغلقة.</td></tr>
+<tr><td><span class="msg">عفوا . ملف التقرير غير متاح</span></td><td>ملف تصميم الطباعة غير موجود أو اسمه غير مكتوب.</td></tr>
+<tr><td><span class="msg">حدث خطا اثناء التنفيذ</span></td><td>تعذر الحفظ أو الحذف؛ لم يُسجَّل أي تغيير. أعد المحاولة.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="faq">
+<h2>أسئلة شائعة</h2>
+<h3>لماذا تظهر قيمة المعادلة صفرًا؟</h3>
+<p>المعادلة تستخدم فقط الأسطر التي تسبقها. تأكد أن الأرقام بين <code>{ }</code> لأسطر أعلى منها، وأنها ليست عناوين، وأن أرقامها لم تتغير بسبب حذف سطر.</p>
+<h3>لماذا لا تُغلق نافذة المعادلة عند الحفظ؟</h3>
+<p>الصيغة غير مقبولة. اكتبها بدون مسافات ولا أقواس، مثل <code>{1}+{2}-{3}</code>.</p>
+<h3>لماذا لا يظهر التقرير في القائمة؟</h3>
+<p>يجب أن يكون التقرير <span class="ui">نشط</span>، وأن يكون اسمك محددًا في تبويب <span class="ui">الصلاحيات</span>.</p>
+<h3>لماذا يختلف الرقم عن كشف الحساب؟</h3>
+<p>التقرير يحسب حركة الفترة فقط من القيود المرحلة، وقد يكون مقيدًا بفرع أو مركز تكلفة أو مصدر. قارن بنفس الفترة والفلاتر في <a href="reports-accounts.html">التقارير المحاسبية</a>.</p>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="reports-accounts.html">التقارير المحاسبية</a> · <a href="chart-of-accounts.html">الدليل المحاسبي</a> · <a href="common-dialogs.html">النوافذ المشتركة</a> · <a href="sales-invoice.html">فاتورة البيع</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-08">8 أكتوبر 2026</time></div></footer>
+</body>
+</html>

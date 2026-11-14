@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>الربط مع هيئة الزكاة والضريبة والجمارك – الفاتورة الإلكترونية المرحلة الثانية | دليل Ezees ERP</title>
+<meta name="description" content="شرح ربط Ezees ERP مع منصة فاتورة (ZATCA) في المرحلة الثانية: المتطلبات، إنشاء CSR برمز OTP، شهادة الامتثال وفحوصه، شهادة الإنتاج، إرسال الفواتير المبسطة والضريبية والإشعارات الدائنة، رمز QR، حالات الفواتير وقراءة الأخطاء وإعادة الإرسال.">
+<meta name="keywords" content="هيئة الزكاة والضريبة والجمارك, ZATCA, فاتورة, الفاتورة الإلكترونية المرحلة الثانية, الربط والتكامل, CSID, CSR, OTP, فاتورة ضريبية مبسطة, اعتماد الفاتورة, إشعار دائن, رمز QR, Ezees ERP">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/zatca-einvoice.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="الربط مع هيئة الزكاة والضريبة والجمارك في Ezees ERP">
+<meta property="og:description" content="خطوات تفعيل الفاتورة الإلكترونية المرحلة الثانية وإرسال الفواتير إلى منصة فاتورة ومتابعة حالتها.">
+<meta property="og:url" content="https://help.tebalink.com/zatca-einvoice.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"الربط مع هيئة الزكاة والضريبة والجمارك – الفاتورة الإلكترونية المرحلة الثانية","inLanguage":"ar","dateModified":"2026-10-10","proficiencyLevel":"Expert","mainEntityOfPage":"https://help.tebalink.com/zatca-einvoice.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"HowTo","name":"ربط Ezees ERP بمنصة فاتورة (المرحلة الثانية)","inLanguage":"ar","step":[
+{"@type":"HowToStep","position":1,"text":"أكمل الرقم الضريبي والسجل التجاري والعنوان الوطني للفرع والعملاء."},
+{"@type":"HowToStep","position":2,"text":"افتح Generate CSR واضغط Generate csr لإنشاء طلب الشهادة."},
+{"@type":"HowToStep","position":3,"text":"استخرج رمز OTP من بوابة فاتورة، واضغط Compliance form ثم أدخل الرمز واضغط Send للحصول على شهادة الامتثال."},
+{"@type":"HowToStep","position":4,"text":"من Compliance Invoice أرسل فاتورة من كل نوع مطلوب حتى تنجح فحوص الامتثال."},
+{"@type":"HowToStep","position":5,"text":"من Producrion CSID (onboarding) اضغط Send للحصول على شهادة الإنتاج."},
+{"@type":"HowToStep","position":6,"text":"من Invoice Report اعرض الفواتير غير المرسلة وحددها واضغط Send Zatca."}]},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"ما الفرق بين الفاتورة الضريبية والفاتورة المبسطة في الربط؟","acceptedAnswer":{"@type":"Answer","text":"الفاتورة الضريبية (B2B) لعميل له رقم ضريبي، وتُرسل للاعتماد (Clearance) قبل تسليمها للعميل. الفاتورة المبسطة (B2C) لعميل بلا رقم ضريبي، وتُبلَّغ بها الهيئة (Reporting) خلال 24 ساعة."}},
+{"@type":"Question","name":"كيف أعيد إرسال فاتورة رُفضت؟","acceptedAnswer":{"@type":"Answer","text":"الفاتورة المرفوضة تبقى في حالة Not Sent. اقرأ سبب الرفض من Json Response، وصحح بيانات العميل أو الفرع، ثم حددها في Invoice Report واضغط Send Zatca مرة أخرى."}},
+{"@type":"Question","name":"هل يمكن إرسال الفواتير من أي جهاز؟","acceptedAnswer":{"@type":"Answer","text":"لا. الشهادة والمفتاح الخاص يُحفظان على الجهاز الذي أُجري عليه الربط، فأرسل الفواتير من نفس الجهاز."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"الأنظمة المتخصصة","item":"https://help.tebalink.com/index.html#modules"},
+{"@type":"ListItem","position":3,"name":"الربط مع هيئة الزكاة والضريبة والجمارك","item":"https://help.tebalink.com/zatca-einvoice.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#pos">نقاط البيع والمطاعم</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#modules">الأنظمة المتخصصة</a></li><li>الربط مع هيئة الزكاة والضريبة والجمارك</li></ol>
+<article>
+<h1>الربط مع هيئة الزكاة والضريبة والجمارك – الفاتورة الإلكترونية المرحلة الثانية</h1>
+<p class="lead">تربط أداة <span class="ui">EzeeZatca</span> برنامج Ezees ERP بمنصة <strong>فاتورة</strong> التابعة لهيئة الزكاة والضريبة والجمارك (ZATCA). من خلالها تحصل على الشهادات الرقمية مرة واحدة، ثم ترسل الفواتير والإشعارات الدائنة الموقّعة إلكترونيًا، وتتابع حالة كل فاتورة وسبب رفضها.</p>
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#overview">نظرة عامة وشاشة البداية</a></li>
+  <li><a href="#before">قبل البدء</a></li>
+  <li><a href="#env">بيئة المحاكاة وبيئة الإنتاج</a></li>
+  <li><a href="#csr">الخطوة 1: إنشاء طلب الشهادة CSR</a></li>
+  <li><a href="#ccsid">الخطوة 2: شهادة الامتثال برمز OTP</a></li>
+  <li><a href="#compliance">الخطوة 3: فحوص الامتثال</a></li>
+  <li><a href="#pcsid">الخطوة 4: شهادة الإنتاج</a></li>
+  <li><a href="#renewal">تجديد الشهادة</a></li>
+  <li><a href="#send">إرسال الفواتير</a></li>
+  <li><a href="#types">أنواع الفواتير والإشعارات</a></li>
+  <li><a href="#qr">رمز QR</a></li>
+  <li><a href="#status">حالة الفاتورة وقراءة الرد</a></li>
+  <li><a href="#resend">إعادة إرسال الفواتير المرفوضة</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+  <li><a href="#faq">أسئلة شائعة</a></li>
+</ol></nav>
+
+<section id="overview">
+<h2>نظرة عامة وشاشة البداية</h2>
+<p>بعد تسجيل الدخول واختيار الفرع تظهر شاشة <span class="ui">EzeeZatca</span>، وفيها الأزرار التالية:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>الزر</th><th>الاستخدام</th><th>متى</th></tr></thead>
+<tbody>
+<tr><td><span class="ui">Generate CSR</span></td><td>إنشاء المفتاح الخاص وطلب توقيع الشهادة (CSR)، ومنه تفتح شاشة شهادة الامتثال.</td><td>مرة واحدة عند الربط.</td></tr>
+<tr><td><span class="ui">Compliance Invoice</span></td><td>إرسال فواتير اختبار لفحوص الامتثال.</td><td>بعد شهادة الامتثال.</td></tr>
+<tr><td><span class="ui">Producrion CSID (onboarding)</span></td><td>الحصول على شهادة الإنتاج التي تُرسل بها الفواتير الفعلية.</td><td>بعد نجاح فحوص الامتثال.</td></tr>
+<tr><td><span class="ui">Production CSID (Renewal)</span></td><td>تجديد شهادة الإنتاج.</td><td>انظر <a href="#renewal">التنبيه</a>.</td></tr>
+<tr><td><span class="ui">Invoice Report</span></td><td>عرض الفواتير وإرسالها ومتابعة حالتها.</td><td>يوميًا.</td></tr>
+<tr><td><span class="ui">Validator</span></td><td>يفتح نسخة مبسطة من قائمة الفواتير (النوع: <span class="ui">البيع</span> / <span class="ui">المرتجع بيع</span>).</td><td>استخدم <span class="ui">Invoice Report</span> بدلًا منها.</td></tr>
+<tr><td><span class="ui">LogOut</span></td><td>إغلاق الأداة.</td><td></td></tr>
+</tbody></table></div>
+<p class="note">يمكن أيضًا إرسال الفاتورة تلقائيًا بعد حفظها من داخل Ezees ERP بتفعيل خيار <span class="ui">ارسال الفواتير الى المنظومة مباشرة - Zatca SA</span> في <a href="settings.html#tax">تبويب الضرائب بالإعدادات</a>. أداة EzeeZatca تبقى لازمة لإجراء الربط أول مرة، ولإرسال ما لم يُرسل أو ما رُفض.</p>
+</section>
+
+<section id="before">
+<h2>قبل البدء</h2>
+<ol>
+  <li><strong>التسجيل في بوابة فاتورة:</strong> يجب أن تكون منشأتك مسجلة في ضريبة القيمة المضافة، وأن يكون لديك دخول إلى بوابة فاتورة (fatoora.zatca.gov.sa) لاستخراج رمز <strong>OTP</strong>.</li>
+  <li><strong>بيانات الشركة والفرع:</strong> اسم الشركة بالإنجليزية، و<strong>الرقم الضريبي</strong> للفرع (15 رقمًا يبدأ بـ3 وينتهي بـ3)، و<strong>السجل التجاري</strong>، والدولة، و<strong>العنوان الوطني</strong> كاملًا: الشارع، ورقم المبنى، والحي، والمدينة، والرمز البريدي. تُقرأ هذه البيانات تلقائيًا في الطلب وفي كل فاتورة.</li>
+  <li><strong>بيانات العملاء:</strong> للعميل الشركة أدخل الرقم الضريبي والعنوان الوطني، واجعل <span class="ui">نوع - ETA</span> شركة (B). للفرد اجعل النوع شخص (P) واترك الرقم الضريبي فارغًا. التفاصيل في <a href="customers.html#tax">الرقم الضريبي والفاتورة الإلكترونية للعملاء</a>.</li>
+  <li><strong>إعدادات الضريبة:</strong> نسبة 15% وتفعيل وضع الفاتورة السعودية (<span class="ui">Print QR Code</span>) من <a href="settings.html#tax">تبويب الضرائب</a>.</li>
+  <li><strong>ترحيل الفواتير:</strong> لا تظهر للإرسال إلا الفواتير <strong>المرحّلة</strong>.</li>
+  <li><strong>الجهاز:</strong> اتصال إنترنت، وبرنامج <code>OpenSSL</code> مثبت على الجهاز، وحزمة أدوات ZATCA التي يجهزها الدعم الفني. نفّذ كل خطوات الربط والإرسال من <strong>نفس الجهاز</strong>، لأن الشهادة والمفتاح الخاص يُحفظان في مجلد <code>ZatcaConfig</code> داخل مجلد البرنامج، وبيانات الدخول تُربط باسم الجهاز.</li>
+</ol>
+<div class="warn">المفتاح الخاص ورمز <code>secret</code> وشهادة الإنتاج هي هوية منشأتك أمام الهيئة. لا ترسل مجلد <code>ZatcaConfig</code> ولا لقطات شاشة الردود لأي جهة، واحتفظ بنسخة احتياطية منه في مكان آمن.</div>
+</section>
+
+<section id="env">
+<h2>بيئة المحاكاة وبيئة الإنتاج</h2>
+<p>تعمل الأداة على إحدى بيئتين لمنصة فاتورة، ويحددها الدعم الفني عند التثبيت:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>البيئة</th><th>الاستخدام</th><th>أثر الفواتير</th></tr></thead>
+<tbody>
+<tr><td>المحاكاة (Simulation)</td><td>تجربة الربط والتدريب قبل التشغيل الفعلي. يُستخرج OTP من بوابة المحاكاة.</td><td>لا أثر ضريبي لها.</td></tr>
+<tr><td>الإنتاج (Core)</td><td>التشغيل الفعلي.</td><td>كل فاتورة تُعتمد أو يُبلَّغ بها تُعد فاتورة رسمية.</td></tr>
+</tbody></table></div>
+<p class="note">الشهادات منفصلة لكل بيئة. عند الانتقال من المحاكاة إلى الإنتاج أعد خطوات الربط كاملة برمز OTP من بوابة الإنتاج.</p>
+</section>
+
+<section id="csr">
+<h2>الخطوة 1: إنشاء طلب الشهادة CSR</h2>
+<ol class="steps">
+  <li>اضغط <span class="ui">Generate CSR</span>. تمتلئ الحقول تلقائيًا من بيانات الفرع الذي سجلت الدخول عليه.</li>
+  <li>راجع الحقول (الجدول التالي)، وأكمل <span class="ui">Invoice Type</span> و<span class="ui">Location</span> و<span class="ui">Industry</span>.</li>
+  <li>اضغط <span class="ui">Generate csr</span>. تظهر مسارات الملفات ومحتوى <span class="ui">Private Key</span> و<span class="ui">Public Key</span> و<span class="ui">CSr</span>.</li>
+  <li>اضغط <span class="ui">Compliance form</span> لفتح شاشة شهادة الامتثال وفيها الـ CSR جاهز.</li>
+</ol>
+<div class="table-wrap"><table>
+<thead><tr><th>الحقل</th><th>المحتوى</th></tr></thead>
+<tbody>
+<tr><td><span class="ui">Common Name</span></td><td>يتكوّن تلقائيًا من الرقم الضريبي والسجل التجاري للفرع.</td></tr>
+<tr><td><span class="ui">Serial Number</span></td><td>الرقم التسلسلي للجهاز (الشركة المصنّعة والطراز والمعرّف). زر <span class="ui">...</span> يعيد قراءته.</td></tr>
+<tr><td><span class="ui">Organization Identifier</span></td><td>الرقم الضريبي للفرع (15 رقمًا).</td></tr>
+<tr><td><span class="ui">Organization Unit Name / TIN</span></td><td>اسم الفرع، أو الرقم المميز (TIN) إذا كانت المنشأة ضمن مجموعة ضريبية.</td></tr>
+<tr><td><span class="ui">Country Name</span></td><td>الدولة، وتكون <code>SA</code>.</td></tr>
+<tr><td><span class="ui">Organization Name</span></td><td>اسم الشركة بالإنجليزية.</td></tr>
+<tr><td><span class="ui">Invoice Type</span></td><td>أنواع الفواتير التي تصدرها: <code>1100</code> ضريبية ومبسطة معًا، <code>1000</code> ضريبية فقط، <code>0100</code> مبسطة فقط.</td></tr>
+<tr><td><span class="ui">Location</span></td><td>عنوان الفرع.</td></tr>
+<tr><td><span class="ui">Industry</span></td><td>نشاط المنشأة.</td></tr>
+</tbody></table></div>
+<div class="warn"><strong>الضغط على «Generate csr» ينشئ مفتاحًا خاصًا جديدًا ويستبدل القديم.</strong> بعد التشغيل الفعلي يتوقف الإرسال بالشهادة الحالية إذا أعدت إنشاء الـ CSR، ولا يمكن استرجاع المفتاح القديم إلا من نسخة احتياطية. لا تستخدمه إلا عند ربط جديد كامل.</div>
+</section>
+
+<section id="ccsid">
+<h2>الخطوة 2: شهادة الامتثال برمز OTP</h2>
+<ol class="steps">
+  <li>ادخل بوابة فاتورة واختر إضافة وحدة إصدار فواتير (EGS)، ثم استخرج رمز <strong>OTP</strong>. الرمز صالح لمدة قصيرة (ساعة تقريبًا)، فاستخدمه فورًا.</li>
+  <li>في شاشة <span class="ui">Compliance CSID</span> (تُفتح من زر <span class="ui">Compliance form</span>) تأكد من وجود الطلب في خانة <span class="ui">CSR</span>، أو اضغط <span class="ui">Choose</span> واختر ملف <code>Cert.csr</code>.</li>
+  <li>اكتب الرمز في خانة <span class="ui">OTP</span> واضغط <span class="ui">Send</span>.</li>
+  <li>عند النجاح تظهر رسالة <span class="msg">Values saved.</span> ويظهر رد المنصة في الصندوق السفلي، وتُحفظ شهادة الامتثال ورقم الطلب على هذا الجهاز.</li>
+</ol>
+<p class="tip">إذا ظهر خطأ يتعلق بالـ OTP فالرمز منتهٍ أو مستخدم من قبل. استخرج رمزًا جديدًا وأعد الإرسال، دون إعادة إنشاء الـ CSR.</p>
+</section>
+
+<section id="compliance">
+<h2>الخطوة 3: فحوص الامتثال</h2>
+<p>قبل منح شهادة الإنتاج تطلب الهيئة فاتورة ناجحة من كل نوع ستصدره. استخدم شاشة <span class="ui">Compliance Invoice</span>:</p>
+<ol class="steps">
+  <li>اختر النوع من <span class="ui">Invoice Type Code</span>. يظهر بجانبه رمز النوع والنوع الفرعي.</li>
+  <li>اختر رقم الفاتورة من <span class="ui">InvCode</span>. تظهر أصنافها وكمياتها وأسعارها في الجدول.</li>
+  <li>اضغط <span class="ui">Send</span>. تظهر <span class="msg">successfully</span> عند النجاح، أو <span class="msg">Not successfully</span> مع سبب الرفض.</li>
+  <li>كرر لكل نوع مطلوب حسب <span class="ui">Invoice Type</span> الذي اخترته في الـ CSR.</li>
+</ol>
+<div class="table-wrap"><table>
+<thead><tr><th>النوع في القائمة</th><th>الفواتير التي تظهر</th></tr></thead>
+<tbody>
+<tr><td>Standard Invoice</td><td>فواتير بيع مرحّلة لعميل نوعه شركة (B).</td></tr>
+<tr><td>Standard Invoice Credit note</td><td>مرتجعات بيع (إشعارات دائنة) لعميل شركة، مرتبطة بفاتورة أصلية.</td></tr>
+<tr><td>Standard Invoice debit note</td><td>فواتير بيع لعميل شركة مرتبطة بفاتورة سابقة (إشعار مدين).</td></tr>
+<tr><td>Simplified Invoice</td><td>فواتير بيع مرحّلة لعميل نوعه شخص (P).</td></tr>
+<tr><td>Simplified credit note Invoice</td><td>مرتجعات بيع لعميل شخص.</td></tr>
+<tr><td>Simplified debit note Invoice</td><td>إشعارات مدينة لعميل شخص.</td></tr>
+</tbody></table></div>
+<p>إذا كانت القائمة فارغة لنوع معين، أنشئ ورحّل في Ezees ERP فاتورة من هذا النوع لعميل مناسب ثم أعد فتح الشاشة.</p>
+<div class="warn"><strong>الفاتورة التي تنجح في فحص الامتثال تُعلَّم «مرسلة» (Success) ولا تظهر بعد ذلك للإرسال الفعلي.</strong> استخدم في الفحوص فواتير اختبار مخصصة لهذا الغرض (ويُفضَّل إجراء الفحوص في بيئة المحاكاة أولًا)، ونسّق مع الدعم الفني بشأن هذه الفواتير قبل التشغيل الفعلي.</div>
+</section>
+
+<section id="pcsid">
+<h2>الخطوة 4: شهادة الإنتاج</h2>
+<ol class="steps">
+  <li>اضغط <span class="ui">Producrion CSID (onboarding)</span>. تظهر رسالة <span class="msg">Values loaded successfully.</span> ويظهر <span class="ui">Compliance Request ID</span> تلقائيًا.</li>
+  <li>اضغط <span class="ui">Send</span>.</li>
+  <li>عند النجاح تُحفظ الشهادة في <code>ZatcaConfig\Cert.pem</code> وتظهر رسالتا الحفظ والنسخ، ثم <span class="msg">Production tokens updated successfully.</span></li>
+</ol>
+<p>من هذه اللحظة أصبح الجهاز جاهزًا لإرسال الفواتير الفعلية.</p>
+<p class="note">إذا ظهرت <span class="msg">No values found. Ensure you have made a request first.</span> فلم تُنجز الخطوة 2 على هذا الجهاز. وإذا رفضت المنصة الطلب فغالبًا لم تكتمل فحوص الامتثال لكل الأنواع المطلوبة.</p>
+</section>
+
+<section id="renewal">
+<h2>تجديد الشهادة</h2>
+<p>لشهادة الإنتاج تاريخ انتهاء. عند قرب انتهائها أو عند تعطل الجهاز يجب الحصول على شهادة جديدة.</p>
+<div class="warn">زر <span class="ui">Send</span> وزر <span class="ui">Choose</span> في شاشة <span class="ui">Production CSID (Renewal)</span> <strong>لا ينفذان أي إجراء في الإصدار الحالي</strong>. لتجديد الشهادة تواصل مع الدعم الفني، أو أعد خطوات الربط من 1 إلى 4 برمز OTP جديد. بعد التجديد أرسل فاتورة واحدة وتأكد من نجاحها قبل الإرسال الجماعي.</div>
+</section>
+
+<section id="send">
+<h2>إرسال الفواتير (Invoice Report)</h2>
+<ol class="steps">
+  <li>اضغط <span class="ui">Invoice Report</span>.</li>
+  <li>حدد الفترة <span class="ui">From</span> و<span class="ui">To</span> (الافتراضي آخر 7 أيام)، و<span class="ui">Branch</span>. لتصفية فواتير عنوان معين فعّل <span class="ui">Title</span> واختره.</li>
+  <li>اختر <span class="ui">Type</span>: <span class="ui">Sell Invoice</span> (فواتير البيع) أو <span class="ui">Credit Invoice</span> (المرتجعات / الإشعارات الدائنة).</li>
+  <li>اختر <span class="ui">Stat</span>: <span class="ui">Not Sent</span> لعرض ما لم يُرسل أو ما رُفض، أو <span class="ui">Success</span> لعرض ما نجح.</li>
+  <li>اضغط زر البحث (العدسة الصفراء). تظهر الفواتير مرتبة بالتاريخ. اضغط على فاتورة لعرض أصنافها في الجدول السفلي.</li>
+  <li>علّم عمود <span class="ui">Add</span> للفواتير المطلوبة، أو فعّل <span class="ui">SelectAll</span> لتحديد كل الفواتير غير المرسلة. يظهر مجموع <span class="ui">Tax</span> و<span class="ui">Total</span> للمحدد بالعملة المحلية.</li>
+  <li>اضغط <span class="ui">Send Zatca</span>. تُوقَّع الفواتير وتُرسل واحدة تلو الأخرى، ويظهر لكل فاتورة سطر في صندوق الرسائل: <span class="msg">Invoice … was Sent</span> أو <span class="msg">Invoice … Error : …</span>. بعد الانتهاء تُحدَّث القائمة تلقائيًا.</li>
+</ol>
+<ul>
+  <li>الفواتير الناجحة لا يمكن تحديدها مرة أخرى.</li>
+  <li>أرسل الفواتير <strong>بترتيب تواريخها</strong> ولا تؤجل فاتورة قديمة، لأن كل فاتورة تحمل بصمة الفاتورة السابقة (سلسلة PIH).</li>
+  <li>الفاتورة المبسطة يجب الإبلاغ عنها خلال 24 ساعة من إصدارها، والفاتورة الضريبية يجب اعتمادها قبل تسليمها للعميل.</li>
+</ul>
+<p class="tip">بعد التأكد من سطر <span class="msg">was Sent</span>، اعرض <span class="ui">Stat</span> = <span class="ui">Success</span> وتأكد من ظهور الفاتورة فيها، فهذا هو التأكيد النهائي لقبولها.</p>
+</section>
+
+<section id="types">
+<h2>أنواع الفواتير والإشعارات</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>المستند في Ezees ERP</th><th>العميل</th><th>النوع عند الهيئة</th><th>طريقة الإرسال</th></tr></thead>
+<tbody>
+<tr><td><a href="sales-invoice.html">فاتورة بيع</a></td><td>له رقم ضريبي</td><td>فاتورة ضريبية (Standard – 388)</td><td>اعتماد (Clearance): تعتمدها المنصة قبل التسليم.</td></tr>
+<tr><td>فاتورة بيع</td><td>بلا رقم ضريبي</td><td>فاتورة ضريبية مبسطة (Simplified – 388)</td><td>إبلاغ (Reporting) خلال 24 ساعة.</td></tr>
+<tr><td><a href="sales-return.html">مرتجع بيع / اشعار دائن</a></td><td>له رقم ضريبي</td><td>إشعار دائن ضريبي (381)</td><td>اعتماد.</td></tr>
+<tr><td>مرتجع بيع / اشعار دائن</td><td>بلا رقم ضريبي</td><td>إشعار دائن مبسط (381)</td><td>إبلاغ.</td></tr>
+</tbody></table></div>
+<p class="note">عند الإرسال الفعلي يُحدَّد النوع (ضريبية أو مبسطة) بوجود <strong>الرقم الضريبي</strong> في بطاقة العميل. عميل شركة بلا رقم ضريبي تُرسل فواتيره كمبسطة.</p>
+<div class="warn"><strong>الإشعار الدائن:</strong> اربط المرتجع دائمًا بالفاتورة الأصلية عند إنشائه (انظر <a href="sales-return.html#link">ربط المرتجع بالفاتورة</a>)، فالهيئة تتطلب مرجع الفاتورة الأصلية وسبب الإصدار. وبعد إرسال الفاتورة لا تعدلها، بل صححها بإشعار دائن.</div>
+<div class="warn"><strong>الإشعار المدين:</strong> اختيار <span class="ui">Debit Invoice</span> في قائمة <span class="ui">Type</span> لا يعمل بشكل صحيح في الإصدار الحالي، فقد تُرسل الإشعارات المدينة كفواتير عادية أو يفشل إرسالها. لا ترسلها من هذه الشاشة قبل مراجعة الدعم الفني.</div>
+</section>
+
+<section id="qr">
+<h2>رمز QR</h2>
+<ul>
+  <li>عند نجاح الإرسال يُحفظ رمز QR الخاص بالمرحلة الثانية (ويتضمن التوقيع الرقمي) مع الفاتورة.</li>
+  <li>عند طباعة الفاتورة من Ezees ERP مع تفعيل <span class="ui">Print QR Code</span> يُطبع هذا الرمز. أما الفاتورة التي لم تُرسل بعد فيُطبع عليها رمز مبسط (اسم البائع، والرقم الضريبي، والتاريخ، والإجمالي، والضريبة).</li>
+  <li>لذلك <strong>أعد طباعة الفاتورة بعد نجاح إرسالها</strong> إذا كانت النسخة الأولى قد طُبعت قبل الإرسال.</li>
+</ul>
+</section>
+
+<section id="status">
+<h2>حالة الفاتورة وقراءة الرد</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الحالة في قائمة Stat</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td><span class="ui">Not Sent</span></td><td>لم تُرسل بعد، أو أُرسلت ورُفضت (not reported / not cleared). يظهر تاريخ آخر محاولة في عمود <code>Eta_SendDate</code>.</td></tr>
+<tr><td><span class="ui">Success</span></td><td>قُبلت: اعتُمدت (cleared) أو بُلّغ عنها (reported)، أو اجتازت فحص الامتثال (complianced).</td></tr>
+</tbody></table></div>
+<h3>عرض رد المنصة (Json Response)</h3>
+<p>حدد الفاتورة في <span class="ui">Invoice Report</span> واضغط بزر الفأرة الأيمن ثم <span class="ui">Json Response</span>. تُفتح نافذة <span class="ui">JsonPreview</span> بآخر رد من المنصة، وزر <span class="ui">Copy</span> ينسخه لإرساله للدعم الفني. أهم ما في الرد:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>الجزء</th><th>كيف تقرؤه</th></tr></thead>
+<tbody>
+<tr><td><code>clearanceStatus</code> / <code>reportingStatus</code></td><td><code>CLEARED</code> أو <code>REPORTED</code>: قُبلت. <code>NOT_CLEARED</code> أو <code>NOT_REPORTED</code>: رُفضت.</td></tr>
+<tr><td><code>validationResults.status</code></td><td><code>PASS</code> سليمة، <code>WARNING</code> قُبلت مع ملاحظات، <code>ERROR</code> مرفوضة.</td></tr>
+<tr><td><code>errorMessages</code></td><td>أسباب الرفض. لكل خطأ <code>code</code> و<code>message</code> يشرح الحقل المخالف (مثل الرقم الضريبي أو العنوان). يجب تصحيحها ثم إعادة الإرسال.</td></tr>
+<tr><td><code>warningMessages</code></td><td>ملاحظات لا تمنع القبول، لكن عالجها في الفواتير القادمة لأن الهيئة قد تشددها لاحقًا.</td></tr>
+</tbody></table></div>
+<p class="note">خيار <span class="ui">Xml File</span> في نفس القائمة لا يعرض الملف في الإصدار الحالي. نسخ الفواتير الموقعة محفوظة في مجلد <code>ZatcaConfig\Invoices</code> داخل مجلد البرنامج، مقسمة إلى Standard وSimplified ثم General وCredit وDebit.</p>
+</section>
+
+<section id="resend">
+<h2>إعادة إرسال الفواتير المرفوضة</h2>
+<ol class="steps">
+  <li>في <span class="ui">Invoice Report</span> اختر <span class="ui">Stat</span> = <span class="ui">Not Sent</span> واعرض الفترة.</li>
+  <li>افتح <span class="ui">Json Response</span> للفاتورة واقرأ <code>errorMessages</code>.</li>
+  <li>صحح السبب في Ezees ERP: بيانات العميل (الرقم الضريبي، العنوان الوطني) في <a href="customers.html#tax">بطاقة العميل</a>، أو بيانات الفرع، أو إعدادات الضريبة.</li>
+  <li>حدد الفاتورة واضغط <span class="ui">Send Zatca</span> مرة أخرى.</li>
+</ol>
+<p class="tip">إذا كان الخطأ في بيانات الفاتورة نفسها (السعر أو الكمية) وكانت ضريبية مرفوضة، فهي لم تُعتمد بعد ويمكن تصحيحها. أما الفاتورة المقبولة فلا تُعدَّل، وتُصحَّح بإشعار دائن.</p>
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى والحل</th></tr></thead>
+<tbody>
+<tr><td><span class="msg">OpenSSL executable not found...</span></td><td>برنامج OpenSSL غير مثبت على الجهاز. اطلب تثبيته من الدعم الفني.</td></tr>
+<tr><td><span class="msg">OTP is empty.</span> / <span class="msg">CSR Encoded text is empty.</span></td><td>أكمل رمز OTP أو الـ CSR قبل الضغط على Send.</td></tr>
+<tr><td><span class="msg">Binary Security Token or Secret is missing or empty in the response.</span></td><td>المنصة لم تُصدر الشهادة. اقرأ الرد في الصندوق؛ غالبًا الـ OTP منتهٍ أو بيانات الـ CSR غير مطابقة.</td></tr>
+<tr><td><span class="msg">Error:User And Pass missed</span></td><td>لا توجد شهادة على هذا الجهاز. أكمل خطوات الربط، أو أرسل من الجهاز الذي تم عليه الربط.</td></tr>
+<tr><td><span class="msg">Error:Check internet connection</span></td><td>لا يوجد اتصال بمنصة فاتورة.</td></tr>
+<tr><td><span class="msg">StatusCode: 401, ReasonPhrase: 'Unauthorized'</span></td><td>الشهادة غير صالحة أو منتهية أو من بيئة أخرى. راجع <a href="#renewal">التجديد</a>.</td></tr>
+<tr><td><span class="msg">Error: BadRequest - ...</span></td><td>الفاتورة مرفوضة لمخالفة في بياناتها. اقرأ <code>errorMessages</code> وصحح ثم أعد الإرسال.</td></tr>
+<tr><td><span class="msg">No data available for the selected invoice.</span></td><td>الفاتورة بلا أصناف، أو ينقصها مدينة العميل أو بيانات الفرع.</td></tr>
+<tr><td><span class="msg">Could not find file ... Cert.pem</span></td><td>شهادة الإنتاج غير موجودة على هذا الجهاز. أكمل <a href="#pcsid">الخطوة 4</a>.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="faq">
+<h2>أسئلة شائعة</h2>
+<details><summary>ما الفرق بين الفاتورة الضريبية والمبسطة في الربط؟</summary><p>الضريبية (B2B) لعميل له رقم ضريبي، وتُعتمد من المنصة قبل تسليمها. المبسطة (B2C) لعميل بلا رقم ضريبي، ويُبلَّغ بها خلال 24 ساعة.</p></details>
+<details><summary>هل أحتاج ربطًا منفصلًا لكل فرع أو جهاز؟</summary><p>نعم. كل وحدة إصدار فواتير (جهاز/فرع) تحتاج CSR وشهادة خاصة بها برمز OTP مستقل، والإرسال يتم من الجهاز الذي حصل على الشهادة.</p></details>
+<details><summary>رُفضت فاتورة، هل أنشئ فاتورة جديدة؟</summary><p>لا. صحح السبب وأعد إرسال نفس الفاتورة من قائمة Not Sent.</p></details>
+<details><summary>لماذا لا تظهر فاتورة في قائمة الإرسال؟</summary><p>تأكد أنها مرحّلة، وأنها في الفترة والفرع المختارين، وأن Stat = Not Sent. الفاتورة المستخدمة في فحص الامتثال تظهر ضمن Success.</p></details>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="sales-invoice.html#einvoice">الفاتورة الإلكترونية في فاتورة البيع</a> · <a href="sales-return.html">مرتجع البيع (الإشعار الدائن)</a> · <a href="customers.html#tax">الرقم الضريبي للعملاء</a> · <a href="settings.html#tax">إعدادات الضرائب</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-10">10 أكتوبر 2026</time></div></footer>
+</body>
+</html>

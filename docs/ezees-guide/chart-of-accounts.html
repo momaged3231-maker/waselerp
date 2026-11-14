@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>شرح شجرة الحسابات والقوائم المالية | دليل Ezees ERP</title>
+<meta name="description" content="دليل إعداد شجرة الحسابات (الدليل المحاسبي) في Ezees ERP: إضافة حساب رئيسي وفرعي، الترقيم التلقائي، طبيعة الحساب والحساب الختامي، ربط مراكز التكلفة، دفتر الأستاذ، والقوائم المالية.">
+<meta name="keywords" content="شجرة الحسابات, الدليل المحاسبي, دليل الحسابات, حساب رئيسي, حساب فرعي, القوائم المالية, ميزان المراجعة, دفتر الأستاذ, Ezees ERP">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/chart-of-accounts.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="شرح شجرة الحسابات في Ezees ERP">
+<meta property="og:description" content="ابنِ الدليل المحاسبي لشركتك وأدِر الحسابات الرئيسية والفرعية.">
+<meta property="og:url" content="https://help.tebalink.com/chart-of-accounts.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"شرح شجرة الحسابات والقوائم المالية في Ezees ERP","inLanguage":"ar","dateModified":"2026-10-08","proficiencyLevel":"Beginner","mainEntityOfPage":"https://help.tebalink.com/chart-of-accounts.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"HowTo","name":"إضافة حساب فرعي في شجرة الحسابات","inLanguage":"ar","step":[
+{"@type":"HowToStep","position":1,"text":"حدد الحساب الرئيسي في الشجرة."},
+{"@type":"HowToStep","position":2,"text":"اضغط جديد فيظهر الكود التالي تلقائيًا."},
+{"@type":"HowToStep","position":3,"text":"اكتب اسم الحساب واختر حساب فرعي."},
+{"@type":"HowToStep","position":4,"text":"حدد ربط مركز التكلفة إن لزم ثم اضغط حفظ."}]},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"لماذا لا أستطيع حذف حساب؟","acceptedAnswer":{"@type":"Answer","text":"الحساب عليه قيود، أو له حسابات فرعية، أو هو حساب أساسي في النظام، أو أنشئ من شاشة أخرى مثل العملاء والموردين ويُحذف منها."}},
+{"@type":"Question","name":"لماذا لا يمكن إضافة حساب تحت هذا الحساب؟","acceptedAnswer":{"@type":"Answer","text":"لأنه حساب فرعي. الحسابات الفرعية لا تحتوي على حسابات تحتها، ويجب أن يكون الأب حسابًا رئيسيًا."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"شجرة الحسابات","item":"https://help.tebalink.com/chart-of-accounts.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#pos">نقاط البيع والمطاعم</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#accounts">الحسابات</a></li><li>شجرة الحسابات</li></ol>
+<article>
+<h1>شرح شجرة الحسابات والقوائم المالية</h1>
+<p class="lead">شاشة <span class="ui">شجرة الحسابات</span> هي الدليل المحاسبي لشركتك، وفيها كل الحسابات مرتبة في مستويات. <strong>الحساب الرئيسي</strong> يجمع حسابات تحته، و<strong>الحساب الفرعي</strong> هو الذي تُسجَّل عليه القيود. في نفس القسم توجد شاشة <span class="ui">القوائم الماليه</span> لتجميع حسابات معينة تستخدمها في التقارير.</p>
+<!--shot:chart-of-accounts-->
+<figure class="shot" id="shot-chart-of-accounts">
+<div class="shot-frame"><a href="assets/screens/chart-of-accounts.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/chart-of-accounts.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: شرح شجرة الحسابات والقوائم المالية"></a></div>
+<figcaption>شاشة «شرح شجرة الحسابات والقوائم المالية» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#concepts">مفاهيم أساسية</a></li>
+  <li><a href="#add">إضافة حساب</a></li>
+  <li><a href="#fields">حقول الحساب</a></li>
+  <li><a href="#balance">رصيد الحساب وتقاريره</a></li>
+  <li><a href="#search">البحث في الشجرة</a></li>
+  <li><a href="#rules">قواعد التعديل والحذف</a></li>
+  <li><a href="#lists">القوائم المالية</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+</ol></nav>
+
+<section id="concepts">
+<h2>مفاهيم أساسية</h2>
+<ul>
+  <li><strong>حساب رئيسي:</strong> مثل «الأصول» أو «العملاء». لا تُسجَّل عليه قيود، ويجمع أرصدة الحسابات التي تحته.</li>
+  <li><strong>حساب فرعي:</strong> مثل «خزينة الفرع الرئيسي». تُسجَّل عليه القيود، ولا يمكن إضافة حسابات تحته.</li>
+  <li><strong>الطبيعة:</strong> <span class="ui">مدين</span> أو <span class="ui">دائن</span>، وتُورَث من الحساب الأب.</li>
+  <li><strong>الحساب الختامي:</strong> <span class="ui">ميزانيه</span> أو <span class="ui">أرباح وخسائر</span> أو <span class="ui">قائمة الدخل</span>، ويحدد التقرير الختامي الذي يظهر فيه الحساب.</li>
+</ul>
+<p class="tip">حسابات العملاء والموردين والمندوبين تُنشأ تلقائيًا من شاشاتها، فلا تُنشئها يدويًا هنا.</p>
+</section>
+
+<section id="add">
+<h2>إضافة حساب جديد</h2>
+<ol class="steps">
+  <li>حدد في الشجرة <strong>الحساب الرئيسي</strong> الذي سيُضاف تحته الحساب الجديد.</li>
+  <li>اضغط <span class="ui">جديد</span>. يظهر الكود التالي تلقائيًا، وهو كود الأب يليه رقمان (01، 02...)، وتُنسخ الطبيعة والحساب الختامي من الأب.</li>
+  <li>اكتب <span class="ui">اسم الحساب</span>، واختر <span class="ui">حساب رئيسي</span> أو <span class="ui">حساب فرعي</span>.</li>
+  <li>اضبط ربط مركز التكلفة إن احتجت، ثم اضغط <span class="ui">حفظ</span>.</li>
+</ol>
+<p>لإضافة حساب في المستوى الأول (بدون أب)، اضغط جديد دون تحديد أي حساب. يُحفظ هذا الحساب رئيسيًا دائمًا.</p>
+</section>
+
+<section id="fields">
+<h2>حقول الحساب</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الحقل</th><th>الوصف</th></tr></thead>
+<tbody>
+<tr><td>كود الحساب</td><td>أرقام فقط. يتلون <strong>بالأخضر</strong> إذا كان الكود متاحًا و<strong>بالوردي</strong> إذا كان مستخدمًا. رابط <span class="ui">تلقائي</span> يولّد الكود التالي.</td></tr>
+<tr><td>اسم الحساب</td><td>إلزامي، ولا يُسمح بتكراره عند الإضافة.</td></tr>
+<tr><td>الحساب الأب</td><td>اكتب كوده أو اختره من القائمة. تظهر فقط الحسابات الرئيسية التي ليس عليها قيود.</td></tr>
+<tr><td>حساب رئيسي / حساب فرعي</td><td>نوع الحساب، ويُقفل إذا كان على الحساب قيود أو كانت له حسابات فرعية.</td></tr>
+<tr><td>الحساب الختامي</td><td>ميزانيه / أرباح وخسائر / قائمة الدخل.</td></tr>
+<tr><td>مدين / دائن</td><td>طبيعة الحساب، ويمكن تعديلها لحسابات المستوى الأول فقط.</td></tr>
+<tr><td>مرتبط بمركز تكلفه</td><td>هل يقبل الحساب مراكز تكلفة. عند تفعيله يمكن جعل المركز <span class="ui">أجباري</span> أو <span class="ui">أختياري</span>.</td></tr>
+<tr><td>ملاحظات</td><td>ملاحظات حرة.</td></tr>
+</tbody></table></div>
+<div class="note">عند تعديل الحساب الختامي أو الطبيعة لحساب رئيسي، <strong>تُطبَّق التعديلات على كل الحسابات التي تحته</strong>.</div>
+<div class="warn">تغيُّر لون الكود إلى الوردي تنبيه فقط ولا يمنع الحفظ، <strong>فلا تحفظ كودًا مكررًا</strong>.</div>
+</section>
+
+<section id="balance">
+<h2>رصيد الحساب وتقاريره</h2>
+<ul>
+  <li>اضغط أيقونة البحث (العدسة) بجانب <span class="ui">اجمالي عدد القيود</span> و<span class="ui">اجمالي الرصيد الحالي</span> لحساب الرصيد. الرصيد يشمل القيود المرحلة في الفرع والفترة الحاليين، ويشمل الحسابات الفرعية إذا كان الحساب رئيسيًا.</li>
+  <li><strong>زر الفأرة الأيمن</strong> على الحساب يعرض أمرين: <span class="ui">دفتر استاذ</span> و<span class="ui">ميزان مراجعة</span> للحساب المحدد.</li>
+  <li><span class="ui">طباعة</span>: تطبع الشجرة كاملة مع الطبيعة والحساب الختامي ورصيد كل حساب.</li>
+</ul>
+</section>
+
+<section id="search">
+<h2>البحث في الشجرة</h2>
+<p>اضغط <kbd>Ctrl</kbd>+<kbd>F</kbd> أو <span class="ui">بحث Ctrl+F</span> لفتح لوحة البحث. اختر <span class="ui">كود الحساب</span> (يبدأ بـ) أو <span class="ui">اسم الحساب</span> (يحتوي على)، ثم اكتب. انقر نقرًا مزدوجًا على أي نتيجة للانتقال إلى الحساب في الشجرة.</p>
+</section>
+
+<section id="rules">
+<h2>قواعد التعديل والحذف</h2>
+<ul>
+  <li>لا يمكن حذف حساب عليه قيود، أو له حسابات فرعية، أو عليه قيود إهلاك، أو له وظيفة في إعدادات النظام.</li>
+  <li>حسابات العملاء والموردين وغيرها التي أُنشئت من شاشات أخرى تُحذف وتُعدَّل أسماؤها من شاشاتها الأصلية. هنا يمكن تعديل الكود والملاحظات ومراكز التكلفة فقط.</li>
+  <li>لا يمكن تحويل حساب عليه قيود إلى حساب رئيسي.</li>
+  <li>الحفظ والحذف ممنوعان في الفترة المالية المغلقة.</li>
+</ul>
+</section>
+
+<section id="lists">
+<h2>القوائم المالية</h2>
+<p>شاشة <span class="ui">القوائم الماليه</span> تجمع حسابات بعينها تحت اسم واحد، مثل «مصروفات التشغيل»، لتستخدمها كمرشح في تقارير ميزان المراجعة والأرباح والخسائر (خيار <span class="ui">قائمه ماليه</span>).</p>
+<!--shot:chart-of-accounts__lists-->
+<figure class="shot" id="shot-chart-of-accounts__lists">
+<div class="shot-frame"><a href="assets/screens/chart-of-accounts__lists.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/chart-of-accounts__lists.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: القوائم المالية"></a></div>
+<figcaption>شاشة «القوائم المالية» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>اضغط <span class="ui">جديد</span> واكتب <span class="ui">الاسم</span>.</li>
+  <li>اختر <span class="ui">الحساب</span> واكتب <span class="ui">البيان</span>، ثم اضغط زر الإضافة الأخضر. كرر الخطوة لباقي الحسابات.</li>
+  <li>اضغط <span class="ui">حفظ</span>.</li>
+</ol>
+<p>لفتح قائمة محفوظة، اكتب <strong>رقمها</strong> في مربع البحث. لحذف حساب واحد من القائمة، حدده واضغط زر الحذف المجاور لزر الإضافة.</p>
+<div class="warn">لا تضغط مفتاح <kbd>Delete</kbd> على جدول الحسابات، لأنه <strong>يحذف القائمة كلها</strong> بعد التأكيد وليس السطر المحدد فقط.</div>
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td><span class="msg">عفوا لا يمكن اضافه حساب فرعي على هذا الحساب</span></td><td>الحساب المحدد فرعي. اختر حسابًا رئيسيًا.</td></tr>
+<tr><td><span class="msg">عفوا تأكد من بياناتك أولا</span></td><td>الكود أو الاسم أو الأب فارغ.</td></tr>
+<tr><td><span class="msg">هذا السجل موجود مسبقا</span></td><td>اسم الحساب مكرر.</td></tr>
+<tr><td><span class="msg">الحساب يحتوى على قيد يومية لا يمكن تحويله</span></td><td>لا يمكن تحويل الحساب إلى رئيسي لأن عليه قيودًا.</td></tr>
+<tr><td><span class="msg">...مسجل عليه بعض القيود اليوميه أو يحتوي على عدد من الحسابات الفرعيه...</span></td><td>لا يمكن الحذف.</td></tr>
+<tr><td><span class="msg">...تمت اضافته من خلال شاشه أخرى...</span></td><td>احذف الحساب من الشاشة التي أنشأته.</td></tr>
+<tr><td><span class="msg">...يقوم بوظيفه محدده في البرنامج...</span></td><td>الحساب مستخدم في إعدادات النظام.</td></tr>
+</tbody></table></div>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="cost-centers.html">مراكز التكلفة</a> · <a href="journal-entry.html">القيود اليومية</a> · <a href="currencies.html">العملات</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-08">8 أكتوبر 2026</time></div></footer>
+</body>
+</html>

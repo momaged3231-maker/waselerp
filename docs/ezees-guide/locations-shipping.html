@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>الدول والمحافظات والمدن وشركات الشحن | دليل Ezees ERP</title>
+<meta name="description" content="شرح إعداد الدول والمحافظات والمدن ومناطق التوصيل وشركات الشحن في Ezees ERP، ورسوم الشحن، واستخدامها في عناوين العملاء وأوامر البيع والفواتير.">
+<meta name="keywords" content="إعداد الدول, المحافظات, المدن, شركات الشحن, رسوم الشحن, مناطق التوصيل, Ezees ERP, عناوين العملاء">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/locations-shipping.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="الدول والمحافظات والمدن وشركات الشحن في Ezees ERP">
+<meta property="og:description" content="جهّز بيانات العناوين وشركات الشحن مرة واحدة واستخدمها في كل الشاشات.">
+<meta property="og:url" content="https://help.tebalink.com/locations-shipping.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"الدول والمحافظات والمدن وشركات الشحن في Ezees ERP","inLanguage":"ar","dateModified":"2026-10-08","proficiencyLevel":"Beginner","mainEntityOfPage":"https://help.tebalink.com/locations-shipping.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"لماذا لا أستطيع حذف دولة أو محافظة؟","acceptedAnswer":{"@type":"Answer","text":"لأنها مستخدمة: الدولة لها محافظات، والمحافظة لها مدن، والمدينة مسجلة في عنوان عميل أو مورد."}},
+{"@type":"Question","name":"لماذا تغيرت رسوم الشحن للمدن؟","acceptedAnswer":{"@type":"Answer","text":"عند حفظ دولة أو محافظة تُنسخ حالة التفعيل ورسوم الشحن إلى كل ما يتبعها من محافظات ومدن."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"الدول والمدن وشركات الشحن","item":"https://help.tebalink.com/locations-shipping.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#pos">نقاط البيع والمطاعم</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#setup">الإعدادات والأدوات</a></li><li>الدول والمدن وشركات الشحن</li></ol>
+<article>
+<h1>إعداد الدول والمحافظات والمدن وشركات الشحن</h1>
+<p class="lead">تُجهَّز هذه البيانات مرة واحدة، ثم تُستخدم في عناوين <a href="customers.html">العملاء</a> و<a href="suppliers.html">الموردين</a> والضامنين، وفي تبويب الشحن في <a href="sales-order.html">أوامر البيع</a> و<a href="sales-invoice.html">فواتير البيع</a>.</p>
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#hierarchy">ترتيب الإدخال الصحيح</a></li>
+  <li><a href="#common">طريقة العمل في كل الشاشات</a></li>
+  <li><a href="#country">الدول</a></li>
+  <li><a href="#gov">المحافظات</a></li>
+  <li><a href="#town">المدن</a></li>
+  <li><a href="#area">مناطق التوصيل (نقاط البيع)</a></li>
+  <li><a href="#shipping">شركات الشحن</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+</ol></nav>
+
+<section id="hierarchy">
+<h2>ترتيب الإدخال الصحيح</h2>
+<p>البيانات مرتبة في ثلاثة مستويات، ويجب إدخالها بالترتيب:</p>
+<ol class="steps">
+  <li><strong>الدول</strong>.</li>
+  <li><strong>المحافظات</strong>: كل محافظة تتبع دولة.</li>
+  <li><strong>المدن</strong>: كل مدينة تتبع محافظة، وتُعرف دولتها من المحافظة.</li>
+</ol>
+<div class="warn"><strong>انتبه:</strong> عند حفظ تعديل على <strong>دولة</strong>، تُنسخ حالة التفعيل و<span class="ui">رسوم الشحن</span> إلى كل محافظاتها ومدنها. وعند حفظ <strong>محافظة</strong>، تُنسخ إلى كل مدنها. أي رسوم مختلفة حددتها لمستوى أدنى ستُستبدل.</div>
+</section>
+
+<section id="common">
+<h2>طريقة العمل في كل الشاشات</h2>
+<ul>
+  <li>الحقول في الأعلى، وأسفلها جدول بالسجلات المحفوظة. اضغط على أي صف لتحميله وتعديله.</li>
+  <li><span class="ui">جديد</span>: تفريغ الحقول. <span class="ui">حفظ</span> أو <kbd>Enter</kbd> في أي حقل: إضافة السجل أو تعديله.</li>
+  <li><span class="ui">حذف</span> أو <kbd>Delete</kbd> على الجدول: حذف السجل بعد التأكيد.</li>
+  <li><span class="ui">طباعة</span>: معاينة طباعة الجدول. <span class="ui">تحديث</span>: إعادة تحميل القائمة.</li>
+  <li><span class="ui">بحث</span>: تصفية فورية بالأسماء التي <strong>تبدأ</strong> بالنص المكتوب.</li>
+</ul>
+<p class="tip">في شاشات العملاء والموردين يوجد زر إضافة بجانب قائمتي المحافظة والمدينة. يفتح الزر شاشة الإعداد مباشرة، وتتحدث القائمة تلقائيًا بعد الحفظ.</p>
+</section>
+
+<section id="country">
+<h2>الدول</h2>
+<!--shot:locations-shipping__country-->
+<figure class="shot" id="shot-locations-shipping__country">
+<div class="shot-frame"><a href="assets/screens/locations-shipping__country.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/locations-shipping__country.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: الدول"></a></div>
+<figcaption>شاشة «الدول» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<div class="table-wrap"><table>
+<thead><tr><th>الحقل</th><th>الوصف</th></tr></thead>
+<tbody>
+<tr><td>الدولة</td><td>الاسم العربي (إلزامي).</td></tr>
+<tr><td>EN</td><td>الاسم الإنجليزي.</td></tr>
+<tr><td>الكود</td><td>كود الدولة المكون من حرفين، مثل SA أو EG (إلزامي).</td></tr>
+<tr><td>رسوم الشحن</td><td>رسوم الشحن الافتراضية.</td></tr>
+<tr><td>Active</td><td>تفعيل الدولة.</td></tr>
+</tbody></table></div>
+<p class="tip">زر <span class="ui">---</span> يفتح قائمة جاهزة بدول العالم، ويمكن البحث فيها بالاسم أو كود الاتصال أو العملة. عند اختيار دولة يُملأ الاسم العربي والإنجليزي والكود تلقائيًا.</p>
+</section>
+
+<section id="gov">
+<h2>المحافظات</h2>
+<p>اختر <span class="ui">الدولة</span>، ثم اكتب اسم <span class="ui">المحافظة</span> بالعربي وبالإنجليزي في <span class="ui">EN</span>، وحدد <span class="ui">رسوم الشحن</span> و<span class="ui">Active</span>. لا يُسمح بتكرار اسم المحافظة حتى لو كانت في دولة مختلفة.</p>
+<!--shot:locations-shipping__gov-->
+<figure class="shot" id="shot-locations-shipping__gov">
+<div class="shot-frame"><a href="assets/screens/locations-shipping__gov.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/locations-shipping__gov.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: المحافظات"></a></div>
+<figcaption>شاشة «المحافظات» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+</section>
+
+<section id="town">
+<h2>المدن</h2>
+<p>اختر <span class="ui">الدولة</span>، فتظهر محافظاتها فقط. اختر <span class="ui">المحافظة</span>، ثم اكتب اسم <span class="ui">المدينة</span> وحدد الرسوم والتفعيل. لا يُسمح بتكرار اسم المدينة في أي محافظة.</p>
+<!--shot:locations-shipping__town-->
+<figure class="shot" id="shot-locations-shipping__town">
+<div class="shot-frame"><a href="assets/screens/locations-shipping__town.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/locations-shipping__town.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: المدن"></a></div>
+<figcaption>شاشة «المدن» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<div class="warn">عند فتح مدينة للتعديل، <strong>راجع قيمة رسوم الشحن قبل الحفظ</strong>، لأن الحقل قد يعرض رسوم المحافظة وليس رسوم المدينة.</div>
+</section>
+
+<section id="area">
+<h2>مناطق التوصيل (نقاط البيع)</h2>
+<p>شاشة <span class="ui">المنطقة</span> قائمة منفصلة لمناطق التوصيل، وتُفتح من شاشة الكاشير والتوصيل. تحتوي على اسم <span class="ui">المنطقة</span> و<span class="ui">التكلفة</span>. عند اختيار المنطقة في طلب توصيل تُضاف تكلفتها تلقائيًا إلى الطلب، ويُطبع اسمها مع العنوان.</p>
+</section>
+
+<section id="shipping">
+<h2>شركات الشحن</h2>
+<!--shot:locations-shipping__shipping-->
+<figure class="shot" id="shot-locations-shipping__shipping">
+<div class="shot-frame"><a href="assets/screens/locations-shipping__shipping.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/locations-shipping__shipping.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: شركات الشحن"></a></div>
+<figcaption>شاشة «شركات الشحن» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<div class="table-wrap"><table>
+<thead><tr><th>الحقل</th><th>الوصف</th></tr></thead>
+<tbody>
+<tr><td>شركة الشحن</td><td>اسم الشركة (إلزامي).</td></tr>
+<tr><td>الهاتف</td><td>رقم التواصل.</td></tr>
+<tr><td>العنوان</td><td>إلزامي.</td></tr>
+<tr><td>Api Url</td><td>رابط الربط الإلكتروني مع شركة الشحن. يُترك لفريق الدعم الفني.</td></tr>
+<tr><td>نشط</td><td>الشركات النشطة فقط تظهر في الفواتير وأوامر البيع.</td></tr>
+</tbody></table></div>
+<p class="note">لإيقاف التعامل مع شركة، <strong>ألغِ تفعيل «نشط» بدلًا من حذفها</strong>، حتى تبقى بياناتها ظاهرة في الطلبات القديمة.</p>
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td><span class="msg">عفوا تأكد من بياناتك أولا</span></td><td>يوجد حقل إلزامي فارغ.</td></tr>
+<tr><td><span class="msg">هذا السجل موجود مسبقا</span></td><td>الاسم مسجل من قبل.</td></tr>
+<tr><td><span class="msg">من فضلك اختر الدولة</span> / <span class="msg">من فضلك اختر المحافظة</span></td><td>اختر المستوى الأعلى أولًا.</td></tr>
+<tr><td><span class="msg">لا يمكن اجراء تعديل لهذا السجل لاستخدامه من قبل اخر</span></td><td>لا يمكن الحذف لأن السجل مستخدم.</td></tr>
+<tr><td><span class="msg">عفوا فترة مالية مغلقة...</span></td><td>الفترة المالية مغلقة.</td></tr>
+</tbody></table></div>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="customers.html">العملاء</a> · <a href="suppliers.html">الموردون</a> · <a href="sales-order.html">أمر البيع والشحن</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-08">8 أكتوبر 2026</time></div></footer>
+</body>
+</html>

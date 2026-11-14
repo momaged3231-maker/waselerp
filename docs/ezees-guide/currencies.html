@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>إدارة العملات وأسعار الصرف | دليل Ezees ERP</title>
+<meta name="description" content="شرح شاشة إدارة العملات في Ezees ERP: إضافة عملة أجنبية، تحديد العملة المحلية، تحديث سعر الصرف، واستخدام العملات في الفواتير والقيود والسندات.">
+<meta name="keywords" content="إدارة العملات, سعر الصرف, عملة محلية, عملة أجنبية, تعدد العملات, Ezees ERP, برنامج محاسبة">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/currencies.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="إدارة العملات وأسعار الصرف في Ezees ERP">
+<meta property="og:description" content="عرّف العملات وأسعار صرفها، وحدد العملة المحلية لشركتك.">
+<meta property="og:url" content="https://help.tebalink.com/currencies.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"إدارة العملات وأسعار الصرف في Ezees ERP","inLanguage":"ar","dateModified":"2026-10-08","proficiencyLevel":"Beginner","mainEntityOfPage":"https://help.tebalink.com/currencies.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"ماذا يعني سعر الصرف في شاشة العملات؟","acceptedAnswer":{"@type":"Answer","text":"هو عدد وحدات العملة المحلية التي تساوي وحدة واحدة من هذه العملة."}},
+{"@type":"Question","name":"لماذا لا أستطيع حذف عملة؟","acceptedAnswer":{"@type":"Answer","text":"العملة مستخدمة في فواتير أو قيود أو فروع أو عملاء، أو هي العملة الأساسية للنظام أو العملة المحلية."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"العملات","item":"https://help.tebalink.com/currencies.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#pos">نقاط البيع والمطاعم</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#accounts">الحسابات</a></li><li>العملات</li></ol>
+<article>
+<h1>إدارة العملات وأسعار الصرف</h1>
+<p class="lead">في شاشة <span class="ui">ادارة العملات</span> تعرّف العملات التي تتعامل بها وسعر صرف كل منها مقابل <strong>العملة المحلية</strong>. هذه العملات تظهر بعد ذلك في <a href="sales-invoice.html">الفواتير</a> و<a href="journal-entry.html">القيود</a> و<a href="vouchers.html">السندات</a>.</p>
+<!--shot:currencies-->
+<figure class="shot" id="shot-currencies">
+<div class="shot-frame"><a href="assets/screens/currencies.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/currencies.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: إدارة العملات وأسعار الصرف"></a></div>
+<figcaption>شاشة «إدارة العملات وأسعار الصرف» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#add">إضافة عملة</a></li>
+  <li><a href="#fields">الحقول</a></li>
+  <li><a href="#local">العملة المحلية</a></li>
+  <li><a href="#rate">تحديث سعر الصرف</a></li>
+  <li><a href="#delete">الحذف والقيود</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+</ol></nav>
+
+<section id="add">
+<h2>إضافة عملة جديدة</h2>
+<ol class="steps">
+  <li>اضغط <span class="ui">جديد</span>.</li>
+  <li>اضغط زر <span class="ui">---</span> بجانب <span class="ui">العمله</span> واختر الدولة، فيُملأ اسم العملة وكسرها والكود تلقائيًا. يمكنك أيضًا كتابتها يدويًا.</li>
+  <li>اكتب <span class="ui">سعر الصرف</span> من العملة المحلية.</li>
+  <li>اترك الخيار على <span class="ui">عمله أجنبيه</span>، ثم اضغط <span class="ui">حفظ</span>.</li>
+</ol>
+</section>
+
+<section id="fields">
+<h2>الحقول</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الحقل</th><th>الوصف</th></tr></thead>
+<tbody>
+<tr><td>العمله</td><td>اسم العملة، مثل دولار أمريكي (إلزامي).</td></tr>
+<tr><td>تجزئة</td><td>اسم الكسر، مثل سنت أو قرش أو هللة. يظهر في كتابة المبالغ بالحروف.</td></tr>
+<tr><td>الكود</td><td>الكود الدولي من 3 أحرف، مثل USD أو SAR أو EGP.</td></tr>
+<tr><td>سعر الصرف</td><td>كم يساوي <strong>1</strong> من هذه العملة بالعملة المحلية. مثال: إذا كانت العملة المحلية الجنيه، فسعر الدولار قد يكون 48.50.</td></tr>
+<tr><td>عمله محليه / عمله أجنبيه</td><td>العملة المحلية سعرها 1 دائمًا.</td></tr>
+<tr><td>أخر تحديث بتاريخ</td><td>تاريخ آخر تعديل، ويُحدَّث تلقائيًا.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="local">
+<h2>العملة المحلية</h2>
+<p>يجب أن تكون هناك <strong>عملة محلية واحدة</strong>، وهي عملة الدفاتر التي تُحسب بها كل الأرصدة. في الجدول يظهر صفها <strong>باللون الأخضر الفاتح</strong>.</p>
+<div class="warn">لتغيير العملة المحلية، <strong>افتح العملة الموجودة للتعديل</strong> واختر «عمله محليه» ثم احفظ، فتتحول باقي العملات إلى أجنبية تلقائيًا. لا تُضف عملة جديدة كعملة محلية، لأن ذلك قد ينتج عنه عملتان محليتان.</div>
+</section>
+
+<section id="rate">
+<h2>تحديث سعر الصرف</h2>
+<p>اضغط على العملة في الجدول، وعدّل <span class="ui">سعر الصرف</span>، ثم احفظ. السعر الجديد يُستخدم افتراضيًا في المستندات الجديدة، ويمكن تعديله داخل كل فاتورة أو قيد. المستندات المحفوظة سابقًا تحتفظ بسعرها.</p>
+</section>
+
+<section id="delete">
+<h2>الحذف</h2>
+<div class="warn">زر <span class="ui">حذف</span> في هذه الشاشة <strong>يحذف العملة فورًا بدون رسالة تأكيد</strong>، فتأكد من العملة المحددة قبل الضغط.</div>
+<p>لا يمكن حذف عملة مستخدمة في فواتير أو قيود أو فروع أو شيكات أو عملاء أو أوامر بيع أو عقود، ولا حذف العملة الأساسية للنظام أو العملة المحلية.</p>
+<p class="tip">إذا ظهر الجدول فارغًا بعد مسح نص البحث، اضغط <span class="ui">تحديث</span>.</p>
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td><span class="msg">عفوا تأكد من بياناتك أولا</span></td><td>سعر الصرف يساوي صفرًا.</td></tr>
+<tr><td><span class="msg">هذا السجل موجود مسبقا</span></td><td>اسم العملة مسجل من قبل.</td></tr>
+<tr><td><span class="msg">من فضلك قم باختيار السجل اولا</span></td><td>حدد العملة قبل الحذف.</td></tr>
+<tr><td><span class="msg">لا يمكن اجراء تعديل لهذا السجل لاستخدامه من قبل اخر</span></td><td>العملة مستخدمة ولا يمكن حذفها.</td></tr>
+<tr><td><span class="msg">حدث خطا اثناء التنفيذ</span></td><td>اسم العملة فارغ، أو تحاول حذف العملة المحلية.</td></tr>
+</tbody></table></div>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="journal-entry.html">القيود متعددة العملات</a> · <a href="sales-invoice.html">فاتورة البيع</a> · <a href="vouchers.html">السندات</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-08">8 أكتوبر 2026</time></div></footer>
+</body>
+</html>

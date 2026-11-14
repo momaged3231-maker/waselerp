@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>شرح سند القبض وسند الصرف | دليل Ezees ERP</title>
+<meta name="description" content="دليل سندات القبض والصرف في Ezees ERP: تحصيل من العملاء، سداد للموردين، سند مصروفات، الدفع نقدًا أو بشيك أو تحويل، سداد فاتورة محددة، الضريبة، الترحيل والطباعة.">
+<meta name="keywords" content="سند قبض, سند صرف, سند مصروفات, تحصيل من العملاء, سداد الموردين, شيك, Ezees ERP, برنامج محاسبة">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/vouchers.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="شرح سند القبض وسند الصرف في Ezees ERP">
+<meta property="og:description" content="سجّل المقبوضات والمدفوعات نقدًا أو بشيك أو تحويل، واربطها بالفواتير.">
+<meta property="og:url" content="https://help.tebalink.com/vouchers.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"شرح سند القبض وسند الصرف في Ezees ERP","inLanguage":"ar","dateModified":"2026-10-08","proficiencyLevel":"Beginner","mainEntityOfPage":"https://help.tebalink.com/vouchers.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"HowTo","name":"تسجيل سند قبض من عميل","inLanguage":"ar","step":[
+{"@type":"HowToStep","position":1,"text":"افتح سند قبض عميل واضغط جديد."},
+{"@type":"HowToStep","position":2,"text":"اختر النوع نقدي أو شيك أو تحويل."},
+{"@type":"HowToStep","position":3,"text":"اختر الخزينة أو البنك في مدين (F9) والعميل في دائن (F10)."},
+{"@type":"HowToStep","position":4,"text":"اكتب المبلغ والغرض، واختر الفاتورة بـ F8 إن أردت، ثم احفظ."}]},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"لماذا لا أستطيع تعديل السند؟","acceptedAnswer":{"@type":"Answer","text":"السند مرحل. حوّله إلى غير مرحل واحفظ (يحتاج صلاحية)، ثم عدّله."}},
+{"@type":"Question","name":"ما هو سند الضمان بدون قيد؟","acceptedAnswer":{"@type":"Answer","text":"سند لتسجيل شيك ضمان للمتابعة فقط، ولا يُنشئ قيدًا محاسبيًا."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"سند القبض وسند الصرف","item":"https://help.tebalink.com/vouchers.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#pos">نقاط البيع والمطاعم</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#accounts">الحسابات</a></li><li>سند القبض وسند الصرف</li></ol>
+<article>
+<h1>شرح سند القبض وسند الصرف</h1>
+<p class="lead">كل سند يسجل حركة مالية واحدة: حساب مدين، وحساب دائن، ومبلغ.</p>
+<!--shot:vouchers-->
+<figure class="shot" id="shot-vouchers">
+<div class="shot-frame"><a href="assets/screens/vouchers.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/vouchers.png" width="1649" height="898" loading="lazy" decoding="async" data-ai-src="assets/screens/vouchers-n.png" alt="صورة شاشة: شرح سند القبض وسند الصرف"></a><span class="shot-n" style="left:86.17%;top:1.56%" aria-hidden="true">1</span><span class="shot-n" style="left:52.82%;top:15.59%" aria-hidden="true">2</span><span class="shot-n" style="left:52.82%;top:23.05%" aria-hidden="true">3</span><span class="shot-n" style="left:52.82%;top:28.62%" aria-hidden="true">4</span><span class="shot-n" style="left:18.37%;top:18.37%" aria-hidden="true">5</span><span class="shot-n" style="left:52.82%;top:37.86%" aria-hidden="true">6</span><span class="shot-n" style="left:52.82%;top:51.78%" aria-hidden="true">7</span></div>
+<ol class="shot-keys"><li>شريط الأزرار والبحث برقم السند. <a href="#search">التفاصيل</a></li><li>رقم السند والتاريخ والفرع والنوع (نقدي أو شيك). <a href="#fields">التفاصيل</a></li><li>العملة والمبلغ. <a href="#fields">التفاصيل</a></li><li>الحساب المدين والدائن (F9 وF10 للبحث). <a href="#entries">التفاصيل</a></li><li>بيانات الشيك: تاريخ الإصدار والاستحقاق ورقم الشيك والبنك. <a href="#paytype">التفاصيل</a></li><li>مركز التكلفة والمندوب والمشروع والغرض. <a href="#fields">التفاصيل</a></li><li>ربط السند بفاتورة (F8). <a href="#invoice">التفاصيل</a></li></ol>
+<figcaption>شاشة «شرح سند القبض وسند الصرف» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ul class="lead">
+  <li><span class="ui">سندات القبض</span> (رقمها يبدأ بحرف <code>K</code>): لكل مبلغ تستلمه.</li>
+  <li><span class="ui">سندات الصرف</span> (رقمها يبدأ بحرف <code>S</code>): لكل مبلغ تدفعه.</li>
+</ul>
+<p class="lead">يُنشأ القيد المحاسبي تلقائيًا عند ترحيل السند.</p>
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#types">أنواع السندات في القائمة</a></li>
+  <li><a href="#quick">تسجيل سند خطوة بخطوة</a></li>
+  <li><a href="#fields">حقول السند</a></li>
+  <li><a href="#paytype">أنواع السداد</a></li>
+  <li><a href="#invoice">سداد فاتورة محددة</a></li>
+  <li><a href="#entries">القيد المحاسبي</a></li>
+  <li><a href="#search">البحث والطباعة</a></li>
+  <li><a href="#shortcuts">الاختصارات</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+</ol></nav>
+
+<section id="types">
+<h2>أنواع السندات في القائمة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>القائمة</th><th>الاستخدام</th></tr></thead>
+<tbody>
+<tr><td>سندات القبض / سندات الصرف</td><td>عام، ويمكن اختيار أي حساب.</td></tr>
+<tr><td>سند قبض عميل</td><td>تحصيل من العملاء، وتظهر فيه قائمة العملاء فقط.</td></tr>
+<tr><td>سند صرف مورد</td><td>سداد للموردين، وتظهر فيه قائمة الموردين فقط.</td></tr>
+<tr><td>سند مصروفات</td><td>صرف مصروف، وتظهر فيه حسابات المصروفات فقط.</td></tr>
+</tbody></table></div>
+<p class="tip">يمكنك فتح السند مباشرة من أزرار <span class="ui">سند قبض</span> و<span class="ui">سند صرف</span> داخل <a href="sales-invoice.html">الفواتير</a>، فيظهر فيه اسم العميل أو المورد تلقائيًا.</p>
+</section>
+
+<section id="quick">
+<h2>تسجيل سند خطوة بخطوة</h2>
+<ol class="steps">
+  <li>اضغط <span class="ui">جديد</span> (<kbd>F1</kbd>).</li>
+  <li>اختر <span class="ui">النوع</span>: نقدي، أو شيك، أو تحويل، أو سند ضمان. تتغير قائمة الخزائن والبنوك حسب النوع.</li>
+  <li>اختر الحسابين:
+    <ul>
+      <li><strong>سند القبض:</strong> <span class="ui">مدين</span> (<kbd>F9</kbd>) هو الخزينة أو البنك، و<span class="ui">دائن</span> (<kbd>F10</kbd>) هو العميل أو الجهة الدافعة.</li>
+      <li><strong>سند الصرف:</strong> <span class="ui">مدين</span> (<kbd>F9</kbd>) هو المورد أو المصروف، و<span class="ui">دائن</span> (<kbd>F10</kbd>) هو الخزينة أو البنك.</li>
+    </ul>
+  </li>
+  <li>اكتب <span class="ui">المبلغ</span> و<span class="ui">الغرض</span>. يظهر بجانب المبلغ رصيد الطرف الآخر الحالي.</li>
+  <li>اضغط <span class="ui">حفظ</span> (<kbd>F2</kbd>)، ثم اختر الطباعة إن أردت.</li>
+</ol>
+<div class="warn">الضغط على <kbd>Enter</kbd> في أي حقل <strong>يحفظ السند مباشرة</strong>، حتى في حقل الملاحظات أو المبلغ.</div>
+</section>
+
+<section id="fields">
+<h2>حقول السند</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الحقل</th><th>الوصف</th></tr></thead>
+<tbody>
+<tr><td>رقم</td><td>رقم تلقائي يسبقه K أو S.</td></tr>
+<tr><td>م دفترى</td><td>رقم الإيصال الورقي، ويمكن البحث به.</td></tr>
+<tr><td>التاريخ</td><td>تاريخ اليوم، وتغييره يحتاج صلاحية.</td></tr>
+<tr><td>قيد</td><td>رقم القيد الناتج. اضغط عليه لفتح القيد.</td></tr>
+<tr><td>الفرع / العمله</td><td>الفرع والعملة وسعر الصرف.</td></tr>
+<tr><td>المبلغ</td><td>في سند الصرف: <span class="ui">المبلغ</span> + <span class="ui">الضريبة</span> = <span class="ui">الاجمالى</span> (عند تفعيل ضريبة سندات الصرف).</td></tr>
+<tr><td>مركز التكلفه</td><td>يظهر إذا كان الحساب مرتبطًا بمراكز التكلفة.</td></tr>
+<tr><td>المندوب</td><td>يُملأ تلقائيًا من بيانات العميل حسب الإعدادات.</td></tr>
+<tr><td>المشروع / مستخلص</td><td>يظهران عند تفعيل نظام المقاولات أو العقارات.</td></tr>
+<tr><td>الغرض / ملاحظات</td><td>سبب الحركة.</td></tr>
+<tr><td>مرحل / غير مرحل</td><td>القيد يُنشأ فقط عند الترحيل.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="paytype">
+<h2>أنواع السداد</h2>
+<ul>
+  <li><strong>نقدي:</strong> من الخزينة أو إليها. في سند الصرف يتحقق البرنامج من كفاية رصيد الخزينة.</li>
+  <li><strong>شيك:</strong> اكتب <span class="ui">رقم الشيك</span> و<span class="ui">البنك</span> و<span class="ui">ت اصدار</span> و<span class="ui">ت استحقاق</span>. يُسجَّل الشيك على حافظة الشيكات، ثم تتابعه من شاشة <a href="checks.html">تحصيل الشيكات</a>.</li>
+  <li><strong>تحويل:</strong> تظهر البنوك فقط.</li>
+  <li><strong>سند ضمان بدون قيد:</strong> لتسجيل شيك ضمان للمتابعة فقط، ولا يُنشئ قيدًا.</li>
+</ul>
+<div class="warn">إعادة حفظ سند شيك بعد تحصيل الشيك أو رفضه <strong>تحذف قيود التحصيل أو الرفض</strong> الخاصة به. عدّل سند الشيك قبل تحصيله فقط.</div>
+</section>
+
+<section id="invoice">
+<h2>سداد فاتورة محددة</h2>
+<p>في <span class="ui">سند قبض عميل</span> أو <span class="ui">سند صرف مورد</span>، اضغط <kbd>F8</kbd> أو حقل <span class="ui">فاتورة</span>. تظهر الفواتير غير المسددة للطرف بنفس عملة السند، فاختر واحدة منها. لا يمكن أن يزيد المبلغ عن المتبقي من الفاتورة، ويُسدَّد السند فاتورة واحدة فقط. زر <span class="ui">الغاء</span> يلغي اختيار الفاتورة.</p>
+</section>
+
+<section id="entries">
+<h2>القيد المحاسبي</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>السند</th><th>المدين</th><th>الدائن</th></tr></thead>
+<tbody>
+<tr><td>قبض</td><td>الخزينة / البنك / حافظة الشيكات</td><td>العميل أو الحساب الدافع</td></tr>
+<tr><td>صرف</td><td>المورد أو المصروف (+ حساب الضريبة)</td><td>الخزينة / البنك / حافظة الشيكات (الإجمالي)</td></tr>
+</tbody></table></div>
+<p>زر <span class="ui">قيد محاسبى</span> في شريط الأدوات يعرض أسطر القيد.</p>
+<p class="note">السند المرحل لا يمكن تعديله أو حذفه. لتعديله، حوّله إلى <span class="ui">غير مرحل</span> واحفظ (يحتاج صلاحية)، ثم عدّله.</p>
+</section>
+
+<section id="search">
+<h2>البحث والطباعة</h2>
+<ul>
+  <li><strong>بحث سريع:</strong> اختر «رقم السند» أو «مسلسل دفترى»، ثم اكتب الرقم <strong>مع الحرف</strong>، مثل <code>K15</code> أو <code>S20</code>.</li>
+  <li><strong>بحث شامل:</strong> افتح اللوحة الجانبية <span class="ui">بحث شامل</span>، وصفِّ بالتاريخ والحسابات والفرع والمندوب والحالة والنوع والمستخدم. اضغط على أي نتيجة لفتح السند.</li>
+  <li><strong>الطباعة</strong> (<kbd>F4</kbd>): بمقاس A4 أو A5 أو 80 مم، مع المبلغ بالحروف ورصيد الطرف قبل السند وبعده.</li>
+  <li><span class="ui">Attachment</span>: إرفاق صورة الإيصال أو الشيك بعد الحفظ.</li>
+</ul>
+</section>
+
+<section id="shortcuts">
+<h2>الاختصارات</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>المفتاح</th><th>الوظيفة</th></tr></thead>
+<tbody>
+<tr><td><kbd>F1</kbd></td><td>سند جديد</td></tr>
+<tr><td><kbd>F2</kbd></td><td>حفظ</td></tr>
+<tr><td><kbd>F4</kbd></td><td>طباعة</td></tr>
+<tr><td><kbd>F6</kbd></td><td>حذف</td></tr>
+<tr><td><kbd>F8</kbd></td><td>اختيار فاتورة (سند العميل أو المورد)</td></tr>
+<tr><td><kbd>F9</kbd></td><td>اختيار الحساب المدين</td></tr>
+<tr><td><kbd>F10</kbd></td><td>اختيار الحساب الدائن</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td>أيقونة حمراء بجانب حقل</td><td>حقل إلزامي فارغ: الحساب، أو المبلغ، أو العملة، أو الفرع، أو مركز التكلفة.</td></tr>
+<tr><td><span class="msg">عفوا رصيد الحساب لا يكفى</span></td><td>رصيد الخزينة لا يغطي المبلغ (سند الصرف).</td></tr>
+<tr><td><span class="msg">قيمة الايصال اكبر من قيمة الفاتورة</span></td><td>المبلغ أكبر من المتبقي من الفاتورة.</td></tr>
+<tr><td><span class="msg">عفوا.هذا السجل مرحل لا يمكن تعديله او حذفه</span></td><td>ألغِ الترحيل أولًا.</td></tr>
+<tr><td><span class="msg">التاريخ المحدد خارج نطاق الفترة المحاسبية</span></td><td>غيّر التاريخ.</td></tr>
+<tr><td><span class="msg">حساب حافظة شيكات ... غير موجود</span></td><td>يجب إعداد حساب حافظة الشيكات في دليل الحسابات.</td></tr>
+<tr><td><span class="msg">عفوا . السند من خلال نظام التعاقدات...</span></td><td>عدّل السند من شاشة العقد.</td></tr>
+</tbody></table></div>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="checks.html">تحصيل الشيكات</a> · <a href="customers.html">العملاء</a> · <a href="suppliers.html">الموردون</a> · <a href="journal-entry.html">القيود اليومية</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-08">8 أكتوبر 2026</time></div></footer>
+</body>
+</html>

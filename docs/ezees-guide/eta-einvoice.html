@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>الربط مع منظومة الفاتورة والإيصال الإلكتروني – مصلحة الضرائب المصرية | دليل Ezees ERP</title>
+<meta name="description" content="شرح ربط Ezees ERP بمنظومة الفاتورة الإلكترونية والإيصال الإلكتروني لمصلحة الضرائب المصرية (ETA): الإعدادات وClient ID والتوقيع الإلكتروني بالتوكن، تكويد الأصناف GS1 وEGS، إرسال الفواتير والإشعارات الدائنة والمستخلصات، حالات المستندات Valid وInvalid، الإلغاء والرفض، والإحصائيات.">
+<meta name="keywords" content="الفاتورة الإلكترونية, الإيصال الإلكتروني, مصلحة الضرائب المصرية, ETA, تكويد الأصناف, EGS, GS1, التوقيع الإلكتروني, توكن, Client ID, إلغاء فاتورة إلكترونية, مستخلصات, Ezees ERP">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/eta-einvoice.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="الفاتورة والإيصال الإلكتروني (مصلحة الضرائب المصرية) في Ezees ERP">
+<meta property="og:description" content="اضبط الربط مع منظومة ETA، كوّد أصنافك، أرسل الفواتير والإشعارات والمستخلصات، وتابع حالاتها وألغِها أو ارفضها من البرنامج.">
+<meta property="og:url" content="https://help.tebalink.com/eta-einvoice.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"الربط مع منظومة الفاتورة والإيصال الإلكتروني – مصلحة الضرائب المصرية","inLanguage":"ar","dateModified":"2026-10-10","proficiencyLevel":"Beginner","mainEntityOfPage":"https://help.tebalink.com/eta-einvoice.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"HowTo","name":"إرسال فاتورة بيع إلى منظومة الفاتورة الإلكترونية المصرية","inLanguage":"ar","step":[
+{"@type":"HowToStep","position":1,"text":"أدخل بيانات الربط في شاشة اعدادات (معرف العميل والمفتاح السري ورقم التسجيل وكود النشاط ورقم سر الامضاء) ثم احفظ."},
+{"@type":"HowToStep","position":2,"text":"كوّد الأصناف بكود EGS أو GS1 وانتظر اعتمادها من المصلحة."},
+{"@type":"HowToStep","position":3,"text":"افتح ارسال فواتير، اختر النوع والفترة والحالة Not Sent ثم اضغط زر البحث."},
+{"@type":"HowToStep","position":4,"text":"انقر على أي فاتورة لعرض أصنافها، وحدد الفواتير من عمود اضافة، ثم اضغط ارسال."},
+{"@type":"HowToStep","position":5,"text":"تابع الحالة من الفواتير المرسلة واستخدم تزامن البيانات الداخلية لتحديثها."}]},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"ما معنى أن حالة الفاتورة Submitted؟","acceptedAnswer":{"@type":"Answer","text":"استلمت المنظومة الفاتورة ولم تنته من فحصها بعد. حدّث الحالة لاحقًا لتصبح Valid أو Invalid."}},
+{"@type":"Question","name":"هل يمكن تعديل فاتورة بعد أن أصبحت Valid؟","acceptedAnswer":{"@type":"Answer","text":"لا. يمكن إلغاؤها خلال المدة التي تسمح بها المصلحة، أو تصحيحها بإشعار دائن (مرتجع بيع)."}},
+{"@type":"Question","name":"لماذا لا يحدث شيء عند الضغط على ارسال؟","acceptedAnswer":{"@type":"Answer","text":"يجب أن تنقر على فاتورة واحدة على الأقل لعرض أصنافها، وأن تحدد الفواتير المطلوبة من عمود اضافة، وأن يكون رمز الدخول (Token) صالحًا."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"الأنظمة المتخصصة","item":"https://help.tebalink.com/index.html#modules"},
+{"@type":"ListItem","position":3,"name":"الفاتورة والإيصال الإلكتروني (مصر)","item":"https://help.tebalink.com/eta-einvoice.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#pos">نقاط البيع والمطاعم</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#modules">الأنظمة المتخصصة</a></li><li>الفاتورة والإيصال الإلكتروني (مصر)</li></ol>
+<article>
+<h1>الربط مع منظومة الفاتورة والإيصال الإلكتروني – مصلحة الضرائب المصرية</h1>
+<p class="lead">برنامج <span class="ui">E Invoice</span> يربط Ezees ERP بمنظومة <strong>الفاتورة الإلكترونية</strong> و<strong>الإيصال الإلكتروني</strong> لمصلحة الضرائب المصرية (ETA). يقرأ فواتير البيع والمرتجعات والمستخلصات المرحّلة من قاعدة بياناتك، ويوقّعها بالتوكن، ثم يرسلها للمنظومة. ومنه أيضًا تكوّد الأصناف، وتتابع حالة المستندات المرسلة والمستلمة، وتلغي المستندات أو ترفضها، وتعرض الإحصائيات.</p>
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#before">قبل البدء: المتطلبات</a></li>
+  <li><a href="#main">الشاشة الرئيسية وأزرارها</a></li>
+  <li><a href="#settings">شاشة الإعدادات والتوكن</a></li>
+  <li><a href="#token">رمز الدخول (Token)</a></li>
+  <li><a href="#codes">تكويد الأصناف (GS1 / EGS)</a></li>
+  <li><a href="#send">إرسال الفواتير والإشعارات</a></li>
+  <li><a href="#receipts">الإيصال الإلكتروني (B2C)</a></li>
+  <li><a href="#extractors">إرسال المستخلصات</a></li>
+  <li><a href="#status">حالات المستندات</a></li>
+  <li><a href="#errors">قراءة الأخطاء</a></li>
+  <li><a href="#recent">الفواتير المرسلة والمستلمة</a></li>
+  <li><a href="#cancel">الإلغاء والرفض</a></li>
+  <li><a href="#stats">الإحصائيات</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+  <li><a href="#faq">أسئلة شائعة</a></li>
+</ol></nav>
+
+<section id="before">
+<h2>قبل البدء: المتطلبات</h2>
+<h3>على بوابة مصلحة الضرائب</h3>
+<ol>
+  <li><strong>رقم التسجيل الضريبي</strong> للشركة (9 أرقام)، و<strong>كود النشاط</strong> المسجل لها لدى المصلحة.</li>
+  <li><strong>تسجيل نظام ERP</strong> على بوابة المنظومة. تحصل منه على <strong>Client ID</strong> و<strong>Client Secret</strong> الخاصين بالفواتير.</li>
+  <li><strong>توكن التوقيع الإلكتروني (USB)</strong> من جهة معتمدة، مع رقمه السري (PIN). ثبّت تعريف التوكن على الجهاز الذي يرسل الفواتير، واترك التوكن متصلًا أثناء الإرسال.</li>
+  <li>للإيصال الإلكتروني فقط: <strong>تسجيل نقطة البيع (POS)</strong> على المنظومة. تحصل منه على Client ID وClient Secret خاصين بالإيصال، ورقم POS Serial، وبيانات نظام التشغيل، وPre-shared key.</li>
+</ol>
+<h3>داخل Ezees ERP</h3>
+<ul>
+  <li><strong>بيانات الفرع:</strong> الدولة، والمحافظة، والمدينة، والشارع، ورقم المبنى. هذا هو عنوان المُصدر في الفاتورة. أي حقل فارغ يُرسل بقيمة افتراضية (Cairo أو NA أو 0)، فأكمل البيانات.</li>
+  <li><strong>العملاء:</strong> <span class="ui">نوع - ETA</span> (شركة B، أو شخص P، أو أجنبي F)، والرقم الضريبي، والمحافظة والمدينة والشارع ورقم المبنى. راجع <a href="customers.html#tax">الرقم الضريبي والفاتورة الإلكترونية</a>.</li>
+  <li><strong>الأصناف:</strong> تبويب <span class="ui">Tax Info</span> في <a href="items.html">بطاقة الصنف</a>: نوع الكود، وكود الصنف الضريبي، والوصف بالعربية والإنجليزية، والاسم الإنجليزي. و<span class="ui">كود التصنيف GPC</span> في مجموعة الصنف.</li>
+  <li><strong>الوحدات:</strong> لكل وحدة كود وحدة معتمد من المصلحة (مثل <code>EA</code> أو <code>KGM</code>)، لأنه يُرسل مع كل سطر.</li>
+  <li><strong>الفواتير:</strong> البرنامج يقرأ الفواتير <strong>المرحّلة</strong> فقط. راجع <a href="sales-invoice.html#einvoice">الفاتورة الإلكترونية والترحيل</a>.</li>
+</ul>
+<p class="note">البرنامج يعمل على فرع المستخدم الذي سجّل الدخول. الإعدادات تُحفظ لكل فرع على حدة، وقوائم الفواتير تعرض فواتير هذا الفرع.</p>
+</section>
+
+<section id="main">
+<h2>الشاشة الرئيسية وأزرارها</h2>
+<p>بعد تسجيل الدخول تفتح شاشة <span class="ui">E Invoice</span>. يطلب البرنامج رمز الدخول من المنظومة تلقائيًا ويعرض النتيجة، ثم يفتح شاشة الإحصائيات. يظهر اسم قاعدة البيانات أسفل الشاشة (<code>DB:</code>).</p>
+<div class="table-wrap"><table>
+<thead><tr><th>الزر</th><th>الوظيفة</th></tr></thead>
+<tbody>
+<tr><td><span class="ui">الرئيسية</span></td><td><a href="#stats">الإحصائيات</a>.</td></tr>
+<tr><td><span class="ui">ارسال فواتير</span></td><td>إرسال فواتير البيع ومرتجعاته (إشعارات دائنة).</td></tr>
+<tr><td><span class="ui">ارسال مستخلصات</span></td><td>إرسال مستخلصات المقاولات. يظهر فقط إذا كان نظام المقاولات مفعّلًا في رخصتك.</td></tr>
+<tr><td><span class="ui">ارسال ايصالات</span></td><td>إرسال الإيصالات الإلكترونية.</td></tr>
+<tr><td><span class="ui">الفواتير المرسلة</span></td><td>المستندات الأخيرة على المنظومة (المرسلة والمستلمة)، مع الإلغاء والرفض وPDF.</td></tr>
+<tr><td><span class="ui">الايصالات المرسلة</span></td><td>الإيصالات الأخيرة على المنظومة.</td></tr>
+<tr><td><span class="ui">ارسال اصناف</span></td><td>طلب أكواد EGS لأصناف البرنامج دفعة واحدة.</td></tr>
+<tr><td><span class="ui">تكويد اصناف</span></td><td>كتابة طلبات أكواد يدويًا وإرسالها.</td></tr>
+<tr><td><span class="ui">الاصناف المرسلة</span></td><td>متابعة طلبات الأكواد ونقل حالتها إلى الأصناف.</td></tr>
+<tr><td><span class="ui">اعدادات</span></td><td>بيانات الربط والتوكن ولغة البرنامج.</td></tr>
+<tr><td><span class="ui">EInvoice TokenRefresh</span></td><td>طلب رمز دخول جديد للفواتير.</td></tr>
+<tr><td><span class="ui">Rec TokenRefresh</span></td><td>طلب رمز دخول للإيصالات.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="settings">
+<h2>شاشة الإعدادات والتوكن</h2>
+<p>من زر <span class="ui">اعدادات</span>، في مجموعة <span class="ui">Tax Con.</span>:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>الحقل</th><th>ماذا تكتب</th></tr></thead>
+<tbody>
+<tr><td><span class="ui">معرف العميل</span> / <span class="ui">مفتاح سرى</span></td><td>Client ID وClient Secret لنظام ERP من بوابة المنظومة. يُحفظان مشفّرين.</td></tr>
+<tr><td><span class="ui">رقم التسجيل</span></td><td>رقم التسجيل الضريبي للشركة. يُستخدم أيضًا لتمييز المستندات المستلمة (المشتريات) عن المرسلة.</td></tr>
+<tr><td><span class="ui">اسم الممول</span></td><td>اسم الشركة كما هو مسجل لدى المصلحة.</td></tr>
+<tr><td><span class="ui">كود النشاط</span></td><td>كود النشاط المسجل (4 أرقام).</td></tr>
+<tr><td><span class="ui">رقم سر الامضاء</span></td><td>الرقم السري (PIN) للتوكن. يُحفظ مشفّرًا.</td></tr>
+<tr><td><span class="ui">استخدام التوقيع</span></td><td>فعّله ليوقّع البرنامج كل فاتورة بالتوكن قبل إرسالها.</td></tr>
+<tr><td><span class="ui">نسخة الرفع</span></td><td>إصدار مستند الفاتورة. الافتراضي <code>1.0</code>، وهو يتطلب التوقيع.</td></tr>
+<tr><td><span class="ui">Live</span> / <span class="ui">Test</span></td><td><span class="ui">Test</span> لبيئة التجربة (Pre-production)، و<span class="ui">Live</span> للمنظومة الفعلية.</td></tr>
+<tr><td><span class="ui">معرف العميل- ايصال</span> / <span class="ui">مفتاح سرى -ايصال</span></td><td>Client ID وClient Secret لنقطة البيع (للإيصالات).</td></tr>
+<tr><td><span class="ui">نسخة الرفع-ايصال</span></td><td>إصدار الإيصال. الافتراضي <code>1.2</code>.</td></tr>
+<tr><td><span class="ui">POSSerial</span> / <span class="ui">PososVersion</span> / <span class="ui">PosModelframework</span> / <span class="ui">presharedkey</span></td><td>بيانات نقطة البيع كما سُجلت على المنظومة.</td></tr>
+</tbody></table></div>
+<ol class="steps">
+  <li>اختر <span class="ui">Test</span> في البداية وجرّب الإرسال.</li>
+  <li>اضغط <span class="ui">Save</span>. تظهر <span class="msg">Update Succssefully ...!!</span>، ثم يطلب البرنامج رمز دخول جديدًا ويعرض النتيجة.</li>
+  <li>بعد نجاح التجربة، غيّر إلى <span class="ui">Live</span> واحفظ.</li>
+</ol>
+<div class="warn">في <span class="ui">Live</span> يجب تفعيل <span class="ui">استخدام التوقيع</span> وتوصيل التوكن. الفاتورة غير الموقّعة ترفضها المنظومة في الإصدار 1.0.</div>
+<p class="tip">رقم سر التوكن ومفاتيح الربط سرية. لا تشاركها، ولا تُدخلها إلا في هذه الشاشة. لاحظ أن <span class="ui">مفتاح سرى -ايصال</span> و<span class="ui">presharedkey</span> يُحفظان بدون تشفير، فاحمِ قاعدة البيانات.</p>
+<p>في مجموعة <span class="ui">DB</span> تختار <span class="ui">اللغة</span> (عربي / English) ثم تضغط <span class="ui">Save</span>. باقي إعدادات الخادم هنا تُعرض فقط. لإعداد الاتصال بالخادم راجع <a href="settings.html">الإعدادات</a>.</p>
+</section>
+
+<section id="token">
+<h2>رمز الدخول (Token)</h2>
+<p>لكل عملية مع المنظومة يحتاج البرنامج رمز دخول مؤقت يحصل عليه بمعرف العميل والمفتاح السري.</p>
+<ul>
+  <li>عند فتح البرنامج يُطلب رمز الفواتير تلقائيًا: <span class="msg">Token Generated Succssefully ...!!</span> يعني النجاح، و<span class="msg">Not Token Generate ...!!</span> يعني الفشل. راجع معرف العميل والمفتاح السري و<span class="ui">Live</span>/<span class="ui">Test</span> والاتصال بالإنترنت.</li>
+  <li>الرمز صالح لفترة محدودة. إذا تركت البرنامج مفتوحًا مدة طويلة وفشل الإرسال، اضغط <span class="ui">EInvoice TokenRefresh</span>.</li>
+  <li><strong>رمز الإيصالات لا يُطلب تلقائيًا.</strong> اضغط <span class="ui">Rec TokenRefresh</span> قبل إرسال الإيصالات.</li>
+</ul>
+</section>
+
+<section id="codes">
+<h2>تكويد الأصناف (GS1 / EGS)</h2>
+<p>كل سطر في الفاتورة الإلكترونية يحمل <strong>كود صنف معتمد</strong> من المصلحة:</p>
+<ul>
+  <li><strong>GS1:</strong> الباركود الدولي المسجل للمنتج.</li>
+  <li><strong>EGS:</strong> كود داخلي تطلبه الشركة من المنظومة، ويكون غالبًا بالشكل <code>EG-رقم التسجيل-كودك الداخلي</code>. يرتبط بكود تصنيف GPC (الكود الأساسي).</li>
+</ul>
+<p>طلب الكود يُرسل للمصلحة، وتعتمده (Approved) أو ترفضه (Rejected). <strong>لا تستخدم كودًا في الفواتير قبل اعتماده.</strong></p>
+
+<h3>ربط أصناف البرنامج بالأكواد</h3>
+<p>اكتب الكود الضريبي للصنف في تبويب <span class="ui">Tax Info</span> ببطاقة الصنف (انظر <a href="items.html">الأصناف</a>). هذا الكود هو ما يُرسل في الفاتورة، ومنه يتم الربط بين الصنف وطلب الكود.</p>
+
+<h3>ارسال اصناف (من بطاقات الأصناف)</h3>
+<ol class="steps">
+  <li>افتح <span class="ui">ارسال اصناف</span>. في <span class="ui">البحث</span> اختر <span class="ui">الحالة</span>: <span class="ui">Not Sent</span> (لم تُرسل)، أو <span class="ui">Submitted</span>، أو <span class="ui">Approved</span>. ويمكنك التصفية بـ<span class="ui">المجموعة</span> أو <span class="ui">اسم المورد</span> بعد تفعيلهما.</li>
+  <li>اضغط زر البحث، ثم حدد الأصناف من عمود <span class="ui">اضافة</span>.</li>
+  <li>اضغط <span class="ui">ارسال</span>. يُنبهك البرنامج: <span class="msg">سيتم تجاهل الاصناف التى لا تحتوى على Name En - Category GPC - ItemTax Code</span>. اضغط <span class="ui">Yes</span>.</li>
+  <li>الأصناف المقبولة تصبح حالتها <code>Submitted</code>. والأصناف المرفوضة يظهر سبب رفض كل منها في رسالة مستقلة.</li>
+</ol>
+
+<h3>تكويد اصناف (إدخال يدوي)</h3>
+<ol class="steps">
+  <li>اختر <span class="ui">نوع الكود</span>: <span class="ui">EGS</span> أو <span class="ui">GS1</span>.</li>
+  <li>املأ <span class="ui">كود التصنيف GPC</span>، و<span class="ui">تكويد الصنف</span>، و<span class="ui">اسم الصنف عربي</span>، و<span class="ui">اسم الصنف انجليزي</span>، و<span class="ui">وصف للمنتج عربي</span>، و<span class="ui">وصف للمنتج انجليزي</span>. <strong>كل الحقول إلزامية</strong>، وإذا ترك أحدها فارغًا لا يُضاف السطر ولا تظهر رسالة.</li>
+  <li>اضغط <span class="ui">اضافة</span>. نقر مزدوج على سطر يعيده إلى الحقول للمراجعة، وعمود <span class="ui">حذف</span> يحذفه.</li>
+  <li>اضغط <span class="ui">ارسال</span>. عند النجاح تظهر <span class="msg">Send Succssefully ...!!</span>، ويُربط الطلب بالصنف الذي له نفس الكود الضريبي.</li>
+</ol>
+<p class="note">في هذه الشاشة لا تظهر أسباب رفض الأكواد عند الإرسال. تابعها من <span class="ui">الاصناف المرسلة</span>.</p>
+
+<h3>الاصناف المرسلة (متابعة الطلبات)</h3>
+<ol class="steps">
+  <li>اختر <span class="ui">الحالة</span> (<span class="ui">Approved</span> أو <span class="ui">Submitted</span> أو <span class="ui">Rejected</span>) ورقم <span class="ui">الصفحة</span>، ثم اضغط <span class="ui">تحميل</span>. يظهر <span class="ui">عدد الاصناف</span> و<span class="ui">عدد الصفحات</span>.</li>
+  <li>اضغط <span class="ui">تزامن البيانات الداخلية</span> لنقل حالة كل طلب وسبب رفضه إلى بطاقة الصنف المرتبطة به.</li>
+</ol>
+</section>
+
+<section id="send">
+<h2>إرسال الفواتير والإشعارات</h2>
+<ol class="steps">
+  <li>افتح <span class="ui">ارسال فواتير</span>. في <span class="ui">النوع</span> اختر <span class="ui">البيع</span> (فاتورة <code>I</code>) أو <span class="ui">المرتجع بيع</span> (إشعار دائن <code>C</code>).</li>
+  <li>حدد الفترة <span class="ui">من</span> / <span class="ui">الى</span> (الافتراضي آخر 7 أيام). ولتصفية فواتير عنوان معين فعّل <span class="ui">عنوان</span> واختره.</li>
+  <li>في <span class="ui">الحالة</span> اختر <span class="ui">Not Sent</span> لعرض الفواتير التي لم تُرسل، ثم اضغط زر البحث.</li>
+  <li><strong>انقر على أي فاتورة</strong> لتظهر أصنافها في الجدول السفلي. راجع كود الصنف الضريبي وكود الوحدة.</li>
+  <li>حدد الفواتير المطلوبة من عمود <span class="ui">اضافة</span>. تتحدث <span class="ui">اجمالى الفاتورة</span> و<span class="ui">اجمالى الضريبة</span> و<span class="ui">ضريبة خصم</span> للمحدد فقط (بالعملة المحلية).</li>
+  <li>اضغط <span class="ui">ارسال</span>. تُرسل كل الفواتير المحددة في دفعة واحدة. عند النجاح تظهر <span class="msg">تم الارسال بنجاح</span>، وتصبح حالة الفواتير المقبولة <code>Submitted</code>.</li>
+  <li>بعد دقائق، اختر الحالة <span class="ui">Submitted</span> واضغط <span class="ui">Update Invoices</span>. يسأل البرنامج المنظومة في الخلفية عن نتيجة الفحص، ويحدّث الحالة إلى <code>Valid</code> أو <code>Invalid</code>. ابحث مرة أخرى لترى النتيجة.</li>
+</ol>
+<div class="note">
+<ul>
+  <li>الفواتير بحالة <code>Valid</code> أو <code>Submitted</code> لا يمكن تحديدها، فلا تُرسل مرتين. أما <code>Invalid</code> فيمكن تصحيحها وإعادة إرسالها.</li>
+  <li><strong>الضريبة:</strong> إذا كانت للفاتورة نسبة ضريبة عامة تُطبق على كل الأسطر، وإلا تُحسب نسبة كل صنف من ضريبته. <span class="ui">ضريبة خصم</span> تُرسل كضريبة خصم وإضافة (W004).</li>
+  <li><strong>المستلم:</strong> الشخص (P) يُرسل رقمه القومي إذا كان 14 رقمًا، وإلا يُرسل بدون رقم. الفاتورة التي تزيد على 50,000 جنيه لشخص تحتاج رقمه القومي.</li>
+  <li>رقم الفاتورة في البرنامج هو الرقم الداخلي (Internal ID) على المنظومة.</li>
+</ul>
+</div>
+<div class="warn">
+<ul>
+  <li>إذا قُبل جزء من الدفعة ورُفض جزء، تظهر <span class="msg">تم الارسال بنجاح</span> <strong>دون ذكر المرفوض</strong>. ابحث بالحالة <span class="ui">Not Sent</span> بعد الإرسال: أي فاتورة محددة بقيت فيها لم تقبلها المنظومة.</li>
+  <li>عندما تكون نسبة الضريبة على الفاتورة، يُقرّب البرنامج مبلغ ضريبة كل سطر لأقرب جنيه. قد تصبح الفاتورة <code>Invalid</code> بسبب فروق الحساب. الأفضل تحديد الضريبة على مستوى الصنف.</li>
+  <li><strong>الإشعار المدين غير متاح</strong> في هذه الشاشة. والإشعار الدائن يُرسل بدون ربط بالفاتورة الأصلية. إذا رفضته المنظومة لهذا السبب، أنشئه من بوابة المصلحة.</li>
+</ul>
+</div>
+</section>
+
+<section id="receipts">
+<h2>الإيصال الإلكتروني (B2C)</h2>
+<p>الإيصال الإلكتروني لمبيعات المستهلك النهائي من نقاط البيع. شاشة <span class="ui">ارسال ايصالات</span> تشبه شاشة الفواتير، لكنها تعرض الفواتير المسجلة كإيصالات فقط. في <span class="ui">النوع</span> تختار <span class="ui">البيع</span> (إيصال <code>S</code>) أو <span class="ui">المرتجع بيع</span> (إيصال مرتجع <code>R</code>).</p>
+<ol class="steps">
+  <li>تأكد أن بيانات الإيصال مسجلة في <a href="#settings">الإعدادات</a>، ثم اضغط <span class="ui">Rec TokenRefresh</span>. يجب أن تظهر <span class="msg">Token Recp. Generated Succssefully ...!!</span>.</li>
+  <li>اعرض الإيصالات بحالة <span class="ui">Not Sent</span>، وانقر على إيصال لعرض أصنافه، وحدد الإيصالات، ثم اضغط <span class="ui">ارسال</span>.</li>
+</ol>
+<p class="note">كل إيصال مربوط بالإيصال الذي قبله (Previous UUID). أرسل الإيصالات <strong>بترتيبها الزمني</strong>، ولا تترك إيصالًا قديمًا بدون إرسال.</p>
+<div class="warn">الإيصال الإلكتروني <strong>مرحلة تجريبية</strong> في هذا الإصدار. جرّبه أولًا على <span class="ui">Test</span>، ولا تنتقل إلى <span class="ui">Live</span> قبل التنسيق مع الدعم الفني:
+<ul>
+  <li>عنوان فرع البائع في الإيصال قيمة ثابتة لا تأتي من بيانات الفرع، وطريقة الدفع دائمًا نقدي.</li>
+  <li>إيصال المرتجع لا يُربط بالإيصال الأصلي.</li>
+  <li>في <span class="ui">الايصالات المرسلة</span> يعمل البحث والتصفية و<span class="ui">فتح فى الموقع</span>. أما <span class="ui">تزامن البيانات الداخلية</span> و<span class="ui">تحديث الحالة</span> وحفظ PDF والإلغاء فلا تعمل مع الإيصالات. تابع حالتها والغها من بوابة المصلحة.</li>
+</ul></div>
+</section>
+
+<section id="extractors">
+<h2>إرسال المستخلصات</h2>
+<p>لشركات المقاولات: مستخلصات الأعمال للعملاء (انظر <a href="contractors.html">المقاولات</a>) تُرسل كفواتير إلكترونية.</p>
+<ol class="steps">
+  <li>افتح <span class="ui">ارسال مستخلصات</span>. حدد الفترة <span class="ui">من</span>/<span class="ui">الى</span> و<span class="ui">الحالة</span>، ثم اضغط زر البحث. تظهر المستخلصات <strong>المرحّلة</strong> للفرع الحالي، مع المشروع ورقم العقد ونوع المستخلص (جارى / ختامى).</li>
+  <li>انقر على مستخلص لعرض بنوده. لكل بند يجب أن يكون كود صنف ضريبي (من تبويب الإضافات في بند الأعمال) وكود وحدة.</li>
+  <li>حدد المستخلصات من عمود <span class="ui">اضافة</span>، ثم اضغط <span class="ui">ارسال</span>.</li>
+  <li>لتحديث الحالات بعد الإرسال: اختر <span class="ui">Submitted</span> واضغط <span class="ui">Update Invoices</span>، ثم ابحث مرة أخرى.</li>
+</ol>
+<p class="note">المستخلص يُرسل كفاتورة (<code>I</code>) برقمه العام. نسبة الضريبة هي نسبة المستخلص، وخصم ضريبة الخصم والإضافة يُرسل كـ W004، والاستقطاعات خصمًا إضافيًا على الفاتورة.</p>
+<div class="warn">لا تستخدم <span class="ui">تحديث الحالة</span> في <span class="ui">الفواتير المرسلة</span> لتحديث مستخلص، فهي لا تحدّث المستخلصات. استخدم <span class="ui">Update Invoices</span> من شاشة المستخلصات.</div>
+</section>
+
+<section id="status">
+<h2>حالات المستندات</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الحالة</th><th>المعنى</th><th>ماذا تفعل</th></tr></thead>
+<tbody>
+<tr><td><code>Not Sent</code></td><td>لم يُرسل المستند بعد. هذه حالة في البرنامج فقط.</td><td>أرسله.</td></tr>
+<tr><td><code>Submitted</code> (جديد)</td><td>استلمته المنظومة ولم تنته من فحصه.</td><td>حدّث الحالة بعد دقائق.</td></tr>
+<tr><td><code>Valid</code> (صحيحة)</td><td>اجتاز الفحص وأصبح مستندًا ضريبيًا رسميًا.</td><td>لا يمكن تعديله. صحّحه بإشعار، أو ألغِه خلال المدة المسموحة.</td></tr>
+<tr><td><code>Invalid</code> (غير صحيحة)</td><td>رفضته المنظومة لخطأ في البيانات أو الحسابات أو التوقيع.</td><td>اقرأ السبب، وصحّح الفاتورة أو البيانات، ثم أعد الإرسال.</td></tr>
+<tr><td><code>Cancelled</code> (ملغية)</td><td>ألغاه المُصدر (أنت أو المورد).</td><td>المستند الملغي لا يُحتسب ضريبيًا.</td></tr>
+<tr><td><code>Rejected</code> (مرفوضة)</td><td>رفضه المستلم (عميلك أو أنت كمستلم).</td><td>راجع العميل، وأصدر مستندًا صحيحًا.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="errors">
+<h2>قراءة الأخطاء</h2>
+<ul>
+  <li><strong>عند الإرسال:</strong> إذا رفضت المنظومة الدفعة كلها تظهر <span class="msg">لم يتم الارسال</span> متبوعة بسبب الرفض لكل مستند، مثل رقم ضريبي غير صحيح أو كود صنف غير معتمد.</li>
+  <li><strong>بعد الفحص (Invalid):</strong> البرنامج لا يعرض تفاصيل الفحص. افتح <span class="ui">الفواتير المرسلة</span>، ثم نقر مزدوج على عمود <code>...</code> للفاتورة، ثم <span class="ui">فتح فى الموقع</span>. تفتح صفحة المستند على بوابة المصلحة، وفيها نتيجة كل خطوة فحص وسببها.</li>
+  <li><strong>أشهر الأسباب:</strong> كود صنف غير معتمد أو غير مطابق، أو كود وحدة غير صحيح، أو رقم تسجيل العميل غير صحيح، أو اختلاف في حساب الإجماليات أو الضريبة، أو عدم وجود توقيع (التوكن غير متصل أو <span class="ui">استخدام التوقيع</span> غير مفعل).</li>
+</ul>
+</section>
+
+<section id="recent">
+<h2>الفواتير المرسلة والمستلمة</h2>
+<p>شاشة <span class="ui">الفواتير المرسلة</span> (<span class="ui">الفواتير التي اضيفت مؤخرا</span>) تعرض المستندات الأخيرة على المنظومة الخاصة بشركتك، <strong>المرسلة منك والمستلمة من مورديك</strong>. كل صفحة 100 مستند. غيّر رقم <span class="ui">الصفحة</span> لتحميل صفحة أخرى، ويظهر <span class="ui">عدد الصفحات</span> والعدد الإجمالي.</p>
+<h3>التصفية</h3>
+<p>كل مجموعة تصفية تعمل بعد تفعيل خانة <span class="ui">تفعيل</span> الخاصة بها، ثم الضغط على <span class="ui">Serach</span>:</p>
+<ul>
+  <li><span class="ui">رقم الفاتورة</span>: بالرقم الداخلي (InternalID)، أو UUID، أو SubmissionUUID.</li>
+  <li><span class="ui">العميل</span>: بالاسم أو الرقم الضريبي للمستلم.</li>
+  <li><span class="ui">المورد</span>: بالاسم أو الرقم الضريبي للمُصدر.</li>
+  <li><span class="ui">حالة الفاتورة</span>: <code>Valid</code> أو <code>Invalid</code>، وأيضًا <code>Cancelled</code> أو <code>Rejected</code> لعرض المستندات التي عليها طلب إلغاء أو رفض.</li>
+  <li><span class="ui">نوع الفاتورة</span>: فاتورة، أو اشعار دائن، أو اشعار مدين.</li>
+  <li><span class="ui">الفواتير</span>: <span class="ui">مبيعات</span> (المرسلة منك)، أو <span class="ui">مشتريات</span> (المستلمة).</li>
+  <li><span class="ui">الفترة</span>: بتاريخ الإصدار.</li>
+</ul>
+<p class="tip">تصفية <span class="ui">الفترة</span> قد تُخفي مستندات صحيحة إذا امتدت الفترة لأكثر من شهر. في هذه الحالة صفِّ شهرًا بشهر.</p>
+<h3>إجراءات المستند</h3>
+<p>نقر مزدوج على عمود <code>...</code> لأي مستند يفتح قائمة فيها:</p>
+<ul>
+  <li><span class="ui">فتح فى الموقع</span>: عرض المستند على بوابة المصلحة.</li>
+  <li><span class="ui">حفظ PDF AR</span> / <span class="ui">حفظ PDF EN</span>: تنزيل نسخة المنظومة PDF وفتحها. يُحفظ الملف باسم <code>Invoice.pdf</code> في مجلد البرنامج، ويُستبدل في كل مرة، فاحفظ نسخة باسم آخر إذا أردت الاحتفاظ به.</li>
+  <li><span class="ui">الغاء</span>: للمستندات التي أصدرتها. و<span class="ui">رفض</span>: للمستندات المستلمة. انظر <a href="#cancel">الإلغاء والرفض</a>.</li>
+</ul>
+<h3>تحديث حالات البرنامج من المنظومة</h3>
+<p>اضغط <span class="ui">تزامن البيانات الداخلية</span>. يأخذ البرنامج حالة كل مستند <strong>ظاهر في الجدول</strong> وتاريخ طلب الإلغاء إن وُجد، ويحفظها على الفاتورة المطابقة في البرنامج. صفِّ الجدول أولًا لتقليل الوقت، وانتظر رسالة <span class="msg">Update Succssefully...!!</span>.</p>
+<p class="warn"><span class="ui">تحديث الحالة</span> في القائمة قد يتوقف بخطأ إذا لم يكن على المستند طلب إلغاء. استخدم <span class="ui">تزامن البيانات الداخلية</span> بدلًا منه.</p>
+</section>
+
+<section id="cancel">
+<h2>الإلغاء والرفض</h2>
+<ul>
+  <li><strong>الإلغاء:</strong> يطلبه المُصدر لمستند <code>Valid</code> أصدره هو. يظهر زر <span class="ui">الغاء</span> للمستندات التي ليس مستلمها شركتك.</li>
+  <li><strong>الرفض:</strong> يطلبه المستلم لمستند وصله من مورد. يظهر زر <span class="ui">رفض</span> للمستندات المستلمة.</li>
+  <li>الإلغاء والرفض مسموحان فقط خلال المدة التي تحددها المصلحة بعد اعتماد المستند. بعد انتهائها صحّح بإشعار دائن أو مدين.</li>
+</ul>
+<ol class="steps">
+  <li>في <span class="ui">الفواتير المرسلة</span> صفِّ حتى يظهر المستند، وتأكد من رقمه الداخلي وUUID.</li>
+  <li>نقر مزدوج على عمود <code>...</code> للمستند، ثم اختر <span class="ui">الغاء</span> أو <span class="ui">رفض</span>.</li>
+  <li>عند نجاح الإلغاء تظهر <span class="msg">تم الالغاء بنجاح</span>. الرفض الناجح لا تظهر له رسالة. عند الفشل يظهر رد المنظومة كما هو.</li>
+  <li>اضغط <span class="ui">تزامن البيانات الداخلية</span> لتسجيل الحالة الجديدة في البرنامج.</li>
+</ol>
+<div class="warn"><strong>الإلغاء والرفض نهائيان ولا يمكن التراجع عنهما من البرنامج.</strong> البرنامج <strong>لا يطلب تأكيدًا</strong>، والطلب يُرسل فور الضغط، والسبب المرسل عبارة عامة ثابتة. تأكد من المستند قبل الضغط. وإذا أردت تسجيل سبب محدد، استخدم بوابة المصلحة.</div>
+</section>
+
+<section id="stats">
+<h2>الإحصائيات</h2>
+<p>شاشة <span class="ui">احصائيات</span> (زر <span class="ui">الرئيسية</span>) تحلل آخر عدد من المستندات على المنظومة. حدد العدد في <span class="ui">احصائيات اخر</span> واضغط زر البحث. تعمل فقط عند وجود رمز دخول صالح.</p>
+<ul>
+  <li><span class="ui">احصائيات الفواتير</span>: لكل حالة (<span class="ui">صحيحة</span>، و<span class="ui">غير صحيحة</span>، و<span class="ui">ملغية</span>، و<span class="ui">مرفوضة</span>، و<span class="ui">جديد</span>) يظهر العدد والصافي قبل الضريبة والضريبة.</li>
+  <li><span class="ui">احصائيات الفواتير الصحيحة المرسلة ( المبيعات )</span>: المستندات الصحيحة الصادرة منك، موزعة على <span class="ui">فاتورة</span> و<span class="ui">اشعار خصم</span> و<span class="ui">اشعار اضافة</span>.</li>
+  <li><span class="ui">احصائيات الفواتير الصحيحة المستلمة ( المشتريات )</span>: نفس التوزيع للمستندات الواردة من مورديك.</li>
+</ul>
+<p class="note">الأرقام تقريبية للمتابعة فقط. صف <span class="ui">فاتورة</span> يجمع كل المستندات الصحيحة (بما فيها الإشعارات). ولإقرار ضريبة القيمة المضافة اعتمد على تقارير البرنامج وبوابة المصلحة.</p>
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى والحل</th></tr></thead>
+<tbody>
+<tr><td><span class="msg">Not Token Generate ...!!</span></td><td>فشل الحصول على رمز الدخول. راجع معرف العميل والمفتاح السري وبيئة <span class="ui">Live</span>/<span class="ui">Test</span> والإنترنت.</td></tr>
+<tr><td><span class="msg">تم الارسال بنجاح</span></td><td>قبلت المنظومة الدفعة (كلها أو جزءًا منها). تأكد مما بقي بحالة <span class="ui">Not Sent</span>، ثم حدّث الحالات لاحقًا.</td></tr>
+<tr><td><span class="msg">لم يتم الارسال ...</span></td><td>رُفضت الدفعة. اقرأ الأسباب المذكورة بعد الرسالة. إذا لم يظهر سبب، حدّث رمز الدخول وأعد المحاولة.</td></tr>
+<tr><td><span class="msg">Object reference not set to an instance of an object</span></td><td>غالبًا لا يوجد رمز دخول صالح أو اتصال. اضغط <span class="ui">EInvoice TokenRefresh</span> وأعد المحاولة.</td></tr>
+<tr><td><span class="msg">سيتم تجاهل الاصناف التى لا تحتوى على ...</span></td><td>تأكيد قبل طلب أكواد الأصناف. الأصناف الناقصة لا تُرسل.</td></tr>
+<tr><td><span class="msg">Send Succssefully ...!!</span></td><td>أُرسلت طلبات الأكواد. تابع اعتمادها من <span class="ui">الاصناف المرسلة</span>.</td></tr>
+<tr><td><span class="msg">Unauthorized</span> / <span class="msg">BadRequest</span></td><td>عند طلب الأكواد: رمز الدخول منتهي، أو بيانات الطلب غير صحيحة.</td></tr>
+<tr><td><span class="msg">تم الالغاء بنجاح</span></td><td>قبلت المنظومة طلب الإلغاء.</td></tr>
+<tr><td><span class="msg">الملف غير موجود</span></td><td>لم تُرجع المنظومة ملف PDF لهذا المستند.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="faq">
+<h2>أسئلة شائعة</h2>
+<details><summary>لماذا لا يحدث شيء عند الضغط على «ارسال»؟</summary>
+<p>انقر على فاتورة واحدة على الأقل لتظهر أصنافها، وحدد الفواتير من عمود <span class="ui">اضافة</span>، وتأكد أن رمز الدخول صالح.</p></details>
+<details><summary>لماذا لا تظهر فاتورتي في قائمة الإرسال؟</summary>
+<p>تأكد أنها مرحّلة، وأن تاريخها داخل الفترة، وأنها من فرعك، وأنك اخترت النوع والحالة الصحيحين (<span class="ui">Not Sent</span> للفواتير الجديدة).</p></details>
+<details><summary>هل يمكن تعديل فاتورة بعد أن أصبحت Valid؟</summary>
+<p>لا. ألغِها خلال المدة المسموحة، أو صحّحها بإشعار دائن من <a href="sales-return.html">مرتجع البيع</a>.</p></details>
+<details><summary>هل أحتاج التوكن على كل جهاز؟</summary>
+<p>تحتاجه فقط على الجهاز الذي يرسل الفواتير، وفيه يجب تثبيت تعريف التوكن.</p></details>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="sales-invoice.html#einvoice">فاتورة البيع والفاتورة الإلكترونية</a> · <a href="customers.html#tax">الرقم الضريبي للعملاء</a> · <a href="items.html">الأصناف</a> · <a href="contractors.html">المقاولات والمستخلصات</a> · <a href="settings.html">الإعدادات</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-10">10 أكتوبر 2026</time></div></footer>
+</body>
+</html>

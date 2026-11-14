@@ -5,7 +5,7 @@ import AppShell from '@/components/AppShell';
 import { apiFetch, formatMoney } from '@/lib/api';
 
 export default function ReportsPage() {
-  const [tab, setTab] = useState<'sales' | 'items' | 'stock' | 'parties' | 'cash'>('sales');
+  const [tab, setTab] = useState<'sales' | 'items' | 'stock' | 'parties' | 'cash' | 'reorder' | 'aging' | 'commissions'>('sales');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [groupBy, setGroupBy] = useState('day');
@@ -14,14 +14,17 @@ export default function ReportsPage() {
   async function load() {
     const query = new URLSearchParams({ from, to });
     if (tab === 'sales') query.set('groupBy', groupBy);
-    const endpoint = {
+    const endpoint: Record<string, string> = {
       sales: '/reports/sales-summary',
       items: '/reports/top-items',
       stock: '/reports/stock-value',
       parties: '/reports/party-balances',
       cash: '/reports/cash-summary',
-    }[tab];
-    setData(await apiFetch(`${endpoint}?${query.toString()}`));
+      reorder: '/reports/reorder',
+      aging: '/reports/debt-aging',
+      commissions: '/reports/commissions',
+    };
+    setData(await apiFetch(`${endpoint[tab]}?${query.toString()}`));
   }
 
   useEffect(() => { load(); }, [tab, from, to, groupBy]);
@@ -29,7 +32,11 @@ export default function ReportsPage() {
   return (
     <AppShell title="التقارير">
       <div className="flex flex-wrap gap-2 mb-4 items-center">
-        {([['sales', 'ملخص المبيعات'], ['items', 'أكثر الأصناف'], ['stock', 'قيمة المخزون'], ['parties', 'أرصدة العملاء والموردين'], ['cash', 'حركة الخزينة']] as const).map(([key, label]) => (
+        {([
+          ['sales', 'ملخص المبيعات'], ['items', 'أكثر الأصناف'], ['stock', 'قيمة المخزون'],
+          ['parties', 'أرصدة العملاء والموردين'], ['cash', 'حركة الخزينة'],
+          ['reorder', 'حد الطلب'], ['aging', 'أعمار الديون'], ['commissions', 'عمولات المندوبين'],
+        ] as const).map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)} className={tab === key ? 'btn-primary' : 'btn-soft'}>{label}</button>
         ))}
         <div className="flex-1" />
@@ -140,6 +147,72 @@ export default function ReportsPage() {
                   </tr>
                 ))}
                 {(!data || data.length === 0) && <tr><td colSpan={4} className="text-center text-slate-400 py-8">لا توجد بيانات</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {tab === 'reorder' && (
+          <div className="table-wrap">
+            <table className="table">
+              <thead><tr><th>الصنف</th><th>الكمية المتاحة</th><th>حد الطلب</th><th>العجز</th><th>تكلفة تقديرية</th></tr></thead>
+              <tbody>
+                {(data ?? []).map((row: any) => {
+                  const shortage = Math.max(0, Number(row.reorderPoint) - Number(row.onHand));
+                  return (
+                    <tr key={row.itemId}>
+                      <td className="font-semibold">{row.itemName}<div className="text-[10px] text-slate-400">{row.itemCode}</div></td>
+                      <td className="font-bold text-rose-600">{Number(row.onHand).toFixed(2)}</td>
+                      <td>{Number(row.reorderPoint).toFixed(2)}</td>
+                      <td>{shortage.toFixed(2)}</td>
+                      <td>{formatMoney(Number(row.estCost ?? 0) * shortage)}</td>
+                    </tr>
+                  );
+                })}
+                {(!data || data.length === 0) && <tr><td colSpan={5} className="text-center text-slate-400 py-8">لا توجد أصناف تحت حد الطلب</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {tab === 'aging' && (
+          <div className="table-wrap">
+            <table className="table">
+              <thead><tr><th>العميل</th><th>التليفون</th><th>الإجمالي</th><th>0-30</th><th>31-60</th><th>61-90</th><th>90+</th></tr></thead>
+              <tbody>
+                {(data ?? []).map((row: any) => (
+                  <tr key={row.partyId}>
+                    <td className="font-semibold">{row.name}</td>
+                    <td dir="ltr" className="text-right">{row.phone ?? '—'}</td>
+                    <td className="font-bold text-rose-600">{formatMoney(row.balance)}</td>
+                    <td>{formatMoney(row.bucket0_30)}</td>
+                    <td>{formatMoney(row.bucket31_60)}</td>
+                    <td>{formatMoney(row.bucket61_90)}</td>
+                    <td className="font-semibold text-rose-700">{formatMoney(row.bucket90plus)}</td>
+                  </tr>
+                ))}
+                {(!data || data.length === 0) && <tr><td colSpan={7} className="text-center text-slate-400 py-8">لا توجد مديونيات</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {tab === 'commissions' && (
+          <div className="table-wrap">
+            <table className="table">
+              <thead><tr><th>المندوب</th><th>عدد الفواتير</th><th>إجمالي المبيعات</th><th>إجمالي الربح</th><th>نسبة العمولة</th><th>قيمة العمولة</th></tr></thead>
+              <tbody>
+                {(data ?? []).map((row: any) => (
+                  <tr key={row.repId}>
+                    <td className="font-semibold">{row.repName}</td>
+                    <td>{row.invoiceCount}</td>
+                    <td className="font-bold">{formatMoney(row.totalSales)}</td>
+                    <td className="text-emerald-700">{formatMoney(row.totalProfit)}</td>
+                    <td>{Number(row.commissionPct).toFixed(2)}%</td>
+                    <td className="font-bold text-emerald-700">{formatMoney(row.commissionAmount)}</td>
+                  </tr>
+                ))}
+                {(!data || data.length === 0) && <tr><td colSpan={6} className="text-center text-slate-400 py-8">لا توجد بيانات عمولات</td></tr>}
               </tbody>
             </table>
           </div>

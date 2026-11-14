@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>إدارة الضامنين لعقود التقسيط | دليل Ezees ERP</title>
+<meta name="description" content="شرح شاشة إدارة الضامنين في Ezees ERP: تسجيل بيانات الضامن ورقم الهوية والعنوان، البحث في قائمة الضامنين، وربط الضامن بعقود التقسيط.">
+<meta name="keywords" content="الضامنين, ضامن العميل, عقود التقسيط, برنامج تقسيط, Ezees ERP, إدارة الأقساط">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/guarantors.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="إدارة الضامنين في Ezees ERP">
+<meta property="og:description" content="سجّل الضامنين مرة واحدة واربطهم بعقود التقسيط برقم الهوية.">
+<meta property="og:url" content="https://help.tebalink.com/guarantors.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"إدارة الضامنين في Ezees ERP","inLanguage":"ar","dateModified":"2026-10-08","proficiencyLevel":"Beginner","mainEntityOfPage":"https://help.tebalink.com/guarantors.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"HowTo","name":"إضافة ضامن وربطه بعقد تقسيط","inLanguage":"ar","step":[
+{"@type":"HowToStep","position":1,"text":"من قائمة العملاء افتح ادارة الضامنين واضغط جديد."},
+{"@type":"HowToStep","position":2,"text":"أدخل الاسم ورقم الهوية والفرع والدولة والمحافظة والمدينة ثم احفظ."},
+{"@type":"HowToStep","position":3,"text":"في شاشة انظمة التقسيط اكتب رقم هوية الضامن واضغط اضافة."}]},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"لماذا لا يظهر الضامن في شاشة التقسيط؟","acceptedAnswer":{"@type":"Answer","text":"البحث في شاشة التقسيط يتم برقم الهوية، فتأكد من تسجيل رقم الهوية في بطاقة الضامن."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"الضامنين","item":"https://help.tebalink.com/guarantors.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#pos">نقاط البيع والمطاعم</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#parties">العملاء والموردون</a></li><li>الضامنين</li></ol>
+<article>
+<h1>إدارة الضامنين</h1>
+<p class="lead">الضامن هو الشخص الذي يضمن العميل في عقود <a href="installments.html">التقسيط</a>. تُسجَّل بيانات الضامنين في سجل مستقل عن العملاء والموردين، ويُربط الضامن بالعقد عن طريق <strong>رقم الهوية</strong>. تجد الشاشة في قائمة <span class="ui">العملاء</span> ← <span class="ui">ادارة الضامنين</span>.</p>
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#add">إضافة ضامن</a></li>
+  <li><a href="#fields">حقول بطاقة الضامن</a></li>
+  <li><a href="#list">قائمة الضامنين والبحث</a></li>
+  <li><a href="#link">ربط الضامن بعقد تقسيط</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+</ol></nav>
+
+<section id="add">
+<h2>إضافة ضامن جديد</h2>
+<ol class="steps">
+  <li>من قائمة الضامنين اضغط <span class="ui">جديد</span>، فتفتح بطاقة <span class="ui">الضامنين</span> ويظهر الكود تلقائيًا.</li>
+  <li>اكتب <span class="ui">الاسم</span> و<span class="ui">رقم الهوية</span>. رقم الهوية ضروري لربط الضامن بالعقود.</li>
+  <li>اختر <span class="ui">الفرع</span> و<span class="ui">الدولة</span> و<span class="ui">المحافظة</span> و<span class="ui">المدينة</span>، وكلها إلزامية.</li>
+  <li>أكمل الهاتف والعنوان وبقية البيانات، ثم اضغط <span class="ui">حفظ</span> (<kbd>F2</kbd>). تُفرَّغ البطاقة وتتحدث القائمة تلقائيًا.</li>
+</ol>
+<div class="warn">الضغط على <kbd>Enter</kbd> في أي حقل <strong>يحفظ البطاقة مباشرة</strong>، حتى في حقل الملاحظات.</div>
+</section>
+
+<section id="fields">
+<h2>حقول بطاقة الضامن</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الحقل</th><th>الوصف</th></tr></thead>
+<tbody>
+<tr><td>الكود</td><td>رقم تلقائي يبدأ من 10000.</td></tr>
+<tr><td>الاسم</td><td>إلزامي، ولا يُسمح بتكراره.</td></tr>
+<tr><td>رقم الهوية</td><td>الرقم القومي أو رقم الإقامة، ويُستخدم للبحث في شاشة التقسيط.</td></tr>
+<tr><td>الشهرة / الزوج / الوظيفة</td><td>بيانات تعريفية إضافية.</td></tr>
+<tr><td>الفرع / المجموعة</td><td>الفرع إلزامي، والمجموعة تصنيف اختياري.</td></tr>
+<tr><td>الدولة / المحافظة / المدينة</td><td>قوائم مترابطة، وبجانبها أزرار لإضافة محافظة أو مدينة جديدة (راجع <a href="locations-shipping.html">إعداد الدول والمدن</a>).</td></tr>
+<tr><td>الشارع / رقم المبنى</td><td>يتكوّن <span class="ui">العنوان</span> منهما تلقائيًا، ويمكن تعديله يدويًا.</td></tr>
+<tr><td>عنوان الاهل</td><td>عنوان بديل للتواصل.</td></tr>
+<tr><td>التليفون / الموبايل / الفاكس / الايميل / الرقم البريدي / ملاحظات</td><td>بيانات التواصل.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="list">
+<h2>قائمة الضامنين والبحث</h2>
+<!--shot:guarantors__list-->
+<figure class="shot" id="shot-guarantors__list">
+<div class="shot-frame"><a href="assets/screens/guarantors__list.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/guarantors__list.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: قائمة الضامنين والبحث"></a></div>
+<figcaption>شاشة «قائمة الضامنين والبحث» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ul>
+  <li>تعرض القائمة: الكود، والاسم، والهوية، والشهرة، والوظيفة، والعنوان، والتليفون، والموبايل، والمجموعة، والفرع. الأحدث يظهر أولًا.</li>
+  <li><strong>البحث:</strong> اختر نوع البحث (الاسم، أو الهاتف، أو الكود، أو المحافظة، أو المدينة، أو الهوية) ثم اكتب، فتتم التصفية فورًا. البحث بالكود يحتاج الرقم كاملًا.</li>
+  <li><strong>الفرع:</strong> اختر فرعًا لعرض ضامنيه فقط، أو <code>--Select--</code> لعرض كل الفروع.</li>
+  <li><strong>التعديل:</strong> انقر نقرًا مزدوجًا على الضامن لفتح بطاقته.</li>
+  <li><span class="ui">طباعة</span>: طباعة القائمة كما تظهر على الشاشة.</li>
+</ul>
+<div class="tip">
+  <ul>
+    <li>لإلغاء التصفية بعد مسح نص البحث، اضغط <span class="ui">تحديث</span>.</li>
+    <li>إذا كانت بطاقة ضامن مفتوحة بالفعل، أغلقها أولًا قبل فتح ضامن آخر من القائمة.</li>
+  </ul>
+</div>
+</section>
+
+<section id="link">
+<h2>ربط الضامن بعقد تقسيط</h2>
+<p>في شاشة <a href="installments.html">انظمه التقسيط</a>، داخل لوحة <span class="ui">الضامنين</span>، اكتب <span class="ui">الهوية</span> واضغط <span class="ui">اضافة</span>. يظهر الضامن في الجدول باسمه وهويته وهاتفه. يمكنك إضافة أكثر من ضامن للعقد.</p>
+<p class="note">لا يمكن حذف ضامن مرتبط بعقد تقسيط.</p>
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td><span class="msg">من فضلك ادخل اسم العميل</span></td><td>اكتب اسم الضامن.</td></tr>
+<tr><td><span class="msg">اختر الفرع</span> / <span class="msg">اختر الدولة</span></td><td>حقل إلزامي فارغ.</td></tr>
+<tr><td><span class="msg">من فضلك قم باختيار اسم المحافظه أولا</span></td><td>اختر المحافظة ثم المدينة.</td></tr>
+<tr><td><span class="msg">هذا السجل موجود مسبقا</span></td><td>الاسم أو الكود مسجل من قبل.</td></tr>
+<tr><td><span class="msg">لايوجد بيانات متاحة</span></td><td>في شاشة التقسيط: لا يوجد ضامن بهذا الرقم. سجّله أولًا.</td></tr>
+</tbody></table></div>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="installments.html">التقسيط</a> · <a href="customers.html">العملاء</a> · <a href="locations-shipping.html">الدول والمدن</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-08">8 أكتوبر 2026</time></div></footer>
+</body>
+</html>

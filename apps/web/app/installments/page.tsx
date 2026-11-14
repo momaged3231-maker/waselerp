@@ -13,6 +13,7 @@ export default function InstallmentsPage() {
   const [cashAccounts, setCashAccounts] = useState<any[]>([]);
   const [form, setForm] = useState({
     partyId: 0, title: '', totalAmount: 0, downPayment: 0, installmentCount: 3, frequency: 1, startDate: '',
+    guarantorName: '', guarantorPhone: '', guarantorIdNumber: '',
   });
   const [message, setMessage] = useState('');
 
@@ -35,7 +36,7 @@ export default function InstallmentsPage() {
     try {
       await apiFetch('/installments/plans', { method: 'POST', body: { ...form, partyId: Number(form.partyId) } });
       setMessage('تم إنشاء خطة التقسيط');
-      setForm({ ...form, title: '', totalAmount: 0, downPayment: 0 });
+      setForm({ ...form, title: '', totalAmount: 0, downPayment: 0, guarantorName: '', guarantorPhone: '', guarantorIdNumber: '' });
       load();
     } catch (error: any) {
       setMessage(error?.message ?? 'تعذر إنشاء الخطة');
@@ -150,6 +151,17 @@ export default function InstallmentsPage() {
                   onChange={(e) => setForm({ ...form, startDate: e.target.value })} required />
               </div>
             </div>
+            <div className="border-t pt-3">
+              <div className="font-semibold text-sm mb-2">بيانات الضامن (اختياري)</div>
+              <div className="grid grid-cols-1 gap-2">
+                <input className="input" placeholder="اسم الضامن" value={form.guarantorName}
+                  onChange={(e) => setForm({ ...form, guarantorName: e.target.value })} />
+                <input className="input" placeholder="هاتف الضامن" dir="ltr" value={form.guarantorPhone}
+                  onChange={(e) => setForm({ ...form, guarantorPhone: e.target.value })} />
+                <input className="input" placeholder="الرقم القومي/الهوية" dir="ltr" value={form.guarantorIdNumber}
+                  onChange={(e) => setForm({ ...form, guarantorIdNumber: e.target.value })} />
+              </div>
+            </div>
             <button className="btn-primary w-full">إنشاء الخطة</button>
           </form>
         </div>
@@ -164,6 +176,11 @@ export default function InstallmentsPage() {
                 <div className="text-xs text-slate-500">
                   إجمالي {formatMoney(detail.plan.totalAmount)} · مقدمة {formatMoney(detail.plan.downPayment)}
                 </div>
+                {(detail.plan.guarantorName || detail.plan.guarantorPhone || detail.plan.guarantorIdNumber) && (
+                  <div className="text-xs text-slate-600 mt-1">
+                    الضامن: {detail.plan.guarantorName || '—'} {detail.plan.guarantorPhone ? `· ${detail.plan.guarantorPhone}` : ''} {detail.plan.guarantorIdNumber ? `· ${detail.plan.guarantorIdNumber}` : ''}
+                  </div>
+                )}
               </div>
               <button className="btn-soft" onClick={() => setDetail(null)}>إغلاق</button>
             </div>

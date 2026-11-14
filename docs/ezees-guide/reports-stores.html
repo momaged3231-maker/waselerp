@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تقارير المخازن والفواتير ونقاط البيع | دليل Ezees ERP</title>
+<meta name="description" content="دليل تقارير المخازن والفواتير في Ezees ERP: أرصدة المخازن، حركة الصنف تفصيلي ومجمع، أذون المخازن، الأصناف تحت حد الطلب، إجمالي فواتير المبيعات والمشتريات، الفواتير الضريبية، أوامر البيع، البحث بالسيريال، وتقارير الكاشير والمطاعم والورديات والمبيعات بالساعة.">
+<meta name="keywords" content="تقرير ارصدة المخازن, حركة الصنف, تقرير الفواتير, الفواتير الضريبية, اوامر البيع, حد الطلب, الارقام المسلسلة, تقرير الورديات, تقرير الكاشير, تقرير المطاعم, Ezees ERP">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/reports-stores.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="تقارير المخازن والفواتير ونقاط البيع في Ezees ERP">
+<meta property="og:description" content="اعرف أرصدة مخازنك وحركة أصنافك وإجمالي فواتيرك وضرائبك ومبيعات الكاشير والورديات من تقارير Ezees ERP.">
+<meta property="og:url" content="https://help.tebalink.com/reports-stores.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"تقارير المخازن والفواتير ونقاط البيع في Ezees ERP","inLanguage":"ar","dateModified":"2026-10-08","proficiencyLevel":"Beginner","mainEntityOfPage":"https://help.tebalink.com/reports-stores.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"HowTo","name":"عرض تقرير وطباعته","inLanguage":"ar","step":[
+{"@type":"HowToStep","position":1,"text":"افتح التقرير من قائمة التقارير."},
+{"@type":"HowToStep","position":2,"text":"حدد الفلاتر في لوحة تصفيه البيانات، مثل التاريخ والفرع والمخزن والصنف."},
+{"@type":"HowToStep","position":3,"text":"اضغط زر العرض (أيقونة العدسة) لعرض النتيجة في الجدول."},
+{"@type":"HowToStep","position":4,"text":"اضغط زر الطباعة (أيقونة الطابعة) واختر نعم للمعاينة والتصدير إلى Excel، أو لا للطباعة المباشرة."}]},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"لماذا يظهر تقرير اذونات المخازن فارغًا؟","acceptedAnswer":{"@type":"Answer","text":"الحالة مضبوطة افتراضيًا على غير معتمد، فلا تظهر الأذون المعتمدة. غيّر الحالة إلى معتمد."}},
+{"@type":"Question","name":"لماذا لا تظهر كل فواتير المشتريات في تقرير الفواتير؟","acceptedAnswer":{"@type":"Answer","text":"الحالة في تقرير فواتير المشتريات مضبوطة افتراضيًا على غير مرحل. اختر الكل لعرض الفواتير المرحلة أيضًا."}},
+{"@type":"Question","name":"كيف أصدّر التقرير إلى Excel؟","acceptedAnswer":{"@type":"Answer","text":"اضغط زر الطباعة، ثم اختر نعم عند سؤال المعاينة، ومن نافذة طباعة تقرير اضغط زر Excel."}},
+{"@type":"Question","name":"كيف أعرف الأصناف التي يجب طلبها؟","acceptedAnswer":{"@type":"Answer","text":"استخدم تقرير الاصناف تحت حد الطلب، ويمكن تحويل نتيجته إلى أمر شراء من زر Export."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"التقارير","item":"https://help.tebalink.com/index.html#reports"},
+{"@type":"ListItem","position":3,"name":"تقارير المخازن والفواتير ونقاط البيع","item":"https://help.tebalink.com/reports-stores.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#pos">نقاط البيع والمطاعم</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#reports">التقارير</a></li><li>تقارير المخازن والفواتير ونقاط البيع</li></ol>
+<article>
+<h1>تقارير المخازن والفواتير ونقاط البيع</h1>
+<p class="lead">تجيب هذه التقارير عن أسئلة يومية: كم عندي من كل صنف؟ أين ذهبت الكميات؟ كم بعت واشتريت؟ كم ضريبة القيمة المضافة؟ ما الأصناف التي يجب طلبها؟ وكم باعت كل وردية؟ تجد هنا شرحًا مختصرًا لكل تقرير: ما يعرضه، وفلاتره، وأعمدته، ونصائح لاستخدامه.</p>
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#how">كيف تعمل شاشات التقارير</a></li>
+  <li><a href="#index">فهرس سريع للتقارير</a></li>
+  <li><a href="#stock">الأرصدة وحركة الأصناف</a></li>
+  <li><a href="#reorder">الأصناف تحت حد الطلب</a></li>
+  <li><a href="#invoices">تقارير الفواتير والضريبة</a></li>
+  <li><a href="#orders">تقارير أوامر البيع والشراء</a></li>
+  <li><a href="#serials">متابعة الأرقام المسلسلة</a></li>
+  <li><a href="#pos">نقاط البيع والمطاعم</a></li>
+  <li><a href="#print-windows">نوافذ طباعة الفواتير</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+</ol></nav>
+
+<section id="how">
+<h2>كيف تعمل شاشات التقارير</h2>
+<p>معظم شاشات التقارير متشابهة. في الأعلى لوحة <span class="ui">تصفيه البيانات</span> فيها الفلاتر، وتحتها جدول النتائج، وفي الأسفل الإجماليات.</p>
+<ol class="steps">
+  <li>افتح التقرير من قائمة <span class="ui">التقارير</span> أو من القائمة المذكورة في شرح كل تقرير.</li>
+  <li>حدد الفلاتر. أغلب الفلاتر لها خانة اختيار بجانبها؛ حدد الخانة أولًا ليُفعَّل الحقل ثم اختر القيمة. الخانة غير المحددة تعني «الكل».</li>
+  <li>اضغط زر <strong>العرض</strong> (أيقونة العدسة، بدون نص). في كثير من التقارير يكفي الضغط على <kbd>Enter</kbd>.</li>
+  <li>للطباعة اضغط زر <strong>الطباعة</strong> (أيقونة الطابعة). يسألك النظام: <span class="msg">هل تريد معاينة التقرير قبل الطباعة؟</span>
+    <ul>
+      <li><strong>نعم:</strong> تفتح نافذة <span class="ui">طباعة تقرير</span>، ومنها تختار <span class="ui">الطابعة</span> وعدد <span class="ui">نسخ</span>، أو تعاين التقرير، أو تصدّره إلى Excel، أو تعرضه كجدول Pivot، أو ترسله بالبريد أو WhatsApp.</li>
+      <li><strong>لا:</strong> يُطبع مباشرة على الطابعة الافتراضية.</li>
+    </ul>
+  </li>
+</ol>
+<ul>
+  <li><strong>اختيار الصنف والمجموعة والحساب:</strong> اضغط داخل الحقل، أو استخدم الاختصار: <kbd>F7</kbd> للصنف، و<kbd>F8</kbd> للمجموعة، و<kbd>F9</kbd> للعميل أو المورد. تفتح نافذة بحث تكتب فيها جزءًا من الاسم أو الكود.</li>
+  <li><strong>الفتح من الجدول:</strong> في كثير من التقارير يفتح <strong>النقر المزدوج</strong> على السطر المستند الأصلي (الفاتورة أو الإذن).</li>
+  <li><strong>قائمة الصنف:</strong> في تقارير الأصناف، انقر السطر بالزر الأيسر ثم بالزر الأيمن لتظهر تقارير الصنف: <span class="ui">كارت صنف</span>، و<span class="ui">تقرير رصيد مخزن</span>، و<span class="ui">تقرير حركة صنف تفصيلى</span>، وغيرها.</li>
+  <li><kbd>Esc</kbd> يغلق معظم شاشات التقارير.</li>
+</ul>
+<p class="tip">بعد تغيير أي فلتر اضغط زر العرض مرة أخرى <strong>قبل</strong> الطباعة أو التصدير. في عدة تقارير تبقى النتيجة السابقة في الجدول وتُطبع هي إذا لم تُحدِّث العرض.</p>
+<p class="note">ما تراه في التقارير يتبع صلاحياتك: الفروع المسموح لك بها، وإظهار أسعار الشراء من عدمه. إذا لم يظهر لك فرع أو عمود فراجع مسؤول النظام.</p>
+</section>
+
+<section id="index">
+<h2>فهرس سريع للتقارير</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>التقرير</th><th>يجيب عن سؤال</th></tr></thead>
+<tbody>
+<tr><td><a href="#rpt-balances">تقرير ارصدة المخازن</a></td><td>كم الرصيد من كل صنف في كل مخزن، وما قيمته؟</td></tr>
+<tr><td><a href="#rpt-pivot">ارصدة المخازن - Pivot</a></td><td>كيف يتوزع رصيد الصنف على المخازن جنبًا إلى جنب؟</td></tr>
+<tr><td><a href="#rpt-movement">حركة الاصناف تفصيلى</a></td><td>ما كل حركات الصنف سطرًا بسطر؟</td></tr>
+<tr><td><a href="#rpt-movement-sum">حركه الاصناف مجمع</a></td><td>رصيد سابق، وارد، صادر، ورصيد حالي لكل صنف في فترة.</td></tr>
+<tr><td><a href="#rpt-store-ops">تقارير اذونات المخازن</a></td><td>ما أذون الوارد والصادر والتحويل في فترة؟</td></tr>
+<tr><td><a href="#reorder">الاصناف تحت حد الطلب</a></td><td>ما الأصناف التي يجب طلبها، وما تكلفتها؟</td></tr>
+<tr><td><a href="#rpt-sales-bills">تقرير فواتير المبيعات والمردودات</a></td><td>كم بعت، وكم حُصّل وكم المتبقي، وكم الربح؟</td></tr>
+<tr><td><a href="#rpt-purchase-bills">تقرير فواتير المشتريات والمردودات</a></td><td>كم اشتريت، وكم دفعت وكم المتبقي؟</td></tr>
+<tr><td><a href="#rpt-tax">تقرير الفواتير الضريبيه</a></td><td>ما الفواتير التي عليها ضريبة، وكم قيمتها؟</td></tr>
+<tr><td><a href="#orders">تقارير اوامر البيع والشراء وعروض الأسعار</a></td><td>ما الأوامر المسجلة، وما المنفذ والمتبقي منها؟</td></tr>
+<tr><td><a href="#serials">متابعة الارقام المسلسلة</a></td><td>من أين جاء هذا السيريال، ولمن بيع؟</td></tr>
+<tr><td><a href="#pos-invoices">تقرير الفواتير (الكاشير)</a></td><td>ما فواتير الكاشير في فترة أو وردية؟</td></tr>
+<tr><td><a href="#pos-restaurant">تقرير المطاعم</a></td><td>ما طلبات الصالة والتيك أواي والدليفري؟</td></tr>
+<tr><td><a href="#pos-shifts">تقرير فترات العمل مجمع</a></td><td>كم باعت كل وردية نقدًا وفيزا وآجلًا؟</td></tr>
+<tr><td><a href="#pos-hours">تقرير احصائى يومى</a></td><td>ما ساعات الذروة في المبيعات؟</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="stock">
+<h2>تقارير الأرصدة وحركة الأصناف</h2>
+<!--shot:reports-stores__stock-->
+<figure class="shot" id="shot-reports-stores__stock">
+<div class="shot-frame"><a href="assets/screens/reports-stores__stock.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/reports-stores__stock.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: تقارير الأرصدة وحركة الأصناف"></a></div>
+<figcaption>شاشة «تقارير الأرصدة وحركة الأصناف» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+
+<h3 id="rpt-balances">تقرير ارصدة المخازن</h3>
+<p>القائمة: <span class="ui">التقارير</span> ← <span class="ui">المخازن والاصناف</span> ← <span class="ui">تقرير ارصدة المخازن</span>. ويفتح أيضًا من كارت الصنف وشاشة المجموعات وقائمة الزر الأيمن للصنف (<span class="ui">تقرير رصيد مخزن</span>)، وعندها يُعرض رصيد ذلك الصنف أو المجموعة مباشرة.</p>
+<p><strong>السؤال الذي يجيب عنه:</strong> كم الرصيد من كل صنف في كل مخزن حتى تاريخ معين، وما قيمته بسعر الشراء وسعر البيع؟</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">الفرع</span>، و<span class="ui">المخزن</span> (أو <span class="ui">الكل</span>، وهو المحدد افتراضيًا)، و<span class="ui">المجموعة</span> (<kbd>F8</kbd>)، و<span class="ui">الصنف</span> (<kbd>F7</kbd>)، وحالة الأصناف (<span class="ui">اصناف نشطة</span> / <span class="ui">اصناف غير نشطة</span> / <span class="ui">الكل</span>)، و<span class="ui">الحساب</span> (المورد، <kbd>F9</kbd>)، و<span class="ui">Brand</span>، و<span class="ui">م تكلفة</span> عند تفعيل المقاولات.</li>
+  <li><strong>التاريخ:</strong> <span class="ui">كل التواريخ</span> محددة افتراضيًا. ألغِ تحديدها واختر تاريخًا في <span class="ui">الى</span> لمعرفة الرصيد حتى ذلك اليوم. حقل <span class="ui">من</span> غير مستخدم في هذا التقرير.</li>
+  <li><strong>خيارات العرض:</strong> <span class="ui">اخفاء الارصدة الصفرية</span>، <span class="ui">اظهار الارصدة الصفرية فقط</span>، <span class="ui">اظهار الارصدة الافتتاحية فقط</span>، <span class="ui">اظهار الارصدة السالبة فقط</span>، و<span class="ui">تصنيف طبقا لتاريخ الصلاحية</span> (يظهر عند تفعيل تواريخ الصلاحية).</li>
+  <li><strong>الأعمدة:</strong> المخزن، كود، الصنف، الوحدة، الرصيد، رصيد مفصل (مثل «2 كرتونة / 3 علبة»)، رصيد محتجز، تاريخ الصلاحية، سعر الشراء، قيمة الشراء، سعر البيع، قيمة البيع، المجموعة، المورد. وفي الأسفل إجماليات: الرصيد، ك محتجزة، رصيد شراء، رصيد البيع.</li>
+  <li><strong>تصدير النتيجة إلى مستند:</strong> زر <span class="ui">Export</span> ينقل الأصناف الظاهرة إلى: <span class="ui">طباعة باركود</span>، أو <span class="ui">فاتورة بيع</span>، أو <span class="ui">امر شراء</span>، وغيرها.</li>
+</ul>
+<p class="tip">لمعرفة الأصناف التي تحتاج إعادة طلب أو التي بها خطأ في الإدخال، فعّل <span class="ui">اظهار الارصدة السالبة فقط</span>. اختر خيارًا واحدًا فقط من خيارات العرض في كل مرة.</p>
+<div class="warn">عند التصدير إلى <span class="ui">اذن مخزن</span> أو <span class="ui">اذن تحويل</span> راجع المخزن في المستند الجديد قبل الحفظ، فقد يُختار المخزن الأول وليس المخزن الذي في التقرير. وعند التصدير إلى <span class="ui">فاتورة شراء</span> تُنقل أسعار البيع، فعدّل الأسعار إلى أسعار الشراء.</div>
+
+<h3 id="rpt-pivot">تقرير ارصدة المخازن - Pivot (ارصدة المخازن متطور)</h3>
+<p>القائمة: <span class="ui">تقرير ارصدة المخازن - Pivot</span>. عنوان الشاشة: <span class="ui">تقارير ارصدة المخازن متطور</span>.</p>
+<p><strong>السؤال الذي يجيب عنه:</strong> كيف يتوزع رصيد كل صنف على مخازن الفرع؟ كل مخزن يظهر في عمود مستقل جنبًا إلى جنب.</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">الفرع</span>، و<span class="ui">المجموعة</span>، و<span class="ui">الصنف</span>، و<span class="ui">كل التواريخ</span> / <span class="ui">الى</span>، و<span class="ui">الحساب</span>، و<span class="ui">Brand</span>. والخيار <span class="ui">اظهار الارصدة الافتتاحية فقط</span>.</li>
+  <li><strong>الأعمدة:</strong> كود، الصنف، وحدة، مجموعة، س بيع، س شراء، ق تكلفة، <span class="ui">Total</span>، ثم عمود لكل مخزن.</li>
+  <li>يعرض الأصناف النشطة غير الخدمية التي لها رصيد فقط.</li>
+</ul>
+<p class="note">بعد تغيير الفرع اضغط زر العرض أولًا ثم اطبع؛ وإلا تُطبع النتيجة السابقة. وإذا كان الفرع المختار بلا مخازن متاحة لك فقد تظهر رسالة خطأ.</p>
+
+<h3 id="rpt-movement">تقرير حركة الاصناف تفصيلى</h3>
+<p>القائمة: <span class="ui">تقرير حركه الأصناف تفصيلي</span>. ويفتح أيضًا من شاشة الصنف وقائمة الزر الأيمن.</p>
+<p><strong>السؤال الذي يجيب عنه:</strong> ما كل حركات الصنف (شراء، بيع، تحويل، تالف، جرد...) سطرًا بسطر، وكيف تغيّر رصيده بعد كل حركة؟</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">الفرع</span>، و<span class="ui">المخزن</span> أو <span class="ui">الكل</span>، و<span class="ui">من</span> / <span class="ui">الى</span> أو <span class="ui">الكل</span> (كل التواريخ، محدد افتراضيًا)، و<span class="ui">المجموعة</span> (<kbd>F8</kbd>)، و<span class="ui">الصنف</span> (<kbd>F7</kbd>).</li>
+  <li><strong>الأعمدة:</strong> كود، الصنف، الوحدة، الوارد، الصادر، التالف، الرصيد (رصيد متحرك)، بيان (نوع المستند ورقمه)، التاريخ، User. وفي الأسفل: وارد، صادر، تالف، الرصيد.</li>
+  <li><strong>نقر مزدوج</strong> على السطر يفتح المستند الأصلي (فاتورة، إذن، تحويل، جرد...) إذا كانت لديك صلاحية فتحه.</li>
+</ul>
+<div class="warn"><span class="ui">الكل</span> بجانب المخزن <strong>غير محددة افتراضيًا</strong>، فيعرض التقرير المخزن الأول فقط. حددها لرؤية كل المخازن.<br>عند تحديد فترة تاريخ يبدأ عمود الرصيد من صفر في أول الفترة ولا يشمل الرصيد السابق. لمعرفة الرصيد الحقيقي استخدم <span class="ui">الكل</span> في التاريخ، أو استخدم <a href="#rpt-movement-sum">حركه الاصناف مجمع</a>.</div>
+<p class="note">الوارد والصادر يظهران بوحدة المستند، أما الرصيد فبالوحدة الصغرى؛ لذلك قد لا يساوي إجمالي الرصيد في الأسفل الفرق بين الوارد والصادر عند استخدام أكثر من وحدة.</p>
+
+<h3 id="rpt-movement-sum">حركه الاصناف مجمع</h3>
+<p>القائمة: <span class="ui">تقرير حركه الأصناف مجمع</span>، أو <span class="ui">تقرير حركة صنف مجمع</span> من قائمة الزر الأيمن.</p>
+<p><strong>السؤال الذي يجيب عنه:</strong> لكل صنف خلال فترة: كم كان رصيده قبلها، وكم ورد وكم صُرف، وكم رصيده الآن؟</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">فرع</span> (مطلوب دائمًا)، و<span class="ui">المخزن</span> (اختياري؛ بدونه تُجمع كل المخازن)، و<span class="ui">المجموعة</span>، و<span class="ui">الصنف</span>، و<span class="ui">من</span> / <span class="ui">الى</span> (الافتراضي آخر 7 أيام)، و<span class="ui">الحساب</span> (المورد).</li>
+  <li><strong>الأعمدة (بالوحدة الصغرى):</strong> كود، الصنف، الوحدة، الفئة، رصيد سابق، الوارد، الصادر (يشمل التالف)، رصيد الفترة (الوارد − الصادر)، الرصيد الحالى.</li>
+  <li>تظهر الأصناف التي لم تتحرك أيضًا بأصفار.</li>
+</ul>
+<p class="note">قائمة <span class="ui">المخزن</span> تعرض مخازن فرعك الحالي دائمًا. إذا اخترت فرعًا آخر فاترك المخزن بدون تحديد، وإلا ستظهر أصفار.</p>
+
+<h3 id="rpt-store-ops">تقارير اذونات المخازن</h3>
+<p>القائمة: <span class="ui">تقرير اذونات المخازن</span>.</p>
+<p><strong>السؤال الذي يجيب عنه:</strong> ما أذون المخزن من نوع معين (وارد، صادر، تالف، تحويل...) في فترة، وما كمية وقيمة كل إذن؟</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">نوع الاذن</span> (وارد، صادر، تالف، رصيد افتتاحى، تحويل غير مباشر، اذن استلام، تحويل مباشر صادر، تحويل مباشر وارد)، و<span class="ui">المخزن</span>، و<span class="ui">الصنف</span> (<kbd>F7</kbd>؛ يقصر الكمية والقيمة على هذا الصنف)، و<span class="ui">اليوزر</span>، و<span class="ui">الحالة</span> (<span class="ui">غير معتمد</span> / <span class="ui">معتمد</span>)، و<span class="ui">المشروع</span> و<span class="ui">م تكلفة</span> عند تفعيل المقاولات.</li>
+  <li><strong>التاريخ:</strong> <span class="ui">كل التواريخ</span>، أو <span class="ui">تاريخ</span> (يوم واحد)، أو <span class="ui">فترة</span> (من – <span class="ui">الى</span>).</li>
+  <li><strong>الأعمدة:</strong> No، التاريخ، المخزن، المشروع، م تكلفة، كمية، اجمالى.</li>
+  <li><span class="ui">طباعة تقرير مفصل</span>: يطبع أصناف كل إذن تحت رأسه.</li>
+  <li><strong>نقر مزدوج</strong> على الإذن يفتحه.</li>
+</ul>
+<div class="warn"><span class="ui">الحالة</span> مضبوطة افتراضيًا على <span class="ui">غير معتمد</span>، فلا تظهر الأذون المعتمدة. إذا ظهر التقرير فارغًا، غيّر الحالة إلى <span class="ui">معتمد</span>. ولا يوجد خيار لعرض الحالتين معًا.</div>
+<p class="note">يعرض التقرير أذون فرعك الحالي والسنة المالية الحالية فقط.</p>
+</section>
+
+<section id="reorder">
+<h2>تقرير عن الاصناف تحت حد الطلب</h2>
+<p>القائمة: <span class="ui">التقارير</span> ← <span class="ui">المخازن والاصناف</span> ← <span class="ui">الاصناف تحت حد الطلب</span>. ويفتح أيضًا من لوحة المعلومات.</p>
+<!--shot:reports-stores__reorder-->
+<figure class="shot" id="shot-reports-stores__reorder">
+<div class="shot-frame"><a href="assets/screens/reports-stores__reorder.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/reports-stores__reorder.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: تقرير عن الاصناف تحت حد الطلب"></a></div>
+<figcaption>شاشة «تقرير عن الاصناف تحت حد الطلب» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<p><strong>السؤال الذي يجيب عنه:</strong> ما الأصناف التي نزل رصيدها عن حد الطلب (أو زاد عن الحد الأقصى)، وما الكمية المطلوب شراؤها وتكلفتها؟ تُحدَّد الحدود في <a href="items.html">بطاقة الصنف</a>.</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">الفرع</span>، و<span class="ui">المخزن</span>، و<span class="ui">المورد</span> (اضغط الحقل أو <kbd>F10</kbd>).</li>
+  <li><strong>نوع التقرير:</strong>
+    <ul>
+      <li><span class="ui">الحد الادنى - تصنيف فرع</span>: الأصناف الأقل من الحد الأدنى، سطر لكل فرع.</li>
+      <li><span class="ui">الحد الاقصى- تصنيف فرع</span>: الأصناف التي تجاوزت الحد الأقصى، وتظهر الكمية بالسالب وتمثل الزيادة.</li>
+      <li><span class="ui">عرض كل الأصناف تحت حد الطلب</span>: الأصناف الأقل من الحد الأدنى برصيد مجمع واحد.</li>
+    </ul></li>
+  <li><strong>خيارات:</strong> <span class="ui">اخفاء المخازن</span>، و<span class="ui">اخفاء الرصيد الحالي</span>، و<span class="ui">الكمية للحد الاقصى</span> (في وضع الحد الأدنى: تُحسب الكمية المطلوبة حتى الحد الأقصى بدلًا من الحد الأدنى).</li>
+  <li><strong>الأعمدة:</strong> الفرع، كود، الصنف، الوحدة، المجموعة، الحد الادنى أو الحد الاقصى، الرصيد، الكمية المطلوبة، سعر الشراء، اجمالى السعر. وفي الأسفل: كمية، الاجمالى.</li>
+  <li><strong>تحويل إلى أمر شراء:</strong> <span class="ui">Export</span> ← <span class="ui">امر شراء</span> يفتح أمر شراء جديدًا بالكميات المطلوبة على المخزن الافتراضي لفرعك.</li>
+</ul>
+<div class="warn">قبل حفظ أمر الشراء الناتج: اختر <strong>المورد</strong> بنفسك (لا يُنقل من التقرير)، وراجع المخزن، واجمع الأصناف المكررة إذا ظهر الصنف أكثر من مرة (مرة لكل فرع).</div>
+<p class="note">بعد تغيير نوع التقرير اضغط زر العرض قبل الطباعة أو التصدير. وفي وضع <span class="ui">الحد الاقصى</span> لا تستخدم خانتي الإخفاء، لأن عمود الفرع والحد يختفيان.</p>
+</section>
+
+<section id="invoices">
+<h2>تقارير الفواتير والضريبة</h2>
+<p>تجدها في القائمة <span class="ui">تقارير الفواتير المحاسبيه</span>. لتفاصيل الفاتورة نفسها راجع <a href="sales-invoice.html">فاتورة البيع</a>.</p>
+<!--shot:reports-stores__invoices-->
+<figure class="shot" id="shot-reports-stores__invoices">
+<div class="shot-frame"><a href="assets/screens/reports-stores__invoices.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/reports-stores__invoices.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: تقارير الفواتير والضريبة"></a></div>
+<figcaption>شاشة «تقارير الفواتير والضريبة» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+
+<h3 id="rpt-sales-bills">تقرير فواتير المبيعات والمردودات</h3>
+<p>عنوان الشاشة: <span class="ui">تقرير الفواتير</span>. يفتح أيضًا بالاختصار <kbd>F4</kbd>، ومن قائمة العملاء وتقاريرهم وفيه العميل محددًا مسبقًا.</p>
+<p><strong>السؤال الذي يجيب عنه:</strong> ما فواتير البيع (أو مرتجعات البيع) في فترة، وكم المدفوع والمتبقي منها، وكم الربح؟</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">من</span> / <span class="ui">الى</span> (الافتراضي الشهر الحالي)، و<span class="ui">الفرع</span>، و<span class="ui">فاتورة</span> (<span class="ui">البيع</span> أو <span class="ui">المرتجع بيع</span>)، و<span class="ui">الدفع</span> (الكل، نقدى، اجل، فيزا، نقدى + فيزا، تحويل؛ ومع الفيزا والتحويل تظهر قائمة الحساب البنكي)، و<span class="ui">النوع</span> (ERP أو POS أو All)، و<span class="ui">الحالة</span> (غير مرحل، مرحل، الكل)، و<span class="ui">الحساب</span> (العميل، <kbd>F9</kbd>).</li>
+  <li><strong>فلاتر إضافية بخانة اختيار:</strong> <span class="ui">المندوب</span>، <span class="ui">المنفذ</span>، <span class="ui">المستخدم</span>، <span class="ui">م تكلفة</span>، <span class="ui">عنوان</span>، <span class="ui">شركة الشحن</span>.</li>
+  <li><strong>الأعمدة:</strong> رقم، التاريخ، العميل، رقم ضريبيى، المندوب، الاجمالى، الخصم، اضافات، ض ق م، ض خصم، المدفوع، المتبقى، الصافى، العملة، Rate، القيمة ع.م، ربح (يظهر «خساره» في المرتجعات)، ت الاستحقاق.</li>
+  <li><strong>الإجماليات:</strong> الاجمالى، الخصم، الضريبة، الصافى، المدفوع، المتبقى، الربح.</li>
+  <li><span class="ui">اظهار الصافى</span>: يخصم من كل فاتورة بيع المرتجع المرتبط بها. الفواتير التي لها مرتجع تتلون بالوردي ويظهر عمود <span class="ui">م مرتجع</span>.</li>
+  <li><strong>نقر مزدوج:</strong> على <span class="ui">رقم</span> يفتح الفاتورة، وعلى <span class="ui">م مرتجع</span> يفتح المرتجع، وعلى أي عمود آخر يعرض أصناف الفاتورة.</li>
+  <li><span class="ui">Map</span>: يعرض فواتير العملاء على الخريطة.</li>
+</ul>
+<p class="note">التقرير لفرع واحد في كل مرة. لمقارنة الفروع اعرض كل فرع على حدة. وإذا لم يجد البحث نتائج قد تبقى النتيجة السابقة ظاهرة، فتأكد من التواريخ والفلاتر.</p>
+
+<h3 id="rpt-purchase-bills">تقرير فواتير المشتريات والمردودات</h3>
+<p>القائمة: <span class="ui">تقرير فواتير المشتريات والمردودات</span>. عنوان الشاشة أيضًا <span class="ui">تقرير الفواتير</span>.</p>
+<p><strong>السؤال الذي يجيب عنه:</strong> ما فواتير الشراء (أو مرتجعات الشراء) في فترة، وكم المدفوع منها والمتبقي للموردين؟</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">من</span> / <span class="ui">الى</span>، و<span class="ui">الفرع</span>، و<span class="ui">فاتورة</span> (<span class="ui">شراء</span> أو <span class="ui">مرتجع شراء</span>)، و<span class="ui">النوع</span> (طريقة الدفع)، و<span class="ui">الحالة</span>، و<span class="ui">المستخدم</span>، و<span class="ui">العنوان</span>، و<span class="ui">مركز تكلفة</span>، و<span class="ui">الحساب</span> (المورد، <kbd>F9</kbd>).</li>
+  <li><strong>الأعمدة:</strong> مثل تقرير المبيعات بدون المندوب والربح. عمود المورد عنوانه <span class="ui">العميل</span>.</li>
+  <li><span class="ui">اظهار الصافى</span> والنقر المزدوج يعملان كما في تقرير المبيعات.</li>
+</ul>
+<div class="warn"><span class="ui">الحالة</span> مضبوطة افتراضيًا على <span class="ui">غير مرحل</span>، فلا تظهر الفواتير المرحلة. اختر <span class="ui">الكل</span> لرؤية كل الفواتير.</div>
+<p class="note">عند فتح التقرير من قائمة الموردين يُطبَّق فلتر المورد رغم أن حقل <span class="ui">الحساب</span> يظهر فارغًا.</p>
+
+<h3 id="rpt-tax">تقرير الفواتير الضريبيه</h3>
+<p>القائمة: <span class="ui">تقرير الفواتير الضريبيه</span>.</p>
+<p><strong>السؤال الذي يجيب عنه:</strong> ما الفواتير التي عليها ضريبة قيمة مضافة في فترة، وما صافيها وضريبتها وإجماليها؟ مفيد عند تجهيز الإقرار الضريبي.</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">نوع الفاتوره</span> (شراء، بيع، مرتجع بيع، مرتجع شراء؛ الافتراضي شراء)، و<span class="ui">الحساب</span> (<kbd>F9</kbd>)، و<span class="ui">الفرع</span>، و<span class="ui">من</span> / <span class="ui">الى</span> (الافتراضي آخر 7 أيام).</li>
+  <li><strong>الأعمدة:</strong> كود الفاتوره، التاريخ، نوع الفاتوره، اسم العميل، صافى الفاتورة، ضريبة خصم، ضريبة مضافة، اجمالى الفاتوره.</li>
+  <li><strong>الإجماليات:</strong> اجمالى صافى، اجمالى ضريبة الخصم، اجمالى ضريبة ق م، اجمالى الفواتير.</li>
+  <li>النقر المزدوج يفتح الفاتورة. اضغط زر العرض بالفأرة (<kbd>Enter</kbd> لا يعمل هنا).</li>
+</ul>
+<div class="warn">راجع الأرقام قبل اعتمادها في الإقرار الضريبي:
+<ul>
+  <li>يُعرض نوع واحد من الفواتير في كل مرة؛ اعرض البيع والمرتجع كلًا على حدة.</li>
+  <li>الفواتير التي ليس عليها إلا ضريبة خصم لا تظهر.</li>
+  <li>في الفواتير بعملة أجنبية، <span class="ui">اجمالى الفاتوره</span> فقط بالعملة المحلية، والصافي والضريبة بعملة الفاتورة.</li>
+  <li>قارن <span class="ui">ضريبة مضافة</span> بقيمة الضريبة في الفاتورة نفسها؛ فقد يجمع العمود ضريبة الأصناف وضريبة الفاتورة معًا.</li>
+</ul></div>
+</section>
+
+<section id="orders">
+<h2>تقارير أوامر البيع والشراء وعروض الأسعار</h2>
+<p>من القائمة <span class="ui">تقارير الفواتير المحاسبيه</span>. التقرير نفسه يُستخدم لأكثر من نوع أمر، ويتغير عنوانه حسب الاختيار من القائمة.</p>
+<!--shot:reports-stores__orders-->
+<figure class="shot" id="shot-reports-stores__orders">
+<div class="shot-frame"><a href="assets/screens/reports-stores__orders.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/reports-stores__orders.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: تقارير أوامر البيع والشراء وعروض الأسعار"></a></div>
+<figcaption>شاشة «تقارير أوامر البيع والشراء وعروض الأسعار» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+
+<h3 id="rpt-orders">التقارير العامة (ملخص الأوامر)</h3>
+<p>القائمة: <span class="ui">تقرير اوامر البيع عام</span>، <span class="ui">تقرير اوامر الشراء عام</span>، <span class="ui">تقرير عروض الاسعار</span>، <span class="ui">تقرير اوامر سلة المبيعات</span> (طلبات المتجر الإلكتروني).</p>
+<p><strong>السؤال الذي يجيب عنه:</strong> ما الأوامر المسجلة في فترة، وحالتها، وقيمتها؟</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">من</span> / <span class="ui">الى</span>، و<span class="ui">الفرع</span>، و<span class="ui">المندوب</span>، و<span class="ui">المستخدم</span>، و<span class="ui">الحساب</span> (<kbd>F9</kbd>)، و<span class="ui">الحالة</span> (مثل --Pending--، قيد التجهيز، تم الشحن، تم التوصيل، تم الالغاء، تم التأجيل)، و<span class="ui">كميات محتجزة</span> (يعرض الأوامر التي حجزت كميات من المخزون فقط).</li>
+  <li><strong>الأعمدة:</strong> رقم، تاريخ، الاسم، المندوب، الفرع، ملاحظات، عملة، معامل، الحالة، فاتورة، قيمة، ت التاجيل، وبيانات الإضافة والتعديل.</li>
+  <li><strong>الإجماليات:</strong> <span class="ui">اجمالى</span> و<span class="ui">اجمالى ع.م</span>.</li>
+  <li><strong>نقر مزدوج</strong> على السطر يفتح الأمر.</li>
+</ul>
+<p class="note"><span class="ui">قيمة</span> = الكمية × السعر قبل الخصم والضريبة. التقرير لفرع واحد في كل مرة. وإذا كان الأمر من فرع غير فرعك الحالي فقد لا يفتح بالنقر المزدوج.</p>
+
+<h3 id="rpt-orders-detail">التقارير المفصلة (أصناف الأوامر)</h3>
+<p>القائمة: <span class="ui">تقرير اوامر البيع مفصل</span>، <span class="ui">تقرير اوامر الشراء مفصل</span>.</p>
+<p><strong>السؤال الذي يجيب عنه:</strong> لكل أمر وصنف: كم الكمية المطلوبة، وكم نُفِّذ، وكم المتبقي، وكم محجوز، وكم الرصيد الحالي؟</p>
+<ul>
+  <li><strong>الفلاتر:</strong> مثل التقرير العام، ويُضاف <span class="ui">التجهيز</span> (Waiting / Done / NotDone / All).</li>
+  <li><strong>الأعمدة:</strong> كود، الصنف، مجموعة، وحدة، الكمية، الاجمالى، ك منفذة، ك متبقية، الفرع، ك محتجزة، الرصيد الحالى.</li>
+  <li><strong>الإجماليات:</strong> <span class="ui">اجمالى عدد</span> و<span class="ui">اجمالى قيمة</span>.</li>
+</ul>
+<div class="warn">فلتر <span class="ui">التجهيز</span> مضبوط افتراضيًا على <strong>NotDone</strong>، وهو خاص بطلبات المتجر الإلكتروني. لعرض أوامر البيع العادية اختر <span class="ui">All</span> قبل العرض.</div>
+<p class="note">لا يتضمن فلتر <span class="ui">الحالة</span> هنا حالة «Pending»؛ لعرض الأوامر المعلقة استخدم التقرير العام.</p>
+</section>
+
+<section id="serials">
+<h2>شاشه متابعه الارقام المسلسله</h2>
+<p>القائمة: <span class="ui">المبيعات</span> ← <span class="ui">الارقام التسلسليه للقطع</span>.</p>
+<p><strong>السؤال الذي يجيب عنه:</strong> ما قصة هذا الرقم المسلسل؟ من أي فاتورة شراء دخل، ولمن بيع، وهل رُدّ أو حُوّل، وهل ما زال متاحًا في المخزن؟</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">الرقم المسلسل</span> (يُكتب كاملًا مطابقًا)، و<span class="ui">الصنف</span>، و<span class="ui">الفرع</span>، و<span class="ui">المخزن</span>، و<span class="ui">عرض المتاح فقط</span> (السيريالات الموجودة في المخزن ولم تُصرف).</li>
+  <li><strong>الأعمدة:</strong> الرقم المسلسل، الصنف، كود، ثم لكل نوع مستند رقمه وتاريخه: ف الشراء / س الشراء، ف البيع / س البيع، ف مرتجع بيع، ف مرتجع شراء، اذن وارد، اذن صادر، صادر غ مباشر، وارد غ مباشر، اذن افتتاحى، كارت تصنيع، والفرع.</li>
+  <li><strong>نقر مزدوج</strong> على رقم المستند يفتح المستند.</li>
+</ul>
+<p class="tip">ابحث بالسيريال وحده للحصول على نتيجة سريعة. البحث بدون سيريال في قاعدة بيانات كبيرة قد يستغرق وقتًا طويلًا.</p>
+<p class="note">بعد كل بحث ناجح يُمسح حقل <span class="ui">الرقم المسلسل</span>، فدوّن الرقم قبل البحث. والبحث في السنة المالية الحالية فقط. زر الطباعة هنا لا يطبع تقريرًا، لكنه يتيح التصدير إلى Excel من نافذة المعاينة (اختر <strong>نعم</strong>).</p>
+</section>
+
+<section id="pos">
+<h2>تقارير نقاط البيع والمطاعم</h2>
+<p>هذه التقارير خاصة بفواتير <strong>الكاشير</strong> (نقاط البيع). تظهر في قائمة نقاط البيع، أو في واجهة الكاشير، حسب إعدادات نسختك.</p>
+<p class="note">قد لا تجد هذه التقارير في القائمة إذا لم تكن وحدة نقاط البيع مفعّلة في نسختك. تواصل مع مسؤول النظام لتفعيلها.</p>
+
+<h3 id="pos-invoices">تقرير الفواتير (فواتير الكاشير)</h3>
+<p><strong>السؤال الذي يجيب عنه:</strong> ما فواتير الكاشير التي صدرت في فترة أو وردية معينة، وما إجمالي قيمتها وخصمها وضريبتها؟</p>
+<p>يفتح من <span class="ui">تقرير الفواتير</span>. إذا كان نظام المطاعم غير مفعّل، تفتح شاشة <span class="ui">تقرير الفواتير</span> العادية. وإذا كان مفعّلًا، تفتح شاشة <a href="#pos-restaurant">تقرير المطاعم</a>.</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">من</span> / <span class="ui">الى</span>، أو <span class="ui">الفترة</span> (اختر وردية بعينها)، و<span class="ui">المستخدم</span> (أو <span class="ui">الكل</span>)، و<span class="ui">السائق</span> (أو <span class="ui">الكل</span>)، و<span class="ui">العميل</span> (اضغط الحقل أو <kbd>F9</kbd> للاختيار)، و<span class="ui">النوع</span> (طريقة الدفع: الكل، نقدى، اجل، فيزا، نقدى - فيزا، تحويل)، و<span class="ui">فاتورة</span> (البيع أو المرتجع بيع)، و<span class="ui">الفرع</span>، و<span class="ui">منطقة</span>. عند اختيار الدفع بالفيزا أو التحويل يظهر حقل لاختيار الحساب البنكي.</li>
+  <li><strong>الأعمدة:</strong> رقم، التاريخ، العميل، القيمة، الخصم، الضريبة، اضافات، المدفوع، المتبقى، الصافى، المستخدم، العملة، القيمة بالعملة المحلية.</li>
+  <li><strong>الإجماليات أسفل الشاشة:</strong> <span class="ui">القيمة</span>، و<span class="ui">اجمالى الخصم</span>، و<span class="ui">اجمالى الضريبة</span>، و<span class="ui">الاضافات</span>، و<span class="ui">اجمالى</span>. وهي محسوبة <strong>بالعملة المحلية</strong>.</li>
+</ul>
+<div class="warn">إذا فعّلت <span class="ui">الفترة</span> فاختر وردية من القائمة، وإذا فعّلت <span class="ui">منطقة</span> فاختر منطقة؛ وإلا لن يظهر أي نتيجة ولا رسالة. قائمة الورديات تشمل ورديات السنوات السابقة، لكن الفواتير المعروضة هي فواتير السنة المالية الحالية فقط.</div>
+<p class="note">يعرض التقرير كل الفواتير المسجلة بما فيها الفواتير المحذوفة أو المعلّقة. قارن بنتيجة شاشة الفواتير عند المراجعة الدقيقة.</p>
+
+<h3 id="pos-restaurant">تقرير المطاعم</h3>
+<p><strong>السؤال الذي يجيب عنه:</strong> ما طلبات المطعم (صالة، تيك اواى، ديلفرى) في فترة أو وردية، وما قيمتها، ومن السائق المسؤول؟</p>
+<p>نفس فكرة تقرير الفواتير، مع فلاتر إضافية خاصة بالمطاعم:</p>
+<ul>
+  <li><span class="ui">النوع</span> (نوع الطلب): صالة، تيك اواى، ديلفرى، الكل.</li>
+  <li><span class="ui">مائدة</span> و<span class="ui">اوردر</span>: رقم الطاولة ورقم الطلب.</li>
+  <li><span class="ui">السائق</span>، و<span class="ui">مسدد</span>، و<span class="ui">ضيافة</span>.</li>
+  <li>الأعمدة الإضافية: <span class="ui">اوردر</span>، <span class="ui">مائدة</span>، <span class="ui">سائق</span>.</li>
+</ul>
+<div class="warn">انتبه لخانتين مهمتين:
+<ul>
+  <li><span class="ui">مسدد</span> مفعّلة افتراضيًا، فلا تظهر إلا الطلبات المسددة. ألغِ تحديدها لرؤية غير المسددة.</li>
+  <li><span class="ui">ضيافة</span>: إذا كانت محددة تظهر طلبات الضيافة <strong>فقط</strong>، وإذا لم تكن محددة تُستبعد طلبات الضيافة. لا يمكن عرض النوعين معًا في نتيجة واحدة.</li>
+</ul></div>
+<p class="note">فلاتر الطلب (النوع، المائدة، الاوردر، السائق، مسدد) تعمل مع فواتير <strong>البيع</strong> فقط، وتُتجاهل عند اختيار المرتجع.</p>
+
+<h3 id="pos-shifts">تقرير فترات العمل مجمع (الورديات)</h3>
+<p><strong>السؤال الذي يجيب عنه:</strong> كم باعت كل وردية، وكم ارتجعت، مقسمًا نقدي وفيزا وأجل؟ وهل الوردية مفتوحة أم مغلقة؟</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">عرض الفترات خلال</span> (اليوم، امس، الاسبوع الماضي، الأسبوع الحالي، الشهر الماضي، الشهر الحالي)، و<span class="ui">المستخدم</span> (أو <span class="ui">الكل</span>)، و<span class="ui">الفرع</span>.</li>
+  <li><strong>الأعمدة:</strong> رقم الفترة، تاريخ البدء، تاريخ الأنتهاء، عددالمبيعات، اجمالي المبيعات، مبيعات نقدى / فيزا / أجل، عددالمرتجع، اجمالي المرتجعات، مرتجعات نقدى / فيزا / أجل، حالة الفترة (<code>Open</code> مفتوحة أو <code>Closed</code> مغلقة).</li>
+</ul>
+<p class="tip">اختيار المستخدم يعرض ورديات هذا المستخدم والفواتير التي أصدرها هو فقط داخلها.</p>
+<p class="note">الفرع مطلوب دائمًا؛ لا يوجد خيار «كل الفروع». وعند الطباعة تُطبع آخر نتيجة ظهرت في الجدول، فاضغط عرض بعد تغيير الفلاتر ثم اطبع.</p>
+
+<h3 id="pos-hours">تقرير احصائى يومى (المبيعات بالساعة)</h3>
+<p><strong>السؤال الذي يجيب عنه:</strong> في أي ساعات اليوم تكون المبيعات أعلى؟ يعرض قيمة المبيعات وعدد الفواتير لكل ساعة من الساعات الـ24.</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">نوع الفاتوره</span> (مبيعات أو مردودات)، و<span class="ui">الصافي</span> (يخصم المرتجعات من المبيعات؛ متاح مع المبيعات فقط)، و<span class="ui">الفرع</span> (اختياري).</li>
+  <li><strong>نطاق التاريخ:</strong> <span class="ui">الكل</span>، أو <span class="ui">تاريخ</span> (يوم واحد)، أو <span class="ui">من</span> / <span class="ui">الى</span>، أو <span class="ui">شهر</span>، أو <span class="ui">سنة</span>.</li>
+  <li>اضغط زر العرض (العدسة) فيظهر التقرير داخل الشاشة نفسها، وتطبع أو تصدّر من شريط أدوات العارض.</li>
+</ul>
+<p class="tip">عند اختيار <span class="ui">من</span> يضبط النظام بداية ونهاية الفترة على اللحظة الحالية نفسها. عدّل الوقتين قبل العرض.</p>
+<p class="note">الفواتير التي سُجّلت بتاريخ قديم بدون وقت تُحسب في الساعة 12 صباحًا (الساعة صفر).</p>
+</section>
+
+<section id="print-windows">
+<h2>نوافذ طباعة الفواتير</h2>
+<p>نافذة <span class="ui">عرض وطباعة الفواتير</span> لا تُفتح من قائمة التقارير، بل تظهر عند طباعة فاتورة بيع أو شراء أو مرتجع أو فاتورة خدمات، إذا كان إعداد «المعاينة قبل الطباعة» مفعّلًا. تعرض الفاتورة بالشكل المطبوع (مع رمز QR للفاتورة الإلكترونية إن كان مفعّلًا)، وتطبع أو تصدّر من شريط أدوات العارض أعلى النافذة.</p>
+<p class="note">إذا ظهرت النافذة فارغة، فتأكد أن الفاتورة محفوظة وفيها أصناف، وأن لكل صنف مجموعة. وفي الواجهة الإنجليزية قد لا تتوفر بعض نماذج الطباعة (فواتير الخدمات وصيانة السيارات)، فاطبعها من الواجهة العربية.</p>
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td><span class="msg">لايوجد بيانات متاحة</span></td><td>لا توجد نتائج للفلاتر المختارة، أو ضغطت الطباعة قبل العرض. وسّع الفترة أو راجع الحالة والفرع.</td></tr>
+<tr><td><span class="msg">هل تريد معاينة التقرير قبل الطباعة؟</span></td><td>نعم: نافذة المعاينة والتصدير. لا: طباعة مباشرة.</td></tr>
+<tr><td><span class="msg">عفوا. اصدار تجريبى</span></td><td>الطباعة غير متاحة في النسخة التجريبية.</td></tr>
+<tr><td><span class="msg">عفوا ليس لديك صلاحية</span></td><td>ليس لديك صلاحية فتح التقرير أو المستند.</td></tr>
+<tr><td><span class="msg">يجب تحديد مخزن افتراضى</span></td><td>عند تحويل الأصناف تحت حد الطلب إلى أمر شراء: حدد مخزنًا افتراضيًا لفرعك.</td></tr>
+</tbody></table></div>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="stores.html">المخازن</a> · <a href="items.html">الأصناف</a> · <a href="sales-invoice.html">فاتورة البيع</a> · <a href="reports-items.html">تقارير الأصناف</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-08">8 أكتوبر 2026</time></div></footer>
+</body>
+</html>

@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>نظام التقسيط المتكامل: العقود والتحصيل والمنازعات | دليل Ezees ERP</title>
+<meta name="description" content="شرح برنامج التقسيط المستقل من Ezees ERP: العملاء والضامنون، عقود التقسيط وجدول الأقساط، بنود الفوائد وأتعاب القضايا، إيقاف القسط، التحصيل الفردي والجماعي، المحامون والمنازعات القضائية للمتعثرين، تقرير المتأخرات الشهري، ورسائل SMS.">
+<meta name="keywords" content="برنامج تقسيط, نظام التقسيط المتكامل, تحصيل الأقساط, متأخرات الأقساط, المحامين والقضايا, منازعات العملاء المتعثرين, ضامن, رسائل SMS للعملاء, Ezees ERP">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/installments-system.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="نظام التقسيط المتكامل في Ezees ERP">
+<meta property="og:description" content="برنامج تقسيط مستقل: عقود وأقساط، تحصيل، متابعة المتأخرات، محامون ومنازعات، وتقارير ورسائل.">
+<meta property="og:url" content="https://help.tebalink.com/installments-system.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"نظام التقسيط المتكامل في Ezees ERP","inLanguage":"ar","dateModified":"2026-10-10","proficiencyLevel":"Beginner","mainEntityOfPage":"https://help.tebalink.com/installments-system.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"HowTo","name":"تسجيل منازعة لعميل متعثر في نظام التقسيط","inLanguage":"ar","step":[
+{"@type":"HowToStep","position":1,"text":"سجّل المحامي من تبويب المنازعات ثم ادارة المحامين."},
+{"@type":"HowToStep","position":2,"text":"افتح ادارة المنازعات واضغط جديد."},
+{"@type":"HowToStep","position":3,"text":"اختر العميل والضامن والمحامي والفرع والحالة، وحدد المدعى عليه."},
+{"@type":"HowToStep","position":4,"text":"أدخل أرقام الجنحة والحصر وتواريخ الجلسات ثم اضغط F2."},
+{"@type":"HowToStep","position":5,"text":"أضف أتعاب القضية للعميل كبند اتعاب قضايا في جدول أقساطه."}]},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"ما الفرق بين نظام التقسيط المتكامل وشاشات التقسيط داخل Ezees ERP؟","acceptedAnswer":{"@type":"Answer","text":"النظام المتكامل برنامج مستقل يضيف المحامين والمنازعات، وتقرير المتأخرات الشهري، وإيقاف العقد، وبنود الفوائد وأتعاب القضايا داخل الجدول، والبحث بالضامن، مع نفس طريقة إنشاء العقود والتحصيل."}},
+{"@type":"Question","name":"ما معنى الحالة ملغى في قائمة الأقساط؟","acceptedAnswer":{"@type":"Answer","text":"هي العقود التي فُعّل فيها خيار ايقاف القسط، وتظهر بخلفية رمادية ولا يمكن تحصيلها أو تعديل أقساطها حتى يُلغى الإيقاف."}},
+{"@type":"Question","name":"كيف أحسب غرامة التأخير في تقرير المتأخرات الشهري؟","acceptedAnswer":{"@type":"Answer","text":"فعّل تطبيق %متأخرات واكتب النسبة، فيضيف التقرير عمودي نسبة متأخرات وإجمالي متأخرات محسوبين على صافي المتأخرات."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"الأنظمة المتخصصة","item":"https://help.tebalink.com/index.html#modules"},
+{"@type":"ListItem","position":3,"name":"نظام التقسيط المتكامل","item":"https://help.tebalink.com/installments-system.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#pos">نقاط البيع والمطاعم</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#modules">الأنظمة المتخصصة</a></li><li>نظام التقسيط المتكامل</li></ol>
+<article>
+<h1>نظام التقسيط المتكامل: العقود والتحصيل والمنازعات</h1>
+<p class="lead"><strong>نظام التقسيط المتكامل</strong> (Ezee Installments) برنامج مستقل لشركات ومعارض البيع بالتقسيط. يعمل على قاعدة بيانات Ezees ERP نفسها، ويجمع في واجهة واحدة: العملاء والضامنين، وعقود التقسيط وجداول أقساطها، والتحصيل، ومتابعة المتعثرين قضائيًا عن طريق <strong>المحامين والمنازعات</strong>، مع تقارير متخصصة ورسائل SMS.</p>
+<p class="lead">طريقة إنشاء العقد والتحصيل هي نفسها الموجودة في <a href="installments.html">شاشات التقسيط داخل Ezees ERP</a>، لذلك تشرح هذه الصفحة <strong>ما يضيفه النظام المتكامل</strong>، وتحيلك إلى الصفحات الأخرى في الأجزاء المشتركة.</p>
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#menu">تبويبات البرنامج</a></li>
+  <li><a href="#diff">ما الذي يضيفه مقارنة بـ Ezees ERP؟</a></li>
+  <li><a href="#before">قبل البدء</a></li>
+  <li><a href="#parties">العملاء والضامنون</a></li>
+  <li><a href="#contract">عقد التقسيط وجدول الأقساط</a></li>
+  <li><a href="#types">بنود الفوائد وأتعاب القضايا</a></li>
+  <li><a href="#hold">إيقاف القسط</a></li>
+  <li><a href="#collect">التحصيل وإلغاؤه</a></li>
+  <li><a href="#lists">قوائم المتابعة</a></li>
+  <li><a href="#legal">المحامون والمنازعات</a></li>
+  <li><a href="#reports">التقارير</a></li>
+  <li><a href="#sms">الرسائل والبريد</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+</ol></nav>
+
+<section id="menu">
+<h2>تبويبات البرنامج</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>التبويب</th><th>الأزرار</th></tr></thead>
+<tbody>
+<tr><td><span class="ui">البيانات الاساسية</span></td><td><span class="ui">ادارة العملاء</span>، <span class="ui">ادارة الضامنين</span>، <span class="ui">مجموعة العملاء</span>، <span class="ui">تصنيف العملاء</span>، <span class="ui">الدول</span>، <span class="ui">المحافظات</span>، <span class="ui">المدن</span>.</td></tr>
+<tr><td><span class="ui">انظمة التقسيط</span></td><td><span class="ui">ادارة نظام التقسيط</span>، <span class="ui">اقساط مستحقة التحصيل</span>، <span class="ui">اقساط تم تحصيلها</span>، <span class="ui">سندات قبض</span>.</td></tr>
+<tr><td><span class="ui">المنازعات</span></td><td><span class="ui">ادارة المحامين</span>، <span class="ui">ادارة المنازعات</span>، <span class="ui">تقرير المنازعات</span>.</td></tr>
+<tr><td><span class="ui">التقارير</span></td><td><span class="ui">حسابات العملاء - مفصل</span>، <span class="ui">انظمة التقسيط</span>، <span class="ui">تقرير الاقساط المستحقة</span>، <span class="ui">تقرير الاقساط المحصلة</span>، <span class="ui">تقرير متأخرات شهرى</span>.</td></tr>
+<tr><td><span class="ui">اعدادات عامة</span></td><td><span class="ui">اعدادات البرنامج</span>: الاتصال بالسيرفر ولغة البرنامج.</td></tr>
+<tr><td><span class="ui">مراسلات SMS</span></td><td><span class="ui">ارسال SMS</span>، <span class="ui">ارسال بريد</span>.</td></tr>
+</tbody></table></div>
+<p class="note">يظهر اسم المستخدم في شريط العنوان، وتظهر عبارة «نسخة تجريبية» إذا لم يكن البرنامج مفعّلًا.</p>
+</section>
+
+<section id="diff">
+<h2>ما الذي يضيفه مقارنة بـ Ezees ERP؟</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الميزة</th><th>في النظام المتكامل</th></tr></thead>
+<tbody>
+<tr><td>المحامون والمنازعات</td><td>سجل للمحامين، وتسجيل القضايا (جنحة، حكم غيابي، معارضة، استئناف، حكم نهائي) مع حالة كل قضية وتقرير خاص بها. <a href="#legal">التفاصيل</a>.</td></tr>
+<tr><td>بنود داخل جدول الأقساط</td><td>بجانب <span class="ui">قسط عادى</span> يمكن إضافة بنود <span class="ui">فوائد</span> و<span class="ui">اتعاب قضايا</span> تُحصَّل مثل الأقساط. <a href="#types">التفاصيل</a>.</td></tr>
+<tr><td>إيقاف العقد</td><td>خيار <span class="ui">ايقاف القسط</span> يجمّد كل العمليات على العقد. <a href="#hold">التفاصيل</a>.</td></tr>
+<tr><td>تقرير متأخرات شهرى</td><td>لكل عميل: المديونية، واستحقاق الشهر، والمتأخرات، مع إمكانية إضافة نسبة غرامة. <a href="#monthly">التفاصيل</a>.</td></tr>
+<tr><td>اختيار الضامن من قائمة</td><td>الضغط على خانة <span class="ui">الهوية</span> في العقد يفتح قائمة الضامنين للاختيار منها، بدلًا من كتابة الرقم.</td></tr>
+<tr><td>المتاح للسداد</td><td>يعرض رصيد العميل المتاح بجانب <span class="ui">الرصيد</span> في شاشة العقد.</td></tr>
+<tr><td>تقارير الأقساط</td><td>تظهر فيها أعمدة الضامن وهاتفه والمندوب، ويمكن التصفية بالمندوب والمحافظة والمدينة.</td></tr>
+<tr><td>موعد أول قسط شهري</td><td>يستحق أول قسط شهري <strong>في تاريخ البداية نفسه</strong>، وليس بعد شهر منه كما في Ezees ERP. انظر <a href="#contract">جدول الأقساط</a>.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="before">
+<h2>قبل البدء</h2>
+<ol>
+  <li><strong>الاتصال بقاعدة البيانات:</strong> من <span class="ui">اعدادات البرنامج</span> حدد <span class="ui">نوع السيرفر</span> و<span class="ui">عنوان السيرفر</span> و<span class="ui">اسم قاعدة البيانات</span>، واختر <span class="ui">مصادقة بمعلومات الويندوز</span> أو <span class="ui">مصادقة بهذه المعلومات</span> (اسم المستخدم وكلمة المرور). بعد الحفظ أعد تشغيل البرنامج.</li>
+  <li><strong>الحسابات:</strong> يجب أن يحتوي <a href="chart-of-accounts.html">الدليل المحاسبي</a> على حساب <strong>الإيرادات الأخرى</strong> وحساب <strong>مبيعات الفرع</strong>، وعلى خزينة أو بنك واحد على الأقل للتحصيل. ولفتح <span class="ui">سندات قبض</span> يجب تحديد حسابي <strong>حافظة الشيكات المدينة والدائنة</strong>.</li>
+  <li><strong>البيانات الأساسية:</strong> الدول والمحافظات والمدن، ثم العملاء والضامنون. انظر <a href="#parties">العملاء والضامنون</a>.</li>
+  <li><strong>الرسائل:</strong> يجب ضبط مزوّد الرسائل واسم المرسل وإعدادات البريد مسبقًا من <a href="settings.html">إعدادات Ezees ERP</a>، فهذا البرنامج يستخدمها ولا يعرض شاشة لتعديلها.</li>
+</ol>
+</section>
+
+<section id="parties">
+<h2>العملاء والضامنون</h2>
+<p>شاشات العملاء والضامنين ومجموعات العملاء وتصنيفاتهم هي نفسها الموجودة في Ezees ERP، ويُشرح استخدامها في <a href="customers.html">إدارة العملاء</a> و<a href="guarantors.html">إدارة الضامنين</a>.</p>
+<p>تحتوي بطاقة العميل هنا على بيانات إضافية مفيدة في التقسيط والمتابعة القضائية: <span class="ui">رقم الهوية</span>، و<span class="ui">الشهرة</span>، و<span class="ui">الزوج</span>، و<span class="ui">الوظيفة</span>، و<span class="ui">عنوان الاهل</span>.</p>
+<p class="tip">سجّل <span class="ui">رقم الهوية</span> لكل عميل وضامن، فهو يُستخدم في البحث في قوائم الأقساط والمنازعات، ويظهر في تقارير القضايا.</p>
+</section>
+
+<section id="contract">
+<h2>عقد التقسيط وجدول الأقساط</h2>
+<p>من <span class="ui">ادارة نظام التقسيط</span> اضغط <span class="ui">جديد</span> لفتح شاشة <span class="ui">انظمه التقسيط</span>. خطوات إنشاء العقد وحقوله وقيده المحاسبي مشروحة في <a href="installments.html#create">إنشاء خطة تقسيط</a> و<a href="installments.html#entry">القيد المحاسبي للخطة</a>. أهم ما يختلف هنا:</p>
+<ul>
+  <li><strong>اختيار العميل:</strong> اضغط على خانة <span class="ui">العميل</span> فتفتح قائمة بحث. تظهر فقط العملاء النشطون، وحسب إعدادات فصل الفروع والمندوبين. زر الإضافة بجانبها يفتح شاشة العملاء لإضافة عميل جديد، ويظهر في القائمة مباشرة.</li>
+  <li><span class="ui">الرصيد</span> و<span class="ui">المتاح للسداد</span>: رصيد العميل الحالي، والمبلغ المتاح في حسابه.</li>
+  <li><strong>توليد الجدول:</strong> فعّل <span class="ui">تاريخ بدايه القسط</span> ثم اضغط <span class="ui">اضافة تلقائى</span>. يعمل الزر فقط إذا كان الجدول فارغًا.
+    <ul>
+      <li><span class="ui">شهري</span>: أول قسط يستحق <strong>في تاريخ البداية</strong>، ثم قسط كل شهر.</li>
+      <li><span class="ui">اسبوعي</span>: أول قسط يستحق بعد 7 أيام من تاريخ البداية، ثم كل أسبوع.</li>
+      <li>تُقرَّب قيمة الأقساط إلى رقم صحيح، ويأخذ <strong>آخر قسط الفرق</strong>. مثال: مبلغ تقسيط 11,200 على 12 قسطًا ينتج 11 قسطًا بقيمة 933 وقسطًا أخيرًا بقيمة 937.</li>
+    </ul>
+  </li>
+  <li><strong>الإضافة اليدوية:</strong> حدد <span class="ui">ميعاد استحقاق القسط</span> و<span class="ui">قيمه القسط</span> ونوع البند (انظر <a href="#types">البنود</a>)، ثم اضغط <span class="ui">أضافه</span>. إذا وُجد بند من النوع نفسه في التاريخ نفسه يُعدَّل بدلًا من إضافة بند جديد. تُعاد ترقيم الأقساط ويُرتب الجدول بتاريخ الاستحقاق.</li>
+  <li><strong>الضامنون:</strong> اضغط على خانة <span class="ui">الهوية</span> في لوحة <span class="ui">الضامنين</span> واختر الضامن، فيُضاف إلى الجدول مباشرة. يمكنك أيضًا كتابة رقم الهوية ثم الضغط على <span class="ui">اضافة</span>. انظر <a href="guarantors.html#link">ربط الضامن بالعقد</a>.</li>
+  <li>اضغط <span class="ui">حفظ</span> (<kbd>F2</kbd>). يجب أن يتساوى <span class="ui">اجمالى الاقساط</span> (الأقساط العادية فقط) مع <span class="ui">مبلغ التقسيط</span>.</li>
+</ul>
+<div class="warn">
+  <ul>
+    <li><strong>استخدم مبالغ صحيحة بدون كسور</strong> في <span class="ui">اجمالي المبلغ</span> و<span class="ui">المقدم</span> و<span class="ui">فوائد اضافية</span>. إذا كان مبلغ التقسيط بكسور فلن يمكن حفظ العقد، لأن المقارنة تتم على مجموع مقرَّب.</li>
+    <li>لا تضف الضامن نفسه مرتين، فالبرنامج لا يمنع التكرار. وعند حذف ضامن بزر <span class="ui">حذف</span> <strong>تأكد أن الضامن المحذوف هو المطلوب</strong> قبل الحفظ، فقد يُحذف أول ضامن في الجدول.</li>
+    <li>عقود الفترة المالية السابقة: عند تعديلها يظهر تنبيه بأن القيد الرئيسي لن يُعاد إنشاؤه، ولا يمكن حذفها.</li>
+  </ul>
+</div>
+<p><span class="ui">طباعة</span> (<kbd>F4</kbd>) تعرض كشف العقد بأقساطه المدفوعة والمتبقية. وللاختصارات: <kbd>F1</kbd> جديد، و<kbd>F6</kbd> حذف العقد.</p>
+</section>
+
+<section id="types">
+<h2>بنود الفوائد وأتعاب القضايا</h2>
+<p>عند الإضافة اليدوية تختار نوع البند من القائمة، وتكتب ملاحظة إن أردت:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>النوع</th><th>الاستخدام</th><th>الأثر</th></tr></thead>
+<tbody>
+<tr><td><span class="ui">قسط عادى</span></td><td>أقساط ثمن البضاعة.</td><td>يدخل في <span class="ui">اجمالى الاقساط</span>. القيد يكون عند التحصيل فقط.</td></tr>
+<tr><td><span class="ui">فوائد</span></td><td>غرامة تأخير أو فائدة إضافية على عميل متأخر.</td><td>يظهر بخلفية رمادية، ويُجمع في خانة <span class="ui">فوائد</span>. عند الحفظ يُنشأ قيد: من حـ/ العميل، إلى حـ/ الإيرادات الأخرى.</td></tr>
+<tr><td><span class="ui">اتعاب قضايا</span></td><td>مصروفات وأتعاب <a href="#legal">المنازعة</a> المحمَّلة على العميل.</td><td>يظهر بخلفية زرقاء فاتحة، ويُجمع في خانة <span class="ui">م . منازعات</span>. له القيد نفسه.</td></tr>
+</tbody></table></div>
+<p>تُحصَّل هذه البنود مثل أي قسط، وتظهر في القوائم بعمود <span class="ui">نوع القسط</span>، ويُضاف مجموعها إلى <span class="ui">مبلغ التقسيط</span> الكلي للعقد في القوائم والتقارير.</p>
+<p class="note">بنود الفوائد والأتعاب لا تؤثر على شرط تساوي الأقساط مع مبلغ التقسيط، لذلك يمكنك إضافتها في أي وقت بعد إنشاء العقد.</p>
+</section>
+
+<section id="hold">
+<h2>إيقاف القسط</h2>
+<p>فعّل <span class="ui">ايقاف القسط</span> في شاشة العقد ثم احفظ، لتجميد عقد متعثر أو محوَّل للقضاء. يحتاج تغيير هذا الخيار إلى صلاحية خاصة.</p>
+<ul>
+  <li>عند فتح عقد موقوف تظهر رسالة <span class="msg">هذا الحساب موقوف التعامل</span> عند محاولة التحصيل، أو إلغاء التحصيل، أو إضافة قسط، أو حذفه، أو إضافة ضامن.</li>
+  <li>يظهر العقد في القوائم بخلفية رمادية، وتحت الحالة <span class="ui">ملغى</span>، ولا يظهر في <span class="ui">اقساط مستحقة التحصيل</span>.</li>
+  <li>لإعادة تفعيل العقد: ألغِ تحديد الخيار واحفظ، ثم أغلق الشاشة وافتح العقد من جديد.</li>
+</ul>
+</section>
+
+<section id="collect">
+<h2>التحصيل وإلغاؤه</h2>
+<p>التحصيل من داخل العقد، والتحصيل الجماعي، وإلغاء التحصيل، مشروحة في <a href="installments.html#collect">تحصيل قسط</a>. ما يجب معرفته هنا:</p>
+<ul>
+  <li>تظهر في قائمة الخزائن <strong>حسابات الخزائن والبنوك</strong> فقط.</li>
+  <li>من داخل العقد: تاريخ التحصيل هو التاريخ الظاهر في <span class="ui">ميعاد استحقاق القسط</span>، فغيّره إلى تاريخ الدفع الفعلي قبل <span class="ui">تسديد</span>.</li>
+  <li>من <span class="ui">اقساط مستحقة التحصيل</span>: تاريخ التحصيل هو تاريخ اليوم.</li>
+  <li>بعد كل قسط يسألك البرنامج عن طباعة الإيصال. عند الموافقة <strong>يُطبع الإيصال مباشرة على الطابعة الرئيسية</strong> بدون معاينة.</li>
+  <li>يتحدث <span class="ui">الرصيد</span> و<span class="ui">المتاح للسداد</span> بعد التحصيل أو الإلغاء.</li>
+</ul>
+<div class="warn">
+  <ul>
+    <li><strong>حدد القسط واختر الخزينة أولًا</strong>، ثم اضغط <span class="ui">تسديد</span>. الضغط بدون تحديد قد يسبب رسالة خطأ.</li>
+    <li>لا تخلط قسطًا مسددًا مع أقساط غير مسددة في التحديد نفسه، لأن العملية تتوقف عند أول قسط مسدد.</li>
+  </ul>
+</div>
+<p>لتسجيل المقدم أو أي دفعة غير مرتبطة بقسط استخدم <span class="ui">سندات قبض</span>، وطريقة استخدامها في <a href="vouchers.html">سند القبض وسند الصرف</a>.</p>
+</section>
+
+<section id="lists">
+<h2>قوائم المتابعة</h2>
+<h3>ادارة نظام التقسيط</h3>
+<ul>
+  <li><strong>الحالة:</strong> <span class="ui">الكل</span>، أو <span class="ui">نشط</span> (عليه أقساط غير مسددة)، أو <span class="ui">منتهية</span> (مسددة بالكامل، بخلفية خضراء)، أو <span class="ui">ملغى</span> (موقوف، بخلفية رمادية).</li>
+  <li><strong>البحث:</strong> بالاسم، أو الهاتف، أو الكود، أو المحافظة، أو المدينة، أو الهوية، أو <span class="ui">الضامن</span>. البحث يلغي تصفية الحالة، فاختر الحالة من جديد بعد مسح نص البحث.</li>
+  <li><strong>التاريخ:</strong> التصفية بتاريخ <strong>تسجيل العقد</strong>، ويبدأ الافتراضي من أول السنة الحالية حتى نهاية الشهر الحالي.</li>
+  <li>أعمدة <span class="ui">الضامن</span> و<span class="ui">القسط القادم يوم</span> (الرقم السالب يعني قسطًا متأخرًا)، وفي الأسفل الإجمالي وعدد الأقساط المدفوعة والمتبقية.</li>
+  <li>نقر مزدوج على العقد لفتحه. <span class="ui">طباعة</span> تطبع القائمة كما تظهر.</li>
+</ul>
+<h3>اقساط مستحقة التحصيل / اقساط تم تحصيلها</h3>
+<ul>
+  <li>كل صف قسط واحد، مع <span class="ui">نوع القسط</span> (عادى، فوائد، قضايا). التاريخ هنا تاريخ <strong>الاستحقاق</strong>.</li>
+  <li>القائمة المستحقة لا تعرض العقود الموقوفة، وفيها زر <span class="ui">تحصيل</span> للتحصيل الجماعي.</li>
+  <li>البحث يحتاج اختيار نوع بحث غير <span class="ui">الكل</span>.</li>
+</ul>
+<div class="note">
+  <ul>
+    <li>في القائمتين لا يعمل البحث بـ<span class="ui">الكود</span>، ويظهر عمود <span class="ui">اجمالى المدفوع</span> فارغًا. استخدم البحث بالاسم أو الهوية، وارجع إلى العقد لمعرفة المدفوع.</li>
+    <li>الحذف غير متاح من هذه القوائم. لحذف قسط افتحه من العقد.</li>
+  </ul>
+</div>
+</section>
+
+<section id="legal">
+<h2>المحامون والمنازعات</h2>
+<p>هذا الجزء خاص بالنظام المتكامل، ويساعدك على متابعة الإجراءات القانونية ضد العملاء أو الضامنين المتعثرين.</p>
+
+<h3>ادارة المحامين</h3>
+<ol class="steps">
+  <li>من <span class="ui">ادارة المحامين</span> اضغط <span class="ui">جديد</span>، فتفتح بطاقة <span class="ui">المحامين</span>.</li>
+  <li>اكتب <span class="ui">الاسم</span>، واختر <span class="ui">الفرع</span> و<span class="ui">الدولة</span> و<span class="ui">المحافظة</span> و<span class="ui">المدينة</span> (كلها إلزامية).</li>
+  <li>أكمل <span class="ui">الشارع</span> و<span class="ui">رقم المبنى</span> والهاتف والموبايل والبريد والملاحظات، ثم اضغط <kbd>F2</kbd>.</li>
+</ol>
+<p class="tip">قائمة المحامين تفتح فارغة. اضغط <span class="ui">تحديث</span> لعرض المحامين، واختر نوع البحث قبل الكتابة.</p>
+
+<h3>تسجيل منازعة</h3>
+<ol class="steps">
+  <li>من <span class="ui">ادارة المنازعات</span> اضغط <span class="ui">جديد</span>، فتفتح شاشة <span class="ui">تسجيل منازعات</span>.</li>
+  <li>اختر <span class="ui">العميل</span> و<span class="ui">الضامن</span> و<span class="ui">المحامى</span> و<span class="ui">الفرع</span>، وحدد <span class="ui">التاريخ</span>.</li>
+  <li>فعّل <span class="ui">المدعى عليه</span> إذا كانت القضية ضد <strong>الضامن</strong>. بدونه تُعتبر القضية ضد العميل، ويظهر اسمه وعنوانه وهويته كـ«المتهم» في القوائم والتقارير.</li>
+  <li>اكتب <span class="ui">المجنى عليه</span> (الشركة أو الشخص الشاكي) و<span class="ui">المحكمة</span> و<span class="ui">الاجراء</span>.</li>
+  <li>أدخل بيانات مراحل القضية التي وصلت إليها، ثم اختر <span class="ui">الحالة</span> واضغط <kbd>F2</kbd>.</li>
+</ol>
+<div class="table-wrap"><table>
+<thead><tr><th>المرحلة</th><th>الحقول</th></tr></thead>
+<tbody>
+<tr><td>الجنحة</td><td><span class="ui">رقم الجنحة</span>، <span class="ui">لسنة</span>، <span class="ui">تاريخ جلسة</span>.</td></tr>
+<tr><td>الحكم الغيابي</td><td><span class="ui">الحكم الغيابى</span>، <span class="ui">رقم الحصر الغيابى</span>.</td></tr>
+<tr><td>المعارضة</td><td><span class="ui">تاريخ جلسة المعارضة</span>، <span class="ui">رقم حصر المعارضة</span>.</td></tr>
+<tr><td>الاستئناف</td><td><span class="ui">رقم الاستئناف</span>، <span class="ui">حصر الاستئاف</span>، <span class="ui">تاريخ جلسة الاستئاف</span>، <span class="ui">تاريخ جلسة معارضة الاستئاف</span>.</td></tr>
+<tr><td>الحكم النهائي</td><td><span class="ui">الحكم</span>، <span class="ui">رقم حصر الحكم النهائى</span>.</td></tr>
+</tbody></table></div>
+<p>حقول التواريخ اختيارية، ولا تُحفظ إلا إذا فعّلت خانة الاختيار بجانبها.</p>
+<p><strong>حالات القضية:</strong> تقديم شكوى، عرض النيابة، جلسة محكمة، حكم غيابى، معارضة، استئناف، حكم نهائى، وقف تنفيذ العقوبة، تم التصالح، منازعة مدنية. حدّث الحالة كلما تقدمت القضية.</p>
+<div class="warn">
+  <ul>
+    <li>سجّل <strong>محاميًا وضامنًا واحدًا على الأقل</strong> قبل فتح شاشة المنازعات، وإلا قد لا تظهر قائمة الحالات.</li>
+    <li>اختر العميل دائمًا، فالشاشة لا تمنع الحفظ بدونه.</li>
+    <li>لفتح منازعة أخرى من القائمة، أغلق شاشة المنازعة المفتوحة أولًا.</li>
+  </ul>
+</div>
+<p class="tip">لتحميل مصروفات القضية على العميل، أضفها في عقده كبند <a href="#types">اتعاب قضايا</a>. ولتجميد العقد أثناء نظر القضية استخدم <a href="#hold">إيقاف القسط</a>.</p>
+
+<h3>قائمة المنازعات</h3>
+<ul>
+  <li>تعرض: المتهم، والهوية، والمجنى عليه، والمحامي، والعنوان، والهواتف، وأرقام وتواريخ كل مرحلة، والمحكمة، والإجراء، والحالة، والضامن، والعميل.</li>
+  <li><strong>البحث:</strong> بالاسم، أو الهاتف، أو المحامي، أو الهوية، أو المجنى عليه، أو الضامن.</li>
+  <li><span class="ui">حذف</span> يحذف المنازعة المحددة بعد التأكيد. <span class="ui">طباعة</span> تطبع «تقرير منازعات» بالقائمة الظاهرة.</li>
+</ul>
+<p class="warn">في البحث، خياري <span class="ui">المجنى عليه</span> و<span class="ui">الضامن</span> معكوسان: للبحث باسم الضامن اختر «المجنى عليه»، وللبحث بالمجنى عليه اختر «الضامن».</p>
+</section>
+
+<section id="reports">
+<h2>التقارير</h2>
+<p>في كل التقارير: اختر العميل بالضغط على خانة <span class="ui">الاسم</span> أو <kbd>F9</kbd>، ثم حدد الفترة (<span class="ui">تاريخ</span> أو <span class="ui">شهر</span> أو <span class="ui">سنة</span> أو <span class="ui">من</span>/<span class="ui">الى</span>)، واضغط عرض ثم طباعة.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>التقرير</th><th>المحتوى</th><th>التصفية</th></tr></thead>
+<tbody>
+<tr><td><span class="ui">حسابات العملاء - مفصل</span></td><td>كشف حساب العميل بالحركات والأرصدة. انظر <a href="reports-customers.html#accounts">تقارير حسابات العملاء</a>.</td><td>العميل والفترة.</td></tr>
+<tr><td><span class="ui">انظمة التقسيط</span></td><td>العقود مع المقدم والقيمة والإضافات والتأخير والمنازعات، وإجماليها أسفل الشاشة.</td><td>تاريخ <strong>بداية القسط</strong>، والحالة (الكل/نشط/منتهى/ملغى)، والفرع، والمحافظة، والمدينة، والمندوب.</td></tr>
+<tr><td><span class="ui">تقرير الاقساط المستحقة</span> / <span class="ui">تقرير الاقساط المحصلة</span></td><td>قسط في كل صف، مع نوعه والضامن وهاتفه والمندوب، و<span class="ui">اجمالى القيمة</span>.</td><td>تاريخ <strong>الاستحقاق</strong> (في التقريرين)، والفرع، والمحافظة، والمدينة، والمندوب.</td></tr>
+<tr><td><span class="ui">تقرير متأخرات شهرى</span></td><td>انظر <a href="#monthly">أدناه</a>.</td><td>الشهر، والفرع، والمندوب، والعميل.</td></tr>
+<tr><td><span class="ui">تقرير المنازعات</span></td><td>المنازعات بكل بياناتها.</td><td>تاريخ تسجيل المنازعة، والحالة، والمحامي، والضامن، والفرع، والمحافظة، والمدينة.</td></tr>
+</tbody></table></div>
+<p class="note">في <span class="ui">انظمة التقسيط</span>، النقر المزدوج على العقد يفتحه. وفي تقرير الأقساط المحصلة يظهر عمود <span class="ui">قيد</span> فارغًا، فارجع إلى العقد لمعرفة القيد.</p>
+
+<h3 id="monthly">تقرير متأخرات شهرى</h3>
+<p>يعرض <strong>العملاء الذين عليهم مديونية</strong> فقط، ولكل عميل:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>العمود</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td>المديونية</td><td>رصيد العميل في الفترة المالية الحالية.</td></tr>
+<tr><td>استحقاق الشهر</td><td>الأقساط غير المسددة التي تستحق خلال الشهر المحدد.</td></tr>
+<tr><td>متأخرات</td><td>الأقساط العادية غير المسددة التي استحقت قبل بداية الشهر.</td></tr>
+<tr><td>فوائد / م قضايا</td><td>بنود الفوائد وأتعاب القضايا غير المسددة قبل بداية الشهر.</td></tr>
+<tr><td>نسبة متاخرات / اجمالى متأخرات</td><td>تظهر عند تفعيل <span class="ui">تطبيق %متأخرات</span> وكتابة النسبة (0–100): النسبة × المتأخرات، ثم المتأخرات + النسبة.</td></tr>
+<tr><td>الباقى</td><td>المديونية − استحقاق الشهر − المتأخرات.</td></tr>
+</tbody></table></div>
+<p class="tip">اترك <span class="ui">شهر</span> مفعّلًا دائمًا. إذا ألغيته يظهر «استحقاق الشهر» صفرًا لكل العملاء.</p>
+</section>
+
+<section id="sms">
+<h2>الرسائل والبريد</h2>
+<h3>من قوائم الأقساط</h3>
+<p>حدد العقد أو القسط واضغط <span class="ui">SMS</span>، فتظهر لوحة <span class="ui">ارسال SMS</span> برقم موبايل العميل. في قائمة الأقساط المستحقة يُكتب النص تلقائيًا بقيمة القسط وتاريخ استحقاقه. يمكنك اختيار نص جاهز من <span class="ui">عنوان الرسالة</span>، أو تعديل <span class="ui">محتوى الرسالة</span>، ثم الضغط على زر الإرسال.</p>
+<h3>ارسال SMS</h3>
+<ul>
+  <li>اكتب أرقام الموبايل مفصولة بفاصلة (مثل <code>2010xxxxxxx,2012xxxxxxx</code>)، أو انقر نقرًا مزدوجًا على اسم في تبويب <span class="ui">الموظفين</span> لإضافة رقمه.</li>
+  <li>اختر <span class="ui">لغه الرساله</span>. يعرض العداد عدد الأحرف وعدد الرسائل (70 حرفًا للرسالة العربية و160 للإنجليزية تقريبًا).</li>
+  <li>اضغط <span class="ui">ارسال</span>. يظهر <span class="ui">اسم الراسل</span> من الإعدادات.</li>
+</ul>
+<h3>ارسال بريد</h3>
+<p>اكتب <span class="ui">البريد الالكتروني</span> (أو انقر نقرًا مزدوجًا على موظف لإضافة بريده، والعناوين مفصولة بـ<code>;</code>)، ثم <span class="ui">عنوان الرساله</span> و<span class="ui">نص الرساله</span>، واختر <span class="ui">نوع الرساله</span>، واضغط <span class="ui">ارسال</span>.</p>
+<p class="note">شاشتا الإرسال تعرضان الموظفين فقط. لمراسلة العملاء استخدم زر <span class="ui">SMS</span> في قوائم الأقساط، أو اكتب الأرقام يدويًا.</p>
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<p>رسائل شاشة العقد المشتركة مع Ezees ERP موجودة في <a href="installments.html#messages">رسائل التقسيط</a>. الرسائل الخاصة بالنظام المتكامل:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td><span class="msg">هذا الحساب موقوف التعامل</span></td><td>العقد موقوف. ألغِ <span class="ui">ايقاف القسط</span> أولًا.</td></tr>
+<tr><td><span class="msg">هذا السجل من فترة محاسبية سابقة لن يتم اضافة قيد محاسبى رئيسى...</span></td><td>العقد مُرحَّل من فترة سابقة. يمكنك المتابعة، لكن قيد العقد لن يُعاد إنشاؤه.</td></tr>
+<tr><td><span class="msg">عفوا لابد من تحديد حساب حافظة شيكات مدينة فى دليل الحسابات أولا</span></td><td>عند فتح <span class="ui">سندات قبض</span>: حدد حسابي حافظة الشيكات في الدليل المحاسبي.</td></tr>
+<tr><td><span class="msg">عفوا . لايوجد حساب للايرادات الاخرى داخل الدليل المحاسبى</span></td><td>مطلوب لحفظ العقد وبنود الفوائد والأتعاب.</td></tr>
+<tr><td><span class="msg">من فضلك ادخل الاسم</span></td><td>في بطاقة المحامي: اكتب الاسم.</td></tr>
+<tr><td><span class="msg">من فضلك قم باختيار اسم المحافظه أولا</span> / <span class="msg">...المدينه أولا</span></td><td>في بطاقة المحامي: المحافظة والمدينة إلزاميتان.</td></tr>
+<tr><td><span class="msg">هذا السجل موجود مسبقا</span></td><td>اسم المحامي أو كوده مسجل من قبل.</td></tr>
+<tr><td><span class="msg">من فضلك تأكد من أدخالك للبيانات بصوره صحيحه</span></td><td>في <span class="ui">ارسال SMS</span>: اكتب الرقم ونص الرسالة.</td></tr>
+<tr><td><span class="msg">من فضلك اعد تشغيل البرنامج</span></td><td>بعد حفظ <span class="ui">اعدادات البرنامج</span>: أغلق البرنامج وافتحه.</td></tr>
+</tbody></table></div>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="installments.html">التقسيط في Ezees ERP</a> · <a href="guarantors.html">الضامنين</a> · <a href="customers.html">العملاء</a> · <a href="vouchers.html">سند القبض</a> · <a href="reports-customers.html">تقارير العملاء</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-10">10 أكتوبر 2026</time></div></footer>
+</body>
+</html>

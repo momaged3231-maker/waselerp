@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>إدارة المطاعم: الصالات والطاولات وشاشة المطبخ | دليل Ezees ERP</title>
+<meta name="description" content="شرح نظام المطاعم في Ezees SmartPOS: إعداد القاعات والموائد وصلاحيات المستخدمين، عدد الأشخاص ورسوم الخدمة، شاشة المطبخ، الأصناف الإضافية، ملاحظات الأصناف، فصل المائدة، وتحويل النظام بين نقاط البيع والمطاعم.">
+<meta name="keywords" content="نظام المطاعم, إدارة الطاولات, قاعات المطعم, شاشة المطبخ, أصناف إضافية, ملاحظات الصنف, فصل مائدة, تقسيم الحساب, رسوم الخدمة, Ezees SmartPOS, Ezees ERP">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/pos-restaurant.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="إدارة المطاعم في Ezees ERP">
+<meta property="og:description" content="جهّز القاعات والموائد، وتابع الطلبات في شاشة المطبخ، وأضف الإضافات والملاحظات، وافصل حساب المائدة.">
+<meta property="og:url" content="https://help.tebalink.com/pos-restaurant.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"إدارة المطاعم في Ezees ERP: الصالات والطاولات وشاشة المطبخ","inLanguage":"ar","dateModified":"2026-10-10","proficiencyLevel":"Beginner","mainEntityOfPage":"https://help.tebalink.com/pos-restaurant.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"HowTo","name":"إعداد قاعة مطعم وموائدها","inLanguage":"ar","step":[
+{"@type":"HowToStep","position":1,"text":"افتح شاشة اعداد القاعات واضغط جديد."},
+{"@type":"HowToStep","position":2,"text":"اكتب اسم الصالة وكودها وعدد الموائد واختر الفرع."},
+{"@type":"HowToStep","position":3,"text":"علّم المستخدمين المسموح لهم برؤية هذه القاعة."},
+{"@type":"HowToStep","position":4,"text":"اضغط حفظ، فتظهر القاعة وموائدها في قائمة الطاولات بشاشة الكاشير."}]},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"لماذا لا تظهر القاعة في شاشة الكاشير؟","acceptedAnswer":{"@type":"Answer","text":"تظهر القاعة فقط للمستخدمين المعلَّم عليهم في شاشة اعداد القاعات، وفي الفرع الذي اخترته للقاعة."}},
+{"@type":"Question","name":"كيف تُرقَّم الموائد؟","acceptedAnswer":{"@type":"Answer","text":"رقم المائدة هو كود الصالة متبوعًا بالرقم التسلسلي، فالصالة ذات الكود A وعدد موائد 10 تُنشئ الموائد A1 حتى A10."}},
+{"@type":"Question","name":"لماذا يرفض البرنامج اختيار أي صنف إضافي؟","acceptedAnswer":{"@type":"Answer","text":"مجموع كميات الإضافات المختارة أكبر من أقصى كمية المحددة للصنف في بطاقته. إذا كانت أقصى كمية صفرًا فلن تُقبل أي إضافة."}},
+{"@type":"Question","name":"هل تغيير نوع النظام يؤثر على كل الأجهزة؟","acceptedAnswer":{"@type":"Answer","text":"لا، يُحفظ الاختيار على الجهاز الحالي فقط ويحتاج إلى إعادة تشغيل البرنامج."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"نقاط البيع والمطاعم","item":"https://help.tebalink.com/index.html#pos"},
+{"@type":"ListItem","position":3,"name":"إدارة المطاعم","item":"https://help.tebalink.com/pos-restaurant.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#pos">نقاط البيع والمطاعم</a></li><li>إدارة المطاعم</li></ol>
+<article>
+<h1>إدارة المطاعم: الصالات والطاولات وشاشة المطبخ</h1>
+<p class="lead">عند تشغيل Ezees SmartPOS بنظام <span class="ui">نظام ادارة المطاعم</span> تظهر في شاشة <a href="pos-cashier.html">الكاشير</a> قائمة <span class="ui">الطاولات</span> وأدوات المطعم. تشرح هذه الصفحة إعداد القاعات والموائد، وإدخال عدد الأشخاص، وشاشة المطبخ، والأصناف الإضافية، وملاحظات الأصناف، وفصل المائدة، وتحويل نوع النظام.</p>
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#mode">تحويل النظام (نقاط بيع / مطاعم)</a></li>
+  <li><a href="#halls">إعداد القاعات والموائد</a></li>
+  <li><a href="#tables">الموائد في شاشة الكاشير</a></li>
+  <li><a href="#persons">عدد الأشخاص ورسوم الخدمة</a></li>
+  <li><a href="#kitchen">شاشة المطبخ</a></li>
+  <li><a href="#linked">الأصناف الإضافية</a></li>
+  <li><a href="#notes">ملاحظات الأصناف</a></li>
+  <li><a href="#split">فصل مائدة (تقسيم الحساب)</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+</ol></nav>
+
+<section id="mode">
+<h2>تحويل النظام (نقاط بيع / مطاعم)</h2>
+<p>يعمل البرنامج بأحد نظامين على كل جهاز: <span class="ui">نظام ادارة نقاط البيع</span> للمحلات، أو <span class="ui">نظام ادارة المطاعم</span> الذي يضيف الموائد والمطبخ والإضافات.</p>
+<ol class="steps">
+  <li>من القائمة الرئيسية اختر <span class="ui">تحويل النظام</span>. تُغلق شاشات الكاشير المفتوحة تلقائيًا، لذا احفظ أي طلب قبلها.</li>
+  <li>في نافذة <span class="ui">يرجى اختيار نظام العمل :</span> اختر النظام المطلوب.</li>
+  <li>اضغط <span class="ui">موافق</span>. تظهر رسالة تطلب إعادة التشغيل، ويُعاد تشغيل البرنامج بالنظام الجديد.</li>
+</ol>
+<div class="note">الاختيار خاص <strong>بهذا الجهاز فقط</strong>، ويحتاج تشغيل البرنامج بصلاحيات مدير ويندوز (Run as administrator). بدونها تظهر رسالة <span class="msg">حدث خطأ اثناء حفظ الاعدادات</span>.</div>
+<div class="warn">يُعاد تشغيل البرنامج حتى لو ضغطت <span class="ui">Cancel</span> في رسالة إعادة التشغيل. وزر <span class="ui">خروج</span> في هذه النافذة <strong>يغلق البرنامج بالكامل</strong> ولا يغلق النافذة فقط.</div>
+</section>
+
+<section id="halls">
+<h2>إعداد القاعات والموائد</h2>
+<p>من القائمة الرئيسية افتح <span class="ui">اعداد القاعات</span> (شاشة <span class="ui">ادارة قاعات المطعم</span>). كل قاعة تحدد مجموعة موائد تُرقَّم تلقائيًا.</p>
+<ol class="steps">
+  <li>اضغط <span class="ui">جديد</span>.</li>
+  <li>اكتب اسم <span class="ui">الصالة</span>، و<span class="ui">كود</span> قصيرًا مثل <code>A</code>، و<span class="ui">عدد مائدة</span>، واختر <span class="ui">الفرع</span>.</li>
+  <li>في قائمة المستخدمين على جانب الشاشة علّم كل مستخدم مسموح له بالعمل على هذه القاعة. يتلوّن السطر بالأخضر عند التعليم.</li>
+  <li>اضغط <span class="ui">حفظ</span>. تظهر القاعة في الجدول.</li>
+</ol>
+<div class="table-wrap"><table>
+<thead><tr><th>الحقل</th><th>الوصف</th></tr></thead>
+<tbody>
+<tr><td>الصالة</td><td>اسم القاعة كما يظهر على زرها في شاشة الكاشير (مثل: الدور الأرضي، التراس). إلزامي ولا يتكرر في نفس الفرع.</td></tr>
+<tr><td>كود</td><td>بادئة أرقام الموائد. إلزامي ولا يتكرر في نفس الفرع.</td></tr>
+<tr><td>عدد مائدة</td><td>عدد موائد القاعة. الكود <code>A</code> مع 10 موائد يُنشئ الموائد <code>A1</code> حتى <code>A10</code>.</td></tr>
+<tr><td>الفرع</td><td>الفرع الذي تظهر فيه القاعة.</td></tr>
+<tr><td>المستخدمون</td><td>من لم تعلّم عليه لن يرى هذه القاعة في قائمة الطاولات.</td></tr>
+</tbody></table></div>
+<p>للتعديل اختر القاعة من الجدول، وعدّل البيانات أو المستخدمين، ثم اضغط <span class="ui">حفظ</span>. للبحث اكتب بداية اسم الصالة في مربع البحث.</p>
+<p class="tip">اختر أكوادًا من حروف مختلفة لكل قاعة (A، B، C...). تجنّب كودًا ينتهي برقم مثل <code>A1</code>، لأن موائده ستتشابه مع موائد قاعة الكود <code>A</code> (مثلًا <code>A11</code>).</p>
+<div class="warn">لا تحذف قاعة أو تقلل عدد موائدها وعليها طلبات مفتوحة؛ البرنامج لا يتحقق من ذلك، وستختفي هذه الموائد من الشاشة بينما تبقى طلباتها مفتوحة. القاعة الأولى في النظام لا يمكن حذفها.</div>
+</section>
+
+<section id="tables">
+<h2>الموائد في شاشة الكاشير</h2>
+<p>في <a href="pos-cashier.html">شاشة الكاشير</a> افتح تبويب <span class="ui">الطاولات</span>، ثم اضغط زر القاعة لتظهر موائدها:</p>
+<ul>
+  <li><strong>مائدة بلون عادي:</strong> فارغة. اضغطها لبدء طلب صالة جديد عليها، فيُكتب رقمها في خانة <span class="ui">مائدة</span>.</li>
+  <li><strong>مائدة صفراء:</strong> عليها طلب مفتوح لم يُطبع بعد. اضغطها لفتح الطلب.</li>
+  <li><strong>مائدة حمراء:</strong> عليها طلب مفتوح طُبع.</li>
+</ul>
+<p>لنقل طلب كامل من مائدة إلى أخرى فارغة: اختر الطلب في القائمة الأولى، والمائدة الجديدة في القائمة الثانية، ثم اضغط <span class="ui">نقل</span>. تفاصيل شاشة الكاشير في <a href="pos-cashier.html">صفحتها</a>.</p>
+</section>
+
+<section id="persons">
+<h2>عدد الأشخاص ورسوم الخدمة</h2>
+<p>إذا كانت رسوم الخدمة في الإعدادات محسوبة <strong>بعدد الأشخاص</strong>، تظهر نافذة صغيرة فيها حقل <span class="ui">عدد اشخاص</span> بعد اختيار مائدة فارغة.</p>
+<ol class="steps">
+  <li>اكتب عدد الجالسين على المائدة.</li>
+  <li>اضغط <kbd>Enter</kbd> أو زر الحفظ.</li>
+</ol>
+<div class="table-wrap"><table>
+<thead><tr><th>طريقة رسوم الخدمة في الإعدادات</th><th>أثر عدد الأشخاص</th></tr></thead>
+<tbody>
+<tr><td>مبلغ لكل شخص</td><td>رسوم الخدمة = قيمة الرسوم × عدد الأشخاص.</td></tr>
+<tr><td>حد أدنى لكل شخص</td><td>الحد الأدنى = قيمة الرسوم × عدد الأشخاص. إذا قلّ إجمالي الطلب عنه أُضيف الفرق رسومًا.</td></tr>
+</tbody></table></div>
+<p class="note">إذا أغلقت النافذة دون إدخال رقم يُسجَّل العدد صفرًا، فلا تُحسب رسوم خدمة بالأشخاص. هذه الرسوم تُطبَّق على طلبات الصالة فقط، لا على التيك أواي والديلفري.</p>
+</section>
+
+<section id="kitchen">
+<h2>شاشة المطبخ</h2>
+<p>تُفتح <span class="ui">شاشة المطبخ</span> من زر المطبخ في شاشة الكاشير، ويُفضّل تشغيلها على شاشة مستقلة داخل المطبخ. تعرض بطاقة لكل طلب لم يُجهَّز بعد في الفرع الحالي:</p>
+<ul>
+  <li><strong>رقم الأوردر</strong> في أعلى البطاقة.</li>
+  <li>جدول بـ<span class="ui">الصنف</span> و<span class="ui">الكمية</span>.</li>
+  <li>نوع الطلب: <span class="ui">صالة - مائدة رقم ...</span>، أو <span class="ui">تيك اواى</span>، أو <span class="ui">ديلفرى</span>.</li>
+</ul>
+<ol class="steps">
+  <li>عند الانتهاء من تحضير الطلب اضغط <span class="ui">تم</span> في بطاقته.</li>
+  <li>أكّد بـ<span class="ui">Yes</span> على سؤال <span class="msg">هل تم تجهيز الاوردر؟</span>. تختفي البطاقة من الشاشة.</li>
+</ol>
+<ul>
+  <li><kbd>F5</kbd>: تحديث الشاشة فورًا.</li>
+  <li>إذا كان التحديث التلقائي لشاشة المطبخ مفعلًا في الإعدادات، تتحدث الشاشة كل 30 ثانية.</li>
+</ul>
+<p class="note">تعرض الشاشة طلبات آخر 24 ساعة تقريبًا فقط. زر <span class="ui">تم</span> يُنهي <strong>كل أصناف الطلب</strong> مرة واحدة، فلا تضغطه قبل تجهيز الطلب كاملًا.</p>
+</section>
+
+<section id="linked">
+<h2>الأصناف الإضافية</h2>
+<p>إذا ربطت بصنف (مثل وجبة أو بيتزا) أصنافًا إضافية في <a href="items.html">بطاقة الصنف</a>، تظهر نافذة <span class="ui">اصناف اضافية</span> تلقائيًا عند إضافته للطلب في نظام المطاعم.</p>
+<ol class="steps">
+  <li>تعرض النافذة الإضافات المتاحة: <span class="ui">الصنف</span> و<span class="ui">الكميه</span> و<span class="ui">الوحده</span> و<span class="ui">السعر</span> و<span class="ui">الأجمالي</span>، وفي الأعلى <span class="ui">اقصى كمية</span> مسموح بها.</li>
+  <li>علّم خانة <span class="ui">CHK</span> أمام كل إضافة يطلبها العميل.</li>
+  <li>اضغط زر الإضافة. تُضاف الإضافات للطلب تحت الصنف الأساسي ومسبوقة بعلامة <code>--</code>.</li>
+</ol>
+<ul>
+  <li>الإضافة التي سعرها صفر تُسجَّل هدية مجانية.</li>
+  <li>لتجاهل الإضافات أغلق النافذة دون اختيار، فيُضاف الصنف الأساسي وحده.</li>
+  <li>لا يمكن تعديل سطر الإضافة من شاشة الكاشير. لتغييرها احذف الصنف الأساسي وأضفه من جديد.</li>
+</ul>
+<div class="warn">إذا كان مجموع كميات الإضافات المختارة أكبر من <span class="ui">اقصى كمية</span> تظهر رسالة <span class="msg">عفوا الكمية المختار اكبر من الكمية المسموح به</span>. إذا كانت <span class="ui">اقصى كمية</span> صفرًا فلن تُقبل أي إضافة؛ حدّدها في بطاقة الصنف أولًا.</div>
+</section>
+
+<section id="notes">
+<h2>ملاحظات الأصناف</h2>
+<p>تكتب ملاحظة للمطبخ على أي صنف في الطلب، مثل «بدون بصل» أو «حار».</p>
+<ol class="steps">
+  <li>في جدول الطلب بشاشة الكاشير اضغط خانة الملاحظة (<span class="ui">Note</span>) في سطر الصنف. تفتح نافذة <span class="ui">ملاحظات اصناف</span>.</li>
+  <li>اضغط أزرار الملاحظات الجاهزة. كل زر تضغطه يُضاف للملاحظة مفصولًا بشرطة، مثل: <code>بدون بصل-حار</code>. يمكنك أيضًا الكتابة مباشرة في مربع الملاحظة.</li>
+  <li>اضغط <span class="ui">Ok</span>. تُكتب الملاحظة في سطر الصنف.</li>
+</ol>
+<h3>إدارة الملاحظات الجاهزة</h3>
+<ul>
+  <li><strong>إضافة:</strong> اضغط <span class="ui">جديد</span>، واكتب النص في <span class="ui">الملاحظة</span>، ثم <span class="ui">حفظ</span>. يظهر زر جديد بها.</li>
+  <li><strong>تعديل:</strong> اضغط زر الملاحظة فيظهر نصها في <span class="ui">الملاحظة</span>، عدّله ثم <span class="ui">حفظ</span>.</li>
+  <li><strong>حذف:</strong> اضغط زر الملاحظة ثم <span class="ui">حذف</span> وأكّد.</li>
+</ul>
+<div class="warn">الضغط على زر ملاحظة جاهزة يجهّزها للتعديل أيضًا؛ فإذا ضغطت <span class="ui">حفظ</span> بعدها سيتغير نص تلك الملاحظة الجاهزة. وزر <span class="ui">جديد</span> يمسح الملاحظة التي جمعتها للصنف. لذا أنهِ ملاحظة الصنف بـ<span class="ui">Ok</span> أولًا، ثم أدِر الملاحظات الجاهزة في وقت آخر. استخدم دائمًا <span class="ui">Ok</span> لا زر الإغلاق، حتى يُحفظ ما كتبته يدويًا.</div>
+</section>
+
+<section id="split">
+<h2>فصل مائدة (تقسيم الحساب)</h2>
+<p>عندما يريد بعض الجالسين دفع حسابهم منفصلًا، انقل أصنافهم إلى طلب جديد على مائدة أخرى.</p>
+<ol class="steps">
+  <li>افتح طلب المائدة المحفوظ في شاشة الكاشير، ثم اضغط <span class="ui">Transfer</span>. تفتح نافذة <span class="ui">فصل مائدة</span> بأصناف الطلب.</li>
+  <li>علّم خانة <span class="ui">CHK</span> أمام الأصناف المطلوب فصلها. الإضافات (الأسطر الرمادية) تتبع صنفها الأساسي تلقائيًا ولا تُعلَّم وحدها.</li>
+  <li>اختر مائدة فارغة من القائمة.</li>
+  <li>اضغط <span class="ui">نقل</span>. يُحفظ الطلب الأصلي بالأصناف المتبقية، ويُنشأ طلب صالة جديد على المائدة المختارة بالأصناف المفصولة ويُحفظ.</li>
+</ol>
+<p class="tip">يعمل الزر فقط على طلب محفوظ مفتوح للتعديل. للخروج دون فصل اضغط <span class="ui">Close</span>.</p>
+<div class="warn">لا تعلّم <strong>كل</strong> أصناف الطلب؛ ففي هذه الحالة يبقى الطلب الأصلي كما هو ويُنشأ طلب جديد بنفس الأصناف، فتتكرر الأصناف. لنقل الطلب بالكامل استخدم <a href="#tables">نقل المائدة</a> بدلًا من الفصل.</div>
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td><span class="msg">عفوا هذا السجل قد تم ادخال بياناته من قبل</span></td><td>توجد قاعة بنفس الاسم في نفس الفرع.</td></tr>
+<tr><td><span class="msg">عفوا هذا الكود مستخدم مسبقا</span></td><td>كود القاعة مستخدم لقاعة أخرى في نفس الفرع.</td></tr>
+<tr><td><span class="msg">الاسم مطلوب</span> / <span class="msg">كود مطلوب</span> / <span class="msg">اختر الفرع</span></td><td>أكمل بيانات القاعة الإلزامية.</td></tr>
+<tr><td><span class="msg">لا يمكن اجراء تعديل لهذا السجل لاستخدامه من قبل اخر</span></td><td>محاولة حذف القاعة الأولى في النظام، وهي محمية.</td></tr>
+<tr><td><span class="msg">هل تم تجهيز الاوردر؟</span></td><td>تأكيد إنهاء الطلب في شاشة المطبخ.</td></tr>
+<tr><td><span class="msg">عفوا الكمية المختار اكبر من الكمية المسموح به</span></td><td>الإضافات المختارة تتجاوز أقصى كمية للصنف.</td></tr>
+<tr><td><span class="msg">عفوا تأكد من صحه بياناتك</span></td><td>الكمية المكتوبة في نافذة الإضافات ليست رقمًا صحيحًا.</td></tr>
+<tr><td><span class="msg">لضمان تطبيق الاعداداث بنجاح يجب اعادة تشغيل البرنامج...</span></td><td>بعد تحويل النظام؛ سيُعاد تشغيل البرنامج.</td></tr>
+<tr><td><span class="msg">حدث خطأ اثناء حفظ الاعدادات</span></td><td>شغّل البرنامج كمسؤول (Run as administrator) ثم أعد تحويل النظام.</td></tr>
+</tbody></table></div>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="pos-cashier.html">شاشة الكاشير</a> · <a href="pos-shifts.html">الورديات</a> · <a href="items.html">الأصناف</a> · <a href="reports-stores.html">تقارير المخازن</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-10">10 أكتوبر 2026</time></div></footer>
+</body>
+</html>

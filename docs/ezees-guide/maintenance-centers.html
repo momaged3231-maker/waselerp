@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>إدارة مراكز الصيانة: استلام الأجهزة والفحص والتسليم | دليل Ezees ERP</title>
+<meta name="description" content="شرح نظام مراكز الصيانة في Ezees ERP: استلام الجهاز وطباعة الإيصال، المنتجات والموديلات وتصنيفات الأعطال، شاشة الفحص وتسجيل قطع الغيار، السداد والتسليم، متابعة الفروع، تقارير الخدمات والقيود المحاسبية.">
+<meta name="keywords" content="مركز صيانة, إذن صيانة, استلام جهاز, فحص الأعطال, قطع غيار, تسليم وسداد, تقرير الخدمات, صيانة موبايل, Ezees ERP">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/maintenance-centers.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="إدارة مراكز الصيانة في Ezees ERP">
+<meta property="og:description" content="استلم أجهزة العملاء، وتابع الفحص والإصلاح وقطع الغيار، ثم حصّل المبلغ وسلّم الجهاز.">
+<meta property="og:url" content="https://help.tebalink.com/maintenance-centers.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"إدارة مراكز الصيانة في Ezees ERP","inLanguage":"ar","dateModified":"2026-10-10","proficiencyLevel":"Beginner","mainEntityOfPage":"https://help.tebalink.com/maintenance-centers.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"HowTo","name":"استلام جهاز للصيانة حتى تسليمه وتحصيل قيمته","inLanguage":"ar","step":[
+{"@type":"HowToStep","position":1,"text":"من شاشة الصيانة اضغط جديد وسجّل اسم العميل ورقم الهاتف والمنتج والموديل ووصف الجهاز والعطل."},
+{"@type":"HowToStep","position":2,"text":"أدخل التكلفة المتوقعة والمقدم وتاريخ التسليم، ثم احفظ بـ F2 واطبع إيصال الاستلام."},
+{"@type":"HowToStep","position":3,"text":"من شاشة المتابعة اختر الإذن واضغط فحص، وحدد المهندس والحالة وتقرير الفحص والتكلفة الفعلية وقطع الغيار، ثم احفظ."},
+{"@type":"HowToStep","position":4,"text":"عند حضور العميل اختر الإذن واضغط تسليم، وراجع المبلغ المدفوع، ثم اضغط سداد وتسليم."}]},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"هل يُسجَّل عميل الصيانة في شاشة العملاء؟","acceptedAnswer":{"@type":"Answer","text":"لا. يُحفظ اسم العميل وهاتفه داخل إذن الصيانة فقط، ولا يُنشأ له حساب. كل المبالغ تُحصَّل نقدًا في الخزينة."}},
+{"@type":"Question","name":"متى تُخصم قطع الغيار من المخزن؟","acceptedAnswer":{"@type":"Answer","text":"عند حفظ شاشة الفحص، تُخصم القطع المسجلة من المخزن الافتراضي للفرع."}},
+{"@type":"Question","name":"لماذا لا أستطيع تعديل إذن صيانة؟","acceptedAnswer":{"@type":"Answer","text":"الإذن تم تسليمه. بعد التسليم يُقفل الإذن، ولا يعدّله إلا مدير النظام أو من لديه صلاحية خاصة."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"الأنظمة المتخصصة","item":"https://help.tebalink.com/index.html#modules"},
+{"@type":"ListItem","position":3,"name":"إدارة مراكز الصيانة","item":"https://help.tebalink.com/maintenance-centers.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#pos">نقاط البيع والمطاعم</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#modules">الأنظمة المتخصصة</a></li><li>إدارة مراكز الصيانة</li></ol>
+<article>
+<h1>إدارة مراكز الصيانة: الاستلام والفحص والتسليم</h1>
+<p class="lead">نظام الصيانة مصمم لمراكز صيانة الأجهزة، مثل الموبايلات والحواسيب والأجهزة المنزلية. تستلم الجهاز من العميل وتطبع له <strong>إيصال استلام</strong> برقم الإذن. بعدها يفحص المهندس الجهاز ويسجل التقرير والتكلفة وقطع الغيار، ثم تحصّل الباقي وتسلّم الجهاز. كل مبلغ تقبضه يُسجَّل تلقائيًا في الخزينة بقيد محاسبي.</p>
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#main">الشاشة الرئيسية للصيانة</a></li>
+  <li><a href="#before">قبل البدء: التعريفات</a></li>
+  <li><a href="#cycle">دورة الجهاز كاملة</a></li>
+  <li><a href="#receive">استلام جهاز (إذن صيانة جديد)</a></li>
+  <li><a href="#track">شاشة المتابعة</a></li>
+  <li><a href="#checkup">شاشة الفحص وقطع الغيار</a></li>
+  <li><a href="#status">حالات الفحص والتسليم</a></li>
+  <li><a href="#deliver">السداد والتسليم</a></li>
+  <li><a href="#branches">متابعة الفروع</a></li>
+  <li><a href="#reports">تقارير الخدمات</a></li>
+  <li><a href="#accounting">الأثر المحاسبي والمخزني</a></li>
+  <li><a href="#rules">قواعد مهمة</a></li>
+  <li><a href="#keys">الأزرار والاختصارات</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+  <li><a href="#faq">أسئلة شائعة</a></li>
+</ol></nav>
+
+<section id="main">
+<h2>الشاشة الرئيسية للصيانة</h2>
+<p>تفتح الصيانة في نافذة مستقلة عنوانها <span class="ui">Service POS</span>. تحتوي على الأزرار التالية:</p>
+<!--shot:maintenance-centers__main-->
+<figure class="shot" id="shot-maintenance-centers__main">
+<div class="shot-frame"><a href="assets/screens/maintenance-centers__main.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/maintenance-centers__main.png" width="1936" height="1036" loading="lazy" decoding="async" alt="صورة شاشة: الشاشة الرئيسية للصيانة"></a></div>
+<figcaption>شاشة «الشاشة الرئيسية للصيانة» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<div class="table-wrap"><table>
+<thead><tr><th>الزر</th><th>ماذا يفتح</th></tr></thead>
+<tbody>
+<tr><td><span class="ui">جديد</span></td><td>شاشة <span class="ui">اضافة خدمة</span> لاستلام جهاز جديد.</td></tr>
+<tr><td><span class="ui">متابعة</span></td><td><span class="ui">شاشة المتابعة</span>: أذون الفرع الحالي، ومنها تنتقل إلى الفحص والتسليم.</td></tr>
+<tr><td><span class="ui">متابعة فروع</span></td><td>عرض أذون كل الفروع للاطلاع فقط.</td></tr>
+<tr><td><span class="ui">تقارير خدمات</span></td><td><span class="ui">تقرير الخدمات</span> بفلاتر متعددة.</td></tr>
+<tr><td><span class="ui">تقرير الخزينة</span></td><td>تقرير حركة الخزينة العام.</td></tr>
+<tr><td><span class="ui">ادارة منتجات</span> / <span class="ui">ادارة الموديلات</span></td><td>أنواع الأجهزة وموديلات كل نوع.</td></tr>
+<tr><td><span class="ui">ادارة تصنيفات رئيسية</span> / <span class="ui">ادارة تصنيفات فرعية</span></td><td>مجموعات الأعطال والأعطال التفصيلية داخل كل مجموعة.</td></tr>
+<tr><td><span class="ui">استعلام اسعار</span></td><td>الاستعلام عن سعر صنف، مثل قطعة غيار.</td></tr>
+<tr><td><span class="ui">خروج</span></td><td>إغلاق البرنامج بعد التأكيد.</td></tr>
+</tbody></table></div>
+<p>في أعلى الشاشة قائمتان لاختيار <strong>الفرع</strong> و<strong>الخزينة</strong>. تُسجَّل الأذون الجديدة على هذا الفرع، وتدخل المبالغ هذه الخزينة. يظهر الفرع والخزينة الحاليان أيضًا في شريط الحالة أسفل الشاشة.</p>
+<p class="note">تغيير الفرع أو الخزينة <strong>يغلق تلقائيًا</strong> شاشات الاستلام والمتابعة والفحص والتسليم المفتوحة. احفظ عملك قبل التغيير. لا يستطيع المستخدم تغيير الفرع والخزينة إلا إذا كانت لديه صلاحية.</p>
+</section>
+
+<section id="before">
+<h2>قبل البدء: التعريفات</h2>
+<ol>
+  <li><strong>المنتجات</strong> (<span class="ui">ادارة المنتجات</span>): أنواع الأجهزة التي تستقبلها، مثل «موبايل» أو «لابتوب» أو «غسالة». اكتب <span class="ui">اسم المنتج</span> واحفظ.</li>
+  <li><strong>الموديلات</strong> (<span class="ui">ادارة الموديلات</span>): اختر <span class="ui">المنتج</span> واكتب <span class="ui">الموديل</span>. <strong>الموديل إلزامي في كل إذن صيانة</strong>، فعرّف موديلًا واحدًا على الأقل لكل منتج.</li>
+  <li><strong>التصنيفات الرئيسية</strong> (<span class="ui">ادارة التصنيفات الرئيسية</span>): مجموعات الأعطال، مثل «شاشة» أو «شحن» أو «صوت».</li>
+  <li><strong>التصنيفات الفرعية</strong> (<span class="ui">ادارة تصنيفات فرعية</span>): الأعطال التفصيلية. اختر <span class="ui">تصنيف رئيسى</span> واكتب <span class="ui">وصف تصنيف فرعى</span>، مثل «كسر شاشة». هذه الأعطال تختار منها لكتابة شكوى العميل بسرعة.</li>
+  <li><strong>مهندسو الصيانة:</strong> تظهر في شاشة الفحص قائمة الموظفين المفعَّل لهم خيار <span class="ui">مندوب</span> في بطاقة الموظف (انظر <a href="hr-employees.html">شئون العاملين</a>). فعّل الخيار لكل مهندس.</li>
+  <li><strong>المخزن الافتراضي للفرع:</strong> قطع الغيار تُخصم منه، و<strong>لا يمكن حفظ الفحص بدونه</strong> (انظر <a href="stores.html">المخازن</a>).</li>
+  <li><strong>قطع الغيار:</strong> عرّفها كأصناف في <a href="items.html">الأصناف</a> داخل فئة من نوع <span class="ui">مواد خام</span>. شاشة الفحص لا تعرض إلا أصناف هذه الفئات.</li>
+  <li><strong>الحسابات:</strong> يلزم وجود حساب <strong>الإيرادات الأخرى</strong> في إعدادات الحسابات الافتراضية، وأن يكون للخزينة حساب في الدليل. بدونهما لا يُحفظ أي مبلغ.</li>
+</ol>
+<p class="tip">في كل شاشات التعريف: <kbd>F1</kbd> جديد، و<kbd>F2</kbd> حفظ، و<kbd>F6</kbd> حذف. اختر السطر من الجدول لتعديله، واستخدم مربع <span class="ui">بحث</span> للتصفية بالاسم. لا يُسمح بتكرار الاسم نفسه.</p>
+<div class="warn">لا يُحذف الموديل إذا استُخدم في أذون صيانة. أما <strong>المنتجات والتصنيفات الرئيسية فيُسمح بحذفها حتى لو كانت مستخدمة</strong>، فيختفي معها ما يرتبط بها من موديلات وأعطال من القوائم. لا تحذف منتجًا أو تصنيفًا عليه بيانات؛ عدّل اسمه بدلًا من حذفه.</div>
+</section>
+
+<section id="cycle">
+<h2>دورة الجهاز كاملة</h2>
+<ol class="steps">
+  <li><strong>الاستلام:</strong> موظف الاستقبال يفتح <span class="ui">جديد</span> ويسجل العميل والجهاز والعطل والتكلفة المتوقعة والمقدم، ثم يطبع الإيصال للعميل. يُقيَّد المقدم في الخزينة فورًا.</li>
+  <li><strong>الانتظار:</strong> يظهر الإذن في <span class="ui">شاشة المتابعة</span> بحالة <span class="ui">انتظار الفحص</span>.</li>
+  <li><strong>الفحص والإصلاح:</strong> يفتح المهندس الإذن بزر <span class="ui">فحص</span>، فيكتب التقرير ويحدد الحالة والتكلفة الفعلية، ويضيف قطع الغيار المستخدمة. عند الحفظ تُخصم القطع من المخزن.</li>
+  <li><strong>إبلاغ العميل:</strong> يمكن إرسال رسالة SMS للعميل من شاشة المتابعة.</li>
+  <li><strong>السداد والتسليم:</strong> عند حضور العميل اختر الإذن واضغط <span class="ui">تسليم</span>، وراجع <span class="ui">المبلغ المدفوع</span>، ثم اضغط <span class="ui">سداد وتسليم</span>. يُقيَّد المبلغ في الخزينة، ويُقفل الإذن.</li>
+</ol>
+</section>
+
+<section id="receive">
+<h2>استلام جهاز (إذن صيانة جديد)</h2>
+<ol class="steps">
+  <li>اضغط <span class="ui">جديد</span> من الشاشة الرئيسية. يظهر <span class="ui">رقم</span> الإذن تلقائيًا، ويبدأ بكود الفرع ثم رقم مسلسل خاص بالفرع (مثل <code>A125</code>).</li>
+  <li>في <span class="ui">بيانات العميل</span> اكتب <span class="ui">اسم العميل</span> و<span class="ui">رقم الهاتف</span>. إذا كتبت رقمًا سبق تسجيله، يُملأ الاسم تلقائيًا من آخر إذن. ويمكنك أيضًا اختيار اسم عميل سابق من القائمة.</li>
+  <li>في بيانات الجهاز اختر <span class="ui">المنتج</span> ثم <span class="ui">الموديل</span>، فتظهر موديلات المنتج المختار فقط. ثم اكتب <span class="ui">الرقم المسلسل</span> و<span class="ui">اللون</span>.</li>
+  <li>في <span class="ui">الملحقات</span> علّم ما استلمته مع الجهاز: <span class="ui">بطاريه</span> أو <span class="ui">شاحن</span> أو <span class="ui">اخرى</span>. عند اختيار «اخرى» يظهر حقل لكتابة الملحق.</li>
+  <li>اكتب <span class="ui">وصف المنتج</span>، أي حالة الجهاز الظاهرة عند الاستلام (خدوش، كسر، ...). هذا الحقل إلزامي.</li>
+  <li>سجّل <span class="ui">ملاحظات العميل</span>. يمكنك الكتابة مباشرة، أو اختيار <span class="ui">تصنيف رئيسى</span> ثم <span class="ui">تصنيف فرعى</span> والضغط على زر الإضافة، فيُضاف العطل إلى النص مفصولًا بفاصلة.</li>
+  <li>في <span class="ui">اقصى تكلفة</span> اكتب أقصى مبلغ وافق عليه العميل.</li>
+  <li>في <span class="ui">بيانات اضافيه</span>: راجع <span class="ui">ت الاستلام</span> و<span class="ui">وقت الدخول</span>، و<span class="ui">ت التسليم</span> المتوقع (افتراضيًا بعد 3 أيام). اكتب <span class="ui">التكلفه</span> المتوقعة و<span class="ui">المقدم</span>، فيُحسب <span class="ui">المتبقى</span> تلقائيًا.</li>
+  <li>اضغط <span class="ui">حفظ</span> (<kbd>F2</kbd>). تظهر رسالة <span class="msg">تم الحفظ بنجاح</span>، ثم سؤال <span class="msg">هل ترغب فى طباعة هذا السجل</span>. اختر «نعم» لطباعة إيصال الاستلام، ثم تُفرَّغ الشاشة لإذن جديد.</li>
+</ol>
+
+<h3>حقول إذن الصيانة</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>الحقل</th><th>الوصف</th></tr></thead>
+<tbody>
+<tr><td>رقم</td><td>رقم الإذن، ويتولد تلقائيًا لكل فرع. هذا هو الرقم الذي تبحث به لاحقًا.</td></tr>
+<tr><td>اسم العميل</td><td>إلزامي. يُحفظ داخل الإذن فقط، ولا يرتبط بشاشة <a href="customers.html">العملاء</a>.</td></tr>
+<tr><td>رقم الهاتف</td><td>إلزامي، 10 أرقام على الأقل. يمكن إضافة رقم موبايل آخر في الحقل الثاني.</td></tr>
+<tr><td>المنتج / الموديل</td><td>إلزاميان.</td></tr>
+<tr><td>الرقم المسلسل / اللون</td><td>لتمييز الجهاز عند التسليم.</td></tr>
+<tr><td>الملحقات</td><td>بطارية، شاحن، أخرى (مع وصفها).</td></tr>
+<tr><td>وصف المنتج</td><td>إلزامي: حالة الجهاز ومواصفاته وقت الاستلام.</td></tr>
+<tr><td>ملاحظات العميل</td><td>شكوى العميل أو الأعطال المبلّغ عنها.</td></tr>
+<tr><td>اقصى تكلفة</td><td>الحد الأقصى الذي وافق عليه العميل، ويُطبع في الإيصال.</td></tr>
+<tr><td>ت الاستلام / وقت الدخول / ت التسليم</td><td>تاريخ الاستلام، ووقت دخول الجهاز، والتاريخ المتوقع للتسليم.</td></tr>
+<tr><td>التكلفه / المقدم / المتبقى</td><td>التكلفة المتوقعة، والمبلغ المدفوع مقدمًا (يُقيَّد في الخزينة)، والباقي (يُحسب تلقائيًا).</td></tr>
+<tr><td>المستخدم</td><td>اسم المستخدم الحالي، ويظهر بجانبه الفرع والخزينة.</td></tr>
+</tbody></table></div>
+
+<h3>الطباعة</h3>
+<ul>
+  <li><span class="ui">طباعة</span> (<kbd>F4</kbd>): تطبع إيصال الاستلام، وفيه بيانات العميل والجهاز والملحقات والشكوى وأقصى تكلفة والتكلفة والمقدم والمتبقي. شكل الإيصال (ورقة كاملة أو طابعة كاشير) يتبع نوع الطابعة المضبوط في <a href="settings.html">الإعدادات</a>.</li>
+  <li><span class="ui">طباعه باركود</span>: تطبع ملصقًا للصقه على الجهاز، وفيه رقم الإذن واسم العميل وهاتفه والشكوى والتواريخ. يُطبع على طابعة الباركود المحددة في الإعدادات.</li>
+</ul>
+<p class="tip">بعد الحفظ تُفرَّغ الشاشة. لإعادة طباعة الإيصال أو الملصق، اكتب رقم الإذن في مربع <span class="ui">بحث برقم الايصال</span> ليُعرض، ثم اطبع.</p>
+
+<h3>تعديل إذن أو حذفه</h3>
+<ul>
+  <li>للتعديل: ابحث برقم الإذن، أو اختره من <a href="#track">شاشة المتابعة</a> واضغط <span class="ui">تعديل</span>. عدّل ثم احفظ، فيُعاد قيد المقدم بالقيمة الجديدة.</li>
+  <li>لا يمكن تعديل إذن تم تسليمه إلا لمدير النظام.</li>
+  <li>الحذف (<kbd>F6</kbd>) يحذف الإذن وقطع الغيار المسجلة عليه وقيوده المحاسبية (المقدم والسداد) بعد التأكيد.</li>
+</ul>
+<div class="warn"><strong>لا تحذف إذنًا سُجلت عليه قطع غيار.</strong> الحذف لا يعيد القطع المخصومة إلى المخزن، فيبقى رصيد المخزن ناقصًا. إذا رفض العميل الإصلاح، اجعل حالة الفحص <span class="ui">تم الرفض</span> بدلًا من الحذف.</div>
+</section>
+
+<section id="track">
+<h2>شاشة المتابعة</h2>
+<p>تعرض <span class="ui">شاشة المتابعة</span> أذون الفرع الحالي. الفترة الافتراضية هي السنة الحالية، والأحدث يظهر أولًا.</p>
+<ul>
+  <li><strong>التصفية:</strong> بالفترة (من / إلى)، وبالموديل، وبحالة الفحص (<span class="ui">الكل</span>، <span class="ui">انتظار الفحص</span>، <span class="ui">قيد الفحص</span>، <span class="ui">تم الرفض</span>، <span class="ui">تم الانتهاء</span>، <span class="ui">مرتجع فحص</span>).</li>
+  <li><strong>البحث:</strong> اختر نوع البحث، ثم اكتب في مربع البحث: <code>ID</code> برقم الإذن كاملًا، أو <code>Name</code> ببداية اسم العميل، أو <code>Phone</code> ببداية الهاتف أو الموبايل.</li>
+  <li><strong>أعمدة الجدول:</strong> الرقم، واسم العميل، ورقم الهاتف، والموديل، وتاريخ الاستلام، وتاريخ التسليم، و<span class="ui">القيمة</span>، و<span class="ui">مدفوع</span> (المقدم + السداد)، و<span class="ui">متبقى</span>، و<span class="ui">دفع</span>، و<span class="ui">التسليم</span>، و<span class="ui">الفحص</span>، والمستخدم، والمهندس (<span class="ui">ENG.</span>)، و<span class="ui">ت خامات</span> (قيمة قطع الغيار).</li>
+  <li><strong>الإجماليات</strong> أسفل الشاشة: <span class="ui">الاجمالى</span>، و<span class="ui">المدفوع</span>، و<span class="ui">المتبقى</span> للأذون المعروضة.</li>
+</ul>
+<div class="table-wrap"><table>
+<thead><tr><th>الزر</th><th>الوظيفة</th></tr></thead>
+<tbody>
+<tr><td><span class="ui">تعديل</span></td><td>يفتح الإذن المحدد في شاشة الاستلام.</td></tr>
+<tr><td><span class="ui">فحص</span></td><td>يفتح الإذن في <a href="#checkup">شاشة الفحص</a>.</td></tr>
+<tr><td><span class="ui">تسليم</span></td><td>يفتح <a href="#deliver">امر تسليم وسداد</a> للإذن المحدد.</td></tr>
+<tr><td><span class="ui">SMS</span></td><td>يفتح لوحة <span class="ui">ارسال SMS</span>: راجع <span class="ui">رقم الهاتف</span>، واختر <span class="ui">عنوان الرسالة</span> من الرسائل الجاهزة، ثم اضغط الإرسال. يلزم ضبط مزود الرسائل مسبقًا.</td></tr>
+<tr><td><span class="ui">جديد</span> (<kbd>F1</kbd>)</td><td>يفتح شاشة استلام جهاز جديد.</td></tr>
+<tr><td><span class="ui">حذف</span> (<kbd>F6</kbd>)</td><td>يحذف الإذن المحدد بعد التأكيد (انظر التحذير في قسم الاستلام).</td></tr>
+<tr><td><span class="ui">طباعة</span></td><td>يطبع تقرير الأذون المعروضة حاليًا.</td></tr>
+</tbody></table></div>
+<p>القائمة التي تظهر بزر الفأرة الأيمن على الجدول فيها <span class="ui">تعديل</span> و<span class="ui">فحص</span> أيضًا.</p>
+<div class="warn">في هذه القائمة أيضًا <span class="ui">اذن صرف قطع غيار</span>. القطع المسجلة في شاشة الفحص <strong>تُخصم من المخزن تلقائيًا عند الحفظ</strong>. إصدار إذن صرف لنفس الإذن يخصمها مرة ثانية، فلا تستخدم هذا الخيار للأذون التي سجلت قطعها في شاشة الفحص.</div>
+</section>
+
+<section id="checkup">
+<h2>شاشة الفحص وقطع الغيار</h2>
+<p>افتحها بزر <span class="ui">فحص</span> من شاشة المتابعة، أو اكتب رقم الإذن في مربع البحث. تظهر بيانات العميل والجهاز للاطلاع، ويكمل المهندس الأجزاء التالية:</p>
+<ol class="steps">
+  <li>اختر المهندس في <span class="ui">م مسئول</span>. هذا الحقل إلزامي.</li>
+  <li>اختر <span class="ui">الحالة</span>: <span class="ui">لم يتم الفحص</span>، أو <span class="ui">قيد الفحص</span>، أو <span class="ui">تم الرفض</span>، أو <span class="ui">تم الاصلاح</span>، أو <span class="ui">ارتجاع</span>.</li>
+  <li>اكتب <span class="ui">تقرير فحص</span>: ما وُجد في الجهاز وما تم عمله.</li>
+  <li>أدخل <span class="ui">تكلفة فعلية</span>، وهي المبلغ النهائي المطلوب من العميل. تحل محل التكلفة المتوقعة، ويُعاد حساب المتبقي = التكلفة الفعلية − المقدم. وعدّل <span class="ui">ت تسليم</span> عند الحاجة.</li>
+  <li>في <span class="ui">سند خامات</span> أضف قطع الغيار: امسح الباركود أو اكتب <span class="ui">كود</span> الصنف، أو اختر <span class="ui">القطعه</span> من القائمة (يمكن تضييقها بـ <span class="ui">الفئة</span>). اكتب <span class="ui">الكميه</span> واضغط <kbd>Enter</kbd> أو زر الإضافة.</li>
+  <li>اضغط <span class="ui">حفظ</span> (<kbd>F2</kbd>). تظهر <span class="msg">تم الحفظ بنجاح</span>، وتتحدث شاشة المتابعة.</li>
+</ol>
+<ul>
+  <li>جدول القطع يعرض: <span class="ui">الصنف</span>، و<span class="ui">الكميه</span>، و<span class="ui">التكلفة</span> (سعر البيع المسجل للقطعة)، و<span class="ui">الأجمالي</span>. وأسفله <span class="ui">اجمالي الكميه</span> و<span class="ui">تكلفة خامات</span>. أعمدة التكلفة تظهر فقط لمن لديه صلاحية رؤيتها.</li>
+  <li>إضافة صنف موجود في الجدول تستبدل كميته بالكمية الجديدة، ولا تضيف سطرًا ثانيًا.</li>
+  <li>تُحسب القطع بالوحدة الأساسية للصنف، وتُخصم من <strong>المخزن الافتراضي للفرع</strong>.</li>
+</ul>
+<div class="warn">
+<strong>إزالة قطعة:</strong> زر الحذف يصلح فقط للقطع التي أضفتها في الجلسة الحالية ولم تحفظها بعد. لإلغاء قطعة محفوظة سابقًا، اخترها مرة أخرى وأضفها <strong>بكمية 0</strong> ثم احفظ.<br>
+<strong>فلتر الفئة:</strong> لعرض كل القطع مرة أخرى، امسح اسم الفئة من القائمة، ولا تُلغِ علامة <span class="ui">الفئة</span>.
+</div>
+<p class="note">بعد تسليم الجهاز لا يُعدَّل الفحص إلا لمن لديه صلاحية خاصة. وإذا أعاد صاحب الصلاحية حفظ الفحص، <strong>يرجع الإذن إلى حالة «لم يتم التسليم»</strong>، فراجع حالة التسليم بعدها من شاشة التسليم.</p>
+</section>
+
+<section id="status">
+<h2>حالات الفحص والتسليم</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>في شاشة الفحص</th><th>في شاشة المتابعة</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td>لم يتم الفحص</td><td>انتظار الفحص (Waiting)</td><td>الحالة الافتراضية لكل جهاز جديد.</td></tr>
+<tr><td>قيد الفحص</td><td>قيد الفحص (Under Check)</td><td>المهندس يعمل على الجهاز.</td></tr>
+<tr><td>تم الرفض</td><td>تم الرفض (Refused)</td><td>العميل رفض الإصلاح أو الجهاز غير قابل للإصلاح. عند التسليم يقترح البرنامج مبلغ سداد 0.</td></tr>
+<tr><td>تم الاصلاح</td><td>تم الانتهاء (Finished)</td><td>الجهاز جاهز للتسليم.</td></tr>
+<tr><td>ارتجاع</td><td>مرتجع فحص (Check back)</td><td>الجهاز عاد بعد التسليم لنفس العطل.</td></tr>
+</tbody></table></div>
+<p>بجانب حالة الفحص، لكل إذن حالة <strong>تسليم</strong> (تم / لم يتم)، وحالة <strong>سداد</strong> (مسدد / غير مسدد). يصبح الإذن «مسددًا» بمجرد حفظ شاشة السداد والتسليم.</p>
+<p class="note">في شاشة المتابعة يظهر عمود <span class="ui">الفحص</span> بالكلمات الإنجليزية الموجودة بين القوسين في الجدول.</p>
+</section>
+
+<section id="deliver">
+<h2>السداد والتسليم</h2>
+<ol class="steps">
+  <li>في <span class="ui">شاشة المتابعة</span> حدد الإذن واضغط <span class="ui">تسليم</span>. تفتح شاشة <span class="ui">امر تسليم وسداد</span>.</li>
+  <li>راجع بيانات العميل والجهاز والملحقات، و<span class="ui">تقرير الصيانه</span> و<span class="ui">حالة الفحص</span>، و<span class="ui">التكلفه</span> و<span class="ui">المقدم</span> و<span class="ui">المتبقى</span>.</li>
+  <li><span class="ui">المبلغ المدفوع</span> يُملأ تلقائيًا بالمتبقي، أو بـ 0 إذا كانت الحالة <span class="ui">تم الرفض</span>. عدّله إذا دفع العميل مبلغًا مختلفًا.</li>
+  <li>اترك <span class="ui">التسليم</span> مفعّلًا (هذا هو الافتراضي) إذا استلم العميل جهازه. وألغِه إذا سدد العميل دون أن يستلم الجهاز. <span class="ui">ت تسليم</span> يكون تاريخ اليوم.</li>
+  <li>اضغط <span class="ui">سداد وتسليم</span>. تظهر <span class="msg">تم الحفظ بنجاح</span>، وتُغلق الشاشة.</li>
+</ol>
+<div class="warn">بعد حفظ التسليم <strong>يُقفل الإذن</strong>، ولا يمكن تعديله أو تعديل سداده إلا لمدير النظام. راجع المبلغ جيدًا قبل الحفظ.</div>
+<ul>
+  <li>إذا ألغيت <span class="ui">التسليم</span>، يمكنك فتح الشاشة لاحقًا وإعادة الحفظ. يحل القيد الجديد محل قيد السداد السابق ولا يُضاف إليه، فاكتب <strong>إجمالي ما دفعه العميل في هذه الشاشة</strong>.</li>
+  <li>البرنامج لا يرد المقدم تلقائيًا للجهاز المرفوض. إذا رددت المقدم للعميل، سجّل ذلك بـ<a href="vouchers.html">سند صرف</a>.</li>
+  <li>المبلغ المتبقي غير المسدد لا يُسجَّل على أي حساب عميل. تابعه من عمود <span class="ui">متبقى</span> ومن التقارير.</li>
+</ul>
+</section>
+
+<section id="branches">
+<h2>متابعة الفروع</h2>
+<p>زر <span class="ui">متابعة فروع</span> يعرض أذون <strong>كل الفروع</strong> معًا، بنفس الأعمدة والفلاتر (الفترة، والموديل، وحالة الفحص، والبحث برقم الإذن أو الاسم أو الهاتف). هنا تظهر حالة الفحص وحالة التسليم بالعربية. هذه الشاشة للاطلاع فقط. لتعديل إذن أو فحصه أو تسليمه، اختر فرعه من الشاشة الرئيسية ثم افتح <span class="ui">متابعة</span>.</p>
+</section>
+
+<section id="reports">
+<h2>تقارير الخدمات</h2>
+<p>شاشة <span class="ui">تقرير الخدمات</span> (زر <span class="ui">تقارير خدمات</span>) تعرض الأذون بالفلاتر التالية، ثم تضغط <span class="ui">عرض</span>:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>الفلتر</th><th>الاستخدام</th></tr></thead>
+<tbody>
+<tr><td>الفرع</td><td>فرع واحد، وأول فرع مختار افتراضيًا.</td></tr>
+<tr><td>من / الى</td><td>فترة تاريخ الاستلام. علّم <span class="ui">الكل</span> لكل التواريخ.</td></tr>
+<tr><td>اسم العميل</td><td>علّمه ثم اختر العميل من أسماء الأذون السابقة.</td></tr>
+<tr><td>موظف الصيانه</td><td>علّمه ثم اختر المهندس.</td></tr>
+<tr><td>موظف الأستقبال</td><td>علّمه ثم اختر المستخدم الذي سجل الإذن.</td></tr>
+<tr><td>السداد</td><td><span class="ui">الكل</span> / <span class="ui">مسدد</span> / <span class="ui">غير مسدد</span>.</td></tr>
+<tr><td>التسليم</td><td><span class="ui">الكل</span> / <span class="ui">تم التسليم</span> / <span class="ui">لم يتم التسليم</span>.</td></tr>
+<tr><td>الحالة</td><td>حالة الفحص، أو علّم <span class="ui">الكل</span>.</td></tr>
+</tbody></table></div>
+<p>يعرض التقرير لكل إذن: القيمة، والمدفوع، والمتبقي، وقيمة قطع الغيار، والربح (القيمة − قيمة قطع الغيار)، والمهندس، والحالات. إذا لم توجد أذون مطابقة تظهر رسالة <span class="msg">عفوا لا توجد نتائج حاليا متاحه للعرض</span>.</p>
+<p class="tip">إذا لم تظهر أذون اليوم الأخير من الفترة، اجعل تاريخ <span class="ui">الى</span> اليوم التالي.</p>
+</section>
+
+<section id="accounting">
+<h2>الأثر المحاسبي والمخزني</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>العملية</th><th>القيد / الأثر</th></tr></thead>
+<tbody>
+<tr><td>حفظ الاستلام مع مقدم</td><td>من حـ/ الخزينة الحالية إلى حـ/ الإيرادات الأخرى، بقيمة المقدم. تعديل الإذن يحذف القيد ويعيد إنشاءه.</td></tr>
+<tr><td>حفظ الفحص بقطع غيار</td><td>تُخصم القطع من المخزن الافتراضي للفرع بتاريخ استلام الجهاز. ولا يُنشأ قيد في هذه الخطوة.</td></tr>
+<tr><td>السداد والتسليم</td><td>من حـ/ الخزينة الحالية إلى حـ/ الإيرادات الأخرى، بقيمة المبلغ المدفوع.</td></tr>
+<tr><td>تكلفة القطع (جرد مستمر)</td><td>إذا كان الجرد المستمر مفعّلًا: من حـ/ تكلفة البضاعة المباعة إلى حـ/ المخزون بتكلفة شراء القطع. يُضاف هذا القيد ضمن قيد السداد، وفقط إذا كان المبلغ المدفوع أكبر من صفر.</td></tr>
+<tr><td>حذف الإذن</td><td>تُحذف قيود المقدم والسداد. أما خصم القطع من المخزن فلا يُلغى.</td></tr>
+</tbody></table></div>
+<p class="note">المبالغ تدخل الخزينة المختارة في الشاشة الرئيسية وقت الحفظ، وليس خزينة الاستلام الأصلية. راجع حركة الخزينة من <span class="ui">تقرير الخزينة</span>.</p>
+</section>
+
+<section id="rules">
+<h2>قواعد مهمة</h2>
+<ul>
+  <li>عميل الصيانة <strong>ليس عميلًا في شاشة العملاء</strong>. لا يُنشأ له حساب، ولا توجد صيانة بالآجل على حساب عميل.</li>
+  <li>رقم الإذن = كود الفرع + رقم مسلسل للفرع. اجعل كود الفرع <strong>حرفًا واحدًا</strong> (مثل A أو B) حتى يعمل الترقيم والبحث بشكل صحيح.</li>
+  <li>الإذن المسلَّم مقفل أمام التعديل في الاستلام والسداد، إلا لمدير النظام.</li>
+  <li>القطع تُخصم من المخزن عند حفظ الفحص، حتى لو لم يُسدد العميل بعد.</li>
+  <li>الجهاز المرفوض: سجّل حالته <span class="ui">تم الرفض</span> ثم سلّمه بمبلغ 0 (أو برسوم الفحص إن وُجدت).</li>
+</ul>
+</section>
+
+<section id="keys">
+<h2>الأزرار والاختصارات</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>المفتاح</th><th>الاستلام</th><th>المتابعة</th><th>الفحص</th><th>شاشات التعريف</th></tr></thead>
+<tbody>
+<tr><td><kbd>F1</kbd> <span class="ui">جديد</span></td><td>إذن جديد</td><td>يفتح الاستلام</td><td>—</td><td>سجل جديد</td></tr>
+<tr><td><kbd>F2</kbd> <span class="ui">حفظ</span></td><td>حفظ</td><td>—</td><td>حفظ الفحص</td><td>حفظ</td></tr>
+<tr><td><kbd>F4</kbd> <span class="ui">طباعة</span></td><td>إيصال الاستلام</td><td>زر الطباعة: تقرير القائمة</td><td>—</td><td>—</td></tr>
+<tr><td><kbd>F6</kbd> <span class="ui">حذف</span></td><td>حذف الإذن</td><td>حذف المحدد</td><td>—</td><td>حذف</td></tr>
+<tr><td><kbd>Enter</kbd></td><td>الانتقال بين الحقول</td><td>—</td><td>إضافة القطعة</td><td>الانتقال بين الحقول</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى / الحل</th></tr></thead>
+<tbody>
+<tr><td><span class="msg">عفوا اسم العميل مطلوب</span></td><td>اكتب اسم العميل.</td></tr>
+<tr><td><span class="msg">عفوا رقم الهاتف</span> / <span class="msg">عفوا رقم الهاتف خطأ</span></td><td>رقم الهاتف فارغ أو أقل من 10 أرقام.</td></tr>
+<tr><td><span class="msg">عفوا مواصفات الجهاز مطلوبه</span></td><td>اكتب <span class="ui">وصف المنتج</span>.</td></tr>
+<tr><td><span class="msg">قم باختيار المنتج</span> / <span class="msg">قم باختيار الموديل</span></td><td>اختر المنتج والموديل. إذا كانت قائمة الموديلات فارغة، عرّف موديلًا لهذا المنتج.</td></tr>
+<tr><td><span class="msg">عفوا لا يجوز تعديل اذن تم تسليمه مسبقا</span></td><td>الإذن مسلَّم ومقفل.</td></tr>
+<tr><td><span class="msg">عفوا . لايوجد حساب للايرادات الاخرى داخل الدليل المحاسبى</span> / <span class="msg">حساب الايرادات غير موجود في شجرة الحسابات حتى الآن</span></td><td>حدد حساب الإيرادات الأخرى في إعدادات الحسابات الافتراضية.</td></tr>
+<tr><td><span class="msg">عفوا . لا يوجد حساب للخزينة داخل الدليل المحاسبى</span> / <span class="msg">حساب الصندوق غير موجود في شجرة الحسابات حتى الآن</span></td><td>الخزينة المختارة ليس لها حساب في الدليل.</td></tr>
+<tr><td><span class="msg">عفوا لابد من تحديد اسم المخزن الأفتراضي</span></td><td>حدد مخزنًا افتراضيًا نشطًا للفرع.</td></tr>
+<tr><td><span class="msg">قم باختيار مهندس الصيانة</span></td><td>اختر المهندس في <span class="ui">م مسئول</span>.</td></tr>
+<tr><td><span class="msg">هذه الفئه غير مسجله هل تريد تسجيلها الأن؟</span> / <span class="msg">هذا العطل غير مسجله هل تريد تسجيلها الأن؟</span></td><td>كتبت تصنيفًا أو عطلًا جديدًا في شاشة الاستلام. اختر «نعم» لإضافته للقائمة.</td></tr>
+<tr><td><span class="msg">هذا السجل موجود مسبقا</span></td><td>الاسم مسجل من قبل في شاشة التعريف.</td></tr>
+<tr><td><span class="msg">لا يمكن اجراء تعديل لهذا السجل لاستخدامه من قبل اخر</span></td><td>لا يمكن حذف الموديل لأنه مستخدم في أذون صيانة.</td></tr>
+<tr><td><span class="msg">عفوا تأكد من بياناتك أولا</span></td><td>بيانات ناقصة. في إذن صرف قطع الغيار تعني أن الإذن ليس عليه قطع، أو صُرفت قطعه من قبل.</td></tr>
+<tr><td><span class="msg">من فضلك قم باختيار السجل اولا</span></td><td>حدد إذنًا من الجدول أولًا.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="faq">
+<h2>أسئلة شائعة</h2>
+<details><summary>هل يُسجَّل عميل الصيانة في شاشة العملاء؟</summary>
+<p>لا. يُحفظ الاسم والهاتف داخل الإذن فقط. ولتسهيل التسجيل، يقترح البرنامج اسم العميل من الأذون السابقة عند كتابة رقم الهاتف.</p></details>
+<details><summary>متى تُخصم قطع الغيار من المخزن؟</summary>
+<p>عند حفظ شاشة الفحص، من المخزن الافتراضي للفرع. لا تصدر لها إذن صرف منفصلًا.</p></details>
+<details><summary>دفع العميل مقدمًا ثم رفض الإصلاح، ماذا أفعل؟</summary>
+<p>اجعل الحالة <span class="ui">تم الرفض</span> في الفحص، ثم سلّم الجهاز بمبلغ مدفوع 0. إذا رددت المقدم، سجّل سند صرف من الخزينة.</p></details>
+<details><summary>لماذا لا أجد المهندس في قائمة «م مسئول»؟</summary>
+<p>القائمة تعرض الموظفين المفعَّل لهم خيار <span class="ui">مندوب</span> في بطاقة الموظف. فعّله للمهندس.</p></details>
+<details><summary>لماذا لا تظهر قطعة الغيار في شاشة الفحص؟</summary>
+<p>يجب أن يكون الصنف نشطًا، وفي فئة من نوع <span class="ui">مواد خام</span>.</p></details>
+<details><summary>كيف أعيد طباعة إيصال استلام قديم؟</summary>
+<p>من شاشة الاستلام اكتب رقم الإذن في <span class="ui">بحث برقم الايصال</span>، ثم اضغط <kbd>F4</kbd>.</p></details>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="customers.html">العملاء</a> · <a href="items.html">الأصناف</a> · <a href="stores.html">المخازن</a> · <a href="vouchers.html">سندات القبض والصرف</a> · <a href="sales-invoice.html">فاتورة البيع</a> · <a href="equipment-maintenance.html">صيانة المعدات</a> · <a href="car-service.html">مراكز خدمة السيارات</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-10">10 أكتوبر 2026</time></div></footer>
+</body>
+</html>

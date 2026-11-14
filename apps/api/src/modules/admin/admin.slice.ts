@@ -42,6 +42,7 @@ export class AdminService {
     const users = await this.db.query(
       `SELECT u.user_id AS "userId", u.user_name AS "userName", u.full_name AS "fullName", u.email, u.phone,
               u.is_active AS "isActive", u.is_cashier AS "isCashier", u.is_sales_rep AS "isSalesRep",
+              u.commission_pct AS "commissionPct",
               u.default_branch_id AS "defaultBranchId", u.max_discount_pct AS "maxDiscountPct",
               u.last_login_at AS "lastLoginAt",
               COALESCE((SELECT json_agg(r.name) FROM user_roles ur JOIN roles r ON r.role_id = ur.role_id
@@ -56,11 +57,11 @@ export class AdminService {
     const { hash, salt } = hashPassword(body.password);
     const row = await this.db.one<any>(
       `INSERT INTO users (user_name, full_name, password_hash, password_salt, email, phone, default_branch_id,
-                          max_discount_pct, is_active, is_cashier, is_sales_rep)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING user_id`,
+                          max_discount_pct, is_active, is_cashier, is_sales_rep, commission_pct)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING user_id`,
       [body.userName, body.fullName ?? body.userName, hash, salt, body.email ?? null, body.phone ?? null,
         body.defaultBranchId ?? null, Number(body.maxDiscountPct ?? 0), body.isActive ?? true,
-        body.isCashier ?? false, body.isSalesRep ?? false],
+        body.isCashier ?? false, body.isSalesRep ?? false, Number(body.commissionPct ?? 0)],
     );
     const userId = Number(row.user_id);
     if (body.roleIds?.length) {
@@ -77,9 +78,10 @@ export class AdminService {
   async updateUser(id: number, body: any) {
     await this.db.query(
       `UPDATE users SET full_name=$2, email=$3, phone=$4, default_branch_id=$5, max_discount_pct=$6,
-              is_active=$7, is_cashier=$8, is_sales_rep=$9 WHERE user_id=$1`,
+              is_active=$7, is_cashier=$8, is_sales_rep=$9, commission_pct=$10 WHERE user_id=$1`,
       [id, body.fullName, body.email ?? null, body.phone ?? null, body.defaultBranchId ?? null,
-        Number(body.maxDiscountPct ?? 0), body.isActive ?? true, body.isCashier ?? false, body.isSalesRep ?? false],
+        Number(body.maxDiscountPct ?? 0), body.isActive ?? true, body.isCashier ?? false, body.isSalesRep ?? false,
+        Number(body.commissionPct ?? 0)],
     );
     if (body.password) {
       const { hash, salt } = hashPassword(body.password);

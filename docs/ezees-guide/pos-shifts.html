@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>الورديات وترحيل الخزينة وعملاء نقطة البيع والسائقين | دليل Ezees ERP</title>
+<meta name="description" content="شرح فتح وإغلاق الوردية (فترات العمل) في نقطة البيع Ezees SmartPOS، وتقرير مبيعات الفترة، وترحيل الخزينة وتسليم الدرج مع حساب العجز والزيادة وقيوده المحاسبية، وإدارة عملاء نقطة البيع وعناوين التوصيل، والسائقين، وشاشة مواعيد تسليم الطلبات.">
+<meta name="keywords" content="فتح وردية, اغلاق الوردية, فترات العمل, تسليم الدرج, ترحيل الخزينة, عجز وزيادة الكاشير, عملاء نقطة البيع, سائق التوصيل, مواعيد التسليم, Ezees SmartPOS, Ezees ERP">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/pos-shifts.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="الورديات وترحيل الخزينة في نقطة البيع - Ezees ERP">
+<meta property="og:description" content="افتح ورديتك وأغلقها، وسلّم الدرج مع حساب العجز والزيادة، وأدر عملاء التوصيل والسائقين.">
+<meta property="og:url" content="https://help.tebalink.com/pos-shifts.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"الورديات وترحيل الخزينة وعملاء نقطة البيع والسائقين في Ezees ERP","inLanguage":"ar","dateModified":"2026-10-10","proficiencyLevel":"Beginner","mainEntityOfPage":"https://help.tebalink.com/pos-shifts.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"HowTo","name":"تسليم الدرج وإغلاق الوردية في نقطة البيع","inLanguage":"ar","step":[
+{"@type":"HowToStep","position":1,"text":"افتح ترحيل الخزينة من بيانات اساسية."},
+{"@type":"HowToStep","position":2,"text":"اختر المستخدم المستلم، فتُختار خزينته تلقائيًا."},
+{"@type":"HowToStep","position":3,"text":"اكتب المبلغ الذي عددته فعليًا لكل عملة في عمود المبلغ المرحل ثم اضغط ترحيل الأرصده."},
+{"@type":"HowToStep","position":4,"text":"افتح فترات العمل، وحدد الوردية المفتوحة، واضغط اغلاق الفترة واطبع تقرير الفترة."}]},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"لماذا تظهر رسالة يجب فتح فتره عمل جديدة اولا؟","acceptedAnswer":{"@type":"Answer","text":"شاشة الكاشير وسندات القبض والصرف في نقطة البيع تحتاج وردية مفتوحة للمستخدم في الفرع الحالي. افتح فترات العمل واضغط فتح فترة جديدة."}},
+{"@type":"Question","name":"هل يُنشئ إغلاق الوردية قيدًا محاسبيًا؟","acceptedAnswer":{"@type":"Answer","text":"لا. الإغلاق يسجل وقت الانتهاء ويطبع تقرير الفترة فقط. نقل النقدية من درج الكاشير يتم بقيد عند ترحيل الخزينة."}},
+{"@type":"Question","name":"كيف يُحسب العجز والزيادة عند تسليم الدرج؟","acceptedAnswer":{"@type":"Answer","text":"الفرق = المبلغ الذي أدخلته في المبلغ المرحل ناقص رصيد الكاشير المتوقع في الخزينة لكل عملة. القيمة السالبة عجز والموجبة زيادة، وتظهر في إيصال الترحيل."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"نقاط البيع والمطاعم","item":"https://help.tebalink.com/index.html#pos"},
+{"@type":"ListItem","position":3,"name":"الورديات وترحيل الخزينة","item":"https://help.tebalink.com/pos-shifts.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#pos">نقاط البيع والمطاعم</a></li><li>الورديات وترحيل الخزينة</li></ol>
+<article>
+<h1>الورديات وترحيل الخزينة وعملاء نقطة البيع والسائقين</h1>
+<p class="lead">في نقطة البيع Ezees SmartPOS يعمل كل كاشير داخل <strong>وردية</strong> (فترة عمل) يفتحها في بداية دوامه ويغلقها في نهايته. وفي نهاية الوردية <strong>يسلّم الدرج</strong> لمشرفه من شاشة <span class="ui">ترحيل الخزينة</span>، فيُحسب العجز أو الزيادة. تشرح هذه الصفحة أيضًا شاشة <span class="ui">العملاء</span> الخاصة بنقطة البيع، وشاشة <span class="ui">السائقين</span>، وشاشة متابعة مواعيد تسليم طلبات التوصيل.</p>
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#cycle">دورة يوم الكاشير</a></li>
+  <li><a href="#open">فتح الوردية</a></li>
+  <li><a href="#close">إغلاق الوردية</a></li>
+  <li><a href="#report">تقرير مبيعات الفترة</a></li>
+  <li><a href="#transfer">ترحيل الخزينة (تسليم الدرج)</a></li>
+  <li><a href="#diff">العجز والزيادة</a></li>
+  <li><a href="#accounting">الأثر المحاسبي</a></li>
+  <li><a href="#customers">عملاء نقطة البيع</a></li>
+  <li><a href="#drivers">السائقين</a></li>
+  <li><a href="#deadline">مواعيد تسليم الطلبات</a></li>
+  <li><a href="#production">كارت التصنيع</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+</ol></nav>
+
+<section id="cycle">
+<h2>دورة يوم الكاشير</h2>
+<ol class="steps">
+  <li>في بداية الدوام: افتح <span class="ui">فترات العمل</span> واضغط <span class="ui">فتح فترة جديدة</span>.</li>
+  <li>اعمل على شاشة الكاشير كالمعتاد. كل فاتورة وكل سند قبض أو صرف من نقطة البيع يُسجَّل على ورديتك. راجع <a href="pos-cashier.html">شاشة الكاشير</a>.</li>
+  <li>في نهاية الدوام: عُدّ النقدية التي في الدرج، ثم سلّمها من <span class="ui">ترحيل الخزينة</span>.</li>
+  <li>أغلق الوردية من <span class="ui">فترات العمل</span> بزر <span class="ui">اغلاق الفترة</span>، واطبع تقرير الفترة.</li>
+</ol>
+<p class="note">الوردية تخص <strong>المستخدم والفرع والسنة المالية</strong> التي سجّلت الدخول بها. كل كاشير يفتح ورديته الخاصة، ولا يرى في الشاشة إلا وردياته.</p>
+</section>
+
+<section id="open">
+<h2>فتح الوردية</h2>
+<p>من الشاشة الرئيسية لنقطة البيع اضغط <span class="ui">فترات العمل</span>. <strong>تُغلق أي شاشة كاشير أو مطعم مفتوحة تلقائيًا</strong> عند فتح هذه الشاشة، لذلك احفظ فاتورتك الحالية قبلها.</p>
+<p>تعرض شاشة <span class="ui">نظام الفترات</span> وردياتك من الأحدث إلى الأقدم، بالأعمدة: <span class="ui">رقم</span>، و<span class="ui">تاريخ البدء</span>، و<span class="ui">تاريخ الأنتهاء</span>، و<span class="ui">الحالة</span> (Open أو Closed)، و<span class="ui">الفرع</span>، و<span class="ui">المستخدم</span>.</p>
+<ol class="steps">
+  <li>اضغط <span class="ui">فتح فترة جديدة</span>.</li>
+  <li>تُنشأ وردية جديدة يبدأ وقتها من الآن، وتظهر في أول القائمة بحالة Open.</li>
+  <li>افتح شاشة الكاشير وابدأ البيع.</li>
+</ol>
+<p class="tip">لا يُسمح بأكثر من وردية مفتوحة للمستخدم نفسه في الفرع نفسه. إذا ظهرت رسالة وجود فترة مفتوحة، أغلق الوردية السابقة أولًا.</p>
+</section>
+
+<section id="close">
+<h2>إغلاق الوردية</h2>
+<ol class="steps">
+  <li>سلّم النقدية أولًا من <a href="#transfer">ترحيل الخزينة</a>.</li>
+  <li>في <span class="ui">فترات العمل</span> انقر على الوردية المفتوحة في الجدول. يتفعّل زر <span class="ui">اغلاق الفترة</span> للوردية المفتوحة فقط.</li>
+  <li>اضغط <span class="ui">اغلاق الفترة</span>.</li>
+  <li>في نظام المطاعم: إذا بقيت موائد لم تُغلق في هذه الوردية تظهر رسالة بعددها. اختر <span class="ui">No</span> للرجوع وإغلاقها أولًا، أو <span class="ui">Yes</span> للمتابعة.</li>
+  <li>يُسجَّل وقت انتهاء الوردية وتصبح حالتها Closed. إذا كانت لديك صلاحية طباعة تقرير الفترة يظهر <a href="#report">تقرير مبيعات الفترة</a> تلقائيًا، ثم تظهر رسالة <span class="msg">تم الحفظ بنجاح</span>.</li>
+</ol>
+<div class="warn">بعد الإغلاق لن تستطيع فتح شاشة الكاشير أو سندات القبض والصرف من نقطة البيع حتى تفتح وردية جديدة. وإغلاق الوردية <strong>لا يمكن التراجع عنه</strong> من هذه الشاشة.</div>
+</section>
+
+<section id="report">
+<h2>تقرير مبيعات الفترة</h2>
+<p>يُطبع تلقائيًا عند الإغلاق، ويمكن طباعته لأي وردية في أي وقت: انقر بزر الفأرة الأيمن على الوردية واختر:</p>
+<ul>
+  <li><span class="ui">تقرير مبيعات الفترة</span>: ملخص مالي للوردية (الجدول التالي).</li>
+  <li><span class="ui">تقرير اصناف الفترة</span>: الأصناف المباعة في الوردية بالكمية والقيمة والخصم والربح، مع خصم المرتجعات. يسألك البرنامج هل تريد معاينة التقرير، وإذا اخترت <span class="ui">No</span> يُطبع مباشرة على طابعة الكاشير.</li>
+</ul>
+<div class="table-wrap"><table>
+<thead><tr><th>البند في تقرير الفترة</th><th>ما يحسبه</th></tr></thead>
+<tbody>
+<tr><td>إجمالي المبيعات</td><td>صافي كل فواتير البيع في الوردية، بعملة الأساس.</td></tr>
+<tr><td>الضيافة</td><td>فواتير البيع المسجلة ضيافة.</td></tr>
+<tr><td>الخصومات</td><td>إجمالي الخصم في فواتير البيع.</td></tr>
+<tr><td>المرتجعات</td><td>إجمالي فواتير مرتجع البيع.</td></tr>
+<tr><td>صالة / تيك أواي / دليفري</td><td>مبيعات كل نوع طلب، مع إجمالي الإضافات (مثل رسوم الخدمة والتوصيل) للصالة والدليفري.</td></tr>
+<tr><td>الفيزا</td><td>ما دُفع بالبطاقة، وفي الدفع المختلط الجزء غير النقدي.</td></tr>
+<tr><td>المصروفات / المقبوضات</td><td>سندات الصرف والقبض النقدية المسجلة على الوردية.</td></tr>
+<tr><td>النقدية</td><td>المبيعات النقدية (والجزء النقدي من الدفع المختلط) − المصروفات − الضيافة − المرتجعات النقدية + المقبوضات. هذا هو ما يُفترض وجوده في الدرج من حركة الوردية.</td></tr>
+<tr><td>الآجل / المدفوع / المتبقي</td><td>مبيعات الآجل، وما دُفع منها مقدمًا، والباقي على العملاء.</td></tr>
+<tr><td>التحويلات</td><td>فواتير البيع المدفوعة بطريقة التحويل.</td></tr>
+</tbody></table></div>
+<p class="note">بندا <strong>صافي النقدية</strong> و<strong>العجز</strong> في هذا التقرير يظهران دائمًا صفرًا. العجز والزيادة الفعليان يُحسبان عند <a href="#diff">ترحيل الخزينة</a> ويظهران في إيصاله.</p>
+<p>لتقارير الورديات المجمّعة استخدم <span class="ui">تقارير</span> ← <span class="ui">تقرير فترات العمل</span> من الشاشة الرئيسية.</p>
+</section>
+
+<section id="transfer">
+<h2>ترحيل الخزينة (تسليم الدرج)</h2>
+<p>من الشاشة الرئيسية: <span class="ui">بيانات اساسية</span> ← <span class="ui">ترحيل الخزينة</span>. تنقل هذه الشاشة النقدية من خزينة الكاشير (باسمه) إلى خزينة المستلم، وهو غالبًا المشرف أو المحاسب.</p>
+<ol class="steps">
+  <li>في سطر <span class="ui">من</span>: يظهر اسمك وخزينتك تلقائيًا. المشرف الذي لديه الصلاحية فقط يستطيع اختيار مستخدم أو خزينة أخرى ليستلم من كاشير غائب.</li>
+  <li>في سطر <span class="ui">الى</span>: اختر المستخدم المستلم. تُختار <strong>خزينته الافتراضية</strong> تلقائيًا ولا يمكن تغييرها.</li>
+  <li>يظهر في الجدول سطر لكل عملة فيه <span class="ui">العملة</span> و<span class="ui">سعر الصرف</span>. اكتب في عمود <span class="ui">المبلغ  المرحل</span> المبلغ الذي <strong>عددته فعليًا</strong> من كل عملة.</li>
+  <li>اضغط <span class="ui">ترحيل الأرصده</span>. تظهر رسالة <span class="msg">تم الحفظ بنجاح</span>، ثم يُعرض إيصال الترحيل للطباعة.</li>
+</ol>
+<ul>
+  <li>لا تعرض الشاشة رصيدك المتوقع قبل الترحيل، حتى يكون العدّ فعليًا. يظهر الرصيد المتوقع والفرق في الإيصال.</li>
+  <li>يحفظ البرنامج نسخة PDF من الإيصال في مجلد البرنامج، باسم المستخدمَين وتاريخ ووقت العملية.</li>
+  <li>يجب أن يكون مجموع المبالغ المرحلة أكبر من صفر، ولا يُسمح بالتحويل من مستخدم إلى نفسه.</li>
+</ul>
+<div class="warn"><strong>قبل الترحيل:</strong> تأكد أن للمستخدم المستلم خزينة افتراضية في بيانات المستخدمين. إذا لم تكن له خزينة قد تظهر رسالة خطأ عند اختياره.</div>
+</section>
+
+<section id="diff">
+<h2>العجز والزيادة</h2>
+<p>لكل عملة يحسب البرنامج <strong>رصيد الكاشير المتوقع</strong>: رصيد حساب الخزينة المرحَّل باسم هذا المستخدم وبهذه العملة في السنة المالية الحالية. ثم:</p>
+<p><strong>الفرق = المبلغ المرحل − الرصيد المتوقع</strong></p>
+<ul>
+  <li>فرق <strong>سالب</strong> = <strong>عجز</strong> (سلّمت أقل من المتوقع).</li>
+  <li>فرق <strong>موجب</strong> = <strong>زيادة</strong>.</li>
+  <li>يُحفظ كل فرق غير صفري في سجل فروقات الخزينة مرتبطًا بعملية الترحيل والكاشير والعملة، ويظهر في الإيصال في عمود <span class="ui">عجز وزيادة</span>.</li>
+</ul>
+<div class="warn">إذا تركت عملة بمبلغ مرحل <strong>صفر</strong> وكان لك رصيد بها، <strong>يُسجَّل رصيدها كله عجزًا</strong>. اكتب مبلغ كل عملة موجودة في الدرج.</div>
+</section>
+
+<section id="accounting">
+<h2>الأثر المحاسبي</h2>
+<p>عند الضغط على <span class="ui">ترحيل الأرصده</span> يُنشأ قيدان مرحّلان، لكل عملة فيها مبلغ:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>القيد</th><th>مدين</th><th>دائن</th></tr></thead>
+<tbody>
+<tr><td>1. خروج من خزينة المُسلِّم</td><td>الحساب الوسيط لتحويلات الخزينة</td><td>خزينة المُسلِّم (باسم الكاشير)</td></tr>
+<tr><td>2. دخول خزينة المستلم</td><td>خزينة المستلم (باسم المستلم)</td><td>الحساب الوسيط لتحويلات الخزينة</td></tr>
+</tbody></table></div>
+<ul>
+  <li>الحساب الوسيط يُقفل على نفسه، والنتيجة نقل المبلغ من عهدة الكاشير إلى عهدة المستلم.</li>
+  <li><strong>العجز والزيادة لا يُنشأ لهما قيد.</strong> يبقى الفرق رصيدًا باسم الكاشير في خزينته حتى تسوّيه بـ<a href="vouchers.html">سند قبض أو صرف</a> أو قيد يومية.</li>
+  <li><strong>فتح الوردية وإغلاقها لا يُنشئان أي قيد.</strong> القيود تأتي من الفواتير والسندات وترحيل الخزينة.</li>
+</ul>
+<p class="note">يجب تحديد <strong>الحساب الوسيط لتحويلات الخزينة</strong> في إعدادات الحسابات الافتراضية، وإلا ترفض الشاشة الترحيل.</p>
+</section>
+
+<section id="customers">
+<h2>عملاء نقطة البيع</h2>
+<p>من الشاشة الرئيسية: <span class="ui">بيانات اساسية</span> ← <span class="ui">العملاء</span>. شاشة مختصرة لتسجيل عملاء التوصيل والصالة بسرعة، وهم نفس عملاء النظام.</p>
+<ol class="steps">
+  <li>اضغط <span class="ui">جديد</span> (<kbd>F1</kbd>). يظهر <span class="ui">الكـــــــود</span> تلقائيًا.</li>
+  <li>اكتب <span class="ui">الاســـــم</span> و<span class="ui">التليفون</span> و<span class="ui">الموبايل</span>، واختر <span class="ui">المجموعة</span>.</li>
+  <li>اختر <span class="ui">المنطقة</span> (إلزامية)، واكتب <span class="ui">الحى</span> و<span class="ui">المجاورة</span> و<span class="ui">الشارع</span> و<span class="ui">المنزل</span> و<span class="ui">الدور</span> و<span class="ui">الشقة</span>. يتكوّن حقل <span class="ui">العنوان</span> تلقائيًا منها.</li>
+  <li>عند الحاجة: <span class="ui">الخصم</span>، و<span class="ui">الرقم الضريبيى</span>، و<span class="ui">البريد </span>.</li>
+  <li>اضغط <span class="ui">حفظ</span> (<kbd>F2</kbd>).</li>
+</ol>
+<p>الحقلان الإلزاميان هما <span class="ui">الاســـــم</span> و<span class="ui">المنطقة</span>، وتظهر بجانب الفارغ منهما أيقونة حمراء. تُعرَّف المناطق من <span class="ui">بيانات اساسية</span> ← <span class="ui">اعداد المناطق</span>.</p>
+
+<h3>عناوين التوصيل ورسومها</h3>
+<p>في جدول العناوين بجانب البيانات يمكنك إضافة أكثر من عنوان للعميل، ولكل عنوان <span class="ui">رسم التوصيل</span> الخاص به. عند إضافة عميل جديد يُضاف العنوان المكتوب في حقل <span class="ui">العنوان</span> تلقائيًا كعنوان أول.</p>
+
+<h3>العميل الافتراضي (Invoice Default)</h3>
+<p>فعّل <span class="ui">Invoice Default</span> للعميل الذي يظهر تلقائيًا في الفواتير، مثل «عميل نقدي». يكون للفرع عميل افتراضي واحد، فتفعيله لعميل يلغيه عن غيره. <strong>لا تفتح شاشة الكاشير بدون عميل افتراضي.</strong></p>
+
+<h3>البحث والتعديل والحذف</h3>
+<ul>
+  <li>ابحث بـ<span class="ui">الاسم</span> أو <span class="ui">التليفون</span> أو <span class="ui">الكود</span>، ثم انقر على العميل لعرض بياناته وعناوينه.</li>
+  <li><span class="ui">حذف</span> (<kbd>F6</kbd>): ممنوع إذا كان للعميل فواتير أو سندات أو قيود.</li>
+  <li><kbd>F5</kbd> لتحديث القائمة.</li>
+  <li>تعرض القائمة العملاء النشطين فقط. إذا جعلت العميل <span class="ui">غير نشـــــــط</span> يختفي منها، ولا يمكن إعادة تنشيطه إلا من <a href="customers.html">إدارة العملاء</a> في Ezees ERP.</li>
+</ul>
+<div class="warn">
+<ul>
+  <li><strong>عدّل عملاء الحسابات من Ezees ERP:</strong> حفظ عميل موجود من هذه الشاشة يعيد ضبط إعداداته الأخرى إلى الافتراضي، مثل حد الائتمان، والمندوب، وقائمة الأسعار، والعملة، وفترة السماح، والتصنيف، ويحوّله إلى الفرع الحالي. استخدم هذه الشاشة لعملاء نقطة البيع فقط.</li>
+  <li>حقل <span class="ui">ملاحظات</span> لا يُحفظ، وتُكتب مكانه عبارة «Added From POS».</li>
+  <li>البحث بالمنطقة أو المجموعة لا يعمل حاليًا، وعمودا <span class="ui">المنطقة</span> و<span class="ui">المجموعة</span> في القائمة يظهران فارغين.</li>
+</ul>
+</div>
+</section>
+
+<section id="drivers">
+<h2>السائقين (مندوبو التوصيل)</h2>
+<p>من الشاشة الرئيسية: <span class="ui">بيانات اساسية</span> ← <span class="ui">السائقين</span>. السائق هو من تختاره في طلب الدليفري على شاشة الكاشير.</p>
+<ol class="steps">
+  <li>اكتب <span class="ui">اسم السائق</span> و<span class="ui">تليفون</span> و<span class="ui">العنوان</span>.</li>
+  <li>اضبط <span class="ui">الحالة</span>: <span class="ui">نشط</span> أو <span class="ui">غير نشط</span>. السائقون النشطون فقط يظهرون في شاشة الكاشير.</li>
+  <li>اضغط <span class="ui">حفظ</span> (<kbd>F2</kbd>). تتحدث قائمة السائقين في شاشة الكاشير المفتوحة مباشرة.</li>
+</ol>
+<ul>
+  <li>للتعديل: انقر على السائق في الجدول، وعدّل، ثم احفظ. <strong>يُنقل السائق إلى فرعك الحالي</strong> عند التعديل.</li>
+  <li>لا يُسمح بتكرار اسم السائق عند الإضافة.</li>
+  <li><span class="ui">حذف</span> (<kbd>F6</kbd>): ممنوع إذا كان للسائق فواتير، فاجعله <span class="ui">غير نشط</span> بدلًا من ذلك. الحذف غير متاح في وضع العمل بدون اتصال (OffLine).</li>
+  <li>البحث بالاسم من خانة البحث أعلى الجدول.</li>
+</ul>
+</section>
+
+<section id="deadline">
+<h2>مواعيد تسليم الطلبات</h2>
+<p>في طلبات الدليفري يحدد الكاشير <strong>ميعاد التسليم</strong>، وقيمته الافتراضية بعد 45 دقيقة من وقت الطلب. شاشة <span class="ui">شاشه تنبيهات مواعيد التسليم للعملاء</span> تعرض الطلبات التي لم تُسلَّم بعد. تفتحها من زر متابعة التوصيل في شاشة الكاشير، أو بنقر مزدوج على أيقونة تنبيهات التوصيل بجانب الساعة في Windows.</p>
+<ul>
+  <li>الأعمدة: <span class="ui">رقم</span> الفاتورة، و<span class="ui">العميل</span>، و<span class="ui">هاتف</span>، و<span class="ui">العنوان</span>، و<span class="ui">تاريخ الاصدار</span>، و<span class="ui">ميعاد التسليم</span>، و<span class="ui">الوقت المتبقي</span> (ساعات:دقائق:ثوانٍ، ويظهر 0 إذا تأخر الطلب)، و<span class="ui">السائق</span>.</li>
+  <li>تظهر فقط الطلبات التي لها ميعاد تسليم <strong>وسائق محدد</strong>.</li>
+  <li>تتحدث القائمة تلقائيًا كل دقيقة.</li>
+  <li>عند تسليم الطلب اضغط زر <span class="ui">تم</span> في سطره ثم أكد. يُعلَّم الطلب «تم التسليم» ويختفي من القائمة. لا يوجد أثر مالي لهذا الإجراء.</li>
+</ul>
+<p class="note">ترتيب القائمة من الميعاد الأبعد إلى الأقرب، فالطلبات الأكثر إلحاحًا تكون في <strong>آخر</strong> القائمة. والقائمة تعرض طلبات كل الفروع.</p>
+</section>
+
+<section id="production">
+<h2>كارت التصنيع</h2>
+<p>شاشتا <span class="ui">كارت التصنيع</span> و<span class="ui">اصناف الصنف المجمع</span> غير متاحتين للمستخدم في الإصدار الحالي من نقطة البيع. لتعريف مكونات الأصناف المجمعة ومتابعة الإنتاج استخدم شاشات <a href="items.html">الأصناف</a> في Ezees ERP.</p>
+<!--shot:pos-shifts__production-->
+<figure class="shot" id="shot-pos-shifts__production">
+<div class="shot-frame"><a href="assets/screens/pos-shifts__production.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/pos-shifts__production.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: كارت التصنيع"></a></div>
+<figcaption>شاشة «كارت التصنيع» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى وما تفعله</th></tr></thead>
+<tbody>
+<tr><td><span class="msg">يجب فتح فتره عمل جديدة اولا .</span></td><td>لا توجد لك وردية مفتوحة. افتح واحدة من <span class="ui">فترات العمل</span>.</td></tr>
+<tr><td><span class="msg">يجب تحديد عميل افتراضى اولا .</span></td><td>فعّل <span class="ui">Invoice Default</span> لأحد العملاء.</td></tr>
+<tr><td><span class="msg">عفوا يوجد حاليا فتره مالية لم يتم اغلاقها...</span></td><td>لديك وردية مفتوحة. أغلقها قبل فتح وردية جديدة.</td></tr>
+<tr><td><span class="msg">لديك عدد  {n}  مائدة لم تغلق هل ترغب فى الاستمرار ؟</span></td><td>في المطاعم: توجد موائد مفتوحة في الوردية.</td></tr>
+<tr><td><span class="msg">عفوا اسم المستخدم مطلوب</span></td><td>في ترحيل الخزينة: اختر المستخدم المُسلِّم.</td></tr>
+<tr><td><span class="msg">عفوا لا يمكن التحويل من والى نفس المستخدم</span></td><td>اختر مستخدمًا مستلمًا مختلفًا.</td></tr>
+<tr><td><span class="msg">عفوا تأكد من بياناتك أولا</span></td><td>مجموع المبالغ المرحلة صفر. اكتب المبالغ في <span class="ui">المبلغ  المرحل</span>. إذا لم تظهر رسالة ولم يحدث شيء، تأكد من اختيار المستخدم في سطر <span class="ui">الى</span>.</td></tr>
+<tr><td><span class="msg">قم بتحديد الحساب الوسيط لتحويلات الخزينة</span></td><td>اطلب من المحاسب ضبط هذا الحساب في الحسابات الافتراضية.</td></tr>
+<tr><td><span class="msg">عفوا حدث خطأ اثناء تحويل الخزينة</span></td><td>لم يُحفظ الترحيل ولم يُنشأ أي قيد. أعد المحاولة.</td></tr>
+<tr><td><span class="msg">عفوا هذا الموظف مسجل من قبل</span></td><td>اسم السائق مسجل من قبل.</td></tr>
+<tr><td><span class="msg">لا يمكن اجراء تعديل لهذا السجل لاستخدامه من قبل اخر</span></td><td>لا يمكن حذف العميل أو السائق لأن له فواتير أو حركات.</td></tr>
+<tr><td><span class="msg">عفوا غير متاح الحذف فى نظام OffLine Mode</span></td><td>الحذف يحتاج اتصالًا بالسيرفر الرئيسي.</td></tr>
+</tbody></table></div>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="pos-cashier.html">شاشة الكاشير</a> · <a href="pos-restaurant.html">المطاعم والصالات</a> · <a href="vouchers.html">سندات القبض والصرف</a> · <a href="reports-stores.html">تقارير المخازن ونقاط البيع</a> · <a href="locations-shipping.html">الدول والمحافظات والمدن</a> · <a href="customers.html">إدارة العملاء</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-10">10 أكتوبر 2026</time></div></footer>
+</body>
+</html>

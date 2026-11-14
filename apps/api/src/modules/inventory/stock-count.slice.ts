@@ -48,7 +48,7 @@ export class StockCountService {
           AND ($3::int = 0 OR c.warehouse_id = $3::int)
           AND ($4::date IS NULL OR c.count_date >= $4::date)
           AND ($5::date IS NULL OR c.count_date <= $5::date)
-          AND ($6::text = '' OR c.count_no ILIKE $7 OR COALESCE(e.full_name,'') ILIKE $7)
+          AND ($6::text = '' OR c.count_no ILIKE $7 OR COALESCE(e.name, '') ILIKE $7)
         ORDER BY c.count_date DESC, c.stock_count_id DESC
         LIMIT $8::int`,
       [params.branchId, params.status ?? 0, params.warehouseId ?? 0, params.from ?? null,

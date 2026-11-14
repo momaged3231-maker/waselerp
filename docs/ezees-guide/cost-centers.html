@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>شرح مراكز التكلفة وربطها بالحسابات | دليل Ezees ERP</title>
+<meta name="description" content="كيف تنشئ شجرة مراكز التكلفة في Ezees ERP، وتحدد المراكز المتاحة لكل مستخدم، وتربطها بالحسابات لتصبح إلزامية أو اختيارية في القيود والسندات والفواتير.">
+<meta name="keywords" content="مراكز التكلفة, مركز تكلفة, توزيع التكاليف, محاسبة التكاليف, Ezees ERP, برنامج محاسبة">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/cost-centers.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="شرح مراكز التكلفة في Ezees ERP">
+<meta property="og:description" content="أنشئ مراكز التكلفة وحدد صلاحيات المستخدمين عليها.">
+<meta property="og:url" content="https://help.tebalink.com/cost-centers.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"شرح مراكز التكلفة في Ezees ERP","inLanguage":"ar","dateModified":"2026-10-08","proficiencyLevel":"Beginner","mainEntityOfPage":"https://help.tebalink.com/cost-centers.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"كيف أجعل مركز التكلفة إجباريًا لحساب معين؟","acceptedAnswer":{"@type":"Answer","text":"من شجرة الحسابات اختر الحساب، وفعّل مرتبط بمركز تكلفه ثم اختر أجباري واحفظ."}},
+{"@type":"Question","name":"لماذا لا يظهر مركز التكلفة في الفاتورة أو القيد؟","acceptedAnswer":{"@type":"Answer","text":"تظهر المراكز الفرعية الأخيرة فقط، وإذا كان تحديد المراكز للمستخدمين مفعّلًا فتظهر فقط المراكز المحددة لك."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"مراكز التكلفة","item":"https://help.tebalink.com/cost-centers.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#pos">نقاط البيع والمطاعم</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#accounts">الحسابات</a></li><li>مراكز التكلفة</li></ol>
+<article>
+<h1>شرح مراكز التكلفة</h1>
+<p class="lead">مراكز التكلفة تساعدك على معرفة تكلفة وإيراد كل قسم أو فرع أو نشاط على حدة. تُنشئ في شاشة <span class="ui">مراكز التكلفه</span> شجرة المراكز (رئيسية وفرعية)، وتحدد اختياريًا المستخدمين المسموح لهم باستخدام كل مركز.</p>
+<!--shot:cost-centers-->
+<figure class="shot" id="shot-cost-centers">
+<div class="shot-frame"><a href="assets/screens/cost-centers.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/cost-centers.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: شرح مراكز التكلفة"></a></div>
+<details class="shot-tabs"><summary>باقي تبويبات الشاشة (1)</summary><div class="shot-thumbs"><a href="assets/screens/cost-centers--tab2.png" target="_blank" rel="noopener"><img src="assets/screens/cost-centers--tab2.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: شرح مراكز التكلفة - التبويب 2"></a></div></details>
+<figcaption>شاشة «شرح مراكز التكلفة» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#add">إضافة مركز تكلفة</a></li>
+  <li><a href="#users">تحديد المستخدمين</a></li>
+  <li><a href="#link">ربط المراكز بالحسابات</a></li>
+  <li><a href="#list">الشجرة والجدول والبحث</a></li>
+  <li><a href="#rules">قواعد مهمة</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+</ol></nav>
+
+<section id="add">
+<h2>إضافة مركز تكلفة</h2>
+<ol class="steps">
+  <li>اضغط <span class="ui">جديد</span>.</li>
+  <li>اكتب <span class="ui">الاسم</span> و<span class="ui">ملاحظات</span> إن أردت.</li>
+  <li>اختر المركز الأب من <span class="ui">الرئيسى</span>، أو اتركه فارغًا (أو فعّل خانة <span class="ui">رئيسى</span>) ليكون مركزًا في المستوى الأول.</li>
+  <li>اضغط <span class="ui">حفظ</span>، فتظهر رسالة <span class="ui">تم الحفظ بنجاح</span>.</li>
+</ol>
+<div class="note">
+  <ul>
+    <li>يحتفظ زر <span class="ui">جديد</span> بآخر مركز أب اخترته، فراجعه قبل الحفظ.</li>
+    <li>الضغط على <kbd>Enter</kbd> في حقل الملاحظات يحفظ مباشرة ولا ينزل سطرًا جديدًا.</li>
+  </ul>
+</div>
+</section>
+
+<section id="users">
+<h2>تحديد المستخدمين لكل مركز</h2>
+<p>يعمل تبويب <span class="ui">المستخدمين</span> عند تفعيل إعداد «تفعيل تحديد مراكز التكلفة للمستخدمين». ضع علامة على المستخدمين المسموح لهم (تتلون صفوفهم بالأخضر) ثم احفظ. بعد ذلك تعرض الفواتير والقيود والسندات لكل مستخدم المراكز المحددة له فقط.</p>
+<p class="tip"><strong>لتحديد مستخدمين لعدة مراكز مرة واحدة:</strong> حدد المراكز في الجدول (<kbd>Ctrl</kbd>+<kbd>A</kbd> أو <kbd>Ctrl</kbd>+نقر)، وضع علامة على المستخدمين، ثم احفظ. هذه الطريقة تحفظ المستخدمين فقط ولا تغيّر أسماء المراكز.</p>
+</section>
+
+<section id="link">
+<h2>ربط المراكز بالحسابات</h2>
+<p>يتم الربط من <a href="chart-of-accounts.html">شجرة الحسابات</a> وليس من هذه الشاشة. لكل حساب تختار:</p>
+<ul>
+  <li><span class="ui">مرتبط بمركز تكلفه</span> أو <span class="ui">غير مرتبط بمركز تكلفه</span>.</li>
+  <li>عند الربط: <span class="ui">أجباري</span> أو <span class="ui">أختياري</span>. في حالة الإجباري، ترفض القيود والسندات والفواتير أي سطر على هذا الحساب بدون مركز تكلفة.</li>
+</ul>
+<p>في العمليات تظهر <strong>المراكز الفرعية الأخيرة فقط</strong>، أي المراكز التي ليس تحتها مراكز أخرى.</p>
+</section>
+
+<section id="list">
+<h2>الشجرة والجدول والبحث</h2>
+<ul>
+  <li>اضغط على أي مركز في الشجرة أو الجدول لتحميله وتعديله.</li>
+  <li>في الجدول تظهر المراكز الرئيسية بخط عريض، والفرعية على خلفية رمادية فاتحة.</li>
+  <li><span class="ui">بحث</span>: تصفية الجدول بالأسماء التي تبدأ بالنص المكتوب. تجنب كتابة علامة <code>'</code> في البحث.</li>
+  <li><span class="ui">طباعة</span>: معاينة يمكن تصديرها إلى Excel.</li>
+  <li><kbd>Delete</kbd> على الجدول يحذف المركز بعد التأكيد.</li>
+</ul>
+</section>
+
+<section id="rules">
+<h2>قواعد مهمة</h2>
+<ul>
+  <li>لا يمكن تكرار اسم المركز تحت نفس المركز الأب.</li>
+  <li>المركز الذي عليه قيود لا يمكن أن يكون أبًا لمركز آخر، ولا يمكن نقله إلى المستوى الأول.</li>
+  <li>لا يمكن حذف مركز عليه قيود أو له مراكز فرعية.</li>
+</ul>
+<div class="warn">عند فتح مركز فرعي للتعديل، <strong>تأكد أن خانة «الرئيسى» ليست فارغة قبل الحفظ</strong>، وإلا يُنقل المركز إلى المستوى الأول.</div>
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td><span class="msg">هذا السجل موجود مسبقا</span></td><td>الاسم مكرر تحت نفس الأب.</td></tr>
+<tr><td><span class="msg">عفوا تأكد من بياناتك أولا</span></td><td>اخترت أبًا عليه قيود، أو اخترت المركز أبًا لنفسه، أو حاولت نقل مركز عليه قيود.</td></tr>
+<tr><td><span class="msg">لا يمكن اجراء تعديل لهذا السجل لاستخدامه من قبل اخر</span></td><td>لا يمكن الحذف لأن المركز عليه قيود.</td></tr>
+<tr><td><span class="msg">عفو هذا السجل مرتبط بسجلات اخرى</span></td><td>لا يمكن الحذف لأن للمركز مراكز فرعية.</td></tr>
+<tr><td><span class="msg">عفوا مركز التكلفه أجباري لهذا الحساب</span></td><td>تظهر في القيود والسندات. اختر مركز تكلفة.</td></tr>
+</tbody></table></div>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="chart-of-accounts.html">شجرة الحسابات</a> · <a href="journal-entry.html">القيود اليومية</a> · <a href="vouchers.html">سند القبض والصرف</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-08">8 أكتوبر 2026</time></div></footer>
+</body>
+</html>

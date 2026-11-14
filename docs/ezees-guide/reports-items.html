@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تقارير الأصناف والمبيعات والمشتريات | دليل Ezees ERP</title>
+<meta name="description" content="دليل تقارير الأصناف في Ezees ERP: مبيعات ومشتريات ومرتجعات الأصناف، التقارير الشهرية، حركة فواتير الصنف، الأصناف الراكدة ومنتهية الصلاحية، البونص والهدايا، التنبؤ بالطلب، الأصناف الأكثر ربحية وتقارير الفروع.">
+<meta name="keywords" content="تقرير مبيعات الأصناف, تقرير مشتريات الأصناف, مرتجع مبيعات, الأصناف الراكدة, الأصناف منتهية الصلاحية, تقرير البونص, التنبؤ بالمبيعات, الأصناف الأكثر ربحية, تقارير الفروع, Ezees ERP">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/reports-items.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="تقارير الأصناف والمبيعات في Ezees ERP">
+<meta property="og:description" content="اعرف ماذا بعت واشتريت من كل صنف، وما الراكد والمنتهي الصلاحية، وما الأكثر ربحًا، وتوقع احتياجك للشراء.">
+<meta property="og:url" content="https://help.tebalink.com/reports-items.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"تقارير الأصناف والمبيعات في Ezees ERP","inLanguage":"ar","dateModified":"2026-10-08","proficiencyLevel":"Beginner","mainEntityOfPage":"https://help.tebalink.com/reports-items.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"HowTo","name":"تشغيل تقرير أصناف وطباعته","inLanguage":"ar","step":[
+{"@type":"HowToStep","position":1,"text":"افتح التقارير ثم تقارير الاصناف واختر التقرير."},
+{"@type":"HowToStep","position":2,"text":"حدد الفلاتر في لوحة تصفيه البيانات: الصنف أو المجموعة أو الحساب أو الفرع والتاريخ."},
+{"@type":"HowToStep","position":3,"text":"اضغط زر العرض (أيقونة العدسة) لعرض النتائج."},
+{"@type":"HowToStep","position":4,"text":"اضغط زر الطباعة، واختر نعم للمعاينة والتصدير إلى Excel أو لا للطباعة المباشرة."}]},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"لماذا لا يظهر عمود الربح في التقرير؟","acceptedAnswer":{"@type":"Answer","text":"عمود الربح وإجماليه يظهران فقط للمستخدم الذي يملك صلاحية إظهار الربح في التقارير."}},
+{"@type":"Question","name":"لماذا لا تظهر بيانات سنة سابقة؟","acceptedAnswer":{"@type":"Answer","text":"تقارير الأصناف تعرض بيانات الفترة المالية التي سجلت الدخول عليها فقط. لعرض سنة سابقة سجّل الدخول على فترتها."}},
+{"@type":"Question","name":"ما معنى تصنيف رئيسى وتصنيف فرعى في فلاتر التقارير؟","acceptedAnswer":{"@type":"Answer","text":"في تقارير المبيعات يعني تصنيف رئيسى محافظة العميل، ويعني تصنيف فرعى مدينة العميل."}},
+{"@type":"Question","name":"كيف يحسب تقرير التنبؤ الكمية المتوقعة؟","acceptedAnswer":{"@type":"Answer","text":"يأخذ صافي مبيعات آخر ثلاثة أشهر قبل الشهر المختار، ويحسب المتوسط البسيط لها، والمتوسط المرجح بأوزان 20% و30% و50% للأحدث."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"التقارير","item":"https://help.tebalink.com/index.html#reports"},
+{"@type":"ListItem","position":3,"name":"تقارير الأصناف والمبيعات","item":"https://help.tebalink.com/reports-items.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#pos">نقاط البيع والمطاعم</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#reports">التقارير</a></li><li>تقارير الأصناف والمبيعات</li></ol>
+<article>
+<h1>تقارير الأصناف والمبيعات والمشتريات</h1>
+<p class="lead">هذه الصفحة دليل لكل تقارير الأصناف في Ezees ERP. تعرف منها كم بعت واشتريت من كل صنف، وما رجع منه، وما الأصناف الراكدة أو القريبة من انتهاء الصلاحية، وما الأكثر ربحًا، وكم تحتاج أن تشتري الشهر القادم. توجد معظم التقارير في قائمة <span class="ui">التقارير</span> ‹ <span class="ui">تقارير الاصناف</span>.</p>
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#common">كيف تعمل شاشات التقارير</a></li>
+  <li><a href="#index">فهرس سريع للتقارير</a></li>
+  <li><a href="#sales">مبيعات الأصناف</a></li>
+  <li><a href="#purchases">المشتريات</a></li>
+  <li><a href="#returns">المرتجعات</a></li>
+  <li><a href="#movement">الحركة والأرصدة</a></li>
+  <li><a href="#expiry">الصلاحية</a></li>
+  <li><a href="#bonus">البونص والهدايا</a></li>
+  <li><a href="#forecast">التنبؤ بالطلب</a></li>
+  <li><a href="#profit">الأصناف الأكثر ربحًا</a></li>
+  <li><a href="#branches">تقارير الفروع</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+</ol></nav>
+
+<section id="common">
+<h2>كيف تعمل شاشات التقارير</h2>
+<p>كل تقارير الأصناف تتبع نفس الشكل: لوحة فلاتر في الأعلى عنوانها <span class="ui">تصفيه البيانات</span>، وجدول النتائج في الوسط، وإجماليات في الأسفل في بعض التقارير. التقارير للعرض فقط، ولا تغيّر أي بيانات.</p>
+<ol class="steps">
+  <li>افتح التقرير من القائمة. يمكنك أيضًا فتح تقارير الصنف من <a href="items.html">كارت الصنف</a> أو من قائمة الزر الأيمن في تقرير آخر، فيفتح التقرير على الصنف مباشرة ويعرض نتائجه.</li>
+  <li>اختر الفلاتر التي تحتاجها. كل الفلاتر اختيارية إلا إذا ذُكر غير ذلك.</li>
+  <li>اضغط زر العرض (أيقونة <strong>العدسة</strong>، بدون نص). تظهر النتائج مرتبة غالبًا من الأكبر كمية.</li>
+  <li>للطباعة اضغط زر <strong>الطابعة</strong>. يسألك البرنامج <span class="msg">هل تريد معاينة التقرير قبل الطباعة؟</span>.</li>
+</ol>
+
+<h3>طريقة اختيار الفلاتر</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>الفلتر</th><th>كيف تختاره</th></tr></thead>
+<tbody>
+<tr><td><span class="ui">الصنف</span></td><td>اضغط على الحقل أو اضغط <kbd>F7</kbd>، ثم ابحث واختر الصنف بالنقر المزدوج أو <kbd>Enter</kbd>.</td></tr>
+<tr><td><span class="ui">المجموعة</span> (مجموعة الأصناف)</td><td>اضغط على الحقل أو <kbd>F8</kbd>. بعض التقارير تشمل المجموعات الفرعية تحتها وبعضها لا، وهذا مذكور في شرح كل تقرير.</td></tr>
+<tr><td><span class="ui">الحساب</span></td><td>اضغط على الحقل أو <kbd>F9</kbd>. هو العميل في تقارير المبيعات، والمورد في تقارير المشتريات.</td></tr>
+<tr><td><span class="ui">المورد</span></td><td>اضغط على الحقل أو <kbd>F10</kbd>. يقصد به <strong>المورد الافتراضي المسجل في كارت الصنف</strong>، وليس مورد الفاتورة.</td></tr>
+<tr><td><span class="ui">الفرع</span>، <span class="ui">المخزن</span>، <span class="ui">مندوب</span>، <span class="ui">المستخدم</span>، <span class="ui">Brand</span></td><td>ضع علامة على المربع أولًا لتفعيل القائمة بجانبه، ثم اختر منها. بدون صلاحية اختيار الفرع يُثبَّت فرعك تلقائيًا.</td></tr>
+<tr><td><span class="ui">تصنيف رئيسى</span> / <span class="ui">تصنيف فرعى</span></td><td>في تقارير المبيعات تعني <strong>محافظة العميل</strong> و<strong>مدينة العميل</strong> (رغم أن الاسم يوحي بتصنيف الأصناف).</td></tr>
+<tr><td>مربع <span class="ui">المجموعة</span> بجانب قائمة</td><td>في تقارير المبيعات يعني <strong>مجموعة العملاء</strong> (جملة، تجزئة، ...).</td></tr>
+<tr><td><span class="ui">النوع</span> (All / Tax / Non Tax)</td><td>كل الفواتير، أو الفواتير الخاضعة للضريبة فقط، أو غير الخاضعة.</td></tr>
+</tbody></table></div>
+<p class="tip">لإلغاء فلتر الصنف أو المجموعة أو الحساب: افتح نافذة الاختيار وأغلقها بدون اختيار (<kbd>Esc</kbd>). انتبه أن هذا يلغي الاختيار السابق أيضًا إن أغلقتها بالخطأ.</p>
+
+<h3>خيارات التاريخ</h3>
+<p>تختار خيارًا واحدًا فقط:</p>
+<ul>
+  <li><span class="ui">الكل</span>: كل الفترة المالية الحالية (الاختيار الافتراضي غالبًا).</li>
+  <li><span class="ui">تاريخ</span>: يوم واحد. <span class="ui">شهر</span>: شهر كامل. <span class="ui">سنة</span>: سنة ميلادية كاملة.</li>
+  <li><span class="ui">من</span> ... <span class="ui">الى</span> (أو <span class="ui">فتره</span>): مدة محددة، وتبدأ افتراضيًا بالشهر الحالي.</li>
+</ul>
+<div class="note">تعرض تقارير الأصناف بيانات <strong>الفترة المالية التي سجلت الدخول عليها فقط</strong>. إذا اخترت سنة أو مدة خارج هذه الفترة فلن تظهر بيانات. لعرض سنة سابقة سجّل الدخول على فترتها.</div>
+
+<h3>الطباعة والتصدير</h3>
+<ul>
+  <li><strong>نعم</strong>: تفتح نافذة <span class="ui">طباعة تقرير</span>، وفيها اختيار <span class="ui">الطابعة</span> وعدد <span class="ui">نسخ</span>، والطباعة، والمعاينة، والتصدير إلى Excel، وأداة Pivot، والإرسال بالبريد أو WhatsApp حسب صلاحياتك.</li>
+  <li><strong>لا</strong>: يطبع التقرير مباشرة على الطابعة الافتراضية.</li>
+  <li>التصدير إلى Excel ينقل الأعمدة الظاهرة في الجدول كما هي.</li>
+  <li>بعض التقارير ليس لها نموذج طباعة جاهز (مذكورة في شرحها). فيها تتيح <strong>نعم</strong> التصدير إلى Excel وPivot فقط، و<strong>لا</strong> لا تفعل شيئًا.</li>
+</ul>
+<div class="warn">
+<strong>قبل الطباعة اضغط زر العرض دائمًا.</strong> الطباعة تستخدم آخر نتيجة عُرضت. إذا غيّرت الفلاتر ولم تضغط العرض، أو ظهرت رسالة <span class="msg">لايوجد بيانات متاحة</span>، فقد تُطبع نتيجة البحث السابق. وفي نفس الحالة قد تبقى <strong>الإجماليات السفلية</strong> من البحث السابق، فلا تعتمد عليها.
+</div>
+
+<h3>قائمة الزر الأيمن على الصنف</h3>
+<p>في معظم تقارير الأصناف: انقر على سطر الصنف بالزر الأيسر أولًا، ثم بالزر الأيمن. تظهر قائمة تفتح تقارير أخرى لنفس الصنف: <span class="ui">كارت صنف</span>، <span class="ui">تقرير رصيد مخزن</span>، <span class="ui">تقرير حركة صنف تفصيلى</span>، <span class="ui">تقرير حركة صنف مجمع</span>، <span class="ui">تقرير مبيعات</span>، <span class="ui">تقرير م مبيعات</span>، <span class="ui">تقرير مشتريات</span>، <span class="ui">تقرير م مشتريات</span>، <span class="ui">تقرير ربح صنف</span>، <span class="ui">تقرير بونص صنف</span>.</p>
+<p class="tip">القائمة تخص آخر سطر نقرت عليه بالزر الأيسر. انقر على الصنف المطلوب بالأيسر قبل فتح القائمة. ولا تستخدمها على سطر الإجمالي الأخضر.</p>
+
+<h3>مصطلحات تتكرر في التقارير</h3>
+<ul>
+  <li><strong>الكمية</strong>: بالوحدة الأساسية (الصغرى) للصنف بعد تحويل الكرتونة والعلبة إليها. عمود <span class="ui">الكمية م</span> يعرض نفس الكمية مفصلة بالوحدات، مثل «2 كرتونة / 3 علبة».</li>
+  <li><strong>الاجمالى / الخصم / الصافى</strong>: قيمة السطور قبل الخصم، وقيمة الخصم، والقيمة بعد الخصم. كلها محولة إلى العملة المحلية بمعامل الصرف.</li>
+  <li><strong>الربح</strong>: صافي قيمة البيع بعد الخصم ناقص تكلفة الصنف (متوسط التكلفة المسجل وقت البيع)، محولًا بمعامل الصرف. المرتجعات تُطرح من الربح. يظهر الربح فقط لمن يملك صلاحية <span class="ui">اظهار الربح فى التقارير</span>.</li>
+  <li><strong>اظهار صافي الصنف</strong>: يطرح المرتجعات من المبيعات (أو من المشتريات) ويعرض الصافي.</li>
+  <li><strong>سطر الإجمالي</strong>: في بعض التقارير يظهر في آخر الجدول سطر <strong>أخضر</strong> فيه <code>----</code> مكان النصوص، وهو مجموع الأعمدة.</li>
+</ul>
+</section>
+
+<section id="index">
+<h2>فهرس سريع للتقارير</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>التقرير (اسم القائمة)</th><th>مكانه</th><th>يجيب عن سؤال</th></tr></thead>
+<tbody>
+<tr><td><a href="#item-sales">تقرير مبيعات</a></td><td>التقارير ‹ تقارير الاصناف</td><td>كم بعت من كل صنف وبكم وما ربحه؟</td></tr>
+<tr><td><a href="#item-sales-detail">تقرير مبيعات مفصل</a></td><td>التقارير ‹ تقارير الاصناف</td><td>المبيعات والمرتجعات والصافي لكل صنف جنبًا إلى جنب.</td></tr>
+<tr><td><a href="#item-sales-cross">تقرير مبيعات Cross</a></td><td>التقارير ‹ تقارير الاصناف</td><td>أي عميل اشترى أي صنف من مجموعة معينة؟</td></tr>
+<tr><td><a href="#cust-item-sales">مبيعات العملاء / مبيعات صنف للعملاء</a></td><td>التقارير ‹ تقارير العملاء</td><td>ماذا اشترى كل عميل من كل صنف؟</td></tr>
+<tr><td><a href="#group-sales">تقرير مبيعات المجموعات</a></td><td>التقارير ‹ تقارير الاصناف</td><td>مبيعات كل مجموعة أصناف ومرتجعاتها وربحها.</td></tr>
+<tr><td><a href="#monthly-sales">تقرير المبيعات الشهرى</a></td><td>التقارير ‹ تقارير الاصناف</td><td>مبيعات كل صنف موزعة على شهور السنة.</td></tr>
+<tr><td><a href="#item-purchases">تقرير مشتريات</a></td><td>التقارير ‹ تقارير الاصناف</td><td>كم اشتريت من كل صنف وبكم؟</td></tr>
+<tr><td><a href="#monthly-purchases">تقرير المشتريات الشهرى</a></td><td>التقارير ‹ تقارير الاصناف</td><td>مشتريات كل صنف موزعة على شهور السنة.</td></tr>
+<tr><td><a href="#group-purchases">تقرير مشتريات المجموعات</a></td><td>التقارير ‹ تقارير الاصناف</td><td>مشتريات كل مجموعة ومرتجعاتها.</td></tr>
+<tr><td><a href="#supplier-items">مشتريات الاصناف الموردين</a></td><td>التقارير ‹ تقارير الموردين</td><td>ماذا اشتريت من كل مورد من كل صنف؟</td></tr>
+<tr><td><a href="#sales-returns">تقرير مرتجع مبيعات</a></td><td>التقارير ‹ تقارير الاصناف</td><td>ما الأصناف التي أرجعها العملاء وبكم؟</td></tr>
+<tr><td><a href="#purchase-returns">تقرير مرتجع مشتريات</a></td><td>التقارير ‹ تقارير الاصناف</td><td>ما الأصناف التي أرجعتها للموردين؟</td></tr>
+<tr><td><a href="#collect">تقرير مبيعات ومشتريات مجمع</a></td><td>التقارير ‹ تقارير الاصناف</td><td>البيع والشراء لكل صنف في جدول واحد.</td></tr>
+<tr><td><a href="#collect-monthly">تقرير المبيعات المشتريات شهرى</a></td><td>التقارير ‹ تقارير الاصناف</td><td>كميات البيع والشراء لكل صنف في كل شهر.</td></tr>
+<tr><td><a href="#item-details">الاصناف التفصيليه</a></td><td>التقارير ‹ تقارير الاصناف</td><td>ملخص كامل لكل صنف: بيع وشراء ومرتجعات ورصيد وربح.</td></tr>
+<tr><td><a href="#invoice-movement">تقرير حركة فواتير صنف</a></td><td>التقارير ‹ تقارير الاصناف</td><td>في أي فواتير ظهر الصنف، سطرًا سطرًا؟</td></tr>
+<tr><td><a href="#items-list">تقارير الاصناف</a></td><td>التقارير ‹ المخازن والاصناف</td><td>قائمة الأصناف بالأسعار والرصيد (قائمة أسعار).</td></tr>
+<tr><td><a href="#stagnant">الاصناف الراكده</a></td><td>التقارير ‹ تقارير الاصناف</td><td>ما الأصناف التي لم تُبع في مدة معينة وكم قيمتها؟</td></tr>
+<tr><td><a href="#expired">الاصناف منتهيه الصلاحيه</a></td><td>التقارير ‹ المخازن والاصناف</td><td>ما المنتهي أو القريب من الانتهاء أو الصالح للبيع؟</td></tr>
+<tr><td><a href="#bonus-items">تقرير البونص للاصناف</a></td><td>التقارير ‹ المخازن والاصناف</td><td>كم بونص دخل وخرج من كل صنف؟</td></tr>
+<tr><td><a href="#bonus-customers">تقرير البونص للاصناف-عملاء</a></td><td>التقارير ‹ المخازن والاصناف</td><td>كم بونص أعطيت لكل عميل؟</td></tr>
+<tr><td><a href="#bonus-suppliers">تقرير البونص للاصناف-موردين</a></td><td>التقارير ‹ المخازن والاصناف</td><td>كم بونص أخذت من كل مورد؟</td></tr>
+<tr><td><a href="#gifts">تقرير هدايا الاصناف</a></td><td>التقارير ‹ تقارير الاصناف</td><td>ما عروض الهدايا المسجلة ومدتها؟</td></tr>
+<tr><td><a href="#forecast-report">تقرير التنبؤ بالطلب والمبيعات</a></td><td>التقارير ‹ تقارير الاصناف</td><td>كم أتوقع أن أبيع، وكم أحتاج أن أشتري؟</td></tr>
+<tr><td><a href="#most-profit">الاصناف الاكثر ربحيه</a></td><td>التقارير ‹ تقارير الاصناف</td><td>ترتيب الأصناف حسب الربح.</td></tr>
+<tr><td><a href="#branch-items">تقرير مبيعات الصنف الفروع - Pivot</a></td><td>التقارير ‹ تقارير اصناف الفروع</td><td>كمية كل صنف في كل فرع، كل فرع في عمود.</td></tr>
+<tr><td><a href="#branch-groups">تقرير مبيعات المجموعة الفروع - Pivot</a></td><td>التقارير ‹ تقارير اصناف الفروع</td><td>كمية كل مجموعة أصناف في كل فرع.</td></tr>
+<tr><td><a href="#branch-invoices">تقرير فواتير مبيعات الفروع</a></td><td>التقارير ‹ تقارير فواتير الفروع</td><td>قائمة فواتير كل فرع بالمدفوع والمتبقي والضريبة.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="sales">
+<h2>مبيعات الأصناف</h2>
+<!--shot:reports-items__sales-->
+<figure class="shot" id="shot-reports-items__sales">
+<div class="shot-frame"><a href="assets/screens/reports-items__sales.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/reports-items__sales.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: مبيعات الأصناف"></a></div>
+<figcaption>شاشة «مبيعات الأصناف» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+
+<h3 id="item-sales">تقرير مبيعات الأصناف (قائمة: تقرير مبيعات)</h3>
+<p><strong>يجيب عن:</strong> كم بعت من كل صنف، وبأي قيمة وخصم، وكم ربحت منه؟ هو التقرير الأساسي للمبيعات.</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">الحساب</span> (العميل)، <span class="ui">المجموعة</span> (تشمل المجموعات الفرعية)، <span class="ui">الصنف</span>، <span class="ui">المورد</span>، <span class="ui">الفرع</span>، <span class="ui">المخزن</span>، <span class="ui">المستخدم</span>، <span class="ui">Brand</span>، <span class="ui">مندوب</span>، <span class="ui">تصنيف رئيسى</span> (محافظة العميل)، <span class="ui">تصنيف فرعى</span> (مدينة العميل)، <span class="ui">المجموعة</span> (مجموعة العملاء)، <span class="ui">النوع</span>، والتاريخ.</li>
+  <li><strong>الخيارات:</strong> <span class="ui">اظهار صافي الصنف</span> يطرح مرتجعات المبيعات من المبيعات. <span class="ui">نمط متطور</span> يضيف أعمدة <span class="ui">العميل</span> و<span class="ui">المورد</span> و<span class="ui">العنوان</span> و<span class="ui">المندوب</span>، ويقسم الصنف إلى سطر لكل عميل ومندوب.</li>
+  <li><strong>الأعمدة:</strong> <span class="ui">كود</span>، <span class="ui">الصنف</span>، <span class="ui">الوحدة</span>، <span class="ui">الكمية</span>، <span class="ui">الكمية م</span>، <span class="ui">الاجمالى</span>، <span class="ui">الخصم</span>، <span class="ui">الصافى</span>، <span class="ui">النقاط</span>، <span class="ui">الربح</span>. الترتيب من الأكثر كمية.</li>
+  <li><strong>الإجماليات:</strong> <span class="ui">كمية</span>، <span class="ui">الاجمالى</span>، <span class="ui">الخصم</span>، <span class="ui">الصافى</span>، <span class="ui">نقاط</span>، <span class="ui">ربح</span>.</li>
+</ul>
+<p class="tip">تغيير <span class="ui">نمط متطور</span> يفرّغ الجدول. اضغط العرض مرة أخرى بعده. وإجمالي الكمية في الأسفل يجمع وحدات أصناف مختلفة، فهو مفيد فقط عند اختيار صنف واحد أو أصناف من نفس الوحدة.</p>
+
+<h3 id="item-sales-detail">تقرير مبيعات الأصناف (قائمة: تقرير مبيعات مفصل)</h3>
+<p><strong>يجيب عن:</strong> لكل صنف، كم بعت، وكم رجع، وما الصافي؟ في سطر واحد.</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">الحساب</span>، <span class="ui">المجموعة</span> (تشمل الفرعية)، <span class="ui">الصنف</span>، <span class="ui">المورد</span>، <span class="ui">الفرع</span>، <span class="ui">المستخدم</span>، <span class="ui">مندوب</span>، <span class="ui">تصنيف رئيسى</span> و<span class="ui">تصنيف فرعى</span> (محافظة ومدينة العميل)، <span class="ui">النوع</span>، والتاريخ.</li>
+  <li><strong>الأعمدة:</strong> <span class="ui">ك بيع</span>، <span class="ui">سعر بيع</span>، <span class="ui">ك م بيع</span>، <span class="ui">سعر م بيع</span>، <span class="ui">ك صافى</span>، <span class="ui">سعر صافى</span>، <span class="ui">النقاط</span>، <span class="ui">الربح</span>. كلمة «سعر» هنا تعني <strong>إجمالي القيمة</strong> وليس سعر الوحدة.</li>
+  <li><strong>الإجماليات:</strong> <span class="ui">كمية بيع</span>، <span class="ui">اجمالى بيع</span>، <span class="ui">كمية م بيع</span>، <span class="ui">اجمالى م بيع</span>، <span class="ui">صافى كمية</span>، <span class="ui">صافى بيع</span>، <span class="ui">نقاط</span>، <span class="ui">ربح</span>.</li>
+</ul>
+
+<h3 id="item-sales-cross">تقرير مبيعات الأصناف (قائمة: تقرير مبيعات Cross)</h3>
+<p><strong>يجيب عن:</strong> أي عميل اشترى أي صنف؟ الصفوف هي العملاء، والأعمدة هي أصناف المجموعة المختارة، والخانة هي الكمية المباعة بالوحدة الأساسية. آخر عمود <span class="ui">Total</span> هو مجموع الصف.</p>
+<ul>
+  <li><strong>إلزامي:</strong> اختيار <span class="ui">المجموعة</span>، وإلا تظهر رسالة <span class="msg">اختر مجموعة اصناف</span>. المجموعة هنا لا تشمل المجموعات الفرعية.</li>
+  <li><strong>فلاتر أخرى:</strong> <span class="ui">الحساب</span>، <span class="ui">الصنف</span>، <span class="ui">المورد</span>، <span class="ui">الفرع</span>، <span class="ui">مندوب</span>، محافظة ومدينة ومجموعة العميل، والتاريخ.</li>
+  <li><strong>الخيارات:</strong> <span class="ui">اظهار صافي الصنف</span> (بعد طرح المرتجعات)، و<span class="ui">اخفاء البونص</span> لاستبعاد الكميات المجانية.</li>
+  <li>لا يوجد نموذج طباعة. استخدم زر الطابعة ثم <strong>نعم</strong> للتصدير إلى Excel.</li>
+</ul>
+<div class="warn">قائمة <span class="ui">النوع</span> في هذه الشاشة لا تؤثر على النتائج. والأصناف التي لها نفس الاسم تُجمع في عمود واحد، والعملاء بنفس الاسم في صف واحد.</div>
+
+<h3 id="cust-item-sales">مبيعات العملاء / مبيعات صنف للعملاء / مرتجع بيع العملاء</h3>
+<p>من <span class="ui">التقارير</span> ‹ <span class="ui">تقارير العملاء</span>. يتغير عنوان الشاشة حسب الاختيار: <span class="ui">تقرير مبيعات العملاء</span> أو <span class="ui">تقرير مردودات مبيعات العملاء</span>.</p>
+<p><strong>يجيب عن:</strong> ماذا اشترى كل عميل من كل صنف، وما قيمته وربحه؟ (أو ماذا أرجع).</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">الحساب</span>، <span class="ui">المجموعة</span> (بدون الفرعية)، <span class="ui">الصنف</span>، <span class="ui">الفرع</span>، <span class="ui">مندوب</span>، <span class="ui">تصنيف رئيسى</span> و<span class="ui">تصنيف فرعى</span> (محافظة ومدينة العميل)، والتاريخ، و<span class="ui">اظهار صافي الصنف</span>.</li>
+  <li><strong>الأعمدة:</strong> <span class="ui">العميل</span>، <span class="ui">كود</span>، <span class="ui">الصنف</span>، <span class="ui">الوحدة</span>، <span class="ui">الكمية</span>، <span class="ui">الاجمالى</span>، <span class="ui">النقاط</span>، <span class="ui">الربح</span>. الإجماليات: <span class="ui">كمية</span>، <span class="ui">اجمالى</span>، <span class="ui">نقاط</span>، <span class="ui">ربح</span>.</li>
+  <li>تُخفى السطور التي كميتها صفر أو أقل.</li>
+</ul>
+<p class="note">«مبيعات العملاء» و«مبيعات صنف للعملاء» يعرضان نفس النتيجة.</p>
+
+<h3 id="group-sales">تقرير مبيعات مجموعات الاصناف (قائمة: تقرير مبيعات المجموعات)</h3>
+<p><strong>يجيب عن:</strong> كم باعت كل مجموعة أصناف، وكم رجع منها، وما الصافي والربح؟ سطر لكل مجموعة.</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">الحساب</span>، <span class="ui">المجموعة</span> (بدون الفرعية)، <span class="ui">الفرع</span>، <span class="ui">مندوب</span>، والتاريخ.</li>
+  <li><strong>الأعمدة:</strong> <span class="ui">المجموعة</span>، <span class="ui">كمية</span>، <span class="ui">قيمة</span>، <span class="ui">كمية مرتجع</span>، <span class="ui">قيمة مرتجع</span>، <span class="ui">صافى الكمية</span>، <span class="ui">صافى القيمة</span>، <span class="ui">الربح</span>.</li>
+  <li><strong>الإجماليات:</strong> ثلاثة أزواج <span class="ui">كمية</span> / <span class="ui">قيمة</span> بالترتيب: المبيعات، ثم المرتجعات، ثم الصافي، ثم <span class="ui">ربح</span>.</li>
+  <li>لا يدخل في التقرير الأصناف الموقوفة (غير النشطة).</li>
+</ul>
+
+<h3 id="monthly-sales">تقرير مبيعات الاصناف سنوي (قائمة: تقرير المبيعات الشهرى)</h3>
+<p><strong>يجيب عن:</strong> كيف توزعت مبيعات كل صنف على شهور السنة؟ مفيد لمعرفة المواسم.</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">الصنف</span>، <span class="ui">الحساب</span>، <span class="ui">الفرع</span>، <span class="ui">نوع الفاتوره</span> (<span class="ui">مبيعات</span> أو <span class="ui">م. مبيعات</span>)، <span class="ui">المندوب</span>، <span class="ui">عام</span>.</li>
+  <li><strong>الخيارات:</strong> <span class="ui">اظهار صافي مبيعات الصنف</span> (المبيعات ناقص المرتجعات)، و<span class="ui">اخفاء الارصدة الصفرية</span>.</li>
+  <li><strong>الأعمدة:</strong> <span class="ui">البيان</span> (الصنف)، ثم لكل شهر عمودان: «ك» للكمية و«س» للقيمة (مثل <span class="ui">يناير ك</span> و<span class="ui">يناير س</span>)، ثم <span class="ui">مجموع س</span> و<span class="ui">مجموع ك</span>. في آخر الجدول سطر إجمالي أخضر.</li>
+</ul>
+<div class="warn">إذا اخترت <span class="ui">م. مبيعات</span>، <strong>أزل علامة الصافي أولًا</strong>. إذا بقيت العلامة من قبل فسيعرض التقرير الصافي رغم أن العنوان يقول مرتجعات. و<span class="ui">اخفاء الارصدة الصفرية</span> يعتمد على القيمة فقط، فيخفي أصنافًا لها كمية بقيمة صفر (مثل البونص).</div>
+</section>
+
+<section id="purchases">
+<h2>المشتريات</h2>
+<!--shot:reports-items__purchases-->
+<figure class="shot" id="shot-reports-items__purchases">
+<div class="shot-frame"><a href="assets/screens/reports-items__purchases.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/reports-items__purchases.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: المشتريات"></a></div>
+<figcaption>شاشة «المشتريات» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+
+<h3 id="item-purchases">تقرير مشتريات الأصناف (قائمة: تقرير مشتريات)</h3>
+<p><strong>يجيب عن:</strong> كم اشتريت من كل صنف، وبأي قيمة وخصم؟</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">الحساب</span> (مورد الفاتورة)، <span class="ui">المجموعة</span> (تشمل الفرعية)، <span class="ui">الصنف</span>، <span class="ui">الفرع</span>، <span class="ui">المخزن</span>، <span class="ui">النوع</span>، <span class="ui">Brand</span>، <span class="ui">المستخدم</span>، والتاريخ.</li>
+  <li><strong>الخيارات:</strong> <span class="ui">اظهار صافي الصنف</span> يطرح مرتجعات المشتريات. <span class="ui">نمط متطور</span> يضيف عمود <span class="ui">المورد</span> (المورد الافتراضي للصنف) وعمود <span class="ui">LastPurchase</span> (تاريخ آخر شراء).</li>
+  <li><strong>الأعمدة:</strong> <span class="ui">كود</span>، <span class="ui">الصنف</span>، <span class="ui">الوحدة</span>، <span class="ui">الكمية</span>، <span class="ui">الكمية م</span>، <span class="ui">الاجمالى</span>، <span class="ui">الخصم</span>، <span class="ui">الصافى</span>. الإجماليات: <span class="ui">كمية</span>، <span class="ui">الاجمالى</span>، <span class="ui">الخصم</span>، <span class="ui">الصافى</span>.</li>
+</ul>
+<p class="tip">عمود <span class="ui">المورد</span> هو المورد المسجل في كارت الصنف، وقد يختلف عن المورد الذي اشتريت منه فعلًا. لمعرفة مورد الفاتورة استخدم فلتر <span class="ui">الحساب</span>.</p>
+
+<h3 id="monthly-purchases">تقرير مشتريات الاصناف سنوي (قائمة: تقرير المشتريات الشهرى)</h3>
+<p><strong>يجيب عن:</strong> كيف توزعت مشتريات كل صنف على شهور السنة؟ نفس شكل <a href="#monthly-sales">تقرير المبيعات الشهرى</a>، مع <span class="ui">نوع</span> (<span class="ui">مشتريات</span> أو <span class="ui">م. مشتريات</span>) و<span class="ui">الحساب</span> للمورد، و<span class="ui">اخفاء الارصدة الصفرية</span>.</p>
+<div class="warn">خيار <span class="ui">اظهار صافي مشتريات الصنف</span> يعرض الأرقام <strong>بإشارة سالبة</strong> (المشتريات بالسالب والمرتجعات بالموجب). اقرأ الرقم بدون الإشارة، أو اعرض <span class="ui">مشتريات</span> و<span class="ui">م. مشتريات</span> كلًا على حدة واطرحهما. وكما في تقرير المبيعات: أزل علامة الصافي قبل اختيار <span class="ui">م. مشتريات</span>.</div>
+
+<h3 id="group-purchases">تقرير مشتريات مجموعات اصناف (قائمة: تقرير مشتريات المجموعات)</h3>
+<p>نفس شاشة <a href="#group-sales">مبيعات المجموعات</a> لكن للمشتريات: <span class="ui">كمية</span> و<span class="ui">قيمة</span> الشراء، ثم <span class="ui">كمية مرتجع</span> و<span class="ui">قيمة مرتجع</span> (مرتجعات الشراء)، ثم الصافي. <span class="ui">الحساب</span> هنا هو المورد. عمود الربح لا يظهر في هذا الوضع، ورقم <span class="ui">ربح</span> في الأسفل يكون صفرًا.</p>
+
+<h3 id="supplier-items">مشتريات الاصناف الموردين / مرتجع شراء الاصناف الموردين</h3>
+<p>من <span class="ui">التقارير</span> ‹ <span class="ui">تقارير الموردين</span>. العنوان <span class="ui">تقرير مشتريات الموردين</span> أو <span class="ui">تقرير مردودات مشتريات الموردين</span>. نفس شاشة <a href="#cust-item-sales">مبيعات العملاء</a>، لكن الصفوف لكل مورد وصنف.</p>
+<div class="warn">لا تضع علامة <span class="ui">اظهار صافي الصنف</span> في هذين التقريرين، لأنها تعرض بيانات المبيعات بدل المشتريات.</div>
+</section>
+
+<section id="returns">
+<h2>المرتجعات</h2>
+<!--shot:reports-items__returns-->
+<figure class="shot" id="shot-reports-items__returns">
+<div class="shot-frame"><a href="assets/screens/reports-items__returns.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/reports-items__returns.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: المرتجعات"></a></div>
+<figcaption>شاشة «المرتجعات» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+
+<h3 id="sales-returns">تقرير مرتجعات مبيعات الأصناف (قائمة: تقرير مرتجع مبيعات)</h3>
+<p><strong>يجيب عن:</strong> ما الأصناف التي أرجعها العملاء، وبأي كمية وقيمة؟</p>
+<ul>
+  <li><strong>الفلاتر:</strong> نفس فلاتر <a href="#item-sales">تقرير مبيعات الأصناف</a>: الحساب، المجموعة، الصنف، المورد، الفرع، المخزن، المندوب، المستخدم، Brand، محافظة ومدينة ومجموعة العميل، النوع، والتاريخ.</li>
+  <li><strong>الأعمدة:</strong> <span class="ui">كود</span>، <span class="ui">الصنف</span>، <span class="ui">الوحدة</span>، <span class="ui">الكمية</span>، <span class="ui">الكمية م</span>، <span class="ui">الاجمالى</span>، <span class="ui">الخصم</span>، <span class="ui">الصافى</span>، <span class="ui">النقاط</span>، <span class="ui">الربح</span>. <span class="ui">نمط متطور</span> يضيف <span class="ui">العميل</span> و<span class="ui">المورد</span> و<span class="ui">المندوب</span>.</li>
+  <li><strong>الربح</strong> يظهر <strong>بالسالب</strong>، لأنه الربح الذي خسرته بسبب المرتجع.</li>
+</ul>
+
+<h3 id="purchase-returns">تقرير مرتجعات مشتريات الأصناف (قائمة: تقرير مرتجع مشتريات)</h3>
+<p><strong>يجيب عن:</strong> ما الأصناف التي أرجعتها للموردين؟</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">الحساب</span> (المورد)، <span class="ui">المجموعة</span> (تشمل الفرعية)، <span class="ui">الصنف</span>، <span class="ui">الفرع</span>، <span class="ui">المخزن</span>، <span class="ui">النوع</span>، <span class="ui">Brand</span>، <span class="ui">المستخدم</span>، والتاريخ. <span class="ui">نمط متطور</span> يضيف عمود <span class="ui">المورد</span>.</li>
+  <li><strong>الأعمدة:</strong> <span class="ui">كود</span>، <span class="ui">الصنف</span>، <span class="ui">الوحدة</span>، <span class="ui">الكمية</span>، <span class="ui">الكمية م</span>، <span class="ui">الاجمالى</span>، <span class="ui">الخصم</span>، <span class="ui">الصافى</span>.</li>
+</ul>
+<div class="warn">الطباعة في هذا التقرير تستخدم نموذج مرتجع المبيعات، فقد يظهر الورق بعناوين غير مناسبة. الأفضل التصدير إلى Excel من نافذة المعاينة. ولا تطبع بعد رسالة <span class="msg">لايوجد بيانات متاحة</span>، لأن الطباعة قد تُخرج نتيجة البحث السابق.</div>
+</section>
+
+<section id="movement">
+<h2>الحركة والأرصدة</h2>
+<!--shot:reports-items__movement-->
+<figure class="shot" id="shot-reports-items__movement">
+<div class="shot-frame"><a href="assets/screens/reports-items__movement.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/reports-items__movement.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: الحركة والأرصدة"></a></div>
+<figcaption>شاشة «الحركة والأرصدة» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+
+<h3 id="collect">تقرير مبيعات ومشتريات الأصناف (قائمة: تقرير مبيعات ومشتريات مجمع)</h3>
+<p><strong>يجيب عن:</strong> كم اشتريت وكم بعت من كل صنف، في جدول واحد؟</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">الحساب</span>، <span class="ui">المجموعة</span> (تشمل الفرعية)، <span class="ui">الصنف</span>، <span class="ui">المورد</span>، <span class="ui">الفرع</span>، والتاريخ (<span class="ui">الكل</span>، <span class="ui">تاريخ</span>، <span class="ui">شهر</span>، <span class="ui">سنة</span>، <span class="ui">فترة</span>).</li>
+  <li><strong>الخيارات:</strong> <span class="ui">اظهار صافي الصنف</span> يطرح المرتجعات من كل جانب. <span class="ui">نمط متطور</span> يضيف عمود <span class="ui">المورد</span>.</li>
+  <li><strong>الأعمدة:</strong> <span class="ui">ك الشراء</span>، <span class="ui">س الشراء</span>، <span class="ui">ك البيع</span>، <span class="ui">س البيع</span>. «ك» كمية و«س» إجمالي القيمة. في الآخر سطر إجمالي أخضر.</li>
+</ul>
+<p class="tip">فلتر <span class="ui">الحساب</span> يطبَّق على البيع والشراء معًا. إذا اخترت عميلًا ستظهر مشترياته منك فقط، وتكون أعمدة الشراء غالبًا صفرًا.</p>
+
+<h3 id="collect-monthly">تقرير مبيعات ومشتريات سنوى (قائمة: تقرير المبيعات المشتريات شهرى)</h3>
+<p><strong>يجيب عن:</strong> لكل صنف، كم اشتريت وكم بعت في كل شهر من السنة؟ (كميات فقط).</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">الصنف</span>، <span class="ui">الفرع</span>، <span class="ui">عام</span>.</li>
+  <li><strong>الأعمدة:</strong> <span class="ui">الصنف</span>، ثم لكل شهر <span class="ui">ش</span> (صافي الشراء بعد مرتجع الشراء) و<span class="ui">ب</span> (صافي البيع بعد مرتجع البيع)، مثل <span class="ui">يناير ش</span> و<span class="ui">يناير ب</span>. في الآخر سطر إجمالي.</li>
+  <li>يعرض <strong>كل الأصناف</strong> حتى التي ليس لها حركة. اختر صنفًا إذا كان عدد أصنافك كبيرًا.</li>
+</ul>
+
+<h3 id="item-details">تقرير اصناف تفصيلى (قائمة: الاصناف التفصيليه)</h3>
+<p><strong>يجيب عن:</strong> ملخص شامل لكل صنف في سطر واحد: بيع، ومرتجع بيع، وشراء، ومرتجع شراء، ورصيد أول المدة، وربح. يفتح أيضًا من <span class="ui">تقرير ربح صنف</span> في قائمة الزر الأيمن ومن كارت الصنف.</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">المجموعة</span>، <span class="ui">الصنف</span>، <span class="ui">المورد</span> (<kbd>F9</kbd>)، <span class="ui">الفرع</span>، <span class="ui">Brand</span>، <span class="ui">المخزن</span>، والتاريخ.</li>
+  <li><strong>الأعمدة:</strong> <span class="ui">المورد</span>، <span class="ui">كود</span>، <span class="ui">الصنف</span>، <span class="ui">الوحدة</span>، <span class="ui">كمية مبيعات</span> / <span class="ui">قيمة مبيعات</span>، <span class="ui">كمية م بيع</span> / <span class="ui">قيمة م بيع</span>، <span class="ui">كمية مشتريات</span> / <span class="ui">قيمة مشتريات</span>، <span class="ui">كمية م مشتريات</span> / <span class="ui">قيمة م مشتريات</span>، <span class="ui">رصيد اول فترة</span>، <span class="ui">اخر س شراء</span>، <span class="ui">اخر س بيع</span>، <span class="ui">رصيد حالى</span>، <span class="ui">رصيد مفصل</span>، <span class="ui">ارباح الصنف</span>.</li>
+  <li><strong>ارباح الصنف</strong> = ربح المبيعات ناقص ربح مرتجعات المبيعات.</li>
+</ul>
+<div class="warn">
+<ul>
+  <li><strong>الفرع:</strong> عند فتح الشاشة يُطبَّق أول فرع في القائمة حتى لو لم تضع علامة على <span class="ui">الفرع</span>. لعرض كل الفروع ضع العلامة ثم أزلها قبل الضغط على العرض.</li>
+  <li><span class="ui">اخر س شراء</span> و<span class="ui">اخر س بيع</span> هما السعران المسجلان في كارت الصنف، وليسا سعر آخر فاتورة.</li>
+  <li><span class="ui">رصيد حالى</span> هو صافي الحركة داخل الفلاتر المختارة، وليس الرصيد الفعلي في المخزن. للرصيد الفعلي استخدم <a href="reports-stores.html">تقارير المخازن</a>.</li>
+  <li>سطر الإجمالي يجمع الأسعار والأرصدة لأصناف مختلفة، فلا معنى لهذه الخانات فيه.</li>
+</ul>
+</div>
+
+<h3 id="invoice-movement">تقرير حركة فواتير صنف</h3>
+<p><strong>يجيب عن:</strong> في أي فواتير شراء أو بيع أو مرتجع ظهر الصنف؟ يعرض كل سطر فاتورة على حدة.</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">المخزن</span>، <span class="ui">الصنف</span>، <span class="ui">المجموعة</span> (تشمل الفرعية)، التاريخ <span class="ui">من</span> / <span class="ui">الى</span>، <span class="ui">الفرع</span>، <span class="ui">العميل</span>، <span class="ui">المندوب</span>، <span class="ui">الشركة</span> (شركة الشحن)، <span class="ui">فاتورة</span> (<span class="ui">شراء</span>، <span class="ui">بيع</span>، <span class="ui">م بيع</span>، <span class="ui">م شراء</span>، <span class="ui">الكل</span>)، <span class="ui">المورد</span>. أنواع الفواتير الظاهرة في القائمة تعتمد على صلاحياتك.</li>
+  <li><strong>الأعمدة:</strong> <span class="ui">كود</span>، <span class="ui">الصنف</span>، <span class="ui">الوحدة</span>، <span class="ui">الوارد</span>، <span class="ui">الصادر</span>، <span class="ui">السعر</span>، <span class="ui">الخصم</span>، <span class="ui">الاجمالى</span>، <span class="ui">الصلاحية</span> (إذا كانت متابعة الصلاحية مفعلة)، <span class="ui">المعامل</span>، <span class="ui">العملة</span>، <span class="ui">بيان</span> (وصف الفاتورة واسم العميل أو المورد)، <span class="ui">التاريخ</span>، <span class="ui">رقم الفاتورة</span>، <span class="ui">Profit</span>، <span class="ui">User</span>.</li>
+  <li><strong>الإجماليات:</strong> <span class="ui">وارد</span>، <span class="ui">صادر</span>، <span class="ui">ربح</span>.</li>
+  <li><strong>نقر مزدوج</strong> على السطر يفتح الفاتورة نفسها.</li>
+</ul>
+<p class="tip">الكمية هنا بوحدة الفاتورة (كرتونة أو قطعة كما سُجلت)، فإجمالي الوارد والصادر يجمع وحدات مختلفة. وعمود <span class="ui">Profit</span> له معنى في فواتير البيع فقط؛ اختر <span class="ui">بيع</span> في فلتر <span class="ui">فاتورة</span> عند قراءة الربح.</p>
+
+<h3 id="items-list">تقرير الأصناف (قائمة: التقارير ‹ المخازن والاصناف ‹ تقارير الاصناف)</h3>
+<p><strong>يجيب عن:</strong> ما أصنافي وأسعارها ورصيدها؟ يُستخدم كقائمة أسعار مطبوعة.</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">المجموعة</span> (تشمل الفرعية)، <span class="ui">الحساب</span> (المورد الافتراضي للصنف)، <span class="ui">الفرع</span> (يؤثر على الرصيد فقط)، <span class="ui">Brand</span>.</li>
+  <li><strong>خيارات الإخفاء:</strong> <span class="ui">اخفاء سعر النقدي</span>، <span class="ui">اخفاء سعر جمله</span>، <span class="ui">اخفاء نص جملة</span>، <span class="ui">اخفاء سعر الشراء</span>، <span class="ui">اخفاء الخدمات</span>، <span class="ui">اخفاء الرصيد</span>، <span class="ui">اخفاء الارصدة الصفرية</span>، <span class="ui">اخفاء الارصدة السالبة</span>.</li>
+  <li><strong>الأعمدة:</strong> <span class="ui">كود</span>، <span class="ui">الصنف</span>، <span class="ui">الوحدة</span>، <span class="ui">المجموعة</span>، <span class="ui">سعر الشراء</span>، <span class="ui">سعر البيع</span>، <span class="ui">نصف جملة</span>، <span class="ui">سعر الجملة</span>، <span class="ui">الرصيد</span>. كل عمود سعر يظهر فقط لمن له صلاحية رؤيته.</li>
+  <li><span class="ui">الرصيد</span> هو رصيد كل المخازن في الفترة المالية الحالية. الأصناف الموقوفة لا تظهر.</li>
+</ul>
+<p class="tip">تغيير أي خيار إخفاء يفرّغ الجدول، فاضغط العرض بعده. و<span class="ui">اخفاء الارصدة السالبة</span> يعرض الأصناف ذات الرصيد الموجب فقط، أي يخفي الصفرية أيضًا.</p>
+
+<h3 id="stagnant">تقرير الاصناف الراكده بالمخازن (قائمة: الاصناف الراكده)</h3>
+<p><strong>يجيب عن:</strong> ما الأصناف التي <strong>لم تُبع</strong> خلال مدة معينة، وكم رصيدها وقيمتها، ومنذ كم يومًا لم تتحرك؟</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">المجموعة</span>، <span class="ui">المورد</span>، <span class="ui">الفرع</span>، <span class="ui">مندوب</span>، <span class="ui">Brand</span>، والمدة: <span class="ui">فتره</span> (تبدأ بالشهر الحالي) أو <span class="ui">شهر</span> أو <span class="ui">سنه</span>.</li>
+  <li><strong>الأعمدة:</strong> <span class="ui">المورد</span>، <span class="ui">كود</span>، <span class="ui">الصنف</span>، <span class="ui">المجموعة</span>، <span class="ui">الوحدة</span>، <span class="ui">الرصيد الحالى</span>، <span class="ui">التكلفة</span>، <span class="ui">اخر تعامل</span>، <span class="ui">الايام</span>. في الآخر سطر إجمالي أخضر.</li>
+  <li><strong>التكلفة</strong> = الرصيد × تكلفة الوحدة. عند اختيار فرع تُستخدم تكلفة الصنف في هذا الفرع، وبدونه تُستخدم التكلفة المسجلة في كارت الصنف.</li>
+  <li><strong>الايام</strong> = عدد الأيام منذ آخر حركة من أي نوع (شراء أو تحويل أو غيره)، وليس منذ آخر بيع.</li>
+</ul>
+<p class="note">الشاشة تعرض أيضًا الأصناف التي رصيدها صفر، أما الورقة المطبوعة فتعرض الأصناف ذات الرصيد فقط مرتبة من الأكبر.</p>
+</section>
+
+<section id="expiry">
+<h2>الصلاحية</h2>
+<h3 id="expired">بيان بالأصناف المنتهيه الصلاحيه (قائمة: الاصناف منتهيه الصلاحيه)</h3>
+<p>يظهر في القائمة فقط إذا كانت <strong>متابعة الصلاحية</strong> مفعلة في الإعدادات. يفتح أيضًا بالنقر على مربع الأصناف المنتهية في لوحة المتابعة.</p>
+<p><strong>يجيب عن:</strong> ما الكميات المنتهية الصلاحية، أو القريبة من الانتهاء، أو الصالحة للبيع، لكل تاريخ انتهاء؟</p>
+<ul>
+  <li><span class="ui">النوع</span>:
+    <ul>
+      <li><span class="ui">الاصناف منتهية الصلاحية</span>: تاريخ انتهائها اليوم أو قبله.</li>
+      <li><span class="ui">الاصناف التى اوشكت على الانتهاء</span>: تنتهي خلال عدد أيام التنبيه المحدد في الإعدادات (30 يومًا إن لم يُحدد).</li>
+      <li><span class="ui">الاصناف المتاحة للبيع</span>: تاريخ انتهائها بعد اليوم.</li>
+    </ul>
+  </li>
+  <li><strong>فلاتر أخرى:</strong> <span class="ui">المجموعة</span>، و<span class="ui">المخزن</span> (ضع العلامة ثم اختر مخزنًا).</li>
+  <li><strong>الأعمدة:</strong> <span class="ui">كود</span>، <span class="ui">الصنف</span>، <span class="ui">المجموعة</span>، <span class="ui">الكمية</span> (المتبقي من هذه التشغيلة بالوحدة الأساسية)، <span class="ui">تاريخ الانتهاء</span>. الترتيب أبجدي بالصنف.</li>
+</ul>
+<div class="warn">فلتر <span class="ui">المورد</span> في هذه الشاشة لا يعمل (قائمته فارغة). وإذا وضعت علامة <span class="ui">المخزن</span> بدون اختيار مخزن فلن تظهر أي نتيجة.</div>
+</section>
+
+<section id="bonus">
+<h2>البونص والهدايا</h2>
+<p>البونص هو الكمية المجانية المسجلة في سطر الفاتورة. هذه التقارير تعرض الكميات فقط (بالوحدة الأساسية) وليس قيمتها.</p>
+<!--shot:reports-items__bonus-->
+<figure class="shot" id="shot-reports-items__bonus">
+<div class="shot-frame"><a href="assets/screens/reports-items__bonus.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/reports-items__bonus.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: البونص والهدايا"></a></div>
+<figcaption>شاشة «البونص والهدايا» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+
+<h3 id="bonus-items">تقرير البونص للاصناف</h3>
+<p><strong>يجيب عن:</strong> لكل صنف، كم بونص دخل إليك وكم خرج منك؟ يفتح أيضًا من <span class="ui">تقرير بونص صنف</span> في قائمة الزر الأيمن ومن كارت الصنف.</p>
+<ul>
+  <li><span class="ui">اجمالي وارد</span> = بونص فواتير الشراء + بونص مرتجعات المبيعات.</li>
+  <li><span class="ui">اجمالي صادر</span> = بونص فواتير البيع + بونص مرتجعات المشتريات.</li>
+  <li><strong>الفلاتر:</strong> <span class="ui">الصنف</span>، <span class="ui">الحساب</span> (العملاء فقط)، <span class="ui">الفرع</span>، <span class="ui">مندوب</span>، والمدة <span class="ui">من</span> / <span class="ui">الى</span> بتاريخ الفاتورة.</li>
+  <li><strong>الأعمدة:</strong> المجموعة، <span class="ui">كود</span>، <span class="ui">الصنف</span>، <span class="ui">الوحدة</span>، <span class="ui">اجمالي وارد</span>، <span class="ui">اجمالي صادر</span>. الإجماليات: وارد، <span class="ui">صادر</span>، <span class="ui">الرصيد</span> (الفرق).</li>
+</ul>
+
+<h3 id="bonus-customers">تقرير البونص للاصناف-العملاء</h3>
+<p><strong>يجيب عن:</strong> كم بونص أعطيت لكل عميل من كل صنف؟</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">الصنف</span>، <span class="ui">الحساب</span>، <span class="ui">الفرع</span>، <span class="ui">مندوب</span>، <span class="ui">المستخدم</span>، والتاريخ.</li>
+  <li><strong>الأعمدة:</strong> <span class="ui">كود الحساب</span>، <span class="ui">الحساب</span>، المجموعة، <span class="ui">كود</span>، <span class="ui">الصنف</span>، <span class="ui">الوحدة</span>، <span class="ui">الكمية</span>. الإجمالي في <span class="ui">الرصيد</span>.</li>
+  <li>لا يوجد نموذج طباعة؛ صدّر إلى Excel.</li>
+</ul>
+<p class="note">يدخل في هذا التقرير أيضًا بونص مرتجعات المشتريات، فقد يظهر فيه مورد. ركّز على أسماء العملاء.</p>
+
+<h3 id="bonus-suppliers">تقرير البونص للاصناف-الموردين</h3>
+<p><strong>يجيب عن:</strong> كم بونص أخذت من كل مورد من كل صنف؟ نفس شكل تقرير العملاء، و<span class="ui">الحساب</span> فيه للموردين. لا يوجد نموذج طباعة.</p>
+<p class="note">يدخل فيه أيضًا بونص مرتجعات المبيعات، فقد يظهر عميل، وقد يظهر نفس الصنف مع نفس الحساب في سطرين.</p>
+
+<h3 id="gifts">تقرير هدايا الاصناف</h3>
+<p><strong>يجيب عن:</strong> ما عروض الهدايا (اشترِ صنفًا واحصل على هدية) المسجلة، ولأي مجموعة عملاء، ومتى تبدأ وتنتهي؟</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">المجموعة</span> (مجموعة العملاء)، <span class="ui">الصنف</span> (الصنف الذي يفعّل الهدية)، <span class="ui">المستخدم</span>، <span class="ui">المورد</span>، <span class="ui">Brand</span>، والتاريخ (على تاريخ بداية العرض)، و<span class="ui">تكرار عددى</span> (Yes / NO)، و<span class="ui">النوع</span> (% أو Qty).</li>
+  <li><strong>الأعمدة:</strong> <span class="ui">رقم</span>، <span class="ui">العرض</span>، <span class="ui">المجموعة</span>، <span class="ui">من</span>، <span class="ui">الى</span>.</li>
+  <li><strong>النقر على أي سطر</strong> يفتح شاشة العرض للتعديل. كل نقرة تفتح نافذة جديدة.</li>
+  <li>لا يوجد نموذج طباعة؛ صدّر إلى Excel.</li>
+</ul>
+<div class="warn">مفتاحا <span class="ui">تكرار عددى</span> و<span class="ui">النوع</span> يطبَّقان دائمًا، ولا يوجد خيار «الكل». لرؤية كل العروض شغّل التقرير لكل تركيبة منهما. لاحظ أيضًا أن تحويل <span class="ui">النوع</span> إلى Qty يحوّل <span class="ui">تكرار عددى</span> إلى Yes تلقائيًا.</div>
+</section>
+
+<section id="forecast">
+<h2>التنبؤ بالطلب</h2>
+<!--shot:reports-items__forecast-->
+<figure class="shot" id="shot-reports-items__forecast">
+<div class="shot-frame"><a href="assets/screens/reports-items__forecast.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/reports-items__forecast.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: التنبؤ بالطلب"></a></div>
+<figcaption>شاشة «التنبؤ بالطلب» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<h3 id="forecast-report">تقرير توقع مبيعات الأصناف (قائمة: تقرير التنبؤ بالطلب والمبيعات)</h3>
+<p><strong>يجيب عن:</strong> كم أتوقع أن أبيع من كل صنف، وهل رصيدي يكفي؟ ويمكنه إنشاء فاتورة شراء أو أمر شراء جاهز بالكميات.</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">الحساب</span> (يؤثر على المبيعات فقط)، <span class="ui">المجموعة</span>، <span class="ui">الصنف</span>، <span class="ui">الفرع</span>، <span class="ui">المورد</span>، <span class="ui">Brand</span>، <span class="ui">شهر</span>، و<span class="ui">تصفية</span>.</li>
+  <li><strong>الأعمدة</strong> (بالإنجليزية): Code، Name، Unit، Old Month، Middle Month، Last Month، Min Request (حد الطلب من كارت الصنف)، Balance (الرصيد)، Moving Average Forecast، Weighted Moving Forecast.</li>
+</ul>
+<h4>كيف تُحسب الأرقام</h4>
+<ul>
+  <li>إذا اخترت شهر <strong>مايو</strong> مثلًا، يأخذ التقرير صافي المبيعات (البيع ناقص المرتجع، بالوحدة الأساسية) لأشهر <strong>فبراير</strong> (Old Month) و<strong>مارس</strong> (Middle Month) و<strong>أبريل</strong> (Last Month). الشهر المختار نفسه لا يدخل.</li>
+  <li><strong>Moving Average Forecast</strong> = متوسط الأشهر الثلاثة، مقربًا لأقرب رقم صحيح. الشهر بدون مبيعات يُحسب صفرًا.</li>
+  <li><strong>Weighted Moving Forecast</strong> = 20% من الشهر الأقدم + 30% من الأوسط + 50% من الأحدث، مقربًا. يعطي وزنًا أكبر للشهر الأخير.</li>
+  <li><strong>Balance</strong> = رصيد الصنف الحالي في الفترة المالية، وليس رصيده في الشهر المختار.</li>
+  <li>الأصناف التي لم تُبع إطلاقًا في الأشهر الثلاثة لا تظهر.</li>
+</ul>
+<h4>قائمة «تصفية»</h4>
+<p>تعرض الأصناف التي تحقق مقارنة معينة، مثل <code>Moving Average &gt; Balance</code> (المتوقع أكبر من الرصيد، أي تحتاج شراء) أو <code>Balance &gt; Weighted Moving</code> (الرصيد أكبر من المتوقع). اضغط العرض بعد تغيير التصفية.</p>
+<h4>إنشاء فاتورة شراء أو أمر شراء</h4>
+<ol class="steps">
+  <li>اختر <span class="ui">الفرع</span>. بدون فرع تظهر رسالة <span class="msg">Choose Branch first</span>. ويجب أن يكون للفرع مخزن افتراضي.</li>
+  <li>اضغط العرض، وتأكد أن الجدول يحوي الأصناف المطلوبة فقط.</li>
+  <li>من زر <span class="ui">Export</span> اختر طريقة حساب الكمية: <code>Moving Average</code>، أو <code>Weighted Moving</code>، أو أحدهما ناقص الرصيد (<code>-Balance</code>)، أو ناقص حد الطلب (<code>-Min Request</code>).</li>
+  <li>اختر <span class="ui">فاتورة شراء</span> أو <span class="ui">امر شراء</span>. تفتح الشاشة بالأصناف والكميات. الأصناف التي كميتها المحسوبة صفر أو أقل لا تُضاف.</li>
+  <li>راجع الكميات وأضف الأسعار والمورد، ثم احفظ. راجع <a href="purchase-invoice.html">فاتورة الشراء</a>.</li>
+</ol>
+<p class="note">الفاتورة الناتجة تأتي بسعر صفر للأصناف، ولا تُحفظ تلقائيًا. التقرير نفسه بلا نموذج طباعة؛ صدّره إلى Excel.</p>
+</section>
+
+<section id="profit">
+<h2>الأصناف الأكثر ربحًا</h2>
+<!--shot:reports-items__profit-->
+<figure class="shot" id="shot-reports-items__profit">
+<div class="shot-frame"><a href="assets/screens/reports-items__profit.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/reports-items__profit.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: الأصناف الأكثر ربحًا"></a></div>
+<figcaption>شاشة «الأصناف الأكثر ربحًا» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<h3 id="most-profit">تقرير الاصناف الاكثر ربحيه</h3>
+<p><strong>يجيب عن:</strong> ما الأصناف التي تحقق أعلى (أو أقل) ربح؟</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">المجموعة</span> (تشمل الفرعية)، <span class="ui">الفرع</span>، <span class="ui">الحساب</span>، <span class="ui">مندوب</span>، <span class="ui">المورد</span>، <span class="ui">Brand</span>، والتاريخ (<span class="ui">الكل</span>، <span class="ui">شهر</span>، <span class="ui">سنة</span>، <span class="ui">من</span> ... <span class="ui">الى</span>).</li>
+  <li><strong>الترتيب:</strong> مفتاح <span class="ui">اكبر ربح</span> / <span class="ui">اقل ربح</span>. <strong>الافتراضي هو «اقل ربح»</strong>، فحوّله إلى «اكبر ربح» لترى الأفضل في الأعلى.</li>
+  <li><strong>الأعمدة:</strong> <span class="ui">كود</span>، <span class="ui">الصنف</span>، <span class="ui">المجموعة</span>، <span class="ui">الكمية</span> (المبيعات ناقص المرتجعات)، <span class="ui">الاجمالى</span> (صافي قيمة البيع)، <span class="ui">الربح</span>. في الآخر سطر إجمالي أخضر.</li>
+  <li><strong>الربح</strong> = صافي قيمة البيع ناقص التكلفة، مطروحًا منه ربح المرتجعات، محولًا بمعامل الصرف.</li>
+</ul>
+<p class="tip">عند وضع علامة <span class="ui">مندوب</span> قد يظهر الصنف أكثر من مرة (مرة لكل مندوب) بدون عمود يوضح المندوب. اختر مندوبًا محددًا أو اترك الفلتر.</p>
+</section>
+
+<section id="branches">
+<h2>تقارير الفروع</h2>
+<!--shot:reports-items__branches-->
+<figure class="shot" id="shot-reports-items__branches">
+<div class="shot-frame"><a href="assets/screens/reports-items__branches.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/reports-items__branches.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: تقارير الفروع"></a></div>
+<figcaption>شاشة «تقارير الفروع» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+
+<h3 id="branch-items">تقارير الصنف للفروع - Pivot</h3>
+<p>من <span class="ui">التقارير</span> ‹ <span class="ui">تقارير اصناف الفروع</span>: <span class="ui">تقرير مبيعات الصنف الفروع - Pivot</span>، و<span class="ui">تقرير م مبيعات الصنف الفروع - Pivot</span>، و<span class="ui">تقرير مشتريات الصنف الفروع - Pivot</span>، و<span class="ui">تقرير م مشتريات الصنف الفروع - Pivot</span>.</p>
+<p><strong>يجيب عن:</strong> كم بيع (أو اشتُري، أو رجع) من كل صنف في كل فرع؟ كل فرع في عمود مستقل.</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">الحساب</span>، <span class="ui">المجموعة</span> (بدون الفرعية)، <span class="ui">الصنف</span>، <span class="ui">المورد</span>، <span class="ui">مندوب</span>، <span class="ui">تصنيف رئيسى</span> و<span class="ui">تصنيف فرعى</span> و<span class="ui">المجموعة</span> (محافظة ومدينة ومجموعة العميل)، <span class="ui">Brand</span>، والتاريخ.</li>
+  <li><strong>الأعمدة:</strong> ID، <span class="ui">كود</span>، <span class="ui">الصنف</span>، <span class="ui">وحدة</span>، <span class="ui">Total</span>، ثم عمود لكل فرع. الأرقام <strong>كميات</strong> بالوحدة الأساسية. تقرير المبيعات والمشتريات يعرض الصافي بعد المرتجعات.</li>
+  <li>قائمة الزر الأيمن متاحة على الأصناف.</li>
+  <li>لا يوجد نموذج طباعة؛ صدّر إلى Excel.</li>
+</ul>
+<div class="warn">عمود <span class="ui">Total</span> يجمع <strong>كل الفروع</strong>، بما فيها الفروع الموقوفة أو التي لا تملك صلاحية رؤيتها وليس لها عمود. لذلك قد لا يساوي Total مجموع الأعمدة الظاهرة.</div>
+
+<h3 id="branch-groups">تقارير المجموعة للفروع - Pivot</h3>
+<p>من نفس القائمة: <span class="ui">تقرير مبيعات المجموعة الفروع - Pivot</span> وأخواته (مرتجع المبيعات، والمشتريات، ومرتجع المشتريات). نفس الفكرة لكن الصف لكل <strong>مجموعة أصناف</strong>: <span class="ui">المجموعة</span>، <span class="ui">Total</span>، ثم عمود لكل فرع. ينطبق عليه نفس التنبيه عن عمود Total. والمجموعات التي لها نفس الاسم تُجمع معًا.</p>
+
+<h3 id="branch-invoices">تقارير فواتير الفروع (تفصيلي)</h3>
+<p>من <span class="ui">التقارير</span> ‹ <span class="ui">تقارير فواتير الفروع</span>: <span class="ui">تقرير فواتير مبيعات الفروع</span>، <span class="ui">تقرير فواتير مرتجع بيع الفروع</span>، <span class="ui">تقرير فواتير مشتريات الفروع</span>، <span class="ui">تقرير فواتير مرتجع شراء الفروع</span>. عنوان الشاشة مثل <span class="ui">مبيعات الفروع تفصيلي</span>.</p>
+<p><strong>يجيب عن:</strong> ما فواتير كل فرع، وكم دُفع منها وكم بقي، وهل رُحّلت؟ سطر لكل فاتورة.</p>
+<ul>
+  <li><strong>الفلاتر:</strong> <span class="ui">الفرع</span> (بدونه تظهر فواتير كل الفروع)، والتاريخ (<span class="ui">الكل</span>، <span class="ui">تاريخ</span>، <span class="ui">شهر</span>، <span class="ui">سنه</span>، <span class="ui">فتره</span>).</li>
+  <li><strong>الأعمدة:</strong> <span class="ui">رقم</span>، <span class="ui">التاريخ</span>، <span class="ui">الفرع</span>، <span class="ui">المدفوع</span>، <span class="ui">المتبقى</span>، <span class="ui">القيمة</span>، <span class="ui">العملة</span>، <span class="ui">معامل الصرف</span>، <span class="ui">القيمة م.ع</span> (بالعملة المحلية)، <span class="ui">الحالة</span> (<span class="ui">مرحل</span> / <span class="ui">غير مرحل</span>)، <span class="ui">ض.ق.م</span> (ضريبة القيمة المضافة)، <span class="ui">خصم.ق.ض</span>، <span class="ui">قيمةالخصم</span>.</li>
+  <li><strong>المدفوع والمتبقي:</strong> الفاتورة النقدية مدفوعة بالكامل. الفاتورة الآجلة: المدفوع هو المبلغ المدفوع عند البيع، والمتبقي هو الباقي من قيمتها. القيم بعملة الفاتورة.</li>
+  <li><strong>نقر مزدوج</strong> على السطر يفتح الفاتورة.</li>
+</ul>
+<p class="note">عمودا المدفوع والمتبقي والحالة يظهرون في الشاشة فقط ولا يُنقلون إلى الورقة المطبوعة. وهذه الشاشة لا تُغلق بزر <kbd>Esc</kbd>؛ استخدم زر الإغلاق.</p>
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى وما تفعله</th></tr></thead>
+<tbody>
+<tr><td><span class="msg">لايوجد بيانات متاحة</span></td><td>لا توجد نتائج للفلاتر المختارة. وسّع التاريخ أو أزل بعض الفلاتر. تذكّر أن البيانات من الفترة المالية الحالية فقط. لا تعتمد على الإجماليات السفلية بعد هذه الرسالة.</td></tr>
+<tr><td><span class="msg">هل تريد معاينة التقرير قبل الطباعة؟</span></td><td>نعم: نافذة المعاينة والتصدير. لا: طباعة مباشرة على الطابعة الافتراضية.</td></tr>
+<tr><td><span class="msg">عفوا ليس لديك صلاحية</span></td><td>لا تملك صلاحية فتح هذا التقرير أو تنفيذ الإجراء. راجع مدير النظام.</td></tr>
+<tr><td><span class="msg">عفوا. اصدار تجريبى</span></td><td>الطباعة غير متاحة في النسخة التجريبية.</td></tr>
+<tr><td><span class="msg">اختر مجموعة اصناف</span></td><td>في تقرير مبيعات Cross: اختر المجموعة أولًا.</td></tr>
+<tr><td><span class="msg">Choose Branch first</span></td><td>في تقرير التنبؤ: اختر الفرع قبل إنشاء فاتورة أو أمر شراء.</td></tr>
+<tr><td><span class="msg">قم بتحديد مخزن افتراضى للفرع المختار</span></td><td>في تقرير التنبؤ: حدد مخزنًا افتراضيًا للفرع في الإعدادات.</td></tr>
+<tr><td><span class="msg">عدد الصفوف يتجاوز 100 صف لا يمكن استخدام هذا الاختيار</span></td><td>أداة Pivot في نافذة المعاينة تقبل حتى 200 صف تقريبًا. قلّل النتائج بالفلاتر أو صدّر إلى Excel.</td></tr>
+<tr><td><span class="msg">Export successful</span> / <span class="msg">Excel Export error</span></td><td>نجح أو فشل التصدير إلى Excel. عند الفشل تأكد أن الملف غير مفتوح في Excel وأن لديك صلاحية الكتابة في المجلد.</td></tr>
+</tbody></table></div>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="items.html">الأصناف</a> · <a href="sales-invoice.html">فاتورة البيع</a> · <a href="purchase-invoice.html">فاتورة الشراء</a> · <a href="reports-stores.html">تقارير المخازن</a> · <a href="sales-return.html">مرتجع البيع</a> · <a href="purchase-return.html">مرتجع الشراء</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-08">8 أكتوبر 2026</time></div></footer>
+</body>
+</html>

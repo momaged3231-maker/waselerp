@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>طلبات المتجر الإلكتروني: المتابعة والتجهيز والشحن | دليل Ezees ERP</title>
+<meta name="description" content="شرح متابعة طلبات المتجر الإلكتروني في Ezees ERP: قائمة الطلبات وتصفيتها، تغيير حالة الطلب وإرسال SMS للعميل، تجهيز الأصناف في المخزن، إصدار الفاتورة، طباعة إيصال الشحن، وتقرير فواتير شركات الشحن.">
+<meta name="keywords" content="المتجر الإلكتروني, طلبات ECommerce, متابعة الطلبات, تجهيز الطلبات, إيصال الشحن, شركات الشحن, الدفع عند الاستلام, حالة الطلب, تحضير الأصناف, Ezees ERP">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/ecommerce.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="طلبات المتجر الإلكتروني في Ezees ERP">
+<meta property="og:description" content="تابع طلبات متجرك من الاستلام إلى التجهيز والشحن والتوصيل، واطبع إيصال الشحن، وراجع فواتير شركات الشحن.">
+<meta property="og:url" content="https://help.tebalink.com/ecommerce.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"طلبات المتجر الإلكتروني في Ezees ERP","inLanguage":"ar","dateModified":"2026-10-08","proficiencyLevel":"Beginner","mainEntityOfPage":"https://help.tebalink.com/ecommerce.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"HowTo","name":"تنفيذ طلب من المتجر الإلكتروني حتى التوصيل","inLanguage":"ar","step":[
+{"@type":"HowToStep","position":1,"text":"افتح متابعة امر بيع ECommerce واعرض الطلبات في حالة Pending."},
+{"@type":"HowToStep","position":2,"text":"راجع الطلب ثم غيّر حالته إلى قيد التجهيز."},
+{"@type":"HowToStep","position":3,"text":"في شاشة تحضير الاصناف اختر المخزن، وحدد الأصناف المجهزة واضغط Done."},
+{"@type":"HowToStep","position":4,"text":"أصدر فاتورة البيع من الطلب، واطبع إيصال الشحن."},
+{"@type":"HowToStep","position":5,"text":"غيّر الحالة إلى تم الشحن ثم تم التوصيل، مع إرسال SMS للعميل عند الحاجة."}]},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"لماذا لا يظهر الطلب في شاشة تحضير الأصناف؟","acceptedAnswer":{"@type":"Answer","text":"تظهر فقط أصناف الطلبات التي حالتها قيد التجهيز، وفي المخزن والفرع والفترة المختارة. غيّر حالة الطلب من Pending إلى قيد التجهيز أولًا."}},
+{"@type":"Question","name":"لماذا زر إصدار الفاتورة غير متاح؟","acceptedAnswer":{"@type":"Answer","text":"الطلب في حالة تم التوصيل، أي أنه مغلق ونُفّذ بالكامل."}},
+{"@type":"Question","name":"لماذا لم يُطبع إيصال الشحن؟","acceptedAnswer":{"@type":"Answer","text":"حدد طلبًا واحدًا فقط، وتأكد من تعريف طابعة الباركود في الإعدادات ووجود ملف الشعار logo.png في القرص C، لأن الإيصال يُطبع مباشرة دون معاينة."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"الأنظمة المتخصصة","item":"https://help.tebalink.com/index.html#modules"},
+{"@type":"ListItem","position":3,"name":"طلبات المتجر الإلكتروني","item":"https://help.tebalink.com/ecommerce.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#pos">نقاط البيع والمطاعم</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#modules">الأنظمة المتخصصة</a></li><li>طلبات المتجر الإلكتروني</li></ol>
+<article>
+<h1>طلبات المتجر الإلكتروني: المتابعة والتجهيز والشحن</h1>
+<p class="lead">تصل طلبات متجرك الإلكتروني إلى Ezees ERP كأوامر بيع من نوع <span class="ui">امر بيع سلة المبيعات</span>. من شاشة <span class="ui">متابعة امر بيع - ECommerce</span> تتابع كل طلب: تراجعه، وتغيّر حالته، وتُبلغ العميل برسالة SMS، وتصدر <a href="sales-invoice.html">فاتورة البيع</a>، وتطبع إيصال الشحن. ويجهّز أمين المخزن الأصناف من شاشة <span class="ui">تحضير الاصناف - امر البيع</span>، ثم تراجع الإدارة الشحنات من <span class="ui">تقرير فواتير شركات الشحن</span>.</p>
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#before">قبل البدء</a></li>
+  <li><a href="#cycle">دورة طلب المتجر</a></li>
+  <li><a href="#list">قائمة طلبات المتجر</a></li>
+  <li><a href="#status">تغيير حالة الطلب</a></li>
+  <li><a href="#invoice">إصدار الفاتورة من الطلب</a></li>
+  <li><a href="#receipt">طباعة إيصال الشحن</a></li>
+  <li><a href="#sms">إرسال رسالة SMS للعميل</a></li>
+  <li><a href="#prepare">تجهيز الأصناف في المخزن</a></li>
+  <li><a href="#orders">قائمة أوامر البيع العادية</a></li>
+  <li><a href="#transfers">أذونات التحويل قيد التسليم</a></li>
+  <li><a href="#report">تقرير فواتير شركات الشحن</a></li>
+  <li><a href="#toolbar">الأزرار والاختصارات</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+  <li><a href="#faq">أسئلة متكررة</a></li>
+</ol></nav>
+
+<section id="before">
+<h2>قبل البدء</h2>
+<p>جهّز البيانات التالية لكي تظهر الطلبات وإيصالات الشحن كاملة:</p>
+<ol>
+  <li><a href="locations-shipping.html">الدول والمحافظات والمدن وشركات الشحن</a>: يجب أن تكون شركة الشحن <strong>نشطة</strong> لتظهر في التقرير.</li>
+  <li>عناوين الشحن للعملاء، لأن أمر بيع المتجر لا يُحفظ بدون عنوان شحن وشركة شحن وطريقة سداد (راجع <a href="sales-order.html#shipping">بيانات الشحن في أمر البيع</a>).</li>
+  <li>طابعة الباركود (الملصقات) في إعدادات البرنامج، لأن إيصال الشحن يُطبع عليها مباشرة.</li>
+  <li>رسائل SMS الجاهزة ومزوّد الخدمة، إذا أردت إبلاغ العملاء برسائل نصية.</li>
+</ol>
+</section>
+
+<section id="cycle">
+<h2>دورة طلب المتجر من الاستلام إلى التوصيل</h2>
+<ol class="steps">
+  <li><strong>الاستلام:</strong> يظهر الطلب الجديد في <span class="ui">متابعة امر بيع - ECommerce</span> بحالة <span class="ui">Pending</span>. تفتح الشاشة افتراضيًا على هذه الطلبات، وتتحدث تلقائيًا كل دقيقتين.</li>
+  <li><strong>المراجعة:</strong> انقر نقرًا مزدوجًا على رقم الطلب لفتحه، وتأكد من الأصناف والعنوان وحالة الدفع.</li>
+  <li><strong>بدء التجهيز:</strong> غيّر حالة الطلب إلى <span class="ui">قيد التجهيز</span> (انظر <a href="#status">تغيير حالة الطلب</a>). عندها فقط تظهر أصنافه في شاشة التحضير.</li>
+  <li><strong>التجهيز في المخزن:</strong> في <span class="ui">تحضير الاصناف - امر البيع</span> يحدد أمين المخزن ما جهّزه بزر <span class="ui">Done</span>، أو ما لم يتوفر بزر <span class="ui">Not Done</span>.</li>
+  <li><strong>الفاتورة:</strong> أصدر <a href="sales-invoice.html">فاتورة البيع</a> من الطلب، فتُستورد بياناته وأصنافه تلقائيًا.</li>
+  <li><strong>الشحن:</strong> اطبع <a href="#receipt">إيصال الشحن</a> وألصقه على الطرد، ثم غيّر الحالة إلى <span class="ui">تم الشحن</span>.</li>
+  <li><strong>التوصيل:</strong> عند استلام العميل للطرد غيّر الحالة إلى <span class="ui">تم التوصيل</span>، وعلّم الفاتورة <span class="ui">Delivered</span> في <a href="#report">تقرير فواتير شركات الشحن</a>.</li>
+</ol>
+<div class="tip">يمكنك تفعيل خيار <span class="ui">SMS</span> عند كل تغيير حالة، فيصل العميل إشعار برقم طلبه وحالته الجديدة.</div>
+</section>
+
+<section id="list">
+<h2>قائمة طلبات المتجر (متابعة امر بيع - ECommerce)</h2>
+<p>افتحها من قائمة المبيعات: <span class="ui">متابعة امر بيع - ECommerce</span>. تعرض طلبات المتجر فقط، الأحدث أولًا.</p>
+<!--shot:ecommerce__list-->
+<figure class="shot" id="shot-ecommerce__list">
+<div class="shot-frame"><a href="assets/screens/ecommerce__list.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/ecommerce__list.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: قائمة طلبات المتجر (متابعة امر بيع - ECommerce)"></a></div>
+<figcaption>شاشة «قائمة طلبات المتجر (متابعة امر بيع - ECommerce)» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<h3>التصفية والبحث</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>الفلتر</th><th>الوصف</th></tr></thead>
+<tbody>
+<tr><td>من / إلى</td><td>فترة تاريخ الطلب، وتبدأ افتراضيًا بالشهر الحالي.</td></tr>
+<tr><td>الفرع</td><td>فرع الطلب. خيار <span class="ui">--Select--</span> يعرض كل الفروع لمن لديه صلاحية رؤيتها.</td></tr>
+<tr><td>حالة الطلب</td><td><span class="ui">--All--</span> لكل الحالات، أو <span class="ui">--Pending--</span> (الافتراضي) للطلبات الجديدة، أو إحدى الحالات: قيد التجهيز، تم الشحن، تم التوصيل، تم الالغاء، تم التأجيل.</td></tr>
+<tr><td>طريقة الدفع</td><td><span class="ui">الكل</span>، أو <span class="ui">الدفع عند الاستلام</span>، أو <span class="ui">الدفع اونلاين</span>.</td></tr>
+<tr><td>حالة الدفع</td><td><span class="ui">قيد الانتظار</span>، أو <span class="ui">تم الدفع</span>، أو <span class="ui">فشل الدفع</span>، أو <span class="ui">غير مكتمل</span>.</td></tr>
+<tr><td>نوع البحث + خانة <span class="ui">بحث</span></td><td><code>Customer.*</code>: بالعميل أو المستلم أو المحافظة أو المدينة أو رقم الفاتورة أو الهاتف. <code>No</code>: برقم الطلب. <code>Gov</code>: بالمحافظة. <code>Town</code>: بالمدينة.</td></tr>
+</tbody></table></div>
+<div class="tip">فلتر <strong>حالة الدفع</strong> لا يحتوي على خيار «الكل». بعد اختيار حالة دفع، أغلق الشاشة وافتحها من جديد إذا أردت عرض كل الطلبات مرة أخرى.</div>
+<div class="note">عند البحث بنوع <code>Customer.*</code> قد تظهر طلبات من حالات أخرى غير المختارة في الفلاتر، فراجع عمود <span class="ui">حالة الطلب</span> في النتائج.</div>
+
+<h3>أعمدة القائمة</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>العمود</th><th>الوصف</th></tr></thead>
+<tbody>
+<tr><td>No</td><td>رقم الطلب. انقر عليه نقرًا مزدوجًا لفتح الطلب.</td></tr>
+<tr><td>التاريخ / الاسم / Code</td><td>تاريخ الطلب، واسم العميل وكوده.</td></tr>
+<tr><td>الدولة / المحافظة / المدينة</td><td>وجهة الشحن.</td></tr>
+<tr><td>حالة الطلب</td><td>الحالة الحالية للطلب، و<span class="ui">Pending</span> للطلب الجديد.</td></tr>
+<tr><td>مستلم الطلب / هاتف المستلم / عنوان الشحن</td><td>بيانات المستلم كما في عنوان الشحن.</td></tr>
+<tr><td>الاجمالى / الشحن / الضريبة / الصافى</td><td>قيم الطلب، ومنها رسوم الشحن.</td></tr>
+<tr><td>InvoiceCode</td><td>رقم فاتورة البيع الصادرة من الطلب. انقر عليه نقرًا مزدوجًا لفتح الفاتورة.</td></tr>
+<tr><td>حالة الدفع / الدفع / P_Method</td><td>حالة الدفع (Waiting، Payment succeeded، Payment Failed، UnCompleted)، ونوعه (COD للدفع عند الاستلام أو OnLine)، ووسيلة الدفع الإلكتروني.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="status">
+<h2>تغيير حالة الطلب</h2>
+<ol class="steps">
+  <li>حدد طلبًا أو أكثر في القائمة. يمكنك تحديد عدة طلبات لتغيير حالتها دفعة واحدة.</li>
+  <li>اضغط زر تغيير الحالة (أيقونة الأسهم)، فتظهر لوحة <span class="ui">تغيير حالة</span> وفيها الحالة الحالية للطلب المحدد.</li>
+  <li>اختر الحالة الجديدة واكتب <span class="ui">ملاحظات</span> إن وجدت. عند اختيار <span class="ui">تم التأجيل</span> يظهر حقل تاريخ التأجيل، وتُحفظ الملاحظات كسبب للتأجيل.</li>
+  <li>فعّل <span class="ui">SMS</span> إذا أردت إبلاغ العميل برسالة: «تأكيد: طلبك رقم #... تم تغيير حالته الى ...».</li>
+  <li>اضغط <span class="ui">OK</span>. تتغير الحالة، ويُسجَّل التغيير في سجل تتبع الطلب بالتاريخ والملاحظات.</li>
+</ol>
+<div class="table-wrap"><table>
+<thead><tr><th>الحالة</th><th>متى تستخدمها</th></tr></thead>
+<tbody>
+<tr><td>Pending</td><td>طلب جديد لم يُراجع بعد (لا يُختار يدويًا).</td></tr>
+<tr><td>قيد التجهيز</td><td>بدأ تجهيز الطلب. أصناف الطلب تظهر في شاشة التحضير بهذه الحالة فقط.</td></tr>
+<tr><td>تم الشحن</td><td>سُلّم الطرد لشركة الشحن.</td></tr>
+<tr><td>تم التوصيل</td><td>استلم العميل الطلب. بعدها لا يمكن إصدار فاتورة جديدة من الطلب.</td></tr>
+<tr><td>تم الالغاء</td><td>ألغى العميل الطلب. اكتب السبب في الملاحظات.</td></tr>
+<tr><td>تم التأجيل</td><td>أجّل العميل الاستلام. حدد تاريخ التأجيل واكتب السبب.</td></tr>
+</tbody></table></div>
+<div class="warn">اختر <span class="ui">تم التوصيل</span> فقط بعد إصدار الفاتورة. هذه الحالة تغلق الطلب ولا تسمح بإصدار فاتورة منه بعد ذلك.</div>
+</section>
+
+<section id="invoice">
+<h2>إصدار الفاتورة من الطلب</h2>
+<ol class="steps">
+  <li>حدد الطلب في القائمة.</li>
+  <li>اضغط زر <span class="ui">Sales invoice</span> (تلميح الزر). تُفتح <a href="sales-invoice.html">فاتورة بيع</a> جديدة، وفيها بيانات الطلب وأصنافه.</li>
+  <li>راجع الفاتورة واحفظها. يظهر رقمها بعد التحديث في عمود <span class="ui">InvoiceCode</span>.</li>
+</ol>
+<p>أما زر <span class="ui">ECommerce order</span> فيفتح الطلب نفسه للعرض أو التعديل، وهو مثل النقر المزدوج على رقم الطلب. تفاصيل شاشة الطلب في <a href="sales-order.html">أوامر البيع وعروض الأسعار</a>.</p>
+<div class="tip">إذا قللت كمية صنف أثناء التجهيز، يُعاد حساب إجمالي الطلب، فتستورد الفاتورة الكميات بعد التعديل.</div>
+</section>
+
+<section id="receipt">
+<h2>طباعة إيصال الشحن</h2>
+<ol class="steps">
+  <li>حدد <strong>طلبًا واحدًا فقط</strong> في القائمة.</li>
+  <li>اضغط زر الطابعة الجانبي (تلميحه <span class="ui">Print Shipping Address</span>).</li>
+  <li>أجب بـ«نعم» على السؤال <span class="msg">هل تريد طباعة السند؟</span>.</li>
+</ol>
+<p>يُطبع الإيصال بمقاس A5 <strong>مباشرة على طابعة الباركود دون معاينة</strong>، ويحتوي على:</p>
+<ul>
+  <li>شعار الشركة واسمها وهاتفها.</li>
+  <li>رقم الطلب وتاريخه، وشركة الشحن ورقم الشحنة.</li>
+  <li>اسم المستلم وهاتفه، والدولة والمحافظة والمدينة والعنوان والعنوان المختصر.</li>
+  <li>الإجمالي والضريبة والصافي، وطريقة الدفع (COD أو OnLine) ليعرف المندوب إن كان سيحصّل المبلغ.</li>
+  <li>رمز QR لموقع العميل على الخريطة، ورمز QR لموقع المتجر.</li>
+</ul>
+<div class="warn">إذا لم يُطبع شيء ولم تظهر أي رسالة: تأكد أنك حددت طلبًا واحدًا فقط، وأن طابعة الباركود معرّفة في الإعدادات وتعمل، وأن ملف الشعار <code>C:\logo.png</code> موجود على هذا الجهاز.</div>
+<p class="note">زر <span class="ui">طباعة</span> في شريط الأدوات العلوي يطبع القائمة كما تظهر على الشاشة، وليس إيصال الشحن.</p>
+</section>
+
+<section id="sms">
+<h2>إرسال رسالة SMS للعميل</h2>
+<ol class="steps">
+  <li>حدد الطلب، واضغط زر <span class="ui">SMS</span>. تظهر لوحة <span class="ui">ارسال SMS</span> وفيها هاتف المستلم تلقائيًا في <span class="ui">رقم الهاتف</span>.</li>
+  <li>اختر <span class="ui">عنوان الرسالة</span> من الرسائل الجاهزة، فيُملأ <span class="ui">محتوى الرسالة</span>، أو اكتب نصًا جديدًا.</li>
+  <li>اضغط زر <span class="ui">ارسال SMS</span>.</li>
+</ol>
+<p>اضغط زر <span class="ui">SMS</span> مرة أخرى لإخفاء اللوحة دون إرسال.</p>
+</section>
+
+<section id="prepare">
+<h2>تجهيز الأصناف في المخزن (تحضير الاصناف - امر البيع)</h2>
+<p>تعرض هذه الشاشة <strong>أصناف</strong> أوامر البيع وطلبات المتجر التي حالتها <span class="ui">قيد التجهيز</span>، صنفًا في كل سطر، ليجمعها أمين المخزن من الرفوف. افتحها من قائمة أوامر المخازن: <span class="ui">تحضير الاصناف - امر البيع</span>.</p>
+<!--shot:ecommerce__prepare-->
+<figure class="shot" id="shot-ecommerce__prepare">
+<div class="shot-frame"><a href="assets/screens/ecommerce__prepare.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/ecommerce__prepare.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: تجهيز الأصناف في المخزن (تحضير الاصناف - امر البيع)"></a></div>
+<figcaption>شاشة «تجهيز الأصناف في المخزن (تحضير الاصناف - امر البيع)» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<h3>الفلاتر</h3>
+<ul>
+  <li><strong>المخزن:</strong> تعرض الشاشة أصناف مخزن واحد في كل مرة، فاختر المخزن الذي تجهّز منه.</li>
+  <li><strong>الفرع</strong> و<strong>من / إلى</strong>: الفترة تبدأ بالشهر الحالي.</li>
+  <li><strong>حالة التجهيز:</strong> <span class="ui">Waiting</span> (لم تُجهز بعد، الافتراضي)، أو <span class="ui">Done</span> (تم تجهيزها)، أو <span class="ui">Not Done</span> (لم تتوفر).</li>
+  <li><strong>البحث:</strong> <code>Customer.*</code> بالعميل أو المخزن أو اسم الصنف أو المندوب، أو <code>No</code> برقم الطلب.</li>
+</ul>
+<p>الأعمدة: No، التاريخ، الاسم، مندوب، الفئة، كود، الصنف، الوحدة، الكمية، المخزن، Notes، و<span class="ui">Location</span> وهو مكان الصنف في المخزن لتسهيل الوصول إليه.</p>
+<h3>خطوات التجهيز</h3>
+<ol class="steps">
+  <li>اختر المخزن واترك الحالة على <span class="ui">Waiting</span>.</li>
+  <li>اجمع الأصناف حسب عمود <span class="ui">Location</span>.</li>
+  <li>إذا وجدت كمية أقل من المطلوب، عدّل خانة <span class="ui">الكمية</span> في السطر. يمكنك <strong>تقليل</strong> الكمية فقط، ويُعاد حساب الخصم والضريبة للسطر تلقائيًا.</li>
+  <li>حدد الأسطر المجهزة (أو فعّل <span class="ui">SelectAll</span> لتحديدها كلها)، ثم اضغط <span class="ui">Done</span> وأكّد. تنتقل الأسطر إلى حالة Done، ويُعاد حساب إجمالي الطلب إذا عدّلت الكمية.</li>
+  <li>للأصناف غير المتوفرة، حددها واضغط <span class="ui">Not Done</span>.</li>
+</ol>
+<div class="warn">عند تعديل كمية: حدد ذلك السطر <strong>وحده</strong> واضغط <span class="ui">Done</span> فورًا. إذا حددت عدة أسطر من طلبات مختلفة بعد تعديل الكمية، قد لا يُعاد حساب إجمالي الطلب الصحيح. وتتحدث الشاشة تلقائيًا كل دقيقتين، فتضيع الكمية المعدلة التي لم تُحفظ بعد.</div>
+<div class="note"><span class="ui">Not Done</span> لا يحذف الصنف من الطلب ولا يغيّر إجماليه. إذا لن يُشحن الصنف، عدّل الطلب نفسه قبل إصدار الفاتورة.</div>
+<p>للانتقال إلى الطلب، انقر نقرًا مزدوجًا على رقمه في عمود <span class="ui">No</span>. وتوجد شاشة مماثلة لأوامر الشراء باسم <span class="ui">تحضير الاصناف - امر الشراء</span>.</p>
+</section>
+
+<section id="orders">
+<h2>قائمة أوامر البيع العادية (ادارة اوامر البيع)</h2>
+<p>تعمل هذه القائمة مثل قائمة طلبات المتجر، بنفس الفلاتر ولوحة <span class="ui">تغيير حالة</span> وزري فتح الأمر وإصدار الفاتورة، لكنها لأوامر البيع العادية. وتضيف ما يلي:</p>
+<!--shot:ecommerce__orders-->
+<figure class="shot" id="shot-ecommerce__orders">
+<div class="shot-frame"><a href="assets/screens/ecommerce__orders.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/ecommerce__orders.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: قائمة أوامر البيع العادية (ادارة اوامر البيع)"></a></div>
+<figcaption>شاشة «قائمة أوامر البيع العادية (ادارة اوامر البيع)» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ul>
+  <li>أعمدة <span class="ui">Added Date</span> و<span class="ui">Added By</span> و<span class="ui">Last Update</span> و<span class="ui">Updated By</span> لمعرفة من أنشأ الأمر ومن عدّله.</li>
+  <li>يتلوّن سطر الأمر بلون فاتح عند الانتهاء من كل أصنافه في شاشة التحضير، أي لم يعد فيه صنف بحالة Waiting.</li>
+  <li>لا يمكن اختيار <span class="ui">تم التوصيل</span> يدويًا من لوحة تغيير الحالة، لأنها تُضبط تلقائيًا عند تنفيذ الأمر بالكامل.</li>
+</ul>
+<p>تُستخدم الشاشة نفسها أيضًا لـ<span class="ui">ادارة اوامر الشراء</span> و<span class="ui">ادارة اوامر مرتجع بيع</span> و<span class="ui">ادارة اوامر التحويلات</span>.</p>
+</section>
+
+<section id="transfers">
+<h2>أذونات التحويل قيد التسليم</h2>
+<p>شاشة <span class="ui">اذونات تحويل قيد التسليم</span> في قائمة المخازن تعرض أذونات التحويل بين المخازن التي <strong>خرجت من المخزن المصدر ولم يُستلم مقابلها بعد</strong> في المخزن المستلم. استخدمها لمتابعة البضاعة التي في الطريق بين الفروع. تفاصيل التحويل نفسه في <a href="stores.html">المخازن</a>.</p>
+<!--shot:ecommerce__transfers-->
+<figure class="shot" id="shot-ecommerce__transfers">
+<div class="shot-frame"><a href="assets/screens/ecommerce__transfers.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/ecommerce__transfers.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: أذونات التحويل قيد التسليم"></a></div>
+<figcaption>شاشة «أذونات التحويل قيد التسليم» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ul>
+  <li>الأعمدة: No، التاريخ، مخزن صادر، فرع صادر، مخزن وارد، فرع وارد، القيمة. ويظهر في الأسفل <span class="ui">اجمالى</span> قيمة الأذونات المعروضة.</li>
+  <li>التصفية بالفرع والفترة. البحث بنوع <code>Customer.*</code> يبحث باسم الفرع الصادر أو الوارد، ونوع <code>No</code> يبحث برقم الإذن.</li>
+  <li>يختفي الإذن من القائمة تلقائيًا بعد تسجيل استلامه.</li>
+</ul>
+<div class="note">هذه الشاشة للعرض فقط. لا تستخدم زر <span class="ui">جديد</span> فيها، فهو لا ينشئ إذن تحويل، والحذف غير متاح منها.</div>
+</section>
+
+<section id="report">
+<h2>تقرير فواتير شركات الشحن</h2>
+<p>من تقارير الفواتير افتح <span class="ui">تقرير فواتير شركات الشحن</span>. يعرض فواتير البيع (أو المرتجع) التي لها شركة شحن، ومنه تعلّم الفواتير التي وصلت للعميل.</p>
+<!--shot:ecommerce__report-->
+<figure class="shot" id="shot-ecommerce__report">
+<div class="shot-frame"><a href="assets/screens/ecommerce__report.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/ecommerce__report.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: تقرير فواتير شركات الشحن"></a></div>
+<figcaption>شاشة «تقرير فواتير شركات الشحن» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<h3>لوحة «تصفيه البيانات»</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>الحقل</th><th>الوصف</th></tr></thead>
+<tbody>
+<tr><td>من / الى</td><td>فترة تاريخ الفاتورة، وتبدأ افتراضيًا من آخر 7 أيام.</td></tr>
+<tr><td>فاتورة</td><td><span class="ui">البيع</span> أو <span class="ui">المرتجع بيع</span>.</td></tr>
+<tr><td>النوع</td><td>طريقة الدفع: <span class="ui">الكل</span>، أو <span class="ui">نقدى</span>، أو <span class="ui">اجل</span>، أو <span class="ui">فيزا</span>، أو <span class="ui">نقدى + فيزا</span>.</td></tr>
+<tr><td>الحالة (الترحيل)</td><td><span class="ui">غير مرحل</span>، أو <span class="ui">مرحل</span>، أو <span class="ui">الكل</span> (الافتراضي).</td></tr>
+<tr><td>الحالة (التسليم)</td><td><span class="ui">Not delivered</span> (الافتراضي) أو <span class="ui">Delivered</span>.</td></tr>
+<tr><td>الفرع</td><td>فرع الفاتورة.</td></tr>
+<tr><td>الحساب</td><td>عميل محدد. اضغط على الخانة أو <kbd>F9</kbd> لاختياره، واتركه فارغًا لكل العملاء.</td></tr>
+<tr><td>الشركة / المندوب / المستخدم / المنفذ / عنوان</td><td>فعّل مربع الاختيار بجانب كل منها لتحديد قيمة، مثل شركة شحن بعينها.</td></tr>
+</tbody></table></div>
+<p>اضغط زر العرض (أيقونة البحث) أو <kbd>Enter</kbd>. الأعمدة: رقم الفاتورة، والتاريخ، والعميل، والمندوب، والإجمالي، والعملة، والقيمة بالعملة المحلية، و<span class="ui">شركة الشحن</span>، و<span class="ui">رقم الشحن</span>، و<span class="ui">ت الشحن</span>، وبيانات المستلم، ومن أضاف الفاتورة وعدّلها. ويظهر في الأسفل <span class="ui">اجمالى</span> الفواتير المعروضة بالعملة المحلية.</p>
+<h3>تعليم الفواتير كمسلّمة</h3>
+<ol class="steps">
+  <li>اختر <span class="ui">Not delivered</span> في فلتر حالة التسليم واعرض التقرير.</li>
+  <li>حدد الفواتير التي استلمها العملاء.</li>
+  <li>اضغط زر <span class="ui">Delivered</span> أسفل الشاشة وأكّد. تختفي الفواتير من القائمة لأنها أصبحت مسلّمة.</li>
+</ol>
+<p>للتراجع عن تعليم خاطئ، اختر <span class="ui">Delivered</span> في الفلتر، فيتحول الزر إلى <span class="ui">Not delivered</span>، ثم حدد الفاتورة واضغطه.</p>
+<p>انقر نقرًا مزدوجًا على أي فاتورة لفتحها. وزر الطابعة يعرض تقرير الفواتير الظاهرة للطباعة.</p>
+<div class="tip">تعليم الفاتورة <span class="ui">Delivered</span> في هذا التقرير منفصل عن حالة الطلب. حدّث حالة الطلب أيضًا إلى <span class="ui">تم التوصيل</span> من قائمة طلبات المتجر.</div>
+</section>
+
+<section id="toolbar">
+<h2>الأزرار والاختصارات</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الزر / المفتاح</th><th>الوظيفة</th></tr></thead>
+<tbody>
+<tr><td>جديد <kbd>F1</kbd></td><td>في قائمة طلبات المتجر: ينشئ طلب متجر جديدًا يدويًا (مثل طلب بالهاتف).</td></tr>
+<tr><td>حذف <kbd>F6</kbd></td><td>يحذف الطلبات المحددة بعد التأكيد.</td></tr>
+<tr><td>تحديث</td><td>يعيد تحميل القائمة. تتحدث القوائم أيضًا تلقائيًا كل دقيقتين، وعند حفظ أي أمر بيع.</td></tr>
+<tr><td>طباعة</td><td>طباعة القائمة كما تظهر.</td></tr>
+<tr><td>بحث</td><td>تصفية فورية أثناء الكتابة حسب نوع البحث المختار.</td></tr>
+<tr><td>ECommerce order / Sales invoice</td><td>فتح الطلب المحدد، أو إصدار فاتورة بيع منه.</td></tr>
+<tr><td>أيقونة الأسهم</td><td>لوحة <span class="ui">تغيير حالة</span>.</td></tr>
+<tr><td>Print Shipping Address</td><td>طباعة إيصال الشحن للطلب المحدد.</td></tr>
+<tr><td>SMS</td><td>لوحة إرسال رسالة نصية للمستلم.</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>إغلاق تقرير فواتير شركات الشحن.</td></tr>
+</tbody></table></div>
+<div class="warn">لا تحذف طلبًا صدرت له فاتورة. لإيقاف طلب لم يكتمل، غيّر حالته إلى <span class="ui">تم الالغاء</span> بدلًا من حذفه، ليبقى سجله وسبب الإلغاء.</div>
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td><span class="msg">من فضلك قم باختيار السجل اولا</span></td><td>حدد طلبًا أو سطرًا قبل الضغط على الزر.</td></tr>
+<tr><td><span class="msg">هل تريد فعلا تنفيذ الأمر؟</span></td><td>تأكيد قبل الحذف، أو Done / Not Done، أو تعليم التسليم.</td></tr>
+<tr><td><span class="msg">هل تريد طباعة السند؟</span></td><td>تأكيد طباعة إيصال الشحن.</td></tr>
+<tr><td><span class="msg">تم الحفظ بنجاح</span> / <span class="msg">تم الحذف بنجاح</span></td><td>تم تنفيذ العملية.</td></tr>
+<tr><td><span class="msg">لايوجد بيانات متاحة</span></td><td>لا توجد نتائج للفلاتر المختارة، أو القائمة فارغة عند الطباعة.</td></tr>
+<tr><td><span class="msg">الكمية اكير من المنفذ فعليا</span></td><td>في التحضير: لا يمكن زيادة الكمية عن المطلوبة في الطلب.</td></tr>
+<tr><td><span class="msg">عفوا لابد من أدخال قيم أكبر من الصفر</span></td><td>الكمية المكتوبة غير صحيحة أو سالبة.</td></tr>
+<tr><td><span class="msg">عفوا ليس لديك صلاحية</span></td><td>ليست لديك صلاحية هذا الإجراء، مثل الحذف أو تغيير الحالة.</td></tr>
+<tr><td><span class="msg">حدث خطا اثناء التنفيذ</span></td><td>تعذّر الحفظ. حدّث الشاشة وأعد المحاولة.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="faq">
+<h2>أسئلة متكررة</h2>
+<details><summary>لماذا لا يظهر الطلب في شاشة تحضير الأصناف؟</summary><p>تظهر فقط أصناف الطلبات التي حالتها <strong>قيد التجهيز</strong>، وفي المخزن والفرع والفترة المختارة، وبحالة التجهيز المختارة. غيّر حالة الطلب من Pending إلى قيد التجهيز أولًا.</p></details>
+<details><summary>لماذا زر إصدار الفاتورة غير متاح؟</summary><p>الطلب في حالة <span class="ui">تم التوصيل</span>، أي أنه مغلق ونُفّذ بالكامل.</p></details>
+<details><summary>لماذا لم يُطبع إيصال الشحن؟</summary><p>حدد طلبًا واحدًا فقط، وتأكد أن طابعة الباركود معرّفة وتعمل، وأن ملف الشعار <code>C:\logo.png</code> موجود على الجهاز، لأن الإيصال يُطبع مباشرة دون معاينة.</p></details>
+<details><summary>كيف أعرف أن العميل دفع أونلاين؟</summary><p>من عمودي <span class="ui">الدفع</span> و<span class="ui">حالة الدفع</span>: OnLine مع Payment succeeded يعني أن الدفع تم. ويمكنك تصفية القائمة بـ<span class="ui">تم الدفع</span>.</p></details>
+<details><summary>هل تغيير حالة الطلب يغيّر المخزون أو الحسابات؟</summary><p>لا. الحالة للمتابعة فقط، والخصم من المخزن والقيد المحاسبي يتمان عند حفظ فاتورة البيع.</p></details>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="sales-order.html">أوامر البيع</a> · <a href="sales-invoice.html">فاتورة البيع</a> · <a href="locations-shipping.html">المناطق وشركات الشحن</a> · <a href="stores.html">المخازن</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-08">8 أكتوبر 2026</time></div></footer>
+</body>
+</html>

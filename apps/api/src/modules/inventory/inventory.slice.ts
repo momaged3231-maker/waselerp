@@ -79,22 +79,23 @@ export class InventoryService {
     );
   }
 
-  /** Stock lines expiring within the next N days. */
+  /** Stock lines expiring within the next N days (expiry/serial meta lives on stock_movements). */
   async expiryAlerts(branchId: number, days: number) {
     return this.db.query(
       `SELECT i.item_id AS "itemId", i.code, i.name, u.name AS "unitName",
-              w.name AS "warehouseName", q.expiry_date AS "expiryDate",
-              q.on_hand_qty AS "onHand", q.serial_no AS "serialNo",
-              (q.expiry_date - CURRENT_DATE) AS "daysLeft"
-         FROM item_warehouse_qty q
-         JOIN items i ON i.item_id = q.item_id
-         LEFT JOIN units u ON u.unit_id = q.unit_id
-         LEFT JOIN warehouses w ON w.warehouse_id = q.warehouse_id
-        WHERE q.expiry_date IS NOT NULL
-          AND q.expiry_date <= CURRENT_DATE + $2::int
-          AND q.on_hand_qty > 0
-          AND ($1::int = 0 OR w.branch_id = $1)
-        ORDER BY q.expiry_date, i.name`,
+              w.name AS "warehouseName", m.serial_no AS "serialNo",
+              m.expiry_date AS "expiryDate", m.quantity AS "onHand",
+              (m.expiry_date - CURRENT_DATE) AS "daysLeft"
+         FROM stock_movements m
+         JOIN items i ON i.item_id = m.item_id
+         LEFT JOIN units u ON u.unit_id = m.unit_id
+         LEFT JOIN warehouses w ON w.warehouse_id = m.warehouse_id
+        WHERE m.expiry_date IS NOT NULL
+          AND m.expiry_date <= CURRENT_DATE + ($2::int)
+          AND m.quantity > 0
+          AND m.move_type IN (1, 4, 5, 7, 9, 10)
+          AND ($1::int = 0 OR m.branch_id = $1)
+        ORDER BY m.expiry_date, i.name`,
       [branchId, days || 30],
     );
   }

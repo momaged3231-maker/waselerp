@@ -4,7 +4,7 @@
 
 نظام إدارة مبيعات ومخزون وفروع متعدد الفروع — **معمارية Modular Monolith + Vertical Slices**، واجهة **Next.js SPA (PWA)** تعمل على الموبايل والتابلت والديسكتوب، وخادم **NestJS + PostgreSQL** مركزي.
 
-> 📘 **للتسليم والاستمرارية:** [`AGENTS.md`](AGENTS.md) (دليل الوكيل/المطوّر) · [`docs/HANDOVER.md`](docs/HANDOVER.md) (خطة الشغل + المحاذير) · [`docs/EZEES-COVERAGE.md`](docs/EZEES-COVERAGE.md) (مصفوفة تغطية دليل Ezees ERP)
+> 📘 **للتسليم والاستمرارية:** [`AGENTS.md`](AGENTS.md) (دليل الوكيل/المطوّر) · [`docs/HANDOVER.md`](docs/HANDOVER.md) (خطة الشغل + المحاذير) · [`docs/EZEES-COVERAGE.md`](docs/EZEES-COVERAGE.md) (مصفوفة تغطية دليل Ezees ERP) · [`docs/PROJECT.md`](docs/PROJECT.md) (وثائق المشروع الشاملة) · [`docs/REFERENCE-ANALYSIS.md`](docs/REFERENCE-ANALYSIS.md) (تحليل البرنامج المرجعي)
 
 ```
 WaselERP/

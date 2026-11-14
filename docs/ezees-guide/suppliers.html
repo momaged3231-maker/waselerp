@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>إدارة الموردين ومجموعاتهم وتصنيفاتهم | دليل Ezees ERP</title>
+<meta name="description" content="شرح إضافة مورد في Ezees ERP: البيانات الأساسية والرقم الضريبي، حد الائتمان والتعامل الآجل، مجموعات وتصنيفات الموردين، كشف حساب المورد، وتحويل المورد إلى عميل.">
+<meta name="keywords" content="إدارة الموردين, إضافة مورد, كشف حساب مورد, تصنيف الموردين, مجموعات الموردين, Ezees ERP, برنامج مشتريات">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/suppliers.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="إدارة الموردين في Ezees ERP">
+<meta property="og:description" content="سجّل مورديك وحدد شروط التعامل وتابع حساباتهم.">
+<meta property="og:url" content="https://help.tebalink.com/suppliers.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"إدارة الموردين في Ezees ERP","inLanguage":"ar","dateModified":"2026-10-08","proficiencyLevel":"Beginner","mainEntityOfPage":"https://help.tebalink.com/suppliers.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"كيف أحوّل مورد إلى عميل؟","acceptedAnswer":{"@type":"Answer","text":"من ادارة الموردين حدد المورد واضغط Transfer ثم وافق، فيأخذ كودًا جديدًا وينتقل حسابه تحت حساب العملاء."}},
+{"@type":"Question","name":"هل يُنشأ حساب للمورد تلقائيًا؟","acceptedAnswer":{"@type":"Answer","text":"نعم، تحت حساب الموردين الرئيسي في الدليل المحاسبي."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"الموردون","item":"https://help.tebalink.com/suppliers.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#pos">نقاط البيع والمطاعم</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#parties">العملاء والموردون</a></li><li>الموردون</li></ol>
+<article>
+<h1>إدارة الموردين ومجموعاتهم وتصنيفاتهم</h1>
+<p class="lead">تعمل شاشة <span class="ui">الموردين</span> بنفس طريقة <a href="customers.html">شاشة العملاء</a> تقريبًا. توضح هذه الصفحة الخطوات والاختلافات المهمة. لكل مورد يُنشأ حساب تلقائي تحت حساب الموردين الرئيسي.</p>
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#add">إضافة مورد</a></li>
+  <li><a href="#diff">الاختلافات عن بطاقة العميل</a></li>
+  <li><a href="#list">قائمة الموردين</a></li>
+  <li><a href="#groups">المجموعات والتصنيفات</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+</ol></nav>
+
+<section id="add">
+<h2>إضافة مورد جديد</h2>
+<ol class="steps">
+  <li>في <span class="ui">ادارة الموردين</span> اضغط <span class="ui">جديد</span>. يبدأ الكود من 40001.</li>
+  <li>اكتب <span class="ui">الاسم</span> و<span class="ui">الشركة</span> و<span class="ui">الموبايل</span>، واختر <span class="ui">الفرع</span> و<span class="ui">تصنيف</span> و<span class="ui">نوع - ETA</span>، وأدخل <span class="ui">الرقم الضريبيى</span>.</li>
+  <li>اختر الدولة والمحافظة والمدينة، وأكمل العنوان.</li>
+  <li>حدد <span class="ui">العمله</span> و<span class="ui">حد الائتمان</span> و<span class="ui">فترة السماح</span> و<span class="ui">امكانية التعامل آجل</span>.</li>
+  <li>اضغط <span class="ui">حفظ</span> (<kbd>F2</kbd>).</li>
+</ol>
+<p class="tip">يمكنك إضافة مورد سريعًا من داخل <a href="purchase-invoice.html">فاتورة الشراء</a> بزر <code>...</code> بجانب اسم المورد.</p>
+</section>
+
+<section id="diff">
+<h2>الاختلافات عن بطاقة العميل</h2>
+<ul>
+  <li><strong>غير موجودة:</strong> النشاط، والمصدر، وخط السير، ونوع السعر، وكلمة المرور، والخريطة.</li>
+  <li><span class="ui">المجموعة</span> اختيارية، و<span class="ui">المندوب</span> غير إلزامي.</li>
+  <li>في وضع الفاتورة السعودية: <strong>المورد من نوع شخص (P) يُترك رقمه الضريبي فارغًا</strong>.</li>
+  <li>لا تُرسل رسائل ترحيب للموردين.</li>
+</ul>
+<p>باقي الحقول (التصنيف، والعملة، ومعامل الصرف، وقائمة الأسعار، والخصم، وحد الائتمان، وفترة السماح، والتعامل الآجل، والمورد الافتراضي) تعمل كما في <a href="customers.html#fields">بطاقة العميل</a>.</p>
+</section>
+
+<section id="list">
+<h2>قائمة الموردين</h2>
+<!--shot:suppliers__list-->
+<figure class="shot" id="shot-suppliers__list">
+<div class="shot-frame"><a href="assets/screens/suppliers__list.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/suppliers__list.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: قائمة الموردين"></a></div>
+<figcaption>شاشة «قائمة الموردين» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ul>
+  <li><strong>التصفية:</strong> بالفرع والحالة.</li>
+  <li><strong>البحث:</strong> بالاسم أو الشركة، أو الهاتف، أو <span class="ui">الكود</span> (رقم كامل)، أو المحافظة، أو المدينة، أو المندوب.</li>
+  <li><strong>نقر مزدوج</strong> لفتح بطاقة المورد.</li>
+  <li><strong>زر الفأرة الأيمن:</strong> كشف حساب المورد وتقارير الفواتير.</li>
+  <li><span class="ui">Transfer</span>: تحويل المورد إلى عميل.</li>
+  <li><span class="ui">طباعة</span>: طباعة القائمة.</li>
+</ul>
+<div class="warn">لا يمكن حذف مورد له فواتير أو شيكات أو قيود. اجعله <strong>غير نشط</strong> بدلًا من ذلك.</div>
+</section>
+
+<section id="groups">
+<h2>المجموعات والتصنيفات</h2>
+<!--shot:suppliers__groups-->
+<figure class="shot" id="shot-suppliers__groups">
+<div class="shot-frame"><a href="assets/screens/suppliers__groups.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/suppliers__groups.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: المجموعات والتصنيفات"></a></div>
+<figcaption>شاشة «المجموعات والتصنيفات» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ul>
+  <li><span class="ui">مجموعات الموردين</span>: تقسيم الموردين (محلي، استيراد، ...). اكتب <span class="ui">الاسم</span> واحفظ.</li>
+  <li><span class="ui">تصنيف الموردين</span>: يعمل مثل <a href="customers.html#rating">تصنيف العملاء</a>، ويحدد الخصم وحد الائتمان وفترة السماح. تعديل التصنيف يُطبَّق على كل الموردين المرتبطين به.</li>
+</ul>
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td><span class="msg">الاسم او الهاتف مسجل مسبقا</span></td><td>المورد مسجل من قبل.</td></tr>
+<tr><td><span class="msg">فى حال كان العميل شخص يجب ترك الرقم الضريبى فارغا</span></td><td>المورد من نوع شخص (P)، فاترك رقمه الضريبي فارغًا.</td></tr>
+<tr><td><span class="msg">من فضلك اكتب اسم المجموعة</span></td><td>في شاشة المجموعات: اسم المجموعة فارغ.</td></tr>
+<tr><td><span class="msg">لا يمكن اجراء تعديل لهذا السجل لاستخدامه من قبل اخر</span></td><td>المورد أو المجموعة أو التصنيف مستخدم.</td></tr>
+</tbody></table></div>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="customers.html">العملاء</a> · <a href="purchase-invoice.html">فاتورة الشراء</a> · <a href="vouchers.html">سند الصرف</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-08">8 أكتوبر 2026</time></div></footer>
+</body>
+</html>

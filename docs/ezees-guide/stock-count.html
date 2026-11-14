@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>الجرد وسند تسوية الجرد | دليل Ezees ERP</title>
+<meta name="description" content="شرح سند تسوية الجرد في Ezees ERP: إدخال الكميات الفعلية بالصنف أو بالفئة أو من Excel، حساب الكمية المتوقعة والفارق، الاعتماد وتعديل رصيد المخزن، والرسائل الشائعة.">
+<meta name="keywords" content="الجرد, تسوية الجرد, سند تسوية جرد, جرد المخزن, عجز وزيادة المخزون, فروقات الجرد, Ezees ERP">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/stock-count.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="الجرد وسند تسوية الجرد في Ezees ERP">
+<meta property="og:description" content="قارن الكميات الفعلية بأرصدة النظام وسجّل الزيادة والعجز في خطوة واحدة.">
+<meta property="og:url" content="https://help.tebalink.com/stock-count.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"الجرد وسند تسوية الجرد في Ezees ERP","inLanguage":"ar","dateModified":"2026-10-08","proficiencyLevel":"Beginner","mainEntityOfPage":"https://help.tebalink.com/stock-count.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"HowTo","name":"تسجيل سند تسوية جرد","inLanguage":"ar","step":[
+{"@type":"HowToStep","position":1,"text":"اعتمد كل أذون المخزن المعلقة على المخزن المراد جرده."},
+{"@type":"HowToStep","position":2,"text":"افتح تسويه الجرد واضغط جديد ثم اختر المخزن والتاريخ والموظف المختص."},
+{"@type":"HowToStep","position":3,"text":"أدخل الكمية الفعلية لكل صنف، فيحسب البرنامج الكمية المتوقعة والفارق."},
+{"@type":"HowToStep","position":4,"text":"احفظ السند، ثم اعتمده بعد المراجعة ليتعدل رصيد المخزن."}]},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"من أين تأتي الكمية المتوقعة؟","acceptedAnswer":{"@type":"Answer","text":"هي رصيد الصنف في المخزن المحسوب من الحركات المعتمدة لحظة إضافة الصنف إلى السند."}},
+{"@type":"Question","name":"لماذا لا أستطيع إنشاء سند جرد جديد؟","acceptedAnswer":{"@type":"Answer","text":"يوجد على المخزن إذن مخزن أو سند جرد أو سجل آخر غير معتمد. اعتمده أولًا ثم أنشئ السند."}},
+{"@type":"Question","name":"هل يمكن الجرد على أكثر من جلسة؟","acceptedAnswer":{"@type":"Answer","text":"نعم، احفظ السند غير معتمد وافتحه لاحقًا لإكمال الأصناف، ثم اعتمده عند الانتهاء."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"المخازن والأصناف","item":"https://help.tebalink.com/index.html#stock"},
+{"@type":"ListItem","position":3,"name":"تسوية الجرد","item":"https://help.tebalink.com/stock-count.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#pos">نقاط البيع والمطاعم</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#stock">المخازن والأصناف</a></li><li>تسوية الجرد</li></ol>
+<article>
+<h1>الجرد وسند تسوية الجرد</h1>
+<p class="lead">شاشة <span class="ui">سند تسويه جرد</span> (من القائمة: <span class="ui">تسويه الجرد</span>) تقارن الكمية التي عددتها فعليًا في المخزن بالرصيد المسجل في النظام، وتسجل الفرق: <strong>زيادة</strong> تُضاف إلى المخزن أو <strong>عجز</strong> يُخصم منه، فيصبح رصيد النظام مطابقًا للواقع.</p>
+<!--shot:stock-count-->
+<figure class="shot" id="shot-stock-count">
+<div class="shot-frame"><a href="assets/screens/stock-count.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/stock-count.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: الجرد وسند تسوية الجرد"></a></div>
+<figcaption>شاشة «الجرد وسند تسوية الجرد» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#before">قبل البدء</a></li>
+  <li><a href="#add">تسجيل سند جرد</a></li>
+  <li><a href="#fields">الحقول وأعمدة الجدول</a></li>
+  <li><a href="#bulk">إضافة مجموعة أصناف</a></li>
+  <li><a href="#excel">الاستيراد من Excel</a></li>
+  <li><a href="#approve">الاعتماد وأثره</a></li>
+  <li><a href="#search">البحث والتعديل والحذف</a></li>
+  <li><a href="#keys">الاختصارات</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+  <li><a href="#faq">أسئلة شائعة</a></li>
+</ol></nav>
+
+<section id="before">
+<h2>قبل البدء</h2>
+<ol>
+  <li><strong>اعتمد كل الحركات المعلقة</strong> على المخزن: أذون المخازن والتحويلات وكروت الإنتاج غير المعتمدة تمنع إنشاء سند الجرد. راجع <a href="stores.html#approve">الاعتماد في أذون المخازن</a>.</li>
+  <li>أوقف الصرف والاستلام على المخزن أثناء العد قدر الإمكان، لأن الكمية المتوقعة تُحسب من الرصيد الحالي لحظة إضافة الصنف.</li>
+  <li>تأكد من وجود اسم الموظف القائم بالجرد في قائمة الموظفين، فحقل <span class="ui">الموظف المختص</span> إلزامي.</li>
+  <li>يُسمح بسند جرد واحد غير معتمد لكل مخزن في نفس الوقت.</li>
+</ol>
+</section>
+
+<section id="add">
+<h2>تسجيل سند جرد</h2>
+<ol class="steps">
+  <li>افتح <span class="ui">تسويه الجرد</span> واضغط <span class="ui">جديد</span> (<kbd>F1</kbd>). يظهر <span class="ui">رقم</span> السند تلقائيًا.</li>
+  <li>اختر <span class="ui">المخزن</span> و<span class="ui">التاريخ</span> و<span class="ui">الموظف المختص</span>، واكتب <span class="ui">ملاحظات</span> إن رغبت. بعد إضافة أول صنف يُقفل حقل المخزن.</li>
+  <li>اكتب أو امسح <span class="ui">كود</span> الصنف، أو ابحث بـ<span class="ui">اسم الصنف</span>. يمكنك تضييق البحث باختيار <span class="ui">الفئة</span>، وتفعيل خانة <span class="ui">الفئة</span> لتبقى الفئة محددة بين الأصناف.</li>
+  <li>اختر <span class="ui">الوحده</span> واكتب <span class="ui">الكميه</span> التي عددتها، وحدد تاريخ الصلاحية <span class="ui">ت.ص</span> إذا كان الصنف يُتابَع بالصلاحية. يظهر الرصيد الدفتري للصنف بجانب الكمية للمراجعة.</li>
+  <li>اضغط <kbd>Enter</kbd> لإضافة السطر. يحسب البرنامج <span class="ui">الكميه المتوقعه</span> و<span class="ui">الفارق</span> تلقائيًا.</li>
+  <li>كرر لكل الأصناف، ثم اضغط <span class="ui">حفظ</span> (<kbd>F2</kbd>). يسألك البرنامج عن الطباعة.</li>
+  <li>بعد مراجعة السند فعّل <span class="ui">معتمد</span> واحفظ لتطبيق الفروقات على المخزن.</li>
+</ol>
+<ul>
+  <li>إذا كانت الكمية التي أدخلتها مساوية للرصيد تظهر رسالة <span class="msg">كمية الصنف مطابقة للرصيد الفعلى</span> ولا يُضاف الصنف، لأنه لا فرق له.</li>
+  <li>إدخال نفس الصنف مرة أخرى بنفس الوحدة <strong>يجمع</strong> الكمية الجديدة على السابقة. هذا مفيد إذا كان الصنف موزعًا في أكثر من مكان داخل المخزن.</li>
+  <li>السطر الأخضر يعني زيادة عن الرصيد، والوردي يعني عجزًا.</li>
+  <li>يمكنك تعديل الكمية الفعلية مباشرة في عمود <span class="ui">الكميه الحاليه</span> بالجدول، فيُعاد حساب الفارق.</li>
+  <li>للإدخال السريع اضغط <kbd>Insert</kbd> أو <kbd>F3</kbd> للانتقال إلى السطر الفارغ أسفل الجدول، واكتب الكود أو الاسم ثم <kbd>Enter</kbd>.</li>
+</ul>
+<p class="tip">يمكنك الجرد على أكثر من جلسة: احفظ السند وهو <span class="ui">غير معتمد</span>، ثم افتحه لاحقًا بالبحث وأكمل الأصناف، واعتمده في النهاية.</p>
+<p class="tip">للجرد الكبير جرّب <a href="ai-mobile-stocktake.html">الجرد من الموبايل</a>: أمين المخزن يمسح الباركود من موبايله، والكميات ترجع لهذه الشاشة سندًا غير معتمد بالفروقات.</p>
+</section>
+
+<section id="fields">
+<h2>الحقول وأعمدة الجدول</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الحقل / العمود</th><th>الوصف</th></tr></thead>
+<tbody>
+<tr><td>رقم</td><td>رقم تسلسلي داخل السنة المالية.</td></tr>
+<tr><td>المخزن</td><td>المخزن المراد جرده (من مخازن فرعك).</td></tr>
+<tr><td>الموظف المختص</td><td>الموظف المسؤول عن الجرد، وهو إلزامي.</td></tr>
+<tr><td>الكميه الحاليه</td><td>الكمية الفعلية التي عددتها.</td></tr>
+<tr><td>الكميه المتوقعه</td><td>رصيد الصنف في النظام لحظة إضافته للسند، محسوبًا من الحركات المعتمدة فقط.</td></tr>
+<tr><td>الفارق</td><td>الكمية الحالية ناقص المتوقعة. موجب = زيادة تُضاف للمخزن، سالب = عجز يُخصم منه.</td></tr>
+<tr><td>سعر الوحدة / الاجمالى / اجمالى متوقع / اجمالى الفارق</td><td>تقييم الكميات بسعر التكلفة. تظهر حسب صلاحياتك.</td></tr>
+<tr><td>اجمالى الاذن / اجمالى متوقع / اجمالى الفارق (أسفل الشاشة)</td><td>إجمالي قيمة الكميات الفعلية والمتوقعة والفرق للسند كله.</td></tr>
+<tr><td>ت الصلاحيه</td><td>تاريخ الصلاحية للسطر، ويظهر عند تفعيل متابعة الصلاحية.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="bulk">
+<h2>إضافة مجموعة أصناف</h2>
+<p>زر <span class="ui">اضافة مجموعة اصناف</span> يضيف كل أصناف فئة معينة (أو كل الأصناف) دفعة واحدة بكمية موحدة:</p>
+<ol class="steps">
+  <li>اختر المخزن أولًا، ثم اضغط <span class="ui">اضافة مجموعة اصناف</span>.</li>
+  <li>اختر <span class="ui">الفئة</span>، أو فعّل <span class="ui">الكل</span> لكل الأصناف النشطة.</li>
+  <li>اختياريًا: اختر <span class="ui">المورد</span> (اضغط على الحقل أو <kbd>F10</kbd>) لإضافة أصناف هذا المورد فقط.</li>
+  <li>اكتب <span class="ui">الكمية</span> التي ستوضع لكل الأصناف، ثم أكّد الإضافة.</li>
+</ol>
+<div class="warn">الكمية الموحدة تُطبق على <strong>كل</strong> أصناف المجموعة. إذا تركتها صفرًا، فكل صنف لم تعدّل كميته سيُسجَّل له عجز بكامل رصيده عند الاعتماد. راجع الجدول وعدّل <span class="ui">الكميه الحاليه</span> لكل صنف قبل الاعتماد.</div>
+<p class="note">تُضاف الأصناف بوحدتها الأساسية. إذا كان الصنف مضافًا من قبل بوحدة أخرى تظهر رسالة <span class="msg">هذا السجل موجود مسبقا</span> وتتوقف الإضافة عنده.</p>
+</section>
+
+<section id="excel">
+<h2>الاستيراد من Excel</h2>
+<p>اضغط زر <span class="ui">Excel Import</span>، ثم زر <code>...</code> لاختيار الملف، واختر الورقة، ثم أضف البيانات.</p>
+<ul>
+  <li>الأعمدة المطلوبة: <code>Name</code> و<code>Code</code> و<code>Qty</code> (الكمية الفعلية). أعمدة اختيارية: <code>Unit</code> و<code>Expire</code> (تاريخ الصلاحية).</li>
+  <li>الأصناف التي لا يُعثر على كودها تُتجاهل وتظهر رسالة <span class="msg">Check Log Error file,Some items not exist</span>.</li>
+</ul>
+<div class="warn">اكتب الكميات في ملف Excel <strong>بالوحدة الأساسية</strong> للصنف واترك عمود <code>Unit</code> فارغًا أو احذفه؛ فالكمية المتوقعة تُحسب بالوحدة الأساسية، واستخدام وحدة أكبر يعطي فرقًا غير صحيح. وتجنب تكرار الصنف في الملف.</div>
+</section>
+
+<section id="approve">
+<h2>الاعتماد وأثره</h2>
+<ul>
+  <li>عند حفظ السند وهو <span class="ui">معتمد</span> تُطبق الفروقات على رصيد المخزن: الزيادة تُضاف، والعجز يُخصم.</li>
+  <li>في نظام المخزون المستمر يُنشأ قيد تسوية تلقائي بقيمة <span class="ui">اجمالى الفارق</span> بين حساب المخزون وحساب عجز المخزون، ويمكن عرضه من زر <span class="ui">قيد محاسبى</span>.</li>
+  <li>السند المعتمد لا يمكن تعديله أو حذفه.</li>
+</ul>
+</section>
+
+<section id="search">
+<h2>البحث والتعديل والحذف</h2>
+<ul>
+  <li>اكتب رقم السند في مربع <span class="ui">بحث</span> لفتحه (يبحث داخل السنة المالية الحالية).</li>
+  <li>للبحث المتقدم افتح لوحة البحث وحدد <span class="ui">من</span> / <span class="ui">الى</span> و<span class="ui">المخزن</span> و<span class="ui">المستخدم</span> والحالة (<span class="ui">معتمد</span> / <span class="ui">غير معتمد</span>)، ثم انقر على السند في النتائج.</li>
+  <li>السند غير المعتمد يمكن تعديله وإعادة حفظه، أو حذفه بـ<span class="ui">حذف</span> (<kbd>F6</kbd>) بعد التأكيد.</li>
+</ul>
+<div class="warn">في سند محفوظ، <strong>لا تحذف سطر صنف</strong> لإلغائه؛ فقد يبقى الفارق القديم محسوبًا. بدلًا من ذلك عدّل <span class="ui">الكميه الحاليه</span> في الجدول لتساوي <span class="ui">الكميه المتوقعه</span> فيصبح الفارق صفرًا.</div>
+</section>
+
+<section id="keys">
+<h2>الاختصارات</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>المفتاح</th><th>العمل</th></tr></thead>
+<tbody>
+<tr><td><kbd>F1</kbd></td><td>سند جديد</td></tr>
+<tr><td><kbd>F2</kbd></td><td>حفظ</td></tr>
+<tr><td><kbd>F4</kbd></td><td>طباعة</td></tr>
+<tr><td><kbd>F5</kbd></td><td>تحديث القوائم</td></tr>
+<tr><td><kbd>F6</kbd></td><td>حذف السطر المحدد أو السند</td></tr>
+<tr><td><kbd>F10</kbd></td><td>اختيار المورد في إضافة مجموعة أصناف</td></tr>
+<tr><td><kbd>Insert</kbd> / <kbd>F3</kbd></td><td>الانتقال إلى سطر الإدخال السريع</td></tr>
+<tr><td><kbd>Enter</kbd></td><td>إضافة الصنف من لوحة الإدخال</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى وما تفعله</th></tr></thead>
+<tbody>
+<tr><td><span class="msg">عفوا لديك اذن مخزن غير معتمد يجب اعتماده اولا</span></td><td>على المخزن إذن غير معتمد. اعتمده أو احذفه ثم أنشئ سند الجرد.</td></tr>
+<tr><td><span class="msg">عفوا لديك اذن جرد غير معتمد يجب اعتماده اولا</span></td><td>يوجد سند جرد مفتوح لنفس المخزن. افتحه وأكمل عليه، أو اعتمده.</td></tr>
+<tr><td><span class="msg">عفوا يوجد سجلات غير معتمدة يجب اغلاقها اولا</span></td><td>توجد أذون أو كروت إنتاج غير معتمدة على المخزن.</td></tr>
+<tr><td><span class="msg">عفوا هذا البند يوجد له سجلات غير معتمده يجب اعتماده اولا</span></td><td>للصنف حركة غير معتمدة في هذا المخزن؛ اعتمدها قبل جرده.</td></tr>
+<tr><td><span class="msg">كمية الصنف مطابقة للرصيد الفعلى</span></td><td>لا فرق في هذا الصنف، فلا حاجة لإضافته.</td></tr>
+<tr><td><span class="msg">عفوا تأكد من بياناتك أولا</span></td><td>اختر المخزن والموظف المختص والصنف والوحدة، وأضف صنفًا واحدًا على الأقل.</td></tr>
+<tr><td><span class="msg">عفوا لابد من أدخال قيم أكبر من الصفر</span></td><td>الكمية المكتوبة في الجدول غير صحيحة أو سالبة.</td></tr>
+<tr><td><span class="msg">عفوا.هذا السجل مرحل لا يمكن تعديله او حذفه</span></td><td>السند معتمد ولا يمكن تغييره.</td></tr>
+<tr><td><span class="msg">التاريخ المحدد خارج نطاق الفترة المحاسبية</span></td><td>غيّر تاريخ السند ليقع داخل الفترة المفتوحة.</td></tr>
+<tr><td><span class="msg">هذا السجل موجود مسبقا</span></td><td>في إضافة مجموعة أصناف: الصنف موجود في السند بوحدة أخرى.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="faq">
+<h2>أسئلة شائعة</h2>
+<details><summary>من أين تأتي الكمية المتوقعة؟</summary>
+<p>هي رصيد الصنف في المخزن المحسوب من الحركات المعتمدة لحظة إضافة الصنف إلى السند، وليس الرصيد في تاريخ السند. لذلك أوقف الحركة على المخزن أثناء الجرد.</p></details>
+<details><summary>لماذا لا أستطيع إنشاء سند جرد جديد؟</summary>
+<p>يوجد على المخزن إذن أو سند جرد أو كارت إنتاج غير معتمد. اعتمده أولًا، أو أكمل على سند الجرد المفتوح.</p></details>
+<details><summary>جردت صنفًا في أكثر من مكان، كيف أجمع الكميات؟</summary>
+<p>أدخل الصنف مرة لكل مكان بنفس الوحدة؛ تُجمع الكميات تلقائيًا في سطر واحد.</p></details>
+<details><summary>أين أرى نتائج الجرد بعد الاعتماد؟</summary>
+<p>تظهر فروقات الجرد في حركة الصنف وفي <a href="reports-stores.html">تقارير المخازن</a>، ويمكنك فتح السند منها.</p></details>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="stores.html">المخازن والأذون والتحويل</a> · <a href="ai-mobile-stocktake.html">جرد المخزن من الموبايل</a> · <a href="items.html">الأصناف</a> · <a href="sales-invoice.html">فاتورة البيع</a> · <a href="purchase-invoice.html">فاتورة الشراء</a> · <a href="reports-stores.html">تقارير المخازن</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-08">8 أكتوبر 2026</time></div></footer>
+</body>
+</html>

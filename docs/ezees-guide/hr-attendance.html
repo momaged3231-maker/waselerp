@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>الحضور والانصراف والإجازات والوقت الإضافي | دليل Ezees ERP</title>
+<meta name="description" content="شرح الحضور والانصراف في Ezees ERP: ربط جهاز البصمة وتنزيل السجلات، التسجيل اليدوي والآلي، خصم التأخير والانصراف المبكر، الإجازات والغياب والاعتمادات، أذونات الانصراف المبكر، الوقت الإضافي، المهام الخارجية والإنذارات.">
+<meta name="keywords" content="الحضور والانصراف, جهاز البصمة, خصم التأخير, الإجازات والغياب, رصيد الإجازات, إذن انصراف مبكر, الوقت الإضافي, مهمة خارجية, إنذارات الموظفين, استيراد CSV, Ezees ERP">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/hr-attendance.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="الحضور والانصراف والإجازات في Ezees ERP">
+<meta property="og:description" content="سجّل الحضور والانصراف يدويًا أو من جهاز البصمة، وأدر الإجازات والغياب والأذونات والوقت الإضافي والإنذارات.">
+<meta property="og:url" content="https://help.tebalink.com/hr-attendance.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"الحضور والانصراف والإجازات والوقت الإضافي في Ezees ERP","inLanguage":"ar","dateModified":"2026-10-08","proficiencyLevel":"Beginner","mainEntityOfPage":"https://help.tebalink.com/hr-attendance.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"HowTo","name":"تسجيل حضور موظف يدويًا","inLanguage":"ar","step":[
+{"@type":"HowToStep","position":1,"text":"اضبط مواعيد الحضور في بطاقة الموظف ونسب الخصم على التأخير مرة واحدة."},
+{"@type":"HowToStep","position":2,"text":"افتح تسجيل الحضور واختر الوضع يدوي والفترة الأولى أو الثانية."},
+{"@type":"HowToStep","position":3,"text":"اختر التاريخ ثم الموظف وأدخل وقت الحضور، وراجع قيمة التأخير في شريط الحالة."},
+{"@type":"HowToStep","position":4,"text":"اضغط حفظ أو Enter. يُسجَّل الحضور ويُضاف خصم التأخير تلقائيًا إن وُجد."}]},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"لماذا لا يظهر الموظف في قائمة تسجيل الحضور؟","acceptedAnswer":{"@type":"Answer","text":"الموظف في إجازة أو غياب مسجل يغطي هذا التاريخ، أو أنه موقوف، أو أنه من فرع آخر. وفي الفترة الثانية لا يظهر إلا من سجّل انصراف الفترة الأولى."}},
+{"@type":"Question","name":"كيف يُحسب خصم التأخير؟","acceptedAnswer":{"@type":"Answer","text":"يُقارن وقت الحضور بموعد الحضور في بطاقة الموظف لهذا اليوم، ثم يُحسب الخصم من أجر يوم الموظف حسب شريحة التأخير في شاشة نسب الخصم على التأخير."}},
+{"@type":"Question","name":"لماذا زر Download From FP غير متاح؟","acceptedAnswer":{"@type":"Answer","text":"الجهاز غير متصل. اتصل به أولًا من اعدادات جهاز FP، ثم أغلق شاشة الحضور وافتحها من جديد."}},
+{"@type":"Question","name":"هل تُخصم أيام المهمة الخارجية؟","acceptedAnswer":{"@type":"Answer","text":"لا. لا يُحسب خصم تأخير أو انصراف مبكر في يوم المهمة الخارجية، ولا يُسجل اليوم غيابًا تلقائيًا."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"الموارد البشرية","item":"https://help.tebalink.com/index.html#hr"},
+{"@type":"ListItem","position":3,"name":"الحضور والانصراف والإجازات","item":"https://help.tebalink.com/hr-attendance.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#pos">نقاط البيع والمطاعم</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#hr">الموارد البشرية</a></li><li>الحضور والانصراف والإجازات</li></ol>
+<article>
+<h1>الحضور والانصراف والإجازات والوقت الإضافي</h1>
+<p class="lead">تتابع من هذه الشاشات دوام موظفيك يومًا بيوم: تسجل <strong>الحضور والانصراف</strong> يدويًا أو من <strong>جهاز البصمة</strong>، وتسجل <strong>الإجازات والغياب</strong> و<strong>أذونات الانصراف المبكر</strong> و<strong>الوقت الإضافي</strong> و<strong>المهام الخارجية</strong> و<strong>الإنذارات</strong>. يحسب النظام خصومات التأخير والانصراف المبكر وقيمة الوقت الإضافي تلقائيًا، وتظهر كلها في <a href="hr-payroll.html">مسير الرواتب</a>.</p>
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#before">قبل البدء</a></li>
+  <li><a href="#device">ربط جهاز البصمة</a></li>
+  <li><a href="#attend">تسجيل الحضور</a></li>
+  <li><a href="#leave">تسجيل الانصراف</a></li>
+  <li><a href="#wizard">معالج الحضور والانصراف</a></li>
+  <li><a href="#csv">استيراد سجلات Csv</a></li>
+  <li><a href="#vacations">الإجازات والغياب</a></li>
+  <li><a href="#approvals">اعتماد الإجازات والأذونات</a></li>
+  <li><a href="#early">أذونات الانصراف المبكر</a></li>
+  <li><a href="#overtime">الوقت الإضافي</a></li>
+  <li><a href="#task">المهمة الخارجية</a></li>
+  <li><a href="#warnings">الإنذارات</a></li>
+  <li><a href="#shifts">تخصيص ورديات الموظفين</a></li>
+  <li><a href="#import">استيراد الموظفين من Excel</a></li>
+  <li><a href="#toolbar">شريط الأدوات والاختصارات</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+  <li><a href="#faq">أسئلة شائعة</a></li>
+</ol></nav>
+
+<section id="before">
+<h2>قبل البدء</h2>
+<p>يعتمد حساب التأخير والانصراف المبكر والوقت الإضافي على بيانات تُضبط مرة واحدة:</p>
+<ol>
+  <li><strong>مواعيد الحضور لكل موظف:</strong> في <a href="hr-employees.html">بطاقة الموظف</a> تبويب <span class="ui">مواعيد الحضور</span>، حدد <span class="ui">ايام الحضور</span> ومواعيد <span class="ui">الفترة الاولى</span> و<span class="ui">الفترة الثانية</span> لكل يوم. اليوم غير المسجل فيه موعد يُعدّ يوم راحة للموظف.</li>
+  <li><strong>معدلات الوقت الإضافي:</strong> في تبويب <span class="ui">بيانات العمل</span> بنفس البطاقة: <span class="ui">معدل حساب ساعات العمل الاضافي</span> للأيام العادية ولأيام العطلات، و<span class="ui">عدد ايام العمل شهريا</span> الذي يُحسب منه أجر اليوم.</li>
+  <li><strong>شرائح خصم التأخير:</strong> من شاشة <span class="ui">نسب الخصم علي التاخير</span> عرّف شرائح دقائق التأخير وقيمة الخصم لكل شريحة. <strong>لا يمكن تسجيل أي حضور قبل إضافتها.</strong></li>
+  <li><strong>جهاز البصمة</strong> (اختياري): اربطه كما في <a href="#device">الفقرة التالية</a>.</li>
+</ol>
+<p class="note">«الفترة الأولى» و«الفترة الثانية» تعنيان دوامين في نفس اليوم (مثل صباحي ومسائي). إذا كان لموظفيك دوام واحد فاستخدم <span class="ui">فترة اولى</span> دائمًا.</p>
+</section>
+
+<section id="device">
+<h2>ربط جهاز البصمة (اعدادات جهاز FP)</h2>
+<p>شاشة <span class="ui">اعدادات جهاز FP</span> تربط البرنامج بجهاز البصمة. يبقى الاتصال قائمًا حتى تغلق البرنامج، لكنه <strong>لا يتم تلقائيًا عند فتح البرنامج</strong>، فاتصل بالجهاز في بداية كل جلسة عمل تريد فيها تنزيل السجلات.</p>
+<!--shot:hr-attendance__device-->
+<figure class="shot" id="shot-hr-attendance__device">
+<div class="shot-frame"><a href="assets/screens/hr-attendance__device.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/hr-attendance__device.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: ربط جهاز البصمة (اعدادات جهاز FP)"></a></div>
+<details class="shot-tabs"><summary>باقي تبويبات الشاشة (1)</summary><div class="shot-thumbs"><a href="assets/screens/hr-attendance__device--tab1.png" target="_blank" rel="noopener"><img src="assets/screens/hr-attendance__device--tab1.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: ربط جهاز البصمة (اعدادات جهاز FP) - التبويب 2"></a></div></details>
+<figcaption>شاشة «ربط جهاز البصمة (اعدادات جهاز FP)» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<h3>الجهاز متصل بشبكة داخلية</h3>
+<ol class="steps">
+  <li>افتح تبويب <span class="ui">الجهاز متصل بشبكه داخليه</span>.</li>
+  <li>أدخل <span class="ui">رقم الأي بي</span> (الافتراضي <code>192.168.1.201</code>) و<span class="ui">المنفذ</span> (الافتراضي <code>4370</code>) و<span class="ui">الباسورد</span> (اتركه <code>0</code> إن لم يكن للجهاز كلمة مرور).</li>
+  <li>اضغط <span class="ui">اتصال</span>. عند النجاح يظهر <code>Status:Connected</code> ويتحول الزر إلى <code>Disconnect</code>.</li>
+</ol>
+<h3>الجهاز متصل بمنفذ تسلسلي</h3>
+<ol class="steps">
+  <li>افتح تبويب <span class="ui">الجهاز متصل بمنفذ تسلسلي</span>.</li>
+  <li>اختر <span class="ui">المنفذ</span> (COM1 إلى COM9) و<span class="ui">معدل النقل</span>، وأدخل <span class="ui">رقم الجهاز</span>.</li>
+  <li>اضغط <span class="ui">اتصال</span>.</li>
+</ol>
+<div class="warn">
+<ul>
+  <li>يحفظ البرنامج العنوان والمنفذ، لكنه <strong>لا يحفظ كلمة مرور الجهاز</strong>. أعد كتابتها في كل مرة تتصل فيها.</li>
+  <li>زر <span class="ui">Download From FP</span> في شاشات الحضور والانصراف والوقت الإضافي يتفعّل عند <strong>فتح</strong> الشاشة فقط. لذلك اتصل بالجهاز أولًا، ثم افتح شاشة الحضور. إذا كانت مفتوحة فأغلقها وافتحها من جديد.</li>
+  <li>إذا ظهرت رسالة <span class="msg">Unable to connect to the device, error number = …</span> فتأكد من تشغيل الجهاز ومن صحة العنوان وأن الجهاز على نفس الشبكة.</li>
+</ul>
+</div>
+</section>
+
+<section id="attend">
+<h2>تسجيل الحضور</h2>
+<p>شاشة <span class="ui">تسجيل الحضور</span> تسجل وقت وصول الموظف لكل يوم ولكل فترة، وتعرض أسفلها حضور اليوم المختار.</p>
+<!--shot:hr-attendance__attend-->
+<figure class="shot" id="shot-hr-attendance__attend">
+<div class="shot-frame"><a href="assets/screens/hr-attendance__attend.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/hr-attendance__attend.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: تسجيل الحضور"></a></div>
+<figcaption>شاشة «تسجيل الحضور» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+
+<h3>طريقتا التسجيل</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>الوضع</th><th>كيف يعمل</th></tr></thead>
+<tbody>
+<tr><td><span class="ui">يدوي</span></td><td>تختار <span class="ui">الموظف</span> بالاسم، وتحدد <span class="ui">التاريخ</span> و<span class="ui">وقت الحضور</span> بنفسك. مناسب لإدخال حضور يوم سابق أو تصحيحه.</td></tr>
+<tr><td><span class="ui">ألي</span></td><td>تكتب <span class="ui">كود الموظف</span> وتضغط <kbd>Enter</kbd>. يُسجَّل الحضور بتاريخ ووقت الجهاز الحالي، ويبقى الحقل جاهزًا للموظف التالي. مناسب لمكتب الاستقبال.</td></tr>
+</tbody></table></div>
+<p class="note">المستخدم الذي لا يملك صلاحية الحذف في هذه الشاشة يعمل في الوضع <span class="ui">ألي</span> فقط، ولا يستطيع تغيير التاريخ أو الوقت.</p>
+
+<h3>تسجيل حضور يدويًا</h3>
+<ol class="steps">
+  <li>اختر <span class="ui">يدوي</span> ثم <span class="ui">فترة اولى</span> أو <span class="ui">فترة ثانية</span>.</li>
+  <li>اختر <span class="ui">التاريخ</span>. تتحدث قائمة الموظفين والجدول لهذا اليوم.</li>
+  <li>اختر <span class="ui">الموظف</span> وعدّل <span class="ui">وقت الحضور</span> (الافتراضي 09:00). يظهر في شريط الحالة أسفل الشاشة <span class="msg">قيمه التأخير تساوى … دقيقة</span> أو «لا يوجد تأخير».</li>
+  <li>أضف <span class="ui">ملاحظات</span> إن أردت، ثم اضغط <span class="ui">حفظ</span> أو <kbd>Enter</kbd>.</li>
+</ol>
+
+<h3>ما يحدث عند الحفظ</h3>
+<ul>
+  <li>يُقارن وقت الحضور بموعد الحضور في بطاقة الموظف لنفس اليوم من الأسبوع ولنفس الفترة.</li>
+  <li>إذا تأخر الموظف، يُضاف <strong>خصم «حضور متأخر»</strong> إلى تفاصيل راتبه. تُحسب قيمته من أجر يومه حسب شريحة التأخير في <span class="ui">نسب الخصم علي التاخير</span>.</li>
+  <li>إذا كانت للموظف <a href="#task">مهمة خارجية</a> في هذا اليوم، <strong>لا يُخصم</strong> شيء وتُكتب الملاحظة «مسجل له مهمة خارجية».</li>
+  <li>لا يُسمح بحضورين لنفس الموظف في نفس اليوم ونفس الفترة، ولا بتاريخ مستقبلي.</li>
+  <li>لا يمكن تسجيل حضور لموظف عليه إجازة أو غياب في هذا اليوم. وفي <span class="ui">فترة ثانية</span> لا يظهر في القائمة إلا من سجّل انصراف الفترة الأولى.</li>
+</ul>
+<p class="tip">الحضور اليدوي في يوم راحة الموظف غير مسموح. لتسجيل عمل في يوم راحة استخدم <a href="#overtime">الوقت الإضافي</a>، أو نزّل البصمة من الجهاز فيُسجَّل الحضور ويُضاف «عمل يوم اضافى» تلقائيًا.</p>
+
+<h3>التعديل والحذف</h3>
+<ul>
+  <li>انقر سطرًا في الجدول لتحميله، وعدّل الوقت أو التاريخ أو الملاحظات، ثم احفظ. يُعاد حساب خصم التأخير.</li>
+  <li>للحذف: انقر السطر ثم اضغط <span class="ui">حذف</span> أو <kbd>Delete</kbd>.</li>
+</ul>
+<div class="warn">حذف حضور يحذف معه <strong>انصراف</strong> نفس السجل وخصمه، وكذلك <strong>إذن الانصراف المبكر</strong> و<strong>الوقت الإضافي</strong> المسجلين للموظف في ذلك اليوم.</div>
+
+<h3>التنزيل من جهاز البصمة</h3>
+<ol class="steps">
+  <li>تأكد أن الجهاز متصل (<a href="#device">ربط جهاز البصمة</a>).</li>
+  <li>في <span class="ui">التاريخ</span> اختر <strong>أول يوم في الشهر</strong> الذي تريد تنزيل حضوره.</li>
+  <li>اضغط <span class="ui">Download From FP</span>. تظهر رسالة بعدد السجلات وسؤال <span class="msg">سجل هل ترغب فى الاستمرار ؟</span>. اضغط <span class="ui">نعم</span>.</li>
+  <li>تظهر النتيجة: <span class="msg">… سجل مع تجاهل السجلات المتكررة</span>. السجلات المسجلة مسبقًا لا تتكرر.</li>
+</ol>
+<ul>
+  <li>يُطابق النظام رقم الموظف في الجهاز مع <strong>كود الموظف</strong> في البرنامج. الأرقام غير المطابقة تُتجاهل.</li>
+  <li>تُقرأ حركة «حضور» من الجهاز للفترة الأولى، وحركة «حضور فترة ثانية» للفترة الثانية. لذلك يجب أن يضغط الموظف على الحالة الصحيحة في الجهاز قبل البصمة.</li>
+</ul>
+<div class="warn"><strong>اختر أول الشهر قبل التنزيل.</strong> إذا اخترت يومًا من منتصف الشهر فقد لا تُنزَّل بصمات الأيام الأولى من الشهور التالية. وتأكد من ضبط تاريخ ووقت جهاز البصمة، فوجود بصمة بتاريخ مستقبلي يوقف التنزيل عندها.</div>
+
+<h3>تسجيل غياب تلقائى</h3>
+<p>زر <span class="ui">تسجيل غياب تلقائى</span> يمر على كل الموظفين النشطين، ويسجل <strong>غيابًا</strong> لكل يوم عمل من أول شهر التاريخ المختار حتى هذا التاريخ لم يُسجَّل فيه حضور ولا مهمة خارجية. يُكتب في الملاحظة «تسجيل تلقائى من النظام». استخدمه بعد اكتمال تسجيل الحضور وتنزيل البصمات والإجازات للفترة.</p>
+</section>
+
+<section id="leave">
+<h2>تسجيل الانصراف</h2>
+<p>شاشة <span class="ui">وقت الانصراف</span> تعمل بنفس أسلوب شاشة الحضور: وضع <span class="ui">يدوي</span> أو <span class="ui">ألي</span>، و<span class="ui">فترة اولى</span> أو <span class="ui">فترة ثانية</span>، وزر <span class="ui">Download From FP</span> لتنزيل حركات الانصراف.</p>
+<!--shot:hr-attendance__leave-->
+<figure class="shot" id="shot-hr-attendance__leave">
+<div class="shot-frame"><a href="assets/screens/hr-attendance__leave.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/hr-attendance__leave.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: تسجيل الانصراف"></a></div>
+<figcaption>شاشة «تسجيل الانصراف» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>اختر الفترة ثم <span class="ui">التاريخ</span>. قائمة <span class="ui">الموظف</span> تعرض فقط من سجّل حضورًا في هذا اليوم ولهذه الفترة.</li>
+  <li>اختر الموظف وعدّل <span class="ui">وقت الانصراف</span> (الافتراضي 05:00 م)، ثم احفظ.</li>
+</ol>
+<ul>
+  <li><strong>انصراف مبكر:</strong> إذا انصرف قبل موعده يُضاف خصم «انصراف مبكر» = (أجر اليوم ÷ ساعات دوامه) × دقائق الانصراف المبكر.</li>
+  <li><strong>وقت إضافي تلقائي:</strong> إذا انصرف بعد موعده بأكثر من الحد المسموح (60 دقيقة افتراضيًا) يُسجَّل <a href="#overtime">وقت إضافي</a> تلقائيًا بالملاحظة «Added From FP Unit».</li>
+  <li>في يوم <a href="#task">المهمة الخارجية</a> لا يُخصم انصراف مبكر.</li>
+  <li>انصراف واحد لكل موظف في اليوم والفترة.</li>
+</ul>
+<p class="tip">عند حفظ تعديل على انصراف قد تظهر للحظة رسالة «هذا السجل موجود مسبقا». إذا ظهرت بعدها «تم التعديل بنجاح» فقد تم التعديل ولا داعي للقلق.</p>
+</section>
+
+<section id="wizard">
+<h2>معالج الحضور والانصراف</h2>
+<p>شاشة <span class="ui">معالج حضور وانصراف الموظفين</span> تسجل حضورًا أو انصرافًا <strong>بالمواعيد الرسمية</strong> لمجموعة كاملة بضغطة واحدة، مثلًا في يوم تعطل فيه جهاز البصمة.</p>
+<!--shot:hr-attendance__wizard-->
+<figure class="shot" id="shot-hr-attendance__wizard">
+<div class="shot-frame"><a href="assets/screens/hr-attendance__wizard.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/hr-attendance__wizard.png" width="1670" height="902" loading="lazy" decoding="async" alt="صورة شاشة: معالج الحضور والانصراف"></a></div>
+<figcaption>شاشة «معالج الحضور والانصراف» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>اختر <span class="ui">التاريخ</span>.</li>
+  <li>حدد <span class="ui">الادارة</span> و<span class="ui">القسم</span>، أو علّم <span class="ui">الكل</span>.</li>
+  <li>اختر <span class="ui">حضور</span> أو <span class="ui">أنصراف</span>، ثم <span class="ui">فترة اولى</span> أو <span class="ui">فترة ثانية</span>.</li>
+  <li>اضغط <span class="ui">حفظ</span>. يظهر عدد السجلات المضافة.</li>
+</ol>
+<ul>
+  <li>يُسجَّل كل موظف بموعده الرسمي في هذا اليوم، فلا يُحسب تأخير ولا انصراف مبكر.</li>
+  <li>يتخطى الموظفين الذين سُجل لهم حضور (أو انصراف) في ذلك اليوم، ومن عليهم إجازة أو غياب، والموقوفين، ومن ليس له موعد في هذا اليوم.</li>
+  <li>لا يظهر طلب تأكيد قبل التنفيذ، فراجع اختياراتك قبل الضغط على <span class="ui">حفظ</span>.</li>
+</ul>
+<div class="warn">
+<ul>
+  <li>سجّل <strong>الحضور</strong> بالمعالج أولًا، ثم <strong>الانصراف</strong> بعده.</li>
+  <li>لا تستخدم المعالج لتسجيل <strong>انصراف</strong> مجموعة فيها موظفون بلا حضور في ذلك اليوم، فقد يُربط انصرافهم بحضور موظف آخر. سجّل انصراف هذه الحالات من شاشة <a href="#leave">تسجيل الانصراف</a>.</li>
+  <li>المعالج لا يسجل للفترة الثانية من سجّل حضور الفترة الأولى في نفس اليوم. سجّلهم من شاشة الحضور.</li>
+  <li>الموظف الذي سُجلت له إجازة لم يُعتمد رجوعه منها في <a href="#approvals">اعتماد انتهاء اجازة</a> قد يتخطاه المعالج. سجّله يدويًا.</li>
+</ul>
+</div>
+</section>
+
+<section id="csv">
+<h2>استيراد سجلات Csv</h2>
+<p>شاشة <span class="ui">قارئ ملفات Csv</span> تستورد حركات الحضور والانصراف من ملف نصي يصدّره جهاز بصمة أو برنامج آخر، وتحسب التأخير والانصراف المبكر كما في التسجيل العادي.</p>
+<!--shot:hr-attendance__csv-->
+<figure class="shot" id="shot-hr-attendance__csv">
+<div class="shot-frame"><a href="assets/screens/hr-attendance__csv.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/hr-attendance__csv.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: استيراد سجلات Csv"></a></div>
+<figcaption>شاشة «استيراد سجلات Csv» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>اضغط <span class="ui">استعراض</span> واختر الملف.</li>
+  <li>حدد <span class="ui">العلامه الفاصله</span>: <span class="ui">Semicolon</span> أو <span class="ui">TAB</span>، أو اختر <span class="ui">Other:</span> واكتب الفاصل (مثل الفاصلة <code>,</code>). وحدد <span class="ui">الترميز</span>: <span class="ui">ANSI</span> أو <span class="ui">Unicode</span> أو <span class="ui">OEM</span>.</li>
+  <li>علّم <span class="ui">اول سجل في الملف هو صف العناوين</span> إذا كان السطر الأول عناوين أعمدة، ثم اضغط <span class="ui">عرض</span>.</li>
+  <li>في <span class="ui">تخصيص حقول الاستعلام</span> اختر الأعمدة المقابلة: <span class="ui">التاريخ</span> و<span class="ui">الوقت</span> و<span class="ui">كود الموظف</span> و<span class="ui">نوع العمليه</span>.</li>
+  <li>علّم ما تريد استيراده: <span class="ui">حضور - فترة اولى</span> و<span class="ui">انصراف فترة اولى</span> و<span class="ui">حضور - فترة ثانية</span> و<span class="ui">انصراف فترة ثانية</span>. اختر بجانب كل خيار القيمة التي تمثله في عمود نوع العملية.</li>
+  <li>اضغط <span class="ui">حفظ</span>. يظهر عدد السجلات المستوردة لكل نوع: <code>Login A … Login B … Leave A … Leave B …</code>.</li>
+</ol>
+<ul>
+  <li>يُطابق كود الموظف في الملف مع كود الموظف في البرنامج، والحركات المكررة لا تُستورد مرتين.</li>
+  <li>يُستورد الانصراف فقط إذا كان للموظف حضور في نفس اليوم والفترة، لذلك استورد الحضور والانصراف معًا في نفس العملية.</li>
+</ul>
+<div class="warn">
+<ul>
+  <li>إذا كان <strong>عمود نوع العملية هو العمود الأول</strong> في الملف فلن تظهر قيمه للاختيار. انقله إلى موضع آخر في الملف قبل الاستيراد.</li>
+  <li>لا تضغط <span class="ui">عرض</span> أكثر من مرة، ولا تحمّل ملفًا ثانيًا في نفس النافذة، فقد تتكرر الصفوف. أغلق الشاشة وافتحها لكل ملف جديد.</li>
+  <li>بعد الاستيراد راجع أوقات <strong>الحضور المسائي</strong> (حضور الفترة الثانية) في شاشة الحضور، فقد يُقرأ الوقت المسائي على أنه صباحي فيُحسب التأخير خطأً.</li>
+</ul>
+</div>
+</section>
+
+<section id="vacations">
+<h2>الإجازات والغياب</h2>
+<p>شاشة <span class="ui">الاجازات والغياب</span> تسجل فترات الإجازة أو الغياب لكل موظف. تُستخدم هذه الفترات في منع تسجيل الحضور، وفي حساب الرصيد، وفي خصم الغياب من الراتب.</p>
+<!--shot:hr-attendance__vacations-->
+<figure class="shot" id="shot-hr-attendance__vacations">
+<div class="shot-frame"><a href="assets/screens/hr-attendance__vacations.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/hr-attendance__vacations.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: الإجازات والغياب"></a></div>
+<figcaption>شاشة «الإجازات والغياب» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>اختر <span class="ui">الموظف</span> و<span class="ui">النوع</span>: <span class="ui">طارئة</span> أو <span class="ui">مرضية</span> أو <span class="ui">سنوية</span> أو <span class="ui">استثنائية</span> أو <span class="ui">غياب</span>.</li>
+  <li>حدد <span class="ui">من</span> و<span class="ui">الى</span>. للإجازات الطارئة والمرضية والسنوية يظهر <strong>الرصيد المتبقي</strong> بالأيام بجانب النوع.</li>
+  <li>اكتب <span class="ui">ملاحظات</span> إن أردت، ثم اضغط <span class="ui">حفظ</span>.</li>
+</ol>
+<h3>قواعد مهمة</h3>
+<ul>
+  <li>لا يمكن تسجيل إجازة أو غياب في أيام سُجّل فيها حضور للموظف. احذف الحضور أولًا إن كان خطأً.</li>
+  <li>لا يُسمح بتداخل فترتين لنفس الموظف.</li>
+  <li>إذا لم يكفِ رصيد الإجازة الطارئة أو المرضية أو السنوية يظهر <span class="msg">رصيد الاجازات لا يكفى يمكنك تسجيلها كغياب</span>.</li>
+  <li>الإجازة التي تمتد إلى سنة جديدة تُقسم تلقائيًا إلى سجلين، واحد لكل سنة.</li>
+  <li>الحركات التي دخلت في رواتب مدفوعة تظهر <strong>رمادية</strong> ولا يمكن تعديلها أو حذفها. سطور <strong>الغياب</strong> تظهر باللون الوردي.</li>
+</ul>
+<h3>القائمة والطباعة</h3>
+<ul>
+  <li>تعرض القائمة إجازات وغياب الفترة المالية الحالية التي تبدأ في الشهر الحالي. غيّر التاريخين أعلى القائمة لعرض فترة أخرى.</li>
+  <li>يمكن تحديد عدة سطور وحذفها معًا. السطور الرمادية لا تُحذف.</li>
+  <li><span class="ui">طباعة</span> يفتح <a href="reports-hr.html">تقرير الاجازات والغياب</a>.</li>
+</ul>
+</section>
+
+<section id="approvals">
+<h2>اعتماد الإجازات والأذونات</h2>
+<p>ثلاث شاشات تعرض الطلبات المنتظرة وبجانب كل سطر زر <span class="ui">اعتمد</span>. تتحدث القوائم تلقائيًا كل فترة قصيرة وهي مفتوحة. لا يوجد زر رفض في هذه الشاشات.</p>
+<!--shot:hr-attendance__approvals-->
+<figure class="shot" id="shot-hr-attendance__approvals">
+<div class="shot-frame"><a href="assets/screens/hr-attendance__approvals.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/hr-attendance__approvals.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: اعتماد الإجازات والأذونات"></a></div>
+<figcaption>شاشة «اعتماد الإجازات والأذونات» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<div class="table-wrap"><table>
+<thead><tr><th>الشاشة</th><th>ماذا تعرض</th><th>أثر <span class="ui">اعتمد</span></th></tr></thead>
+<tbody>
+<tr><td><span class="ui">اعتماد بداية اجازة</span></td><td>طلبات الإجازة والغياب التي تنتظر الاعتماد: الموظف، <span class="ui">بداية الأجازه</span>، <span class="ui">انتهاء الأجازه</span>، النوع، الملاحظات.</td><td>تصبح الإجازة معتمدة وتظهر في شاشة الإجازات والغياب.</td></tr>
+<tr><td><span class="ui">اعتماد انتهاء اجازة</span></td><td>الموظفون الموجودون حاليًا في إجازة لم تنته بعد ولم يُعتمد رجوعهم.</td><td>يُعتمد رجوع الموظف (مباشرته العمل) فيعود إلى قائمة الموظفين في شاشة تسجيل الحضور.</td></tr>
+<tr><td><span class="ui">اعتماد الانصراف المبكر</span></td><td>أذونات الانصراف المبكر المنتظرة: الموظف، <span class="ui">من</span>، <span class="ui">الى</span>، الملاحظات.</td><td>يصبح الإذن معتمدًا ويظهر في شاشة <a href="#early">أذونات الانصراف المبكر</a> بتاريخه.</td></tr>
+</tbody></table></div>
+<div class="warn">
+<ul>
+  <li>في <span class="ui">اعتماد بداية اجازة</span> يعتمد الزر <strong>كل الطلبات المنتظرة لنفس الموظف</strong> مرة واحدة، لا السطر المختار فقط. إذا كان للموظف أكثر من طلب فراجعها كلها قبل الاعتماد.</li>
+  <li>في <span class="ui">اعتماد انتهاء اجازة</span> يُطبَّق الاعتماد على كل إجازات الموظف، ومنها إجازاته المستقبلية. إذا رجع الموظف قبل موعده فعدّل تاريخ نهاية الإجازة أولًا في <a href="#vacations">الإجازات والغياب</a>.</li>
+  <li>اعتماد إذن الانصراف المبكر لا يضيف خصمًا على الراتب. إذا أردت الخصم فافتح الإذن في شاشة الأذونات وعلّم <span class="ui">يخصم من الراتب</span> ثم احفظ.</li>
+</ul>
+</div>
+</section>
+
+<section id="early">
+<h2>أذونات الانصراف المبكر</h2>
+<p>شاشة <span class="ui">اذن الانصراف المبكر</span> تسجل إذنًا لموظف بمغادرة العمل قبل موعده في يوم معين، مع خصم من الراتب أو بدونه.</p>
+<!--shot:hr-attendance__early-->
+<figure class="shot" id="shot-hr-attendance__early">
+<div class="shot-frame"><a href="assets/screens/hr-attendance__early.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/hr-attendance__early.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: أذونات الانصراف المبكر"></a></div>
+<figcaption>شاشة «أذونات الانصراف المبكر» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>اختر التاريخ. قائمة <span class="ui">الموظف</span> تعرض من سجّل حضورًا في هذا اليوم فقط.</li>
+  <li>اختر الموظف. يظهر <span class="ui">موعد انصراف الموظف</span> الرسمي ويُملأ في حقل <span class="ui">الي</span>.</li>
+  <li>في <span class="ui">وقت الانصراف</span> حدد <span class="ui">من</span> (وقت خروجه) و<span class="ui">الي</span>، واكتب <span class="ui">السبب</span>.</li>
+  <li>علّم <span class="ui">يخصم من الراتب</span> إذا كان الإذن مخصومًا، ثم اضغط <span class="ui">حفظ</span>.</li>
+</ol>
+<ul>
+  <li>قيمة الخصم = (أجر اليوم ÷ ساعات دوام الفترة الأولى) × دقائق الإذن، وتظهر باسم «اذن انصراف مبكر» في تفاصيل الراتب.</li>
+  <li>إذن واحد للموظف في اليوم. لا يُقبل إذا سُجّل انصرافه بالفعل، أو كان عليه إجازة أو غياب، أو كان اليوم يوم راحته.</li>
+  <li>لا يجوز أن يتجاوز <span class="ui">الي</span> موعد انصرافه الرسمي.</li>
+</ul>
+<p class="tip">للتعديل أو الحذف انقر السطر في الجدول أولًا. وبعد إضافة إذن مخصوم أو حذفه، راجع تفاصيل راتب الموظف للشهر وتأكد من أن الخصم أُضيف أو حُذف.</p>
+</section>
+
+<section id="overtime">
+<h2>الوقت الإضافي</h2>
+<p>شاشة <span class="ui">وقت اضافى</span> تسجل ساعات العمل الزائدة عن الدوام الرسمي، وتضيف قيمتها إلى الراتب باسم «وقت اضافى».</p>
+<!--shot:hr-attendance__overtime-->
+<figure class="shot" id="shot-hr-attendance__overtime">
+<div class="shot-frame"><a href="assets/screens/hr-attendance__overtime.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/hr-attendance__overtime.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: الوقت الإضافي"></a></div>
+<figcaption>شاشة «الوقت الإضافي» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>اختر <span class="ui">التاريخ</span> ثم <span class="ui">الموظف</span>.</li>
+  <li>في <span class="ui">المدة</span> حدد <span class="ui">مــــن</span> و<span class="ui">الــى</span>.</li>
+  <li>اختر <span class="ui">النوع</span>: <span class="ui">اعتيادية</span> أو <span class="ui">اثناء الاعياد والاجازات</span>.</li>
+  <li>اكتب <span class="ui">المهام التى تم انجازها خلال الساعات الاضافى:</span> ثم اضغط <span class="ui">حفظ</span>.</li>
+</ol>
+<h3>كيف تُحسب القيمة</h3>
+<p>القيمة = (أجر اليوم ÷ ساعات الدوام اليومي) ÷ 60 × دقائق الوقت الإضافي × معدل الساعة الإضافية. يُؤخذ المعدل من بطاقة الموظف: معدل الأيام العادية للنوع <span class="ui">اعتيادية</span>، ومعدل أيام العطلات للنوع <span class="ui">اثناء الاعياد والاجازات</span>.</p>
+<ul>
+  <li>يجب أن تقع الفترة خارج ساعات عمل الموظف في ذلك اليوم، وإلا تظهر <span class="msg">عفوا هذا الوقت ضمن اوقات عملك الاساسى</span>.</li>
+  <li>يُسمح بسجل وقت إضافي واحد لكل موظف في اليوم.</li>
+  <li><span class="ui">Download From FP</span> هنا ينزّل حركات «خروج وقت إضافي» من جهاز البصمة.</li>
+</ul>
+<div class="warn"><strong>لتعديل وقت إضافي، احذفه ثم سجّله من جديد.</strong> إعادة الحفظ فوق سجل موجود قد لا تغيّر القيمة، أو قد تغيّر سجلًا آخر اخترته قبل ذلك، مع أن رسالة النجاح تظهر. وبعد أي تعديل اضغط <span class="ui">تحديث</span> وراجع الجدول.</div>
+</section>
+
+<section id="task">
+<h2>المهمة الخارجية</h2>
+<p>شاشة <span class="ui">مهمة عمل خارجية</span> تسجل أن الموظف كان في مهمة عمل خارج المقر في يوم معين.</p>
+<!--shot:hr-attendance__task-->
+<figure class="shot" id="shot-hr-attendance__task">
+<div class="shot-frame"><a href="assets/screens/hr-attendance__task.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/hr-attendance__task.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: المهمة الخارجية"></a></div>
+<figcaption>شاشة «المهمة الخارجية» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>اختر <span class="ui">الموظف</span> و<span class="ui">التاريخ</span>.</li>
+  <li>حدد <span class="ui">من</span> و<span class="ui">الي</span> واكتب <span class="ui">ملاحظات</span>، ثم احفظ.</li>
+</ol>
+<ul>
+  <li>في يوم المهمة <strong>لا يُخصم تأخير ولا انصراف مبكر</strong>، ولا يُسجَّل اليوم غيابًا في <a href="#attend">الغياب التلقائي</a>.</li>
+  <li>سجّل المهمة <strong>قبل</strong> تسجيل حضور الموظف أو تنزيل البصمة لذلك اليوم، لأن الخصم يُحسب لحظة تسجيل الحضور.</li>
+  <li>مهمة واحدة للموظف في اليوم. لا تُقبل إذا سُجّل انصرافه في ذلك اليوم، أو كان عليه إجازة أو غياب.</li>
+  <li>يعرض الجدول كل مهام الفترة المالية الحالية. يمكن تحديد عدة سطور وحذفها معًا.</li>
+</ul>
+</section>
+
+<section id="warnings">
+<h2>الإنذارات</h2>
+<p>شاشة <span class="ui">الانذارات</span> تسجل الإنذارات الإدارية للموظفين، مع خصم من الراتب أو بدونه.</p>
+<!--shot:hr-attendance__warnings-->
+<figure class="shot" id="shot-hr-attendance__warnings">
+<div class="shot-frame"><a href="assets/screens/hr-attendance__warnings.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/hr-attendance__warnings.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: الإنذارات"></a></div>
+<figcaption>شاشة «الإنذارات» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>اختر <span class="ui">الموظف</span> و<span class="ui">تاريخ الانذار</span>.</li>
+  <li>في <span class="ui">نوع الانذار</span> اختر نوعًا موجودًا، أو اكتب اسم نوع جديد. عند الحفظ يسألك البرنامج <span class="msg">هذا السجل غير مسجل لدينا هل ترغب فى تسجيله الان</span>، فاختر <span class="ui">نعم</span>.</li>
+  <li>للخصم علّم <span class="ui">يخصم من الراتب</span>، واختر <span class="ui">مبلغ مالي</span> أو <span class="ui">نسبه</span> (من الراتب)، وأدخل القيمة.</li>
+  <li>اكتب <span class="ui">ملاحظات</span> ثم احفظ.</li>
+</ol>
+<p>يُخصم الإنذار في راتب الشهر الذي يقع فيه <span class="ui">تاريخ الانذار</span>.</p>
+<div class="warn">
+<ul>
+  <li>إذا كان للموظف في نفس الشهر أكثر من إنذار مخصوم، فاستخدم نوع خصم واحدًا لها كلها: كلها <span class="ui">مبلغ مالي</span> أو كلها <span class="ui">نسبه</span>. الخلط بينهما قد يجعل الراتب يأخذ أحدهما فقط.</li>
+  <li>لا تحذف نوع إنذار مستخدمًا بزر الحذف بجانب <span class="ui">نوع الانذار</span>. تختفي إنذاراته من القائمة، لكن خصمها يبقى في الراتب.</li>
+  <li>بعد فتح إنذار مخصوم ثم الضغط على <span class="ui">جديد</span>، تأكد من حالة <span class="ui">يخصم من الراتب</span> قبل حفظ الإنذار الجديد، فهي لا تُفرَّغ تلقائيًا.</li>
+</ul>
+</div>
+</section>
+
+<section id="shifts">
+<h2>تخصيص ورديات الموظفين</h2>
+<p>شاشة <span class="ui">تخصيص مواعيد الموظفين</span> تعرض جدولًا شهريًا: صف لكل موظف وعمود لكل يوم، وفي كل خانة مواعيد الفترتين أو كلمة «راحة».</p>
+<ol class="steps">
+  <li>اختر الشهر واضغط <span class="ui">Show</span>.</li>
+  <li>انقر نقرًا مزدوجًا على خانة لتعديلها: حدد <span class="ui">من</span> و<span class="ui">الــي</span> لـ<span class="ui">الفترة الاولى</span> و<span class="ui">الفترة الثانية</span>، أو علّم <span class="ui">أجازة</span>. تتلون الخانة المعدلة بالأصفر.</li>
+  <li>لتطبيق نفس الموعد على عدة خانات حددها ثم اضغط <span class="ui">تعديل خلية</span>. لنسخ يوم كامل اختر خانة فيه ثم <span class="ui">نسخ يوم</span>، واختر خانة في اليوم الهدف ثم <span class="ui">لصق يوم</span>.</li>
+  <li>اضغط <span class="ui">Save</span> لحفظ الجدول.</li>
+</ol>
+<div class="warn">حاليًا <strong>لا يعتمد حساب التأخير والانصراف المبكر على هذا الجدول</strong>، بل على <span class="ui">مواعيد الحضور</span> في <a href="hr-employees.html">بطاقة الموظف</a>. عدّل المواعيد هناك ليتغير الحساب. ونافذة التعديل تتطلب إدخال مواعيد الفترتين معًا، إلا إذا علّمت <span class="ui">أجازة</span>.</div>
+</section>
+
+<section id="import">
+<h2>استيراد الموظفين من Excel</h2>
+<p>شاشة <span class="ui">استيراد موظفين</span> (قائمة <span class="ui">استيراد موظفين Xls</span>) تضيف عددًا كبيرًا من الموظفين من ملف Excel دفعة واحدة. لكل موظف يُنشأ حسابا «راتب شهرى» و«سلف وقروض» في <a href="chart-of-accounts.html">الدليل المحاسبي</a>.</p>
+<!--shot:hr-attendance__import-->
+<figure class="shot" id="shot-hr-attendance__import">
+<div class="shot-frame"><a href="assets/screens/hr-attendance__import.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/hr-attendance__import.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: استيراد الموظفين من Excel"></a></div>
+<figcaption>شاشة «استيراد الموظفين من Excel» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>اضغط <span class="ui">استعراض</span> واختر ملف <code>.xls</code> أو <code>.xlsx</code>، ثم اختر الورقة واضغط <span class="ui">عرض</span>.</li>
+  <li>اضغط <span class="ui">اضافة</span>. تُنقل الأعمدة التي تحمل عناوين معروفة، مثل: <code>الاسم</code>، <code>الادارة</code>، <code>القسم</code>، <code>الوظيفة</code>، <code>الرقم القومى</code>، <code>تاريخ الميلاد</code>، <code>الجنسية</code>، <code>التليفون</code>، <code>محمول</code>، <code>العنوان</code>، <code>الايميل</code>، <code>تاريخ التعيين</code>، <code>المرتب</code>، <code>اسم البنك</code>، <code>رقم الحساب</code>، <code>ملاحظات</code>، وأرصدة <code>اجازة سنوى</code> و<code>اجازة مرضى</code> و<code>اجازة طارئة</code>.</li>
+  <li>لحذف عمود لا تريده انقر عنوانه ثم <span class="ui">حذف اعمدة</span>. زر <span class="ui">حذف</span> يفرّغ جدول المعاينة.</li>
+  <li>اختر <span class="ui">الفرع</span> واضغط <span class="ui">حفظ</span>. يظهر سجل التقدم حتى رسالة <code>Import completed successfully</code>.</li>
+</ol>
+<ul>
+  <li>عمود <code>الاسم</code> إلزامي. الإدارات والأقسام غير الموجودة تُنشأ تلقائيًا بأسمائها.</li>
+  <li>كود الموظف يُولَّد تلقائيًا. النوع والحالة الاجتماعية لا يُستوردان، فأكملهما من بطاقة الموظف.</li>
+  <li>يجب تحديد الحسابين الرئيسيين لرواتب الموظفين وسلفهم في إعدادات الحسابات الرئيسية قبل الاستيراد.</li>
+</ul>
+<div class="warn">
+<ul>
+  <li>الموظف الموجود بنفس الاسم <strong>تُستبدل بياناته</strong> بما في الملف، والحقول غير الموجودة في الملف قد تُفرَّغ أو تأخذ قيمًا افتراضية. استخدم الاستيراد للموظفين الجدد فقط.</li>
+  <li>أي خطأ في صف (مثل تاريخ مكتوب بصيغة غير صحيحة) يلغي الاستيراد كله، حتى لو ظهرت سطور «Saved» في السجل. تأكد من وجود الموظفين في <a href="hr-employees.html">قائمة الموظفين</a> بعد الانتهاء.</li>
+  <li>لا تعمل في شاشات أخرى من البرنامج أثناء الاستيراد.</li>
+</ul>
+</div>
+</section>
+
+<section id="toolbar">
+<h2>شريط الأدوات والاختصارات</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الزر / المفتاح</th><th>الوظيفة</th></tr></thead>
+<tbody>
+<tr><td><span class="ui">جديد</span></td><td>تفريغ الحقول لإدخال سجل جديد.</td></tr>
+<tr><td><span class="ui">حفظ</span> / <kbd>Enter</kbd></td><td>حفظ السجل. الضغط على <kbd>Enter</kbd> داخل حقول الإدخال يحفظ مباشرة، حتى داخل حقل الملاحظات.</td></tr>
+<tr><td><span class="ui">حذف</span> / <kbd>Delete</kbd></td><td>حذف السطر المحدد في الجدول بعد التأكيد.</td></tr>
+<tr><td><span class="ui">تحديث</span></td><td>إعادة تحميل القوائم والجدول.</td></tr>
+<tr><td><span class="ui">بحث</span></td><td>تصفية الجدول ببداية اسم الموظف.</td></tr>
+<tr><td><span class="ui">طباعة</span></td><td>في شاشة الإجازات والغياب يفتح تقرير الإجازات. التقارير الأخرى في <a href="reports-hr.html">تقارير الموارد البشرية</a>.</td></tr>
+<tr><td><span class="ui">Download From FP</span></td><td>تنزيل الحركات من جهاز البصمة (الحضور، الانصراف، الوقت الإضافي).</td></tr>
+</tbody></table></div>
+<p class="tip">لأن <kbd>Enter</kbd> يحفظ فورًا، اكتب الملاحظات في سطر واحد، وراجع البيانات قبل الضغط عليه.</p>
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى / الحل</th></tr></thead>
+<tbody>
+<tr><td><span class="msg">عفوا يجب اضافة نسب احتساب الخصم علي التاخير</span></td><td>أضف شرائح التأخير من شاشة <span class="ui">نسب الخصم علي التاخير</span> أولًا.</td></tr>
+<tr><td><span class="msg">عفوا قيمة احتساب وقت التأخير هذه ليست مسجله...</span></td><td>دقائق التأخير لا تقع في أي شريحة. أضف شريحة تغطيها.</td></tr>
+<tr><td><span class="msg">عفوا هذا الموظف مسجل غياب لهذا اليوم</span></td><td>على الموظف إجازة أو غياب في هذا التاريخ.</td></tr>
+<tr><td><span class="msg">عفوا هذا الموظف ليس متاح له أن يسجل حضور اليوم</span></td><td>هذا اليوم ليس من أيام حضوره في بطاقة الموظف.</td></tr>
+<tr><td><span class="msg">عفوا هذا الموظف لم يسجل حضور لهذا اليوم</span></td><td>في شاشة الانصراف: سجّل حضوره أولًا، أو تأكد من أن اليوم من أيام حضوره.</td></tr>
+<tr><td><span class="msg">هذا السجل موجود مسبقا</span></td><td>يوجد سجل لنفس الموظف في نفس اليوم (والفترة). وفي الوضع الآلي للانصراف قد تعني أن كود الموظف غير صحيح.</td></tr>
+<tr><td><span class="msg">هذا السجل غير موجود</span></td><td>الوضع الآلي في الحضور: كود الموظف غير موجود أو من فرع آخر.</td></tr>
+<tr><td><span class="msg">عفوا تأكد من بياناتك أولا</span></td><td>بيانات ناقصة أو غير صحيحة، مثل عدم اختيار الموظف، أو تاريخ مستقبلي، أو وقت «الي» قبل «من».</td></tr>
+<tr><td><span class="msg">المدة المطلوبة تحتوى على ايام مأخوذة بالفعل</span></td><td>تتداخل الفترة مع إجازة أو غياب مسجل للموظف.</td></tr>
+<tr><td><span class="msg">رصيد الاجازات لا يكفى يمكنك تسجيلها كغياب</span></td><td>رصيد هذا النوع من الإجازة لا يكفي.</td></tr>
+<tr><td><span class="msg">عفوا هذا الموظف مسجل حضور</span></td><td>للموظف حضور داخل فترة الإجازة. احذفه أو عدّل الفترة.</td></tr>
+<tr><td><span class="msg">لا يمكن اضافة او تعديل او حذف حركات تم استخدامها فى دفع المرتبات</span></td><td>الحركة دخلت في رواتب مدفوعة.</td></tr>
+<tr><td><span class="msg">عفوا هذا الموظف سجل اجازة او غياب خلال هذا اليوم</span></td><td>لا يمكن تسجيل إذن أو مهمة خارجية في يوم إجازة أو غياب.</td></tr>
+<tr><td><span class="msg">عفوا هذا الموظف قد تم تسجيل أنصراف له مسبقا...</span></td><td>سُجّل انصراف الموظف. احذفه أولًا إن أردت تسجيل إذن أو مهمة.</td></tr>
+<tr><td><span class="msg">عفوا ... هذا الميعاد أكبر من ميعاد الانصراف الاساسى للموظف</span></td><td>وقت «الي» في الإذن بعد موعد انصرافه الرسمي.</td></tr>
+<tr><td><span class="msg">عفوا لا يمكن تسجيل اذن انصراف فى ايام العمل الاضافية</span></td><td>اليوم ليس من أيام دوام الموظف.</td></tr>
+<tr><td><span class="msg">عفوا هذا الوقت ضمن اوقات عملك الاساسى</span></td><td>فترة الوقت الإضافي داخل ساعات الدوام.</td></tr>
+<tr><td><span class="msg">لم يتم تسجيل ايام الغياب لهذا الموظف</span></td><td>تعذر تسجيل الغياب التلقائي لأحد الموظفين. راجع إجازاته وحضوره.</td></tr>
+<tr><td><span class="msg">لايوجد بيانات متاحة</span></td><td>لا توجد حركات في جهاز البصمة من التاريخ المختار.</td></tr>
+<tr><td><span class="msg">عفوا حدث خطأ أثناء حفظ بيانات الحضور</span> / <span class="msg">الأنصراف</span></td><td>في استيراد Csv: تأكد من إضافة شرائح التأخير ومن صحة أعمدة التاريخ والوقت.</td></tr>
+<tr><td><span class="msg">يجب اختيار عمود الاسم</span></td><td>في استيراد الموظفين: لا يوجد عمود بعنوان «الاسم» أو «Name».</td></tr>
+<tr><td><span class="msg">عفوا فترة مالية مغلقة لا يمكن تنفيذ الاجراء</span></td><td>الفترة المالية الحالية مغلقة.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="faq">
+<h2>أسئلة شائعة</h2>
+<details><summary>لماذا لا يظهر الموظف في قائمة تسجيل الحضور؟</summary>
+<p>الأسباب المحتملة: عليه إجازة أو غياب يغطي التاريخ ولم يُعتمد رجوعه، أو هو موقوف، أو تابع لفرع آخر. وفي <span class="ui">فترة ثانية</span> لا يظهر إلا من سجّل انصراف الفترة الأولى.</p></details>
+<details><summary>كيف يُحسب خصم التأخير؟</summary>
+<p>يُقارن وقت الحضور بموعد الحضور في بطاقة الموظف لهذا اليوم والفترة. ثم يُحسب الخصم من أجر يومه حسب الشريحة التي تقع فيها دقائق التأخير في <span class="ui">نسب الخصم علي التاخير</span>، ويظهر باسم «حضور متأخر» في تفاصيل الراتب.</p></details>
+<details><summary>لماذا زر Download From FP غير متاح؟</summary>
+<p>الجهاز غير متصل. اتصل به من <span class="ui">اعدادات جهاز FP</span>، ثم أغلق شاشة الحضور وافتحها من جديد.</p></details>
+<details><summary>هل تُخصم أيام المهمة الخارجية؟</summary>
+<p>لا، بشرط تسجيل المهمة قبل تسجيل الحضور أو تنزيل البصمة لذلك اليوم.</p></details>
+<details><summary>كيف أصحح حضورًا مسجلًا خطأً بعد صرف الراتب؟</summary>
+<p>الحركات الداخلة في رواتب مدفوعة مقفلة. راجع قسم <a href="hr-payroll.html">الرواتب</a> لمعالجة الفروق.</p></details>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="hr-employees.html">الموظفون ومواعيد العمل</a> · <a href="hr-payroll.html">الرواتب والاستقطاعات</a> · <a href="reports-hr.html">تقارير الموارد البشرية</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-08">8 أكتوبر 2026</time></div></footer>
+</body>
+</html>

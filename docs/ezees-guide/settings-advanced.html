@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>إعدادات الطباعة ونقاط البيع والسيرفر والاتصال | دليل Ezees ERP</title>
+<meta name="description" content="شرح باقي تبويبات شاشة الإعدادات في Ezees ERP: اعدادات الطابعة وطباعة الباركود، اعدادات السيرفر والنسخ الاحتياطي، POS والمطاعم، شئون العاملين، المستخلصات، المرفقات، البريد والرسائل وواتساب، المظهر، التصنيع، وشاشة اعدادات الاتصال بقاعدة البيانات.">
+<meta name="keywords" content="إعدادات الطابعة, طباعة الباركود, إعدادات POS, إعدادات المطعم, النسخ الاحتياطي التلقائي, إعدادات السلف, اعدادات الاتصال, قاعدة البيانات, SQL Server, Ezees ERP">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/settings-advanced.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="الإعدادات المتقدمة في Ezees ERP: الطباعة ونقاط البيع والسيرفر والاتصال">
+<meta property="og:description" content="اضبط الطابعات والباركود ونقاط البيع والموارد البشرية والنسخ الاحتياطي والاتصال بقاعدة البيانات.">
+<meta property="og:url" content="https://help.tebalink.com/settings-advanced.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"الإعدادات المتقدمة في Ezees ERP: الطباعة ونقاط البيع والسيرفر والاتصال","inLanguage":"ar","dateModified":"2026-10-10","proficiencyLevel":"Expert","mainEntityOfPage":"https://help.tebalink.com/settings-advanced.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"HowTo","name":"تغيير قاعدة البيانات التي يتصل بها البرنامج","inLanguage":"ar","step":[
+{"@type":"HowToStep","position":1,"text":"خذ نسخة احتياطية، ثم افتح اعدادات السيرفر من قائمة الإدارة."},
+{"@type":"HowToStep","position":2,"text":"اختر OnLine للاتصال الرئيسي أو OffLine للاتصال الفرعي المحلي."},
+{"@type":"HowToStep","position":3,"text":"أدخل عنوان السيرفر وطريقة المصادقة واختر قاعدة البيانات."},
+{"@type":"HowToStep","position":4,"text":"اضغط حفظ. يختبر البرنامج الاتصال أولًا، ثم يطلب إعادة التشغيل أو إعادة تسجيل الدخول عند الحاجة."}]},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"لماذا لا تنطبق إعدادات الطابعة على جهاز آخر؟","acceptedAnswer":{"@type":"Answer","text":"إعدادات الطابعات والهوامش والباركود واللغة والمظهر تُحفظ على كل جهاز على حدة، فاضبطها على كل جهاز."}},
+{"@type":"Question","name":"لماذا لا يعمل النسخ الاحتياطي التلقائي؟","acceptedAnswer":{"@type":"Answer","text":"يعمل فقط على جهاز الترخيص الرئيسي المتصل بسيرفر محلي، ويجب تحديد المسار بزر استعراض وكتابة عدد دقائق أكبر من صفر."}},
+{"@type":"Question","name":"ماذا يحدث عند تغيير قاعدة البيانات من اعدادات الاتصال؟","acceptedAnswer":{"@type":"Answer","text":"يختبر البرنامج الاتصال قبل الحفظ. إذا تغير السيرفر أو قاعدة البيانات تُغلق الشاشات المفتوحة وتظهر شاشة تسجيل الدخول، وإذا تغير وضع OnLine/OffLine يطلب إعادة تشغيل البرنامج."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"الإعدادات والأدوات","item":"https://help.tebalink.com/index.html#setup"},
+{"@type":"ListItem","position":3,"name":"الإعدادات المتقدمة","item":"https://help.tebalink.com/settings-advanced.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#pos">نقاط البيع والمطاعم</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#setup">الإعدادات والأدوات</a></li><li>الإعدادات المتقدمة</li></ol>
+<article>
+<h1>الإعدادات المتقدمة: الطباعة ونقاط البيع والسيرفر والاتصال</h1>
+<p class="lead">هذه الصفحة تكمل <a href="settings.html">إعدادات البرنامج</a>، وتشرح باقي تبويبات شاشة <span class="ui">الاعدادات</span>. وفي آخرها شرح شاشة <span class="ui">اعدادات الاتصال</span> بقاعدة البيانات، وهي لمسؤول النظام فقط.</p>
+<p class="note">طريقة الحفظ، والفرق بين إعدادات الفرع وإعدادات الجهاز، ومتى تحتاج إلى إعادة التشغيل: كلها مشروحة في <a href="settings.html#save">الحفظ وأين تُحفظ الإعدادات</a>.</p>
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#printer">اعدادات الطابعه</a></li>
+  <li><a href="#barcode">طباعة الباركود</a></li>
+  <li><a href="#server">اعدادات السيرفر (النسخ الاحتياطي)</a></li>
+  <li><a href="#pos">POS ونقاط البيع والمطاعم</a></li>
+  <li><a href="#hr">شئون العاملين</a></li>
+  <li><a href="#extracts">مستخلصات</a></li>
+  <li><a href="#attach">المرفقات</a></li>
+  <li><a href="#messaging">EMail-SMS وواتساب</a></li>
+  <li><a href="#style">Style (المظهر)</a></li>
+  <li><a href="#manufacturing">التصنيع</a></li>
+  <li><a href="#extramodule">ExtraModule</a></li>
+  <li><a href="#connection">اعدادات الاتصال بقاعدة البيانات</a></li>
+  <li><a href="#remote">اعداد السيرفر للاتصال عن بعد</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+</ol></nav>
+
+<section id="printer">
+<h2>تبويب «اعدادات الطابعه»</h2>
+<p>كل ما في هذا التبويب <strong>يُحفظ على الجهاز الحالي فقط</strong>. اضبطه على كل جهاز طباعة.</p>
+<h3>طباعة الفواتير</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>الإعداد</th><th>ماذا يفعل</th><th>ملاحظات</th></tr></thead>
+<tbody>
+<tr><td>الطابعة</td><td>الطابعة التي تُرسل إليها الفواتير والتقارير.</td><td>الافتراضي: طابعة ويندوز الافتراضية.</td></tr>
+<tr><td>نوع الطباعة</td><td><span class="ui">Normal Receipt</span>: فاتورة A4/A5 مع معاينة. <span class="ui">Crystal Receipt 1</span> و<span class="ui">Thermal Receipt 2</span>: إيصال حراري على طابعة الكاشير، ويُستخدم أيضًا شكل 80 مم لسندات الصرف.</td><td>عند اختيار Thermal يُفعَّل «مقاس البون» وتُقفل الهوامش.</td></tr>
+<tr><td>مقاس الفاتورة</td><td>A5 أو A4 للفاتورة العادية.</td><td>الافتراضي A5.</td></tr>
+<tr><td>مقاس البون</td><td>80 mm أو 57 mm. يغيّر حجم الخطوط وأماكن الأعمدة في الإيصال الحراري.</td><td>يُستخدم مع Thermal فقط.</td></tr>
+<tr><td>هامش اعلى / يسار / يمين / اسفل</td><td>هوامش ورقة الفاتورة بالسنتيمتر.</td><td>الافتراضي 0.70 أعلى و0.50 لباقي الهوامش.</td></tr>
+</tbody></table></div>
+<h3>طباعة POS</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>الإعداد</th><th>ماذا يفعل</th><th>ملاحظات</th></tr></thead>
+<tbody>
+<tr><td>طابعة ايصال العميل</td><td>الطابعة الحرارية لإيصال الكاشير.</td><td></td></tr>
+<tr><td>طابعة ورقة المطبخ</td><td>الطابعة التي تخرج عليها طلبات المطبخ.</td><td>للمطاعم.</td></tr>
+<tr><td>cashier receipt</td><td>مفعّل: يطبع إيصالًا حراريًا مباشرة من <a href="pos-cashier.html#print">شاشة الكاشير</a>. غير مفعّل: يفتح عرض الفاتورة بشكل A4.</td><td>الافتراضي مفعّل.</td></tr>
+<tr><td>عدد النسخ</td><td>عدد نسخ إيصال الكاشير. ويُستخدم أيضًا لعدد نسخ أذون المخزن والتحويل.</td><td>الافتراضي 1.</td></tr>
+<tr><td>عدد ايصال مطبخ</td><td>عدد نسخ ورقة المطبخ.</td><td>الافتراضي 1.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="barcode">
+<h2>تبويب «طباعة الباركود»</h2>
+<p>يتحكم في ملصقات <a href="barcode-import.html#barcode">طباعة الباركود</a>. ويُحفظ على الجهاز الحالي.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>الإعداد</th><th>ماذا يفعل</th><th>ملاحظات</th></tr></thead>
+<tbody>
+<tr><td>طابعه الباركود</td><td>تفعيل الطباعة على طابعة ملصقات (Zebra) مباشرة بدلًا من الورق العادي. يفعّل اختيار الطابعة و<span class="ui">مقاس الملصق</span>.</td><td>عند تفعيله تُقفل الهوامش.</td></tr>
+<tr><td>مقاس الملصق</td><td>4 x 1.3، أو 4 x 2.5، أو 5 x 2.5، أو 6 x 2.5، أو 4 x 2.0.</td><td>لطابعة الملصقات فقط.</td></tr>
+<tr><td>استخدام الباركود مع</td><td>الرقم الذي يُطبع كباركود: <span class="ui">رقم المنتج</span> أو <span class="ui">كود الصنف</span>.</td><td>عند تفعيل نظام تاريخ الصلاحية يُثبَّت على الخيار الأول.</td></tr>
+<tr><td>هامش اعلى / يسار / يمين / اسفل</td><td>هوامش الملصق على الورق العادي.</td><td></td></tr>
+<tr><td>ضبط الطباعة (نوع الخط والحجم)</td><td>خط وحجم كل جزء في الملصق: الباركود، واسم الشركة، واسم الصنف، والكود، والسعر. تظهر معاينة فورية بجانبها.</td><td>خط الباركود الافتراضي «3 of 9 Barcode»، ويجب أن يكون مثبتًا على الجهاز.</td></tr>
+</tbody></table></div>
+<p class="tip">رمز العملة الذي يظهر بجانب السعر على الملصق يُضبط من <a href="settings.html#general">الاعدادات العامة</a> ← <span class="ui">رمز العمله</span>.</p>
+</section>
+
+<section id="server">
+<h2>تبويب «اعدادات السيرفر» (النسخ الاحتياطي والمصادقة)</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الإعداد</th><th>ماذا يفعل</th><th>ملاحظات</th></tr></thead>
+<tbody>
+<tr><td>نسخ احتياطى تلقائى</td><td>يأخذ <a href="system-tools.html#backup">نسخة احتياطية</a> كل عدد من الدقائق تكتبه، إلى المسار المحدد.</td><td>يعمل فقط على جهاز الترخيص الرئيسي المتصل بسيرفر محلي. اكتب عددًا أكبر من صفر.</td></tr>
+<tr><td>مسار النسخ (زر استعراض)</td><td>المجلد الذي تُحفظ فيه النسخ.</td><td>اختر المسار بزر <span class="ui">استعراض</span>، فالكتابة اليدوية في الحقل لا تُحفظ.</td></tr>
+<tr><td>تفعيل النسخ الاحتياطى الخارجى Cloud Backup</td><td>يرفع النسخ إلى سيرفر خارجي. تفعيله يفعّل النسخ التلقائي أيضًا.</td><td>يتطلب تسجيل كود العميل وكلمة المرور في شاشة إعدادات الدعم الفني.</td></tr>
+<tr><td>التنبيه بالنسخ الاحتياطى عند الخروج من البرنامج فى كل مره</td><td>عند إغلاق البرنامج يسألك: «هل ترغب فى عمل نسخة احتياطية من البيانات؟».</td><td>الافتراضي مفعّل.</td></tr>
+<tr><td>استيراد وتصدير البيانات تلقائيا من السيرفر الرئيسى</td><td>في أجهزة الفروع التي تعمل على قاعدة محلية: يجلب البيانات من السيرفر الرئيسي تلقائيًا كل عدد من الساعات. انظر <a href="system-tools.html#offline">العمل بدون إنترنت</a>.</td><td>يُفعَّل فقط عند اختيار OffLine في <a href="#connection">اعدادات الاتصال</a>.</td></tr>
+<tr><td>تصدير البيانات تلقائيا الى السيرفر الرئيسى</td><td>خيار متقدم – استشر الدعم الفني.</td><td>لا يؤدي حاليًا إلى تصدير تلقائي، فصدّر يدويًا.</td></tr>
+</tbody></table></div>
+<div class="warn">على أجهزة الترخيص الثانوي، أو الأجهزة المتصلة بسيرفر بعيد، تُقفل خيارات النسخ الاحتياطي ويُلغى تفعيلها. خذ النسخ من جهاز السيرفر.</div>
+</section>
+
+<section id="pos">
+<h2>تبويب «POS» (نقاط البيع والمطاعم)</h2>
+<p>يظهر هذا التبويب فقط إذا كان ترخيصك يشمل نقاط البيع. ويؤثر في <a href="pos-cashier.html">شاشة الكاشير</a> و<a href="pos-restaurant.html">المطاعم</a>.</p>
+<h3>شكل الشاشة والأزرار</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>الإعداد</th><th>ماذا يفعل</th><th>ملاحظات</th></tr></thead>
+<tbody>
+<tr><td>تفعيل ازار اللمس</td><td>يُظهر أزرار الفئات والأصناف للمس في شاشة الكاشير.</td><td>للشاشات اللمسية.</td></tr>
+<tr><td>مقاس زر الصنف - عرض / ارتفاع</td><td>حجم زر الصنف بالبكسل.</td><td>الافتراضي 100 × 70.</td></tr>
+<tr><td>تفعيل صورة الصنف اعلى الزر</td><td>يعرض صورة الصنف على زره.</td><td></td></tr>
+<tr><td>اخفاء اسم الصنف اسفل الزر</td><td>الزر يظهر بدون اسم الصنف.</td><td>مفيد مع الصور.</td></tr>
+<tr><td>التحكم في أماكن الأصناف</td><td>يسمح بسحب أزرار الأصناف وترتيبها، ويتذكر البرنامج أماكنها.</td><td></td></tr>
+<tr><td>تفعيل  الفئات مع المستخدم</td><td>يعرض لكل كاشير الفئات والأصناف المخصصة له فقط.</td><td>راجع النتيجة بعد التفعيل؛ قد لا تظهر الأصناف كما تتوقع. استشر الدعم الفني إن حدث ذلك.</td></tr>
+<tr><td>تفعيل لوحة الارقام الخارجية</td><td>يُظهر لوحة أرقام على الشاشة.</td><td>الافتراضي مفعّل.</td></tr>
+<tr><td>تفعيل حساب الكميات</td><td>يُظهر لوحة الكمية ويطلب كتابة الكمية عند إضافة كل صنف.</td><td></td></tr>
+<tr><td>السماح بتكرار الأصناف</td><td>غير مفعّل: مسح نفس الصنف مرة ثانية لا يضيف سطرًا جديدًا.</td><td></td></tr>
+<tr><td>الدفع الافتراضى</td><td>طريقة الدفع التي تُختار تلقائيًا في الفاتورة الجديدة.</td><td></td></tr>
+<tr><td>كتابة  اجبارى-BatchNo</td><td>يُلزم بكتابة رقم العملية (Batch No) عند الدفع بالبطاقة.</td><td></td></tr>
+<tr><td>شاشة عرض سعر العميل + منفذ</td><td>يرسل إجمالي الفاتورة إلى شاشة عرض العميل المتصلة بمنفذ COM بالسرعة المحددة.</td><td>الافتراضي COM1 و9600.</td></tr>
+<tr><td>اظهار رقم الطالب + منفذ</td><td>يُظهر رقم المتصل عبر مودم متصل بالمنفذ المحدد.</td><td>لطلبات التوصيل الهاتفية.</td></tr>
+<tr><td>تفعيل ميزان الباركود</td><td>يقرأ ملصقات الميزان: <span class="ui">عدد خانات كود الصنف</span> ثم <span class="ui">عدد خانات الوزن</span>، أو الفصل برمز <span class="ui">الفاصله بين كود الصنف والوزن</span>.</td><td>يعمل في الكاشير وكل الفواتير وأذون المخزن.</td></tr>
+</tbody></table></div>
+<h3>الطباعة في POS</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>الإعداد</th><th>ماذا يفعل</th><th>ملاحظات</th></tr></thead>
+<tbody>
+<tr><td>السؤال قبل طباعه الايصال</td><td>بعد الحفظ يسألك هل تطبع الإيصال وورقة المطبخ.</td><td></td></tr>
+<tr><td>زر طباعة البون افتراضى  نعم</td><td>يجعل «نعم» هو الزر الافتراضي في سؤال الطباعة، فيكفي ضغط <kbd>Enter</kbd>.</td><td>يعمل مع الخيار السابق.</td></tr>
+<tr><td>طباعة ورقة مطبخ</td><td>يطبع ورقة المطبخ تلقائيًا عند حفظ طلب جديد.</td><td>الافتراضي مفعّل.</td></tr>
+<tr><td>طباعة ورقة المطبخ طبقا لمجموعة الصنف</td><td>ورقة مطبخ منفصلة لكل مجموعة أصناف (مثلًا مشروبات، مشويات).</td><td></td></tr>
+<tr><td>طباعة سعر الصنف فى ورق المطبخ</td><td>يضيف عمود السعر إلى ورقة المطبخ.</td><td></td></tr>
+<tr><td>طباعة قيمة الفاتورة بالعملات الاضافية</td><td>يطبع على الإيصال الإجمالي محوّلًا لكل <a href="currencies.html">العملات</a> المعرّفة.</td><td></td></tr>
+<tr><td>طباعة الفاتورة مقسمة طبقا للكمية / اخفاء زر طباعة ورقة المطبخ / اخفاء زر طباعة ورقة الشواية / طباعة الايصال فى الضيافة- Cash</td><td>خيارات متقدمة – استشر الدعم الفني.</td><td>لا يظهر لها أثر في الإصدار الحالي.</td></tr>
+</tbody></table></div>
+<h3>المطاعم والتوصيل</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>الإعداد</th><th>ماذا يفعل</th><th>ملاحظات</th></tr></thead>
+<tbody>
+<tr><td>نظام العمل الافتراضي للمطاعم</td><td>الوضع الذي تفتح عليه الشاشة: <span class="ui">صالة</span> أو <span class="ui">تيك اواى</span> أو <span class="ui">ديلفرى</span>.</td><td></td></tr>
+<tr><td>اخفاء نظام الصالة / اخفاء نظام التوصيل</td><td>يخفي زري الصالة والتوصيل.</td><td>لمحلات البيع المباشر.</td></tr>
+<tr><td>عدد الموائد</td><td>عدد أزرار الموائد المعروضة.</td><td>الافتراضي 20.</td></tr>
+<tr><td>امكانية اضافة عميل الى الطاولة</td><td>يحتفظ باسم العميل وهاتفه وعنوانه عند التحويل إلى الصالة أو السفري.</td><td></td></tr>
+<tr><td>وضع السداد التلقائى</td><td>يعلّم الطلب «مدفوع» تلقائيًا في طلبات الصالة والتوصيل.</td><td></td></tr>
+<tr><td>رسوم توصيل</td><td>رسم ثابت يُضاف لطلبات التوصيل.</td><td>إذا كان للمنطقة رسم توصيل خاص في <a href="locations-shipping.html">المناطق</a> يُستخدم بدلًا منه.</td></tr>
+<tr><td>خدمة (القيمة ونوعها)</td><td>نسبة الخدمة التي تُوضع تلقائيًا في طلبات الصالة. انظر <a href="pos-restaurant.html#persons">رسوم الخدمة</a>.</td><td>قائمة نوع الخدمة لا تغيّر طريقة الحساب حاليًا.</td></tr>
+<tr><td>التنبيه بميعاد التسليم قبل ... دقيقه</td><td>ينبهك قبل موعد تسليم طلبات التوصيل. القيمة 0 تلغي التنبيه.</td><td>الافتراضي 20.</td></tr>
+<tr><td>تحديث شاشة المطبخ تلقائيا</td><td>تتحدث <a href="pos-restaurant.html#kitchen">شاشة المطبخ</a> تلقائيًا.</td><td>الافتراضي مفعّل.</td></tr>
+<tr><td>حساب الضيافة</td><td>الحساب الذي يُحمَّل عليه قيد فواتير الضيافة المجانية.</td><td>تظهر هنا الحسابات الفرعية لحساب الضيافة المحدد في الحسابات الافتراضية.</td></tr>
+<tr><td>نافذة المدفوع والمتبقى قبل الحفظ</td><td>خيار متقدم – استشر الدعم الفني.</td><td></td></tr>
+</tbody></table></div>
+</section>
+
+<section id="hr">
+<h2>تبويب «شئون العاملين»</h2>
+<p>يظهر إذا كان ترخيصك يشمل الموارد البشرية. يؤثر في <a href="hr-attendance.html">الحضور والانصراف</a> و<a href="hr-payroll.html">الرواتب والسلف</a>.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>الإعداد</th><th>ماذا يفعل</th><th>ملاحظات</th></tr></thead>
+<tbody>
+<tr><td>رمز تسجيل دخول / خروج فترة اولى وثانية</td><td>الرموز التي يرسلها <a href="hr-attendance.html#device">جهاز البصمة</a> للحضور والانصراف في الفترتين.</td><td>الافتراضي 0 و1 للفترة الأولى، 2 و3 للثانية. طابقها مع إعداد جهازك.</td></tr>
+<tr><td>رمز تسجيل دخول / خروج OverTime</td><td>رموز <a href="hr-attendance.html#overtime">الوقت الإضافي</a> في جهاز البصمة.</td><td>الافتراضي 4 و5. يعتمد البرنامج حاليًا على رمز الخروج.</td></tr>
+<tr><td>تسجيل الغياب تلقائى من جهاز البصمة</td><td>عند سحب الحضور تُسجل الأيام التي ليس فيها حضور غيابًا.</td><td></td></tr>
+<tr><td>احتساب عمل اضافى بعد ... دقيقة</td><td>لا يُحسب وقت إضافي إلا بعد تجاوز موعد الانصراف بهذه الدقائق.</td><td>الافتراضي 60.</td></tr>
+<tr><td>الحد الاقصى للسلفه (مبلغ / %)</td><td>أقصى قيمة <a href="hr-payroll.html#loans">للسلفة</a>: مبلغ ثابت، أو نسبة من صافي راتب الموظف.</td><td>0 = بدون حد.</td></tr>
+<tr><td>اقصى عدد للسلف في السنه / في الشهر</td><td>يمنع السلفة إذا وصل الموظف لهذا العدد.</td><td>في شاشة دفع المرتبات اكتب عددًا سنويًا أكبر من صفر، فالقيمة 0 قد تمنع صرف السلف للجميع.</td></tr>
+<tr><td>لا يتم صرف سلف الا بعد مرور .... من التعيين</td><td>أقل عدد شهور من تاريخ التعيين قبل السماح بالسلفة.</td><td></td></tr>
+<tr><td>اقل تقييم خلال اخر 3 شهور لصرف السلفه</td><td>أقل نسبة تقييم للموظف لقبول السلفة.</td><td></td></tr>
+<tr><td>عدم صرف سلفيات فى حال وجود انذارات ... شهر</td><td>يمنع الصرف إذا حصل الموظف على <a href="hr-attendance.html#warnings">إنذارات</a> خلال آخر عدد الشهور المحدد.</td><td>الافتراضي مفعّل، 3 شهور.</td></tr>
+<tr><td>اضافة قيد محاسبى عند سداد المرتبات والسلفيات</td><td>ينشئ <a href="hr-payroll.html#journal">قيدًا محاسبيًا</a> عند صرف الرواتب والسلف.</td><td>الافتراضي مفعّل. اتركه مفعّلًا لتطابق الحسابات.</td></tr>
+<tr><td>اخفاء راتب الموظف فى شاشة دفع المرتبات</td><td>لا يُكتب الراتب المحسوب تلقائيًا في خانة المبلغ المدفوع.</td><td></td></tr>
+<tr><td>معاينه اقرار الراتب قبل الطباعه</td><td>يغيّر شكل طباعة إقرار استلام الراتب (نافذة معاينة أو تقرير).</td><td>جرّب الخيارين واختر المناسب.</td></tr>
+</tbody></table></div>
+<div class="warn">إذا ظهرت رسالة أن للموظف سلفة غير مسددة رغم أنه سدد كل سلفه، فقد تكون هناك أقساط سلف غير مسددة لموظفين آخرين. راجع الدعم الفني.</div>
+</section>
+
+<section id="extracts">
+<h2>تبويب «مستخلصات»</h2>
+<p>يظهر إذا كان ترخيصك يشمل <a href="contractors.html">المقاولات</a>، ويؤثر في <a href="contractors.html#extracts">المستخلصات</a> و<a href="contractors.html#totals">حساب إجمالياتها</a>.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>الإعداد</th><th>ماذا يفعل</th><th>ملاحظات</th></tr></thead>
+<tbody>
+<tr><td>حساب قيمة البند من اجمالى الكمية - اجمالى الكمية * السعر</td><td>قيمة البند تُحسب من الكمية التراكمية بدلًا من كمية المستخلص الحالي.</td><td></td></tr>
+<tr><td>تضمين نسبة التنفيذ ضمن معادلة السعر</td><td>قيمة البند = الكمية × السعر × نسبة التنفيذ، وتصبح نسبة التنفيذ قابلة للتعديل.</td><td></td></tr>
+<tr><td>خصم الدفعات السابقة من المستخلص الحالى</td><td>يطرح ما صُرف سابقًا من صافي المستخلص ومن قيده.</td><td></td></tr>
+<tr><td>السماح باضافة كمية اكبر من المحدد فى العقد</td><td>يسمح بتجاوز كمية البند في العقد.</td><td></td></tr>
+<tr><td>اضافة قيد مركز التكلفة مع بنود الاضافات والاستقطاعات</td><td>يضع <a href="cost-centers.html">مركز التكلفة</a> على أسطر قيد الإضافات والاستقطاعات.</td><td>الافتراضي مفعّل.</td></tr>
+<tr><td>اجبارى اختيار رقم المستخلص / مركز التكلفة مع المشروع فى سندات القبض والصرف</td><td>يُظهر في <a href="vouchers.html">سندات القبض والصرف</a> اختيار المستخلص ومركز التكلفة.</td><td></td></tr>
+<tr><td>اضافة قيد مركز التكلفة مع اذن المخزن</td><td>يضيف مركز التكلفة إلى قيد <a href="stores.html#indirect">التحويل غير المباشر</a>.</td><td></td></tr>
+</tbody></table></div>
+</section>
+
+<section id="attach">
+<h2>تبويب «المرفقات»</h2>
+<p>يحدد أين تُحفظ <a href="system-tools.html#attachments">المرفقات</a>.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>الإعداد</th><th>ماذا يفعل</th><th>ملاحظات</th></tr></thead>
+<tbody>
+<tr><td>النوع (Local / FTP)</td><td><span class="ui">Local</span>: ملفات في مجلد على الشبكة. <span class="ui">FTP</span>: رفع إلى سيرفر FTP.</td><td>الافتراضي Local.</td></tr>
+<tr><td>المسار الافتراضى</td><td>مجلد حفظ المرفقات (زر استعراض).</td><td>اختر مجلدًا مشتركًا تصل إليه كل الأجهزة.</td></tr>
+<tr><td>سيرفر FTP / مسار FTP / عنوان الموقع / اليوزر / كلمة المرور</td><td>بيانات سيرفر FTP. زر <span class="ui">Connect FTP</span> يختبر الاتصال.</td><td>تُحفظ كلمة المرور مشفرة.</td></tr>
+<tr><td>اقصى عدد ملفات للمستند</td><td>أقصى عدد مرفقات لكل مستند.</td><td>الافتراضي 3.</td></tr>
+<tr><td>اقصى حجم للملف KB</td><td>أقصى حجم لكل ملف بالكيلوبايت.</td><td>الافتراضي 5000.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="messaging">
+<h2>تبويب «EMail-SMS» (البريد والرسائل وواتساب)</h2>
+<h3>Email</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>الإعداد</th><th>ماذا يفعل</th><th>ملاحظات</th></tr></thead>
+<tbody>
+<tr><td>تفعيل</td><td>يفعّل الإرسال بالبريد من البرنامج.</td><td></td></tr>
+<tr><td>اسم الراسل / البريد الالكتروني / كلمه المرور</td><td>حساب البريد الذي تُرسل منه الرسائل.</td><td>في Gmail استخدم كلمة مرور التطبيقات.</td></tr>
+<tr><td>عنوان السيرفر / رقم البورت / تمكين SSL</td><td>بيانات SMTP.</td><td>الافتراضي 587 مع SSL.</td></tr>
+</tbody></table></div>
+<h3>SMS</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>الإعداد</th><th>ماذا يفعل</th><th>ملاحظات</th></tr></thead>
+<tbody>
+<tr><td>مزود الخدمه</td><td>شركة الرسائل: retag-sms، أو mobily، أو smsmisr، أو smseg.</td><td></td></tr>
+<tr><td>المستخدم / كلمه المرور / اسم الراسل</td><td>بيانات حسابك لدى المزود.</td><td>اسم الراسل يجب أن يكون معتمدًا لدى المزود.</td></tr>
+<tr><td>تفعيل</td><td>خيار متقدم – استشر الدعم الفني.</td><td>الإرسال يعتمد على بيانات المزود حتى لو لم يُفعَّل هذا الخيار.</td></tr>
+</tbody></table></div>
+<h3>WhatsApp</h3>
+<p>خطوات الربط بالكامل في <a href="system-tools.html#whatsapp">ربط واتساب</a>.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>الإعداد</th><th>ماذا يفعل</th><th>ملاحظات</th></tr></thead>
+<tbody>
+<tr><td>Enable</td><td>يفعّل الإرسال عبر واتساب.</td><td></td></tr>
+<tr><td>Link / PHONE_NUMBER_ID / YOUR_ACCESS_Token / Waba_ID / Display_Phone_Number</td><td>بيانات حساب واتساب للأعمال. زر <span class="ui">Link</span> يملؤها تلقائيًا.</td><td>احفظ الإعدادات بعد الربط.</td></tr>
+<tr><td>Invoice / Payment / Report / General_Notify Template</td><td>أسماء قوالب الرسائل. <span class="ui">Check</span> يتحقق من القالب و<span class="ui">Add</span> ينشئه.</td><td></td></tr>
+</tbody></table></div>
+<h3>ما يُرسل تلقائيًا</h3>
+<ul>
+  <li><span class="ui">رسالة ترحيب العميل</span> (SMS / Email / WhatsApp): تُرسل عند حفظ <a href="customers.html">عميل جديد</a>.</li>
+  <li><span class="ui">ارسال فاتورة البيع</span> (Email / WhatsApp): يفعّل زري البريد وواتساب في معاينة الفاتورة، بشرط صلاحية المستخدم.</li>
+  <li><span class="ui">ارسال امر البيع</span>: خيار متقدم – استشر الدعم الفني.</li>
+</ul>
+</section>
+
+<section id="style">
+<h2>تبويب «Style» (المظهر)</h2>
+<p>يُحفظ على الجهاز الحالي. افتح الشاشات من جديد، أو أعد تشغيل البرنامج، لترى التغيير.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>الإعداد</th><th>ماذا يفعل</th><th>ملاحظات</th></tr></thead>
+<tbody>
+<tr><td>Main Style</td><td>شكل الشاشة الرئيسية: <span class="ui">Classic</span> أو <span class="ui">Modern</span>.</td><td>يتطلب إعادة تشغيل البرنامج.</td></tr>
+<tr><td>Form Style</td><td>نمط ألوان الشاشات.</td><td>الافتراضي Metro.</td></tr>
+<tr><td>Form Font</td><td>خط الشاشات وحجمه ونمطه ولونه.</td><td>الافتراضي «Hacen Saudi Arabia» حجم 8.</td></tr>
+<tr><td>Grid Column Font / Grid Raw Font</td><td>خط عناوين الجداول وخط صفوفها.</td><td></td></tr>
+<tr><td>Grid Raw Height</td><td>ارتفاع صف الجدول.</td><td></td></tr>
+<tr><td>Base Color / Canvas Color / Reset Color</td><td>لون الواجهة الأساسي والخلفية، والعودة للألوان الافتراضية.</td><td>تُحفظ فور اختيارها.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="manufacturing">
+<h2>تبويب «التصنيع»</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الإعداد</th><th>ماذا يفعل</th><th>ملاحظات</th></tr></thead>
+<tbody>
+<tr><td>تصنيع تلقائى للاصناف المجمعة من شاشة المبيعات</td><td>عند بيع <a href="items.html#grouped">صنف مجمع</a> يُصنَّع تلقائيًا من مكوناته.</td><td></td></tr>
+<tr><td>تصنيع الاصناف الفرعية فى كارت التجميع</td><td>عند التصنيع يُصنَّع أيضًا أي مكوّن هو نفسه صنف مجمع.</td><td></td></tr>
+</tbody></table></div>
+</section>
+
+<section id="extramodule">
+<h2>تبويب «ExtraModule»</h2>
+<p>محمي بكود وكلمة مرور الدعم الفني (<span class="ui">Code</span> و<span class="ui">Password</span> ثم <span class="ui">Log in</span>). بعد الدخول تظهر خيارات تُظهر أو تُخفي أقسام القائمة الرئيسية، مثل <span class="ui">Enable Sales Module</span> و<span class="ui">Enable HR Module</span>. تُحفظ على الجهاز الحالي، وتظهر بعد إعادة تشغيل البرنامج.</p>
+<div class="warn">لا تغيّر هذا التبويب إلا بتوجيه من الدعم الفني. إخفاء قسم يخفي قوائمه وأزراره من هذا الجهاز.</div>
+</section>
+
+<section id="connection">
+<h2>شاشة «اعدادات الاتصال» بقاعدة البيانات</h2>
+<p>تفتح من القائمة بـ<span class="ui">اعدادات السيرفر</span> (تحتاج صلاحية الإعدادات)، وتظهر تلقائيًا عند تشغيل البرنامج إذا كانت بيانات الاتصال فارغة أو خاطئة. تُحفظ على الجهاز الحالي.</p>
+<div class="warn"><strong>لمسؤول النظام فقط.</strong> الإعداد الخاطئ يجعل البرنامج يتصل بقاعدة بيانات أخرى أو لا يعمل. خذ <a href="system-tools.html#backup">نسخة احتياطية</a> وسجّل البيانات الحالية قبل أي تغيير.</div>
+<div class="table-wrap"><table>
+<thead><tr><th>الإعداد</th><th>ماذا يفعل</th><th>ملاحظات</th></tr></thead>
+<tbody>
+<tr><td>OnLine / OffLine</td><td><span class="ui">OnLine</span>: يعمل الجهاز على مجموعة <span class="ui">اعدادات الاتصال</span> (السيرفر الرئيسي). <span class="ui">OffLine</span>: يعمل على مجموعة <span class="ui">اعدادات اتصال فرعى</span>، أي قاعدة محلية للفرع تُزامَن مع الرئيسي.</td><td>تغيير الوضع يتطلب إعادة تشغيل البرنامج.</td></tr>
+<tr><td>نوع السيرفر (محلى / بعيد)</td><td>هل السيرفر على نفس الشبكة أم بعيد عبر الإنترنت.</td><td>على السيرفر البعيد تُقفل خيارات النسخ الاحتياطي.</td></tr>
+<tr><td>عنوان السيرفر</td><td>اسم جهاز SQL Server أو عنوانه، مثل <code>SERVER\SQLEXPRESS</code> أو عنوان IP.</td><td></td></tr>
+<tr><td>مصادقة الويندوز / مصادقة بهذه المعلومات</td><td>الدخول بحساب ويندوز، أو بمستخدم وكلمة مرور SQL Server.</td><td>للأجهزة الأخرى في الشبكة استخدم المستخدم وكلمة المرور.</td></tr>
+<tr><td>المستخدم / كلمة المرور</td><td>بيانات دخول SQL Server.</td><td>تُحفظ كلمة المرور مشفرة.</td></tr>
+<tr><td>قاعدة البيانات</td><td>عند فتح القائمة تظهر قواعد بيانات Ezees ERP الموجودة على السيرفر فقط.</td><td></td></tr>
+<tr><td>زر DB Cloud List</td><td>يعرض قواعد البيانات السحابية المسجلة لحسابك، و<span class="ui">اضافه</span> يملأ بيانات الاتصال بها ويختبرها.</td><td>يحتاج إنترنت وكود العميل.</td></tr>
+</tbody></table></div>
+<h3>الحفظ</h3>
+<ol class="steps">
+  <li>اضغط <span class="ui">حفظ</span>. يختبر البرنامج الاتصال أولًا، وإذا فشل تظهر <span class="msg">بيانات الاتصال خاطئة</span> ولا يُحفظ شيء.</li>
+  <li>إذا تغيّر السيرفر أو قاعدة البيانات تُغلق الشاشات المفتوحة وتظهر شاشة تسجيل الدخول.</li>
+  <li>إذا تغيّر وضع OnLine/OffLine تظهر رسالة <span class="msg">لضمان تطبيق الاعدادات بنجاح يجب اعادة تشغيل النظام</span>، ويعيد البرنامج التشغيل.</li>
+</ol>
+<p class="note">الضغط على <kbd>F12</kbd> في هذه الشاشة يفتح أداة أوامر SQL. استخدمها بتوجيه من الدعم الفني فقط.</p>
+</section>
+
+<section id="remote">
+<h2>تبويب «اعداد السيرفر» (الاتصال عن بعد)</h2>
+<p>يظهر على جهاز السيرفر نفسه، ويضبط SQL Server لاستقبال اتصالات الأجهزة الأخرى.</p>
+<ul>
+  <li><span class="ui">اعداد السيرفر الحالى لاستقبال الاتصالات عن بعد</span>: يفعّل الدخول بمستخدم SQL والمنفذ 1433 والاتصال عن بعد، ويفعّل المستخدم <code>sa</code> بكلمة المرور التي تكتبها في <span class="ui">كلمة مرور السيرفر</span> و<span class="ui">تاكيد كلمة المرور</span>.</li>
+  <li><span class="ui">اعداد السيرفر الحالى لمنع استقبال الاتصالات عن بعد</span>: يغلق الاتصال عن بعد ويعطّل المستخدم <code>sa</code>.</li>
+  <li>اضغط <span class="ui">موافق</span>، ثم <strong>أعد تشغيل الجهاز</strong> كما تطلب الرسالة.</li>
+</ul>
+<div class="warn">استخدم كلمة مرور قوية للمستخدم <code>sa</code>، ولا تفتح المنفذ 1433 على الإنترنت بدون جدار حماية. لا يعمل هذا الخيار من جهاز متصل بسيرفر بعيد أو بترخيص ثانوي: تظهر رسالة «لا يمكن عمل اعداد للسيرفر لانك متصل بسيرفر بعيد».</div>
+<p class="tip">بعد الضغط على <span class="ui">موافق</span> تأكد من ظهور رسالة إعادة التشغيل. إذا لم تظهر فلم يُطبَّق الإعداد؛ تأكد من اختيار <span class="ui">OnLine</span> ومن صحة بيانات الاتصال.</p>
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td><span class="msg">بيانات الاتصال خاطئة</span></td><td>لا يمكن الاتصال بالسيرفر أو قاعدة البيانات. راجع العنوان والمستخدم وكلمة المرور وأن خدمة SQL Server تعمل.</td></tr>
+<tr><td><span class="msg">لضمان تطبيق الاعدادات بنجاح يجب اعادة تشغيل النظام</span></td><td>غيّرت وضع OnLine/OffLine، وسيعيد البرنامج التشغيل.</td></tr>
+<tr><td><span class="msg">من فضلك اعد تشغيل الجهاز لتفعيل الاعدادات</span></td><td>طُبّق إعداد الاتصال عن بعد، وأعد تشغيل جهاز السيرفر.</td></tr>
+<tr><td><span class="msg">كلمة المرور فارغة او غير متطابقة</span></td><td>اكتب كلمة مرور السيرفر نفسها في الحقلين.</td></tr>
+<tr><td><span class="msg">من فضلك اعد تشغيل البرنامج</span></td><td>أغلقت شاشة الإعدادات ولا توجد شاشة أخرى مفتوحة، فيُغلق البرنامج. افتحه من جديد.</td></tr>
+</tbody></table></div>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="settings.html">إعدادات البرنامج (العامة والفواتير والضرائب)</a> · <a href="system-tools.html">أدوات النظام</a> · <a href="pos-cashier.html">شاشة الكاشير</a> · <a href="pos-restaurant.html">المطاعم</a> · <a href="hr-payroll.html">الرواتب والسلف</a> · <a href="barcode-import.html">طباعة الباركود</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-10">10 أكتوبر 2026</time></div></footer>
+</body>
+</html>

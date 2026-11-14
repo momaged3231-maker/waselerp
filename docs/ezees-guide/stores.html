@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>المخازن وأذون المخازن والتحويل بين المخازن | دليل Ezees ERP</title>
+<meta name="description" content="شرح تعريف المخازن في Ezees ERP، وأذون المخازن (وارد، صادر، تالف، رصيد افتتاحي)، والتحويل المباشر بين المخازن، والتحويل غير المباشر بين الفروع واستلامه، واعتماد الأذون والرسائل الشائعة.">
+<meta name="keywords" content="المخازن, تعريف مخزن, اذن مخزن, اذن وارد, اذن صادر, اذن تالف, رصيد افتتاحي, تحويل بين المخازن, تحويل غير مباشر, اذن استلام تحويل, Ezees ERP">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/stores.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="المخازن وأذون المخازن والتحويل في Ezees ERP">
+<meta property="og:description" content="عرّف مخازنك، وسجّل أذون الوارد والصادر والتالف، وحوّل البضاعة بين المخازن والفروع.">
+<meta property="og:url" content="https://help.tebalink.com/stores.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"المخازن وأذون المخازن والتحويل بين المخازن في Ezees ERP","inLanguage":"ar","dateModified":"2026-10-08","proficiencyLevel":"Beginner","mainEntityOfPage":"https://help.tebalink.com/stores.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"HowTo","name":"تحويل بضاعة من مخزن إلى مخزن آخر","inLanguage":"ar","step":[
+{"@type":"HowToStep","position":1,"text":"افتح اذن تحويل مباشر واضغط جديد (F1)."},
+{"@type":"HowToStep","position":2,"text":"اختر المخزن في حقل من والمخزن في حقل الى وتاريخ التحويل."},
+{"@type":"HowToStep","position":3,"text":"أضف الأصناف بالكود أو الباركود أو البحث بالاسم وحدد الكمية والوحدة."},
+{"@type":"HowToStep","position":4,"text":"اضغط حفظ (F2). يُخصم الرصيد من المخزن الأول ويُضاف إلى الثاني."}]},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"ما الفرق بين التحويل المباشر والتحويل غير المباشر؟","acceptedAnswer":{"@type":"Answer","text":"التحويل المباشر بين مخزنين في نفس الفرع ويُنفّذ فورًا. التحويل غير المباشر يُخرج البضاعة من المخزن المصدر، ولا تدخل المخزن المستلم إلا بعد تسجيل اذن استلام تحويل في الفرع المستلم."}},
+{"@type":"Question","name":"لماذا لا يتغير رصيد الصنف بعد حفظ الإذن؟","acceptedAnswer":{"@type":"Answer","text":"رصيد المخزن يحتسب الأذون المعتمدة فقط. اجعل الإذن معتمدًا ليؤثر على الرصيد."}},
+{"@type":"Question","name":"لماذا لا يظهر التحويل غير المباشر في قائمة الاستلام؟","acceptedAnswer":{"@type":"Answer","text":"تظهر فقط التحويلات المعتمدة التي لم تُستلم بعد، والموجهة إلى مخزن في الفرع الذي تعمل عليه."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"المخازن والأصناف","item":"https://help.tebalink.com/index.html#stock"},
+{"@type":"ListItem","position":3,"name":"المخازن والأذون والتحويل","item":"https://help.tebalink.com/stores.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#pos">نقاط البيع والمطاعم</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#stock">المخازن والأصناف</a></li><li>المخازن والأذون والتحويل</li></ol>
+<article>
+<h1>المخازن وأذون المخازن والتحويل بين المخازن</h1>
+<p class="lead">تبدأ إدارة المخزون في Ezees ERP بشاشة <span class="ui">المخازن</span> (من القائمة: <span class="ui">تعريف مخزن</span>)، ثم تُسجَّل حركة البضاعة التي لا تمر بفاتورة من خلال <span class="ui">اذن مخزن</span>، وتنتقل البضاعة بين المخازن عبر <span class="ui">اذن تحويل مباشر</span> أو <span class="ui">اذن تحويل غير مباشر</span> يليه <span class="ui">اذن استلام تحويل</span>. أما مطابقة الرصيد الفعلي بالدفتري فلها صفحة مستقلة: <a href="stock-count.html">تسوية الجرد</a>.</p>
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#before">قبل البدء</a></li>
+  <li><a href="#stores">تعريف المخازن</a></li>
+  <li><a href="#common">ما تشترك فيه شاشات الأذون</a></li>
+  <li><a href="#approve">الاعتماد وأثره على الرصيد</a></li>
+  <li><a href="#voucher">اذن مخزن (وارد، صادر، تالف، رصيد افتتاحي)</a></li>
+  <li><a href="#direct">اذن تحويل مباشر</a></li>
+  <li><a href="#indirect">اذن تحويل غير مباشر</a></li>
+  <li><a href="#receive">اذن استلام تحويل</a></li>
+  <li><a href="#edit">التعديل والحذف</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+  <li><a href="#faq">أسئلة شائعة</a></li>
+</ol></nav>
+
+<section id="before">
+<h2>قبل البدء</h2>
+<ol>
+  <li>عرّف الفروع أولًا، فكل مخزن يتبع فرعًا واحدًا.</li>
+  <li>عرّف <a href="items.html">الأصناف</a> ووحداتها وأسعار التكلفة؛ فالأذون تقرأ السعر من بطاقة الصنف.</li>
+  <li>إذا كانت شركتك تعمل بنظام المخزون المستمر، تأكد من ضبط حسابات المخزون الافتراضية في <a href="chart-of-accounts.html">الدليل المحاسبي</a>، لأن بعض الأذون تُنشئ قيودًا تلقائية.</li>
+</ol>
+</section>
+
+<section id="stores">
+<h2>تعريف المخازن</h2>
+<p>الشاشة مقسمة إلى قائمة بالمخازن الحالية وبطاقة إدخال فيها تبويبان: <span class="ui">بيانات اساسية</span> و<span class="ui">المستخدمين</span>.</p>
+<!--shot:stores__stores-->
+<figure class="shot" id="shot-stores__stores">
+<div class="shot-frame"><a href="assets/screens/stores__stores.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/stores__stores.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: تعريف المخازن"></a></div>
+<details class="shot-tabs"><summary>باقي تبويبات الشاشة (1)</summary><div class="shot-thumbs"><a href="assets/screens/stores__stores--tab2.png" target="_blank" rel="noopener"><img src="assets/screens/stores__stores--tab2.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: تعريف المخازن - التبويب 2"></a></div></details>
+<figcaption>شاشة «تعريف المخازن» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<h3>إضافة مخزن</h3>
+<ol class="steps">
+  <li>افتح <span class="ui">المخازن</span> واضغط <span class="ui">جديد</span>.</li>
+  <li>اكتب اسم <span class="ui">المخزن</span> واختر <span class="ui">الفرع</span>، وأكمل <span class="ui">العنوان</span> و<span class="ui">التليفون</span> و<span class="ui">امين المخزن</span> و<span class="ui">ملاحظة</span> إن رغبت.</li>
+  <li>حدد <span class="ui">الحالة</span> (<span class="ui">نشط</span> / <span class="ui">غير نشط</span>) و<span class="ui">الافتراضى</span> (<span class="ui">نعم</span> / <span class="ui">لا</span>).</li>
+  <li>إذا كان تحديد المستخدمين لكل مخزن مفعّلًا، افتح تبويب <span class="ui">المستخدمين</span> وضع علامة أمام كل مستخدم مسموح له بالتعامل مع هذا المخزن.</li>
+  <li>اضغط <span class="ui">حفظ</span>. يظهر المخزن في القائمة، وتُحدَّث قوائم المخازن في الشاشات المفتوحة.</li>
+</ol>
+<div class="table-wrap"><table>
+<thead><tr><th>الحقل</th><th>الوصف</th></tr></thead>
+<tbody>
+<tr><td>المخزن</td><td>اسم المخزن، وهو إلزامي ولا يتكرر عند الإضافة.</td></tr>
+<tr><td>الفرع</td><td>الفرع الذي يتبعه المخزن. لا يمكن تغييره بعد تسجيل أي حركة على المخزن.</td></tr>
+<tr><td>الافتراضى</td><td>المخزن الذي يُختار تلقائيًا في الأذون. مخزن افتراضي واحد فقط لكل فرع؛ اختيار مخزن جديد كافتراضي يلغي السابق. المخزن الافتراضي يكون نشطًا دائمًا.</td></tr>
+<tr><td>الحالة</td><td>المخزن غير النشط لا يظهر في قوائم الأذون، ويظهر في القائمة باللون الرمادي.</td></tr>
+<tr><td>Online Ecommerce</td><td>المخزن الذي يُعرض رصيده في <a href="ecommerce.html">المتجر الإلكتروني</a>. مخزن واحد فقط لكل فرع.</td></tr>
+<tr><td>تبويب المستخدمين</td><td>يعمل فقط عند تفعيل تحديد المستخدمين مع المخازن من <span class="ui">الاعدادات العامة</span>. المستخدم غير المحدد لا يستطيع حفظ أذون على هذا المخزن.</td></tr>
+</tbody></table></div>
+<p class="note">في القائمة يظهر المخزن الافتراضي باللون الأخضر والمخزن غير النشط باللون الرمادي. اختر مخزنًا من القائمة لعرض بياناته وتعديلها، واستخدم مربع <span class="ui">بحث</span> للبحث بالاسم، و<span class="ui">طباعة</span> لطباعة القائمة.</p>
+<div class="warn"><strong>الحذف:</strong> لا يُحذف مخزن عليه أي حركة. إذا ضغطت <span class="ui">حذف</span> ولم تظهر رسالة <span class="msg">تم الحذف بنجاح</span> فالمخزن مستخدم؛ اجعله <span class="ui">غير نشط</span> بدلًا من حذفه.</div>
+<p class="tip">عند تعديل اسم مخزن قائم لا يتحقق البرنامج من تكرار الاسم، فاحرص على ألا تستخدم اسم مخزن آخر حتى لا تختلط التقارير.</p>
+</section>
+
+<section id="common">
+<h2>ما تشترك فيه شاشات الأذون</h2>
+<p>شاشات <span class="ui">اذن مخزن</span> و<span class="ui">اذن تحويل مباشر</span> و<span class="ui">اذن تحويل غير مباشر</span> متشابهة في طريقة العمل:</p>
+<h3>شريط الأدوات والاختصارات</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>الأمر</th><th>الاختصار</th><th>العمل</th></tr></thead>
+<tbody>
+<tr><td><span class="ui">جديد</span></td><td><kbd>F1</kbd></td><td>تفريغ الشاشة لإذن جديد برقم تلقائي.</td></tr>
+<tr><td><span class="ui">حفظ</span></td><td><kbd>F2</kbd></td><td>حفظ الإذن. بعد حفظ إذن جديد يسألك البرنامج: <span class="msg">هل ترغب فى طباعة هذا السجل</span>.</td></tr>
+<tr><td><span class="ui">طباعة</span></td><td><kbd>F4</kbd></td><td>طباعة الإذن المعروض. خيار <span class="ui">نمط متطور</span> (إن ظهر) يطبع نموذجًا يتضمن الأسعار.</td></tr>
+<tr><td><span class="ui">تحديث</span></td><td><kbd>F5</kbd></td><td>إعادة تحميل المخازن والأصناف.</td></tr>
+<tr><td><span class="ui">حذف</span></td><td><kbd>F6</kbd></td><td>إذا كان التركيز على سطر في جدول الأصناف يحذف السطر، وإلا يحذف الإذن كله بعد التأكيد.</td></tr>
+<tr><td>سطر الإدخال السريع</td><td><kbd>Insert</kbd> أو <kbd>F3</kbd></td><td>ينقلك إلى السطر الفارغ أسفل جدول الأصناف لإضافة صنف مباشرة.</td></tr>
+<tr><td><span class="ui">قيد محاسبى</span></td><td>—</td><td>عرض القيد المرتبط بالإذن إن وُجد.</td></tr>
+<tr><td><span class="ui">Attachment</span></td><td>—</td><td>إرفاق مستندات بالإذن بعد حفظه.</td></tr>
+</tbody></table></div>
+
+<h3>إضافة الأصناف</h3>
+<ul>
+  <li><strong>بالكود أو الباركود:</strong> اكتب أو امسح الكود في حقل <span class="ui">كود</span>؛ يُختار الصنف وتُضبط الوحدة تلقائيًا إذا كان الباركود خاصًا بوحدة معينة، وتصبح الكمية 1. عدّل <span class="ui">الكميه</span> ثم اضغط <kbd>Enter</kbd> للإضافة.</li>
+  <li><strong>بالبحث:</strong> اكتب حرفين على الأقل من اسم الصنف في حقل <span class="ui">الصنف</span> واختر من النتائج. يمكنك تضييق النتائج باختيار <span class="ui">الفئه</span> أولًا.</li>
+  <li><strong>سطر الإدخال السريع:</strong> اضغط <kbd>Insert</kbd> واكتب الكود أو جزءًا من الاسم ثم <kbd>Enter</kbd>. لكتابة الكمية مع الكود استخدم الصيغة <code>5*الكود</code>.</li>
+  <li><strong>من ملف Excel:</strong> اضغط زر <span class="ui">Excel Import</span>، ثم زر <code>...</code> لاختيار الملف، واختر الورقة، ثم أضف البيانات. يجب أن يحتوي الملف على الأعمدة <code>Name</code> و<code>Code</code> و<code>Price</code> و<code>Qty</code>، ويمكن إضافة <code>Unit</code> و<code>Notes</code>. الأصناف غير الموجودة تُتجاهل وتظهر رسالة <span class="msg">Check Log Error file,Some items not exist</span>.</li>
+  <li>إضافة نفس الصنف مرة أخرى بنفس الوحدة وتاريخ الصلاحية تزيد كميته في السطر نفسه حسب إعدادات النظام، ولا تُنشئ سطرًا جديدًا.</li>
+  <li>عند اختيار صنف يظهر رصيده في المخزن المحدد بجانب الكمية (حسب صلاحياتك).</li>
+  <li>إذا كانت الصلاحية مفعلة، اختر تاريخ الصلاحية من القائمة <span class="ui">ت.خ</span> (تظهر فيها التواريخ التي لها رصيد فقط). وإذا كانت الأرقام التسلسلية مفعلة، أدخلها من زر الأرقام التسلسلية قبل الإضافة؛ يجب أن يساوي عددها الكمية.</li>
+</ul>
+<p>يمكنك تعديل <span class="ui">الكميه</span> مباشرة داخل الجدول. أسفل الشاشة يظهر <span class="ui">عدد القطع</span> و<span class="ui">اجمالى الاذن</span>.</p>
+
+<h3>أزرار إضافية تحت الجدول</h3>
+<ul>
+  <li><span class="ui">طباعة الباركود</span>: يفتح شاشة الباركود محمّلة بأصناف الإذن وكمياتها.</li>
+  <li><span class="ui">اضافة فاتورة بيع بقائمة الاصناف</span> / <span class="ui">اضافة فاتورة شراء بقائمة الاصناف</span> / <span class="ui">اضافة فاتورة مرتجع بيع</span> / <span class="ui">اضافة فاتورة مرتجع شراء</span>: تفتح فاتورة جديدة تحتوي على أصناف الإذن نفسها لتوفير وقت الإدخال.</li>
+</ul>
+
+<h3>البحث عن إذن سابق</h3>
+<ul>
+  <li>اكتب رقم الإذن في مربع <span class="ui">بحث</span> بأعلى الشاشة، واختر من القائمة المجاورة البحث بـ<span class="ui">رقم الاذن</span> أو <span class="ui">مسلسل دفترى</span>.</li>
+  <li>للبحث المتقدم افتح لوحة البحث (نقر مزدوج على مربع البحث) وحدد الفترة <span class="ui">من</span> / <span class="ui">الى</span> و<span class="ui">المخزن</span> و<span class="ui">المستخدم</span> والحالة (<span class="ui">معتمد</span> / <span class="ui">غير معتمد</span>)، ثم انقر نقرًا مزدوجًا على الإذن في النتائج لفتحه.</li>
+</ul>
+</section>
+
+<section id="approve">
+<h2>الاعتماد وأثره على الرصيد</h2>
+<p>في كل إذن مفتاح <span class="ui">معتمد</span> / <span class="ui">غير معتمد</span>. قد يكون مفعلًا تلقائيًا حسب صلاحياتك.</p>
+<ul>
+  <li><strong>رصيد المخزن يحتسب الأذون المعتمدة فقط.</strong> الإذن غير المعتمد محفوظ لكنه لا يغيّر الرصيد حتى يُعتمد.</li>
+  <li>الإذن المعتمد لا يمكن تعديله أو حذفه. لتعديله يلغي المستخدم المخوَّل الاعتماد ويحفظ، ثم يعدّل.</li>
+  <li>في نظام المخزون المستمر تُنشأ القيود المحاسبية للأذون عند اعتمادها، ويمكن عرضها من زر <span class="ui">قيد محاسبى</span>.</li>
+</ul>
+</section>
+
+<section id="voucher">
+<h2>اذن مخزن</h2>
+<p>يُستخدم لتسجيل حركة بضاعة لا تمر بفاتورة بيع أو شراء. اختر نوع الإذن من حقل <span class="ui">نوع</span>:</p>
+<!--shot:stores__voucher-->
+<figure class="shot" id="shot-stores__voucher">
+<div class="shot-frame"><a href="assets/screens/stores__voucher.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/stores__voucher.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: اذن مخزن"></a></div>
+<figcaption>شاشة «اذن مخزن» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<div class="table-wrap"><table>
+<thead><tr><th>النوع</th><th>أثره على المخزن</th><th>متى يُستخدم</th></tr></thead>
+<tbody>
+<tr><td><span class="ui">وارد</span></td><td>يزيد الرصيد</td><td>استلام بضاعة بدون فاتورة شراء، مثل عينات أو إنتاج داخلي.</td></tr>
+<tr><td><span class="ui">صادر</span></td><td>ينقص الرصيد</td><td>صرف بضاعة للاستخدام الداخلي أو لجهة ما بدون فاتورة بيع.</td></tr>
+<tr><td><span class="ui">تالف</span></td><td>ينقص الرصيد</td><td>إخراج البضاعة التالفة أو الهالكة.</td></tr>
+<tr><td><span class="ui">رصيد افتتاحى</span></td><td>يزيد الرصيد</td><td>إدخال أرصدة بداية التشغيل أو بداية السنة. يجب أن يكون للصنف سعر تكلفة أكبر من صفر.</td></tr>
+</tbody></table></div>
+<h3>تسجيل اذن مخزن</h3>
+<ol class="steps">
+  <li>افتح <span class="ui">اذن مخزن</span> واضغط <span class="ui">جديد</span> (<kbd>F1</kbd>).</li>
+  <li>اختر <span class="ui">نوع</span> الإذن أولًا (يتغير رقم الإذن حسب النوع)، ثم <span class="ui">المخزن</span> و<span class="ui">التاريخ</span>.</li>
+  <li>اختياريًا: اكتب <span class="ui">م دفترى</span> (رقم الإذن الورقي)، و<span class="ui">ملاحظات</span>، واختر <span class="ui">الاسم</span> (عميل أو مورد مرتبط بالحركة) بالضغط على الحقل أو <kbd>F9</kbd>.</li>
+  <li>أضف الأصناف كما في <a href="#common">إضافة الأصناف</a>.</li>
+  <li>حدد <span class="ui">معتمد</span> إذا كنت تريد أن يؤثر الإذن على الرصيد فورًا، ثم اضغط <span class="ui">حفظ</span> (<kbd>F2</kbd>).</li>
+</ol>
+<div class="table-wrap"><table>
+<thead><tr><th>الحقل</th><th>الوصف</th></tr></thead>
+<tbody>
+<tr><td>رقم</td><td>يُولَّد تلقائيًا ويسبقه حرف يميز نوع الإذن.</td></tr>
+<tr><td>م دفترى</td><td>رقم المستند الورقي، ولا يجوز تكراره لنفس النوع.</td></tr>
+<tr><td>ح مدين / ح دائن</td><td>تظهر في نظام المخزون المستمر فقط، وتُملأ تلقائيًا حسب النوع. يمكنك تغيير الحساب بزر <code>...</code>. لا تتركهما فارغين، وإلا يُرفض حفظ إذن التالف.</td></tr>
+<tr><td>م تكلفة / المشروع</td><td>تظهر حسب إعدادات الشركة لتحميل الحركة على <a href="cost-centers.html">مركز تكلفة</a> أو مشروع.</td></tr>
+<tr><td>استيراد / PO</td><td>اكتب رقم أمر بيع (لأذون الصادر والتالف) أو أمر شراء (لأذون الوارد) واضغط الزر لجلب أصنافه وكمياته. بعد الاستيراد تُقفل لوحة إضافة الأصناف، ويمكن تعديل الكميات في الجدول بحيث لا تتجاوز كمية الأمر.</td></tr>
+</tbody></table></div>
+<p class="note">من القائمة تتوفر أيضًا نسخ خاصة من الشاشة: <span class="ui">اذن مخزن - LW</span> و<span class="ui">اذن مخزن - LWH</span> للأصناف التي تُحسب بالطول والعرض (م²) أو بالطول والعرض والارتفاع (م³)، حيث تظهر أعمدة <code>L</code> و<code>W</code> و<code>H</code> في الجدول. و<span class="ui">اذن مخزن صرف مواد</span> نسخة بدون نوع الرصيد الافتتاحي مخصصة لصرف المواد على المشروعات.</p>
+<p class="tip">لا تغيّر <span class="ui">نوع</span> الإذن بعد إضافة الأصناف؛ اختر النوع أولًا ثم أضف الأصناف حتى تُعرض تواريخ الصلاحية والأرصدة الصحيحة.</p>
+</section>
+
+<section id="direct">
+<h2>اذن تحويل مباشر</h2>
+<p>ينقل البضاعة بين مخزنين <strong>في نفس الفرع</strong> في خطوة واحدة: يُخصم من المخزن المصدر ويُضاف إلى المخزن المستلم بنفس التاريخ.</p>
+<!--shot:stores__direct-->
+<figure class="shot" id="shot-stores__direct">
+<div class="shot-frame"><a href="assets/screens/stores__direct.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/stores__direct.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: اذن تحويل مباشر"></a></div>
+<figcaption>شاشة «اذن تحويل مباشر» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>افتح <span class="ui">اذن تحويل مباشر</span> واضغط <span class="ui">جديد</span> (<kbd>F1</kbd>).</li>
+  <li>اختر المخزن المصدر في <span class="ui">من</span> والمخزن المستلم في <span class="ui">الى</span>، وحدد <span class="ui">التاريخ</span>.</li>
+  <li>أضف الأصناف والكميات. يظهر رصيد الصنف في المخزن المصدر لتتأكد من كفايته.</li>
+  <li>اضغط <span class="ui">حفظ</span> (<kbd>F2</kbd>).</li>
+</ol>
+<ul>
+  <li>لا يمكن التحويل من مخزن إلى نفسه.</li>
+  <li>إذا كان النظام لا يسمح بالرصيد السالب، يُرفض الحفظ إذا لم يكفِ رصيد المخزن المصدر، ويُلوَّن الصنف المسبب باللون الوردي.</li>
+  <li>حقل <span class="ui">استيراد</span> (<kbd>F9</kbd>) يفتح قائمة <span class="ui">امر تحميل مخازن</span> لتختار أمرًا غير مغلق فتُجلب أصنافه، ويُقفل لوحة إضافة الأصناف بعدها.</li>
+  <li>بعد الحفظ لا يمكن تغيير المخزنين في الإذن؛ للتغيير احذف الإذن وسجّل إذنًا جديدًا.</li>
+  <li>تتوفر أيضًا <span class="ui">اذن تحويل مباشر - LW</span> و<span class="ui">اذن تحويل مباشر - LWH</span> للأصناف المقاسة بالمساحة أو الحجم.</li>
+</ul>
+</section>
+
+<section id="indirect">
+<h2>اذن تحويل غير مباشر</h2>
+<p>يُستخدم لنقل البضاعة إلى مخزن في <strong>فرع آخر</strong>، أو عندما تحتاج إلى تأكيد الاستلام من الطرف المستلم. يتم على مرحلتين:</p>
+<!--shot:stores__indirect-->
+<figure class="shot" id="shot-stores__indirect">
+<div class="shot-frame"><a href="assets/screens/stores__indirect.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/stores__indirect.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: اذن تحويل غير مباشر"></a></div>
+<figcaption>شاشة «اذن تحويل غير مباشر» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol>
+  <li><strong>الإرسال:</strong> يُسجَّل <span class="ui">اذن تحويل غير مباشر</span> فيُخصم الرصيد من المخزن المصدر، وتعتبر البضاعة «في الطريق».</li>
+  <li><strong>الاستلام:</strong> يُسجِّل الفرع المستلم <a href="#receive">اذن استلام تحويل</a> فيُضاف الرصيد إلى مخزنه.</li>
+</ol>
+<h3>تسجيل التحويل</h3>
+<ol class="steps">
+  <li>افتح <span class="ui">اذن تحويل غير مباشر</span> واضغط <span class="ui">جديد</span>.</li>
+  <li>اختر <span class="ui">من مخزن</span> (من مخازن فرعك الحالي) واختر المخزن المستلم في <span class="ui">الى</span> (يمكن أن يكون في أي فرع).</li>
+  <li>أضف الأصناف والكميات، واكتب <span class="ui">ملاحظات</span> للطرف المستلم إن لزم.</li>
+  <li>اجعل الإذن <span class="ui">معتمد</span> ثم احفظ. <strong>التحويل غير المعتمد لا يظهر للفرع المستلم.</strong></li>
+</ol>
+<div class="warn">بعد أن يُسجَّل اذن الاستلام لا يمكن تعديل التحويل أو حذفه، وتظهر رسالة <span class="msg">عفو هذا السجل مرتبط بسجلات اخرى لا يمكن تعديله</span>. لذلك راجع الكميات جيدًا قبل الاعتماد.</div>
+</section>
+
+<section id="receive">
+<h2>اذن استلام تحويل</h2>
+<p>تُستخدم في الفرع المستلم لإدخال بضاعة تحويل غير مباشر إلى المخزن.</p>
+<!--shot:stores__receive-->
+<figure class="shot" id="shot-stores__receive">
+<div class="shot-frame"><a href="assets/screens/stores__receive.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/stores__receive.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: اذن استلام تحويل"></a></div>
+<figcaption>شاشة «اذن استلام تحويل» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>افتح <span class="ui">اذن استلام تحويل</span> واضغط <span class="ui">جديد</span>.</li>
+  <li>اضغط زر <span class="ui">امر استلام</span>. تظهر قائمة بالتحويلات المعتمدة الموجهة إلى مخازن فرعك ولم تُستلم بعد (الرقم، والتاريخ، والفرع والمخزن المرسِل والمستلم).</li>
+  <li>اختر التحويل؛ تُملأ المخازن والفروع والملاحظات والأصناف تلقائيًا.</li>
+  <li>حدد <span class="ui">التاريخ</span>، ويجب ألا يكون قبل تاريخ التحويل.</li>
+  <li>اضغط <span class="ui">حفظ</span>. يُضاف الرصيد إلى المخزن المستلم.</li>
+</ol>
+<div class="table-wrap"><table>
+<thead><tr><th>العنصر</th><th>الوصف</th></tr></thead>
+<tbody>
+<tr><td>من / الى</td><td>المخزن المرسِل والمخزن المستلم، مع اسم فرع كل منهما. لا يمكن تغييرهما.</td></tr>
+<tr><td>كمية واردة / كمية فعلية</td><td>الكمية المرسلة في التحويل والكمية التي ستدخل المخزن.</td></tr>
+<tr><td>اجمالى متوقع / صافى الاذن / اجمالى الفارق</td><td>قيمة البضاعة المرسلة والمستلمة والفرق بينهما، وتظهر حسب صلاحياتك.</td></tr>
+</tbody></table></div>
+<div class="warn">في الإصدار الحالي يُستلم التحويل <strong>بكامل الكمية المرسلة</strong>. إذا وصلت كمية أقل أو تالفة، سجّل الاستلام كاملًا ثم سجّل <a href="#voucher">اذن مخزن</a> من نوع <span class="ui">تالف</span> أو <span class="ui">صادر</span> بالكمية الناقصة، واكتب رقم التحويل في الملاحظات.</div>
+<ul>
+  <li>لا يمكن استلام نفس التحويل مرتين: <span class="msg">اذن الصادر تم استخدامه مسبقا</span>.</li>
+  <li>يكون اذن الاستلام <span class="ui">معتمد</span> افتراضيًا؛ لتعديله أو حذفه بعد الحفظ يجب إلغاء اعتماده أولًا.</li>
+  <li>عند حذف اذن الاستلام يعود التحويل إلى قائمة التحويلات المنتظرة.</li>
+</ul>
+</section>
+
+<section id="edit">
+<h2>التعديل والحذف</h2>
+<ul>
+  <li>افتح الإذن بالبحث، ثم عدّل وأعد الحفظ. لا يمكن تغيير المخزن أو رقم الإذن بعد الحفظ.</li>
+  <li>حذف سطر من إذن محفوظ يجعل كميته صفرًا ويختفي عند الحفظ.</li>
+  <li>لا يمكن تعديل أو حذف إذن معتمد، أو إذن في فترة مالية مغلقة، أو إذن من سنة مالية سابقة.</li>
+  <li>عند الحذف يتحقق البرنامج من أن حذف الإذن لن يجعل رصيد أي صنف سالبًا (مثل حذف اذن وارد صُرفت بضاعته).</li>
+  <li>إذا أغلقت الشاشة وفيها أصناف لم تُحفظ يسألك البرنامج: <span class="msg">يوجد لديك بيانات لم يتم حفظها بعد . هل تريد الخروج فعليا؟</span></li>
+</ul>
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى وما تفعله</th></tr></thead>
+<tbody>
+<tr><td><span class="msg">من فضلك أختر اسم الفرع</span></td><td>في شاشة المخازن: اختر فرع المخزن.</td></tr>
+<tr><td><span class="msg">هذا السجل موجود مسبقا</span></td><td>اسم المخزن مستخدم من قبل.</td></tr>
+<tr><td><span class="msg">ادخل المخزن ونوع الاذن</span> / <span class="msg">من فضلك ادخل البيانات المطلوبة</span></td><td>لم تختر المخزن أو نوع الإذن أو أحد مخزني التحويل.</td></tr>
+<tr><td><span class="msg">ادخل الاصناف</span></td><td>الإذن لا يحتوي على أصناف بكميات أكبر من صفر.</td></tr>
+<tr><td><span class="msg">من فضلك اختر اسم صنف صحيح وادخل الكمية بشكل صحيح</span></td><td>اختر صنفًا من النتائج واكتب كمية أكبر من صفر قبل الإضافة.</td></tr>
+<tr><td><span class="msg">لا يمكن التحويل من والى نفس المخزن</span></td><td>اختر مخزنًا مختلفًا في <span class="ui">الى</span>.</td></tr>
+<tr><td><span class="msg">رصيد الصنف فى المخزن لايكفى لاتمام هذه العملية حيث انه لا يمكن ان يكون اقل من الصفر</span></td><td>قلل الكمية للصنف الملوَّن بالوردي، أو سجّل الوارد أولًا واعتمده.</td></tr>
+<tr><td><span class="msg">عفوا هذا المستخدم لم يصرح له بعد بالتعامل مع هذا المخزن</span></td><td>أضف المستخدم في تبويب <span class="ui">المستخدمين</span> بشاشة المخازن.</td></tr>
+<tr><td><span class="msg">التاريخ المحدد خارج نطاق الفترة المحاسبية</span></td><td>غيّر تاريخ الإذن ليقع داخل الفترة المفتوحة.</td></tr>
+<tr><td><span class="msg">عفوا.هذا السجل مرحل لا يمكن تعديله او حذفه</span></td><td>الإذن معتمد. ألغِ الاعتماد أولًا إن كانت لديك الصلاحية.</td></tr>
+<tr><td><span class="msg">عفو هذا السجل مرتبط بسجلات اخرى لا يمكن تعديله</span></td><td>التحويل غير المباشر تم استلامه بالفعل.</td></tr>
+<tr><td><span class="msg">اذن الصادر تم استخدامه مسبقا</span></td><td>هذا التحويل له اذن استلام سابق.</td></tr>
+<tr><td><span class="msg">عفوا تاريخ اذن الاستلام يجب ان يكون لاحق لتاريخ اذن التحويل</span></td><td>اجعل تاريخ الاستلام في يوم التحويل أو بعده.</td></tr>
+<tr><td><span class="msg">عفوا المسلسل الدفترى مسجل سابقا</span></td><td>رقم <span class="ui">م دفترى</span> مستخدم في إذن آخر من نفس النوع.</td></tr>
+<tr><td><span class="msg">عفوا قيمة الصنف يجب انت تكون اعلى من صفر</span></td><td>في الرصيد الافتتاحي: أدخل سعر تكلفة للصنف في بطاقته أولًا.</td></tr>
+<tr><td><span class="msg">عفوا تأكد من بياناتك أولا</span></td><td>بيانات ناقصة، مثل عدم تحديد <span class="ui">ح مدين</span> أو <span class="ui">ح دائن</span>، أو ملف Excel بدون الأعمدة المطلوبة.</td></tr>
+<tr><td><span class="msg">عفوا هذا الصنف مطلوب ادخال الرقم التسلسلي له</span></td><td>أدخل الأرقام التسلسلية للصنف قبل الإضافة أو الحفظ.</td></tr>
+<tr><td><span class="msg">عفوا عدد الارقام المسلسله المدخله لهذا الصنف لا تتساوى مع الكميه المطلوبه</span></td><td>عدد الأرقام التسلسلية يجب أن يساوي الكمية.</td></tr>
+<tr><td><span class="msg">عفوا الامر المطلوب مغلق</span> / <span class="msg">عفوا المستند مغلق</span></td><td>الأمر الذي تحاول استيراده مغلق.</td></tr>
+<tr><td><span class="msg">الصنف غير موجود، اختر من نتائج البحث</span></td><td>في سطر الإدخال السريع: الكود غير صحيح؛ اختر الصنف من القائمة.</td></tr>
+<tr><td><span class="msg">عفوا هذا الاذن مرحل من سنة مالية سابقة لا يمكن تعديله</span></td><td>الإذن منقول من سنة سابقة ولا يُعدّل.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="faq">
+<h2>أسئلة شائعة</h2>
+<details><summary>ما الفرق بين التحويل المباشر وغير المباشر؟</summary>
+<p>المباشر بين مخزنين في نفس الفرع ويُنفَّذ فورًا. غير المباشر يُخرج البضاعة من المخزن المصدر، ولا تدخل المخزن المستلم إلا بعد تسجيل <span class="ui">اذن استلام تحويل</span>، ويصلح للتحويل بين الفروع.</p></details>
+<details><summary>حفظت الإذن ولم يتغير رصيد الصنف، لماذا؟</summary>
+<p>الإذن غير معتمد. الرصيد يحتسب الأذون المعتمدة فقط؛ افتح الإذن وفعّل <span class="ui">معتمد</span> ثم احفظ.</p></details>
+<details><summary>لا يظهر التحويل في قائمة «امر استلام»، لماذا؟</summary>
+<p>تأكد من أن التحويل معتمد، وأنه لم يُستلم من قبل، وأنك تعمل على نفس الفرع الذي يتبعه المخزن المستلم.</p></details>
+<details><summary>هل يُنشئ اذن المخزن قيدًا محاسبيًا؟</summary>
+<p>في نظام المخزون المستمر فقط وعند اعتماد الإذن: أذون التالف دائمًا، وأذون الوارد والصادر والتحويل غير المباشر إذا كانت قيودها مفعلة في الإعدادات. التحويل المباشر لا يُنشئ قيدًا.</p></details>
+<details><summary>كيف أدخل أرصدة أول المدة؟</summary>
+<p>من <span class="ui">اذن مخزن</span> اختر النوع <span class="ui">رصيد افتتاحى</span>، وتأكد من وجود سعر تكلفة لكل صنف.</p></details>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="stock-count.html">تسوية الجرد</a> · <a href="items.html">الأصناف</a> · <a href="sales-invoice.html">فاتورة البيع</a> · <a href="purchase-invoice.html">فاتورة الشراء</a> · <a href="reports-stores.html">تقارير المخازن</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-08">8 أكتوبر 2026</time></div></footer>
+</body>
+</html>

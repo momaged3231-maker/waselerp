@@ -45,6 +45,7 @@ export interface InvoiceInput {
   branchId?: number;
   warehouseId: number;
   partyId?: number;
+  repId?: number;
   invoiceDate?: string;
   paymentType: number;     // 1 cash, 2 credit, 3 mixed
   cashAccountId?: number;
@@ -247,9 +248,10 @@ export class SalesService {
       // ---- party validation + credit limit -------------------------------
       let creditLimit = 0;
       let partyBalance = 0;
+      let repId = dto.repId ? Number(dto.repId) : undefined;
       if (partyId) {
         const party = await client.query<any>(
-          `SELECT p.party_type, p.credit_limit,
+          `SELECT p.party_type, p.credit_limit, p.sales_rep_id,
                   COALESCE((SELECT SUM(CASE WHEN l.direction = 1 THEN l.amount ELSE -l.amount END)
                               FROM ledger_entries l WHERE l.party_id = p.party_id), p.opening_balance) AS balance
              FROM parties p WHERE p.party_id = $1`,
@@ -263,7 +265,9 @@ export class SalesService {
         }
         creditLimit = Number(party.rows[0].credit_limit ?? 0);
         partyBalance = Number(party.rows[0].balance ?? 0);
+        if (!repId && party.rows[0].sales_rep_id) repId = Number(party.rows[0].sales_rep_id);
       }
+      if (invoiceType !== 1) repId = undefined;
 
       // ---- period + items ------------------------------------------------
       const period = await client.query<{ period_id: number }>(
@@ -606,6 +610,7 @@ export class SalesService {
                   cash_account_id = $16::int, notes = $17::text, coupon_code = $18::text,
                   order_type = $19::smallint, delivery_address = $20::text, delivery_fee = $21::numeric,
                   driver_name = $22::text, driver_phone = $23::text, table_ref = $24::text,
+                  rep_id = $25::int,
                   gl_journal_id = NULL, is_posted = true, posted_at = now()
             WHERE invoice_id = $1::bigint
             RETURNING invoice_id`,
@@ -617,6 +622,7 @@ export class SalesService {
             couponRow?.code ?? null,
             Number(dto.orderType ?? 1), dto.deliveryAddress ?? null, deliveryFee,
             dto.driverName ?? null, dto.driverPhone ?? null, dto.tableRef ?? null,
+            repId ?? null,
           ],
         )
         : await client.query<{ invoice_id: number }>(
@@ -624,9 +630,9 @@ export class SalesService {
            (invoice_no, invoice_type, branch_id, warehouse_id, party_id, invoice_date, period_id, status, payment_type,
             sub_total, discount_amount, discount_pct, tax_amount, total_amount, paid_amount, cost_total, profit_amount,
             cash_account_id, cashier_id, created_by, notes, is_posted, posted_at, client_request_id, parent_invoice_id,
-            coupon_code, order_type, delivery_address, delivery_fee, service_charge, driver_name, driver_phone, table_ref)
+            coupon_code, order_type, delivery_address, delivery_fee, service_charge, driver_name, driver_phone, table_ref, rep_id)
          VALUES ($1,$2,$3,$4,$5, COALESCE($6, now()), $7, 2, $8, $9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20, true, now(), $21, $22, $23,
-                 $24::smallint, $25::text, $26::numeric, $27::numeric, $28::text, $29::text, $30::text)
+                 $24::smallint, $25::text, $26::numeric, $27::numeric, $28::text, $29::text, $30::text, $31::int)
          RETURNING invoice_id`,
         [
           invoiceNo, invoiceType, effectiveBranch, dto.warehouseId, partyId ?? null,
@@ -636,7 +642,7 @@ export class SalesService {
           dto.clientRequestId ?? null, dto.parentInvoiceId ?? null,
           couponRow?.code ?? null,
           Number(dto.orderType ?? 1), dto.deliveryAddress ?? null, deliveryFee, serviceCharge,
-          dto.driverName ?? null, dto.driverPhone ?? null, dto.tableRef ?? null,
+          dto.driverName ?? null, dto.driverPhone ?? null, dto.tableRef ?? null, repId ?? null,
         ],
       );
       const invoiceId = Number(invoice.rows[0].invoice_id);

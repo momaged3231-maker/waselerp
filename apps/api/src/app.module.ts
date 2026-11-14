@@ -10,6 +10,7 @@ import { ItemsModule } from './modules/catalog/items.slice';
 import { PartiesModule } from './modules/parties/parties.slice';
 import { CustomerGroupsModule } from './modules/parties/customer-group.slice';
 import { HrModule } from './modules/hr/hr.slice';
+import { RemindersModule } from './modules/reminders/reminders.slice';
 import { SalesModule } from './modules/sales/sales.module';
 import { InventoryModule } from './modules/inventory/inventory.slice';
 import { TreasuryModule } from './modules/treasury/treasury.slice';
@@ -41,6 +42,7 @@ import { EtaModule } from './modules/eta/eta.slice';
     PartiesModule,
     CustomerGroupsModule,
     HrModule,
+    RemindersModule,
     SalesModule,
     InventoryModule,
     TreasuryModule,

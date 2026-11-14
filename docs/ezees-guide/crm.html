@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>إدارة علاقات العملاء CRM: العملاء المستهدفون والتذاكر والزيارات | دليل Ezees ERP</title>
+<meta name="description" content="شرح نظام Mini CRM في Ezees ERP: تسجيل العملاء المستهدفين ومصادرهم وأنشطتهم، تحويلهم إلى عملاء دائمين، تذاكر الدعم الفني وأقسامها وإسنادها، تسجيل زيارات المندوبين ومتابعتها، وتقرير متابعة المستخدمين.">
+<meta name="keywords" content="CRM, إدارة علاقات العملاء, عملاء مستهدفين, مصادر العملاء, تذاكر الدعم الفني, زيارات العملاء, متابعة المندوبين, Ezees ERP">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/crm.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="إدارة علاقات العملاء (CRM) في Ezees ERP">
+<meta property="og:description" content="سجّل العملاء المستهدفين، وتابع تذاكر الدعم، ونظّم زيارات المندوبين وراقب أداء فريقك.">
+<meta property="og:url" content="https://help.tebalink.com/crm.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"إدارة علاقات العملاء (CRM) في Ezees ERP","inLanguage":"ar","dateModified":"2026-10-08","proficiencyLevel":"Beginner","mainEntityOfPage":"https://help.tebalink.com/crm.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"HowTo","name":"تسجيل تذكرة دعم فني لعميل","inLanguage":"ar","step":[
+{"@type":"HowToStep","position":1,"text":"افتح تذكرة عميل من قائمة Mini CRM."},
+{"@type":"HowToStep","position":2,"text":"اضغط F9 لاختيار العميل، أو زر ... لإضافة عميل جديد."},
+{"@type":"HowToStep","position":3,"text":"اختر القسم والحالة، وأدخل هاتف المتابعة وعنوان التذكرة."},
+{"@type":"HowToStep","position":4,"text":"اكتب وصف المشكلة في خانة الرد ثم اضغط F2 للحفظ."}]},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"ما الفرق بين العميل المستهدف والعميل الدائم؟","acceptedAnswer":{"@type":"Answer","text":"العميل المستهدف هو عميل محتمل لم يتعامل معك بعد، وليس له حساب في الدليل المحاسبي. عند تحويله إلى عميل دائم ينتقل إلى شاشة العملاء ويمكن البيع له."}},
+{"@type":"Question","name":"لماذا لا يظهر لي أي قسم عند تسجيل تذكرة؟","acceptedAnswer":{"@type":"Answer","text":"تظهر لك الأقسام التي أُضفت إليها فقط. افتح أقسام الدعم واختر القسم ثم علّم على اسمك في تبويب المستخدمين واحفظ."}},
+{"@type":"Question","name":"لماذا يرفض البرنامج حفظ الزيارة؟","acceptedAnswer":{"@type":"Answer","text":"للمندوب زيارة أخرى في نفس الوقت أو قريبة منه. يجب ترك نصف ساعة على الأقل بين الزيارات لنفس المندوب."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"الأنظمة المتخصصة","item":"https://help.tebalink.com/index.html#modules"},
+{"@type":"ListItem","position":3,"name":"إدارة علاقات العملاء","item":"https://help.tebalink.com/crm.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#pos">نقاط البيع والمطاعم</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#modules">الأنظمة المتخصصة</a></li><li>إدارة علاقات العملاء</li></ol>
+<article>
+<h1>إدارة علاقات العملاء (CRM): العملاء المستهدفون والتذاكر والزيارات</h1>
+<p class="lead">من قائمة <span class="ui">Mini CRM</span> تسجّل <strong>العملاء المستهدفين</strong> (المحتملين) ومصادرهم، وتتابع <strong>تذاكر الدعم الفني</strong> حتى إغلاقها، وتنظّم <strong>زيارات المندوبين</strong> للعملاء، وتراقب أداء فريقك من <span class="ui">تقرير متابعة المستخدمين</span>. وعندما يقرر العميل المستهدف التعامل معك، تحوّله إلى <a href="customers.html">عميل دائم</a> بخطوة واحدة.</p>
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#menu">شاشات النظام</a></li>
+  <li><a href="#setup">الإعدادات: الأنشطة والمصادر والأقسام</a></li>
+  <li><a href="#lead-add">إضافة عميل مستهدف</a></li>
+  <li><a href="#lead-fields">حقول بطاقة العميل المستهدف</a></li>
+  <li><a href="#lead-list">قائمة العملاء المستهدفين</a></li>
+  <li><a href="#convert">التحويل إلى عميل دائم</a></li>
+  <li><a href="#ticket-add">تسجيل تذكرة دعم</a></li>
+  <li><a href="#ticket-list">إدارة التذاكر</a></li>
+  <li><a href="#visit-add">تسجيل زيارة عميل</a></li>
+  <li><a href="#visit-list">إدارة زيارات العملاء</a></li>
+  <li><a href="#report">تقرير متابعة المستخدمين</a></li>
+  <li><a href="#keys">اختصارات لوحة المفاتيح</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+  <li><a href="#faq">أسئلة شائعة</a></li>
+</ol></nav>
+
+<section id="menu">
+<h2>شاشات النظام</h2>
+<p>تجد كل شاشات النظام في قائمة <span class="ui">Mini CRM</span>:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>الشاشة</th><th>الاستخدام</th></tr></thead>
+<tbody>
+<tr><td><span class="ui">عملاء مستهدفين</span></td><td>قائمة العملاء المحتملين، ومنها تضيفهم وتعدّلهم وتحذفهم.</td></tr>
+<tr><td><span class="ui">انشطة العملاء</span></td><td>مجالات عمل العملاء (مثل: مطاعم، صيدليات، مقاولات).</td></tr>
+<tr><td><span class="ui">مصادر العملاء</span></td><td>من أين عرف العميل عنك (إعلان، ترشيح، معرض...).</td></tr>
+<tr><td><span class="ui">تذكرة عميل</span></td><td>تسجيل طلب دعم أو شكوى، والرد عليها.</td></tr>
+<tr><td><span class="ui">ادارة التذاكر</span></td><td>متابعة التذاكر وتغيير حالتها وإسنادها لموظف آخر.</td></tr>
+<tr><td><span class="ui">اقسام الدعم</span></td><td>أقسام التذاكر (فني، مبيعات، حسابات...) والموظفون في كل قسم.</td></tr>
+<tr><td><span class="ui">تسجيل زيارة عميل</span></td><td>جدولة زيارة مندوب لعميل.</td></tr>
+<tr><td><span class="ui">ادارة زيارات العملاء</span></td><td>متابعة الزيارات وحالاتها والاتصال بالعملاء بعدها.</td></tr>
+<tr><td><span class="ui">انواع الزيارات</span></td><td>أنواع الزيارة: مبيعات، صيانة، عرض توضيحي، تسويق.</td></tr>
+<tr><td><span class="ui">تقرير متابعة المستخدمين</span></td><td>عدد التذاكر لكل موظف وحالتها ومتوسط تقييم العملاء.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="setup">
+<h2>الإعدادات: الأنشطة والمصادر وأنواع الزيارات وأقسام الدعم</h2>
+<p>جهّز هذه القوائم قبل البدء. الشاشات الأربع تعمل بنفس الطريقة:</p>
+<!--shot:crm__setup-->
+<figure class="shot" id="shot-crm__setup">
+<div class="shot-frame"><a href="assets/screens/crm__setup.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/crm__setup.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: الإعدادات: الأنشطة والمصادر وأنواع الزيارات وأقسام الدعم"></a></div>
+<details class="shot-tabs"><summary>باقي تبويبات الشاشة (1)</summary><div class="shot-thumbs"><a href="assets/screens/crm__setup--tab2.png" target="_blank" rel="noopener"><img src="assets/screens/crm__setup--tab2.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: الإعدادات: الأنشطة والمصادر وأنواع الزيارات وأقسام الدعم - التبويب 2"></a></div></details>
+<figcaption>شاشة «الإعدادات: الأنشطة والمصادر وأنواع الزيارات وأقسام الدعم» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>افتح الشاشة واضغط <span class="ui">جديد</span> (<kbd>F1</kbd>).</li>
+  <li>اكتب <span class="ui">المسمى</span> (أو <span class="ui">القسم</span> في أقسام الدعم)، وأضف <span class="ui">ملاحظات</span> إن أردت.</li>
+  <li>اضغط <span class="ui">حفظ</span> (<kbd>F2</kbd>). يظهر السجل في الجدول أسفل الشاشة.</li>
+  <li>للتعديل اضغط على السجل في الجدول، وعدّل ثم احفظ. وللحذف اختره واضغط <span class="ui">حذف</span>.</li>
+</ol>
+<ul>
+  <li><span class="ui">انواع الزيارات</span>: تأتي معرّفة مسبقًا: مبيعات، وصيانة، وعرض توضيحي، وتسويق. لا يمكن حذف نوع مستخدم في زيارات.</li>
+  <li><span class="ui">اقسام الدعم</span>: لا يمكن حذف قسم عليه تذاكر، ولا حذف القسم الأول في القائمة.</li>
+</ul>
+<div class="warn"><strong>انشطة العملاء ومصادر العملاء:</strong> البرنامج لا يمنعك من حذف نشاط أو مصدر مستخدم. إذا حذفته يبقى الحقل فارغًا في بطاقات العملاء المرتبطين به. لذلك <strong>عدّل الاسم بدلًا من الحذف</strong> إذا كان النشاط أو المصدر مستخدمًا.</div>
+
+<h3>ربط الموظفين بأقسام الدعم</h3>
+<p>في شاشة <span class="ui">اقسام الدعم</span> يوجد تبويب <span class="ui">المستخدمين</span> فيه كل المستخدمين النشطين. علّم على الموظفين الذين يعملون في القسم، فيتلوّن صفهم بالأخضر، ثم احفظ.</p>
+<div class="tip">الموظف <strong>لا يرى في شاشة التذكرة إلا الأقسام التي أُضيف إليها</strong>. إذا لم يُضف لأي قسم فلن يتمكن من تسجيل تذكرة.</div>
+<div class="warn">عند إضافة قسم جديد، <strong>احفظه أولًا بدون موظفين</strong>. ثم اضغط عليه في الجدول، وعلّم على الموظفين واحفظ مرة ثانية. إذا علّمت عليهم قبل الحفظ الأول فلن يُربطوا بالقسم.</div>
+</section>
+
+<section id="lead-add">
+<h2>إضافة عميل مستهدف</h2>
+<p>العميل المستهدف هو عميل محتمل لم يشترِ منك بعد. يُسجَّل بشكل منفصل عن العملاء الدائمين، و<strong>لا يُنشأ له حساب</strong> في الدليل المحاسبي.</p>
+<ol class="steps">
+  <li>افتح <span class="ui">عملاء مستهدفين</span> واضغط <span class="ui">جديد</span>. تفتح شاشة <span class="ui">العملاء المستهدفين</span> ويظهر <span class="ui">الكود</span> تلقائيًا.</li>
+  <li>اكتب <span class="ui">الاسم</span> و<span class="ui">الموبايل</span>، وتأكد من <span class="ui">الفرع</span> و<span class="ui">تصنيف</span> و<span class="ui">نوع - ETA</span>.</li>
+  <li>اختر <span class="ui">النشاط</span> و<span class="ui">المصدر</span> لتعرف لاحقًا أي القنوات تجلب لك عملاء أكثر.</li>
+  <li>اختر <span class="ui">الدولة</span> ثم <span class="ui">المحافظة</span> ثم <span class="ui">المدينة</span>، واكتب <span class="ui">الشارع</span> و<span class="ui">المبنى</span>. يتكوّن حقل <span class="ui">العنوان</span> تلقائيًا من هذه الأجزاء.</li>
+  <li>اختر <span class="ui">المندوب</span> المسؤول عن العميل إن وُجد.</li>
+  <li>اضغط <span class="ui">حفظ</span> (<kbd>F2</kbd>). تظهر رسالة <span class="msg">تم الحفظ بنجاح</span> وتُفرَّغ الشاشة لإضافة عميل آخر، ويظهر العميل في القائمة مباشرة.</li>
+</ol>
+<p class="note">إذا كان هناك حقل إلزامي فارغ يظهر بجانبه أيقونة حمراء ولا يتم الحفظ. الحقول الإلزامية: الاسم، والموبايل، والفرع، والتصنيف، ونوع ETA، والدولة.</p>
+<p class="tip">يمكنك أيضًا إضافة عميل مستهدف بسرعة من شاشة التذكرة أو الزيارة بزر <code>...</code> بجانب اسم العميل، دون مغادرة الشاشة.</p>
+</section>
+
+<section id="lead-fields">
+<h2>حقول بطاقة العميل المستهدف</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الحقل</th><th>الوصف</th></tr></thead>
+<tbody>
+<tr><td>الحالة</td><td><span class="ui">نشط</span> / <span class="ui">غير نشط</span>.</td></tr>
+<tr><td>الكود</td><td>يُملأ تلقائيًا، ويقبل أرقامًا فقط.</td></tr>
+<tr><td>الاسم / الشركة</td><td>اسم الشخص المسؤول واسم شركته. لا يمكن تكرار نفس الاسم لعميلين مستهدفين.</td></tr>
+<tr><td>الفرع</td><td>الفرع التابع له العميل، ويظهر افتراضيًا فرعك الحالي.</td></tr>
+<tr><td>تصنيف / المجموعة</td><td>نفس <a href="customers.html#rating">تصنيفات</a> و<a href="customers.html#groups">مجموعات</a> العملاء الدائمين، وتنتقل معه عند تحويله.</td></tr>
+<tr><td>النشاط / المصدر</td><td>من شاشتي <span class="ui">انشطة العملاء</span> و<span class="ui">مصادر العملاء</span>. اختيارية.</td></tr>
+<tr><td>نوع - ETA / الرقم الضريبيى / السجل التجارى</td><td>بيانات الفاتورة الإلكترونية، وتفيد عند تحويله إلى عميل دائم.</td></tr>
+<tr><td>الدولة / المحافظة / المدينة</td><td>كل قائمة تعرض ما يتبع اختيارك في القائمة السابقة. الزر المجاور للمحافظة أو المدينة يفتح شاشة تعريفها لإضافة جديد.</td></tr>
+<tr><td>الحى / المجاورة / الشارع / المبنى / الدور / الشقة / الرقم البريدى</td><td>تفاصيل العنوان.</td></tr>
+<tr><td>العنوان</td><td>يتكوّن تلقائيًا من المبنى والشارع والمدينة والمحافظة والدولة، ويمكنك تعديله.</td></tr>
+<tr><td>التليفون / الموبايل / الفاكس</td><td>تُحذف المسافات والرموز الزائدة من الأرقام تلقائيًا.</td></tr>
+<tr><td>الايميل</td><td>اختياري، لكن إذا كتبته يجب أن يكون بصيغة صحيحة.</td></tr>
+<tr><td>المندوب</td><td>المندوب المسؤول. الزر المجاور يمسح الاختيار.</td></tr>
+<tr><td>Map</td><td>تحديد موقع العميل على الخريطة، ويُستخدم لاحقًا في رمز QR بتقرير الزيارة.</td></tr>
+<tr><td>عميل دائم</td><td>يُفعَّل عند فتح عميل محفوظ فقط. انظر <a href="#convert">التحويل إلى عميل دائم</a>.</td></tr>
+</tbody></table></div>
+<p>لإرفاق ملفات (عقد، عرض سعر، صورة بطاقة...) افتح العميل من القائمة واضغط <span class="ui">Attachment</span>.</p>
+</section>
+
+<section id="lead-list">
+<h2>قائمة العملاء المستهدفين (ادارة العملاء CRM)</h2>
+<!--shot:crm__lead-list-->
+<figure class="shot" id="shot-crm__lead-list">
+<div class="shot-frame"><a href="assets/screens/crm__lead-list.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/crm__lead-list.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: قائمة العملاء المستهدفين (ادارة العملاء CRM)"></a></div>
+<figcaption>شاشة «قائمة العملاء المستهدفين (ادارة العملاء CRM)» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ul>
+  <li><strong>التصفية:</strong> بالفرع، وبالحالة (<span class="ui">All</span> / <span class="ui">Active</span> / <span class="ui">Inactive</span>). بعد تغيير الفرع أو الحالة <strong>اضغط <span class="ui">تحديث</span></strong> لتظهر النتائج.</li>
+  <li><strong>البحث:</strong> اختر نوع البحث (الاسم، الهاتف، الكود، المحافظة، المدينة، المندوب) واكتب في خانة <span class="ui">بحث</span>. البحث بالاسم يشمل اسم الشركة.</li>
+  <li><strong>نقر مزدوج</strong> على العميل لفتح بطاقته وتعديلها.</li>
+  <li><span class="ui">Active</span>: حدد عميلًا أو أكثر واضغطه لتعليمهم كعملاء متجاوبين، فيتلوّن صفهم باللون الأزرق الفاتح. و<span class="ui">Hold</span> يلغي هذا التعليم. اضغط <span class="ui">تحديث</span> بعدها لترى اللون.</li>
+  <li>زر <code>...</code> في آخر الصف: عرض موقع العميل على الخريطة. و<span class="ui">Map</span> يعرض كل العملاء الذين لهم موقع.</li>
+  <li><span class="ui">طباعة</span>: طباعة القائمة كما تظهر بعد التصفية.</li>
+</ul>
+<div class="warn"><strong>الحذف:</strong> حذف عميل مستهدف من القائمة <strong>يحذف معه كل تذاكره وزياراته وأوامر البيع الخاصة به</strong> ومرفقاته. إذا أردت الاحتفاظ بالسجل اجعله <span class="ui">غير نشط</span> بدلًا من حذفه.</div>
+</section>
+
+<section id="convert">
+<h2>تحويل العميل المستهدف إلى عميل دائم</h2>
+<p>عندما يوافق العميل على التعامل معك:</p>
+<ol class="steps">
+  <li>افتح العميل من القائمة بنقر مزدوج.</li>
+  <li>علّم على <span class="ui">عميل دائم</span>. يتغير الكود إلى كود جديد من تسلسل العملاء الدائمين.</li>
+  <li>اضغط <span class="ui">حفظ</span>. يختفي العميل من قائمة العملاء المستهدفين ويظهر في شاشة <a href="customers.html">ادارة العملاء</a>، وتبقى تذاكره وزياراته السابقة مرتبطة به.</li>
+  <li><strong>مهم:</strong> افتح العميل من شاشة <span class="ui">ادارة العملاء</span>، وأكمل الشروط التجارية (حد الائتمان، والتعامل الآجل، وقائمة الأسعار)، ثم اضغط <span class="ui">حفظ</span>. هذا الحفظ يُنشئ حسابه في الدليل المحاسبي.</li>
+</ol>
+<div class="warn">لا تُصدر فواتير للعميل المحوَّل قبل تنفيذ الخطوة الرابعة، لأن حسابه في الدليل المحاسبي لا يُنشأ إلا بعد حفظه من شاشة العملاء.</div>
+</section>
+
+<section id="ticket-add">
+<h2>تسجيل تذكرة دعم (تذكرة عميل)</h2>
+<p>التذكرة تسجّل طلب دعم أو شكوى، وتحفظ كل الردود عليها بالتاريخ واسم الموظف حتى إغلاقها.</p>
+<!--shot:crm__ticket-add-->
+<figure class="shot" id="shot-crm__ticket-add">
+<div class="shot-frame"><a href="assets/screens/crm__ticket-add.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/crm__ticket-add.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: تسجيل تذكرة دعم (تذكرة عميل)"></a></div>
+<figcaption>شاشة «تسجيل تذكرة دعم (تذكرة عميل)» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>افتح <span class="ui">تذكرة عميل</span>. يظهر <span class="ui">رقم</span> التذكرة تلقائيًا، ويبدأ من 10000، ويظهر اسمك في <span class="ui">المستخدم</span>.</li>
+  <li>اضغط <kbd>F9</kbd> أو انقر على خانة <span class="ui">العميل</span> لاختياره. تظهر العملاء الدائمون والمستهدفون معًا. يُملأ الكود والهاتف والعنوان والفرع والمندوب تلقائيًا، ويُعلَّم <span class="ui">عميل سابق</span> إذا كان عميلًا دائمًا. لعميل جديد اضغط <code>...</code> وأضفه.</li>
+  <li>اختر <span class="ui">القسم</span> و<span class="ui">الحالة</span>.</li>
+  <li>أدخل <span class="ui">هاتف المتابعة</span>، أو اضغط الزر المجاور له لنسخ رقم موبايل العميل.</li>
+  <li>اختر <span class="ui">المنتج *اختيارى</span> بالضغط على <kbd>F7</kbd> إذا كانت المشكلة تخص صنفًا معينًا.</li>
+  <li>في <span class="ui">موضوع التذكرة</span> اكتب <span class="ui">عنوان</span> مختصرًا، ثم اكتب تفاصيل المشكلة في خانة الرد.</li>
+  <li>اضغط <span class="ui">حفظ</span> (<kbd>F2</kbd>). تبقى التذكرة مفتوحة أمامك، وتظهر الرسالة الأولى في جدول الردود.</li>
+</ol>
+<div class="tip">اختر العميل دائمًا من القائمة (<kbd>F9</kbd>) ولا تكتب اسمه يدويًا، حتى ترتبط التذكرة به وتظهر بياناته في <span class="ui">ادارة التذاكر</span>.</div>
+
+<h3>إضافة رد على تذكرة</h3>
+<ol class="steps">
+  <li>افتح التذكرة بنقر مزدوج عليها من <span class="ui">ادارة التذاكر</span>، أو اكتب رقمها في خانة <span class="ui">بحث</span> بشريط الأدوات.</li>
+  <li>اضغط زر <span class="ui">رد جديد</span> لتفريغ خانة الرد، ثم اكتب ردك.</li>
+  <li>اضغط <span class="ui">حفظ</span>. يُضاف الرد إلى الجدول بتاريخه واسمك، وتصبح الحالة <span class="ui">قيد المتابعة</span>.</li>
+</ol>
+<ul>
+  <li>الضغط على رد في الجدول يعرض نصه للقراءة فقط. لكتابة رد جديد بعدها اضغط <span class="ui">رد جديد</span> أولًا.</li>
+  <li><span class="ui">حذف الرد</span>: يحذف الرد المحدد. لا يمكن حذف الرسالة الأولى للتذكرة.</li>
+  <li>لإرفاق ملفات بالتذكرة احفظها أولًا ثم اضغط <span class="ui">Attachment</span>.</li>
+</ul>
+
+<h3>إغلاق التذكرة</h3>
+<p>علّم على خانة <span class="ui">تاريخ الاغلاق</span> وحدد التاريخ، ثم احفظ. تتحول الحالة إلى <span class="ui">مغلقة</span> وتُقفل خانة الرد. وإذا ألغيت التعليم ترجع الحالة إلى <span class="ui">قيد المتابعة</span>. ويمكنك أيضًا إغلاق عدة تذاكر معًا من <a href="#ticket-list">ادارة التذاكر</a>.</p>
+
+<h3>حالات التذكرة</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>الحالة</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td>مفتوحة</td><td>تذكرة جديدة لم يُرد عليها بعد.</td></tr>
+<tr><td>قيد المتابعة</td><td>تم الرد عليها والعمل جارٍ.</td></tr>
+<tr><td>مغلقة</td><td>تم حل المشكلة، ويُسجَّل تاريخ الإغلاق.</td></tr>
+</tbody></table></div>
+<p class="note">لتعديل تذكرة يجب أن تكون عضوًا في قسمها. إذا لم يظهر القسم في القائمة عند فتحها فلن تتمكن من حفظها. اطلب من المسؤول إضافتك إلى القسم من <span class="ui">اقسام الدعم</span>.</p>
+</section>
+
+<section id="ticket-list">
+<h2>إدارة التذاكر (متابعة تذاكر الدعم الفنى)</h2>
+<p>تعرض الشاشة التذاكر المسجلة في الفترة المحددة، والأحدث تعديلًا أولًا. عند فتحها تظهر تذاكرك أنت من أمس إلى الغد.</p>
+<!--shot:crm__ticket-list-->
+<figure class="shot" id="shot-crm__ticket-list">
+<div class="shot-frame"><a href="assets/screens/crm__ticket-list.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/crm__ticket-list.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: إدارة التذاكر (متابعة تذاكر الدعم الفنى)"></a></div>
+<figcaption>شاشة «إدارة التذاكر (متابعة تذاكر الدعم الفنى)» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ul>
+  <li><strong>التصفية:</strong> بالفترة (من / إلى)، وبالحالة، وبالمستخدم المسؤول. حسب صلاحياتك قد ترى تذاكرك فقط.</li>
+  <li><strong>البحث:</strong> اختر <span class="ui">ID</span> للبحث برقم التذكرة، أو <span class="ui">Ticket Title</span> للبحث بعنوانها.</li>
+  <li><strong>نقر مزدوج</strong> على تذكرة لفتحها والرد عليها.</li>
+  <li><kbd>F1</kbd> أو <span class="ui">جديد</span>: فتح شاشة تذكرة جديدة.</li>
+</ul>
+<div class="warn">في هذا الإصدار، خيار البحث <span class="ui">Customer.*</span> قد يُظهر رسالة خطأ. للوصول لتذاكر عميل معين، ابحث برقم التذكرة أو عنوانها، أو رتّب الجدول بالضغط على عمود اسم العميل.</div>
+
+<h3>تغيير حالة عدة تذاكر</h3>
+<ol class="steps">
+  <li>حدد تذكرة أو أكثر في الجدول.</li>
+  <li>اضغط <span class="ui">تغيير حالة</span>، واختر الحالة الجديدة، ثم اضغط <span class="ui">OK</span>.</li>
+</ol>
+<p>عند اختيار <span class="ui">مغلقة</span> يُسجَّل تاريخ الإغلاق بالوقت الحالي، وعند اختيار حالة أخرى يُمسح تاريخ الإغلاق.</p>
+
+<h3>إسناد تذكرة لموظف أو قسم آخر</h3>
+<ol class="steps">
+  <li>حدد التذكرة واضغط <span class="ui">تحويل</span>. تظهر لوحة <span class="ui">اسناد تذكرة</span>.</li>
+  <li>اختر <span class="ui">القسم</span> و<span class="ui">المستخدم</span> الجديدين، واكتب ملاحظة للموظف إن أردت.</li>
+  <li>اضغط <span class="ui">اسناد</span>. تنتقل التذكرة إلى الموظف الجديد، وتُضاف الملاحظة إلى سجل ردود التذكرة.</li>
+</ol>
+
+<h3>متابعة رضا العميل</h3>
+<p>بعد حل المشكلة، اتصل بالعميل وسجّل رأيه: حدد التذكرة واضغط <span class="ui">متابعة</span>، واكتب <span class="ui">ملاحظة العميل</span>، واختر <span class="ui">التقييم</span> من 0 إلى 5، ثم اضغط <span class="ui">حفظ</span>. يظهر في عمود المتابعة <code>Done</code>، ويدخل التقييم في <a href="#report">تقرير متابعة المستخدمين</a>. (قد لا تظهر هذه الخاصية لكل المستخدمين حسب الصلاحيات.)</p>
+
+<h3>إرسال رسالة SMS</h3>
+<p>حدد التذكرة واضغط <span class="ui">SMS</span>. يظهر رقم موبايل العميل تلقائيًا. اختر <span class="ui">عنوان الرسالة</span> من الرسائل الجاهزة أو اكتب <span class="ui">محتوى الرسالة</span>، ثم اضغط زر الإرسال. تحتاج هذه الخاصية إلى ضبط خدمة الرسائل القصيرة في الإعدادات.</p>
+</section>
+
+<section id="visit-add">
+<h2>تسجيل زيارة عميل</h2>
+<!--shot:crm__visit-add-->
+<figure class="shot" id="shot-crm__visit-add">
+<div class="shot-frame"><a href="assets/screens/crm__visit-add.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/crm__visit-add.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: تسجيل زيارة عميل"></a></div>
+<figcaption>شاشة «تسجيل زيارة عميل» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>افتح <span class="ui">تسجيل زيارة عميل</span>. يظهر <span class="ui">رقم</span> الزيارة تلقائيًا.</li>
+  <li>اضغط <kbd>F9</kbd> لاختيار <span class="ui">العميل</span> (دائم أو مستهدف)، أو <code>...</code> لإضافة عميل جديد. تُملأ بياناته وفرعه ومندوبه تلقائيًا.</li>
+  <li>حدد <span class="ui">تاريخ الزيارة</span> و<span class="ui">وقت البداية</span> و<span class="ui">وقت الانتهاء</span>.</li>
+  <li>اختر <span class="ui">النوع</span> و<span class="ui">الفرع</span> و<span class="ui">المندوب</span>.</li>
+  <li>اكتب <span class="ui">سبب الزيارة</span>، و<span class="ui">ملاحظات العميل</span> إن وُجدت، واختر <span class="ui">المنتج *اختيارى</span> بـ <kbd>F7</kbd>.</li>
+  <li>اضغط <span class="ui">حفظ</span> (<kbd>F2</kbd>). يسألك البرنامج: <span class="msg">هل ترغب فى طباعة هذا السجل</span>. اختر نعم لطباعة نموذج الزيارة للمندوب، ثم تُفرَّغ الشاشة لزيارة جديدة.</li>
+</ol>
+<p class="note">الحقول الإلزامية: المندوب، والنوع، والفرع، واسم العميل، والموبايل، والعنوان، وسبب الزيارة.</p>
+<ul>
+  <li><strong>منع تعارض المواعيد:</strong> لا يمكن تسجيل زيارتين لنفس المندوب في وقتين متداخلين. ويجب ترك <strong>نصف ساعة على الأقل</strong> بين نهاية زيارة وبداية التالية.</li>
+  <li><strong>جدول المواعيد:</strong> تُضاف الزيارة تلقائيًا إلى جدول مواعيد المستخدم المرتبط بالمندوب.</li>
+  <li><strong>نموذج الزيارة المطبوع</strong> (<kbd>F4</kbd>): فيه بيانات العميل والزيارة، ورمز QR يفتح موقع العميل على خرائط Google إذا كان موقعه محددًا في بطاقته.</li>
+  <li><span class="ui">متابعة اتصال</span>: علّم عليها واكتب ملاحظة إذا اتصلت بالعميل بعد الزيارة.</li>
+  <li>لفتح زيارة سابقة اكتب رقمها في خانة <span class="ui">بحث</span> بشريط الأدوات، أو افتحها بنقر مزدوج من <span class="ui">ادارة زيارات العملاء</span>.</li>
+</ul>
+<div class="warn">عند حفظ تعديل على زيارة سابقة، <strong>ترجع حالتها إلى Waiting</strong>. بعد التعديل افتح <a href="#visit-list">ادارة زيارات العملاء</a> وأعد ضبط حالتها.</div>
+</section>
+
+<section id="visit-list">
+<h2>إدارة زيارات العملاء (متابعة زيارات العملاء)</h2>
+<p>تعرض الشاشة زيارات الشهر الحالي، والأحدث أولًا.</p>
+<!--shot:crm__visit-list-->
+<figure class="shot" id="shot-crm__visit-list">
+<div class="shot-frame"><a href="assets/screens/crm__visit-list.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/crm__visit-list.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: إدارة زيارات العملاء (متابعة زيارات العملاء)"></a></div>
+<figcaption>شاشة «إدارة زيارات العملاء (متابعة زيارات العملاء)» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ul>
+  <li><strong>التصفية:</strong> بالفترة، والمندوب، والفرع، والحالة، وحالة المتابعة (<span class="ui">الكل</span> / <span class="ui">انتظار المتابعة</span> / <span class="ui">تم المتابعة</span>).</li>
+  <li><strong>البحث:</strong> برقم الزيارة (<span class="ui">ID</span>)، أو اسم العميل (<span class="ui">Name</span>)، أو الموبايل (<span class="ui">Phone</span>).</li>
+  <li><strong>نقر مزدوج</strong> على زيارة لفتحها.</li>
+  <li><span class="ui">طباعة</span>: طباعة القائمة كما تظهر. و<span class="ui">Attachment</span>: مرفقات الزيارة المحددة.</li>
+  <li><span class="ui">حذف</span> (<kbd>F6</kbd>): حذف الزيارات المحددة مع مرفقاتها بعد التأكيد.</li>
+</ul>
+
+<h3>حالات الزيارة</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>الحالة</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td>Waiting</td><td>في الانتظار، وهي حالة كل زيارة جديدة.</td></tr>
+<tr><td>Inprogress</td><td>المندوب في الطريق أو الزيارة جارية.</td></tr>
+<tr><td>Postponed</td><td>تم تأجيل الزيارة.</td></tr>
+<tr><td>Canceled</td><td>تم إلغاء الزيارة.</td></tr>
+<tr><td>Finished</td><td>تمت الزيارة.</td></tr>
+</tbody></table></div>
+
+<h3>تحديث حالة الزيارات</h3>
+<ol class="steps">
+  <li>حدد زيارة أو أكثر.</li>
+  <li>اضغط <span class="ui">Order Status</span>. تظهر لوحة <span class="ui">تغيير حالة</span>.</li>
+  <li>اختر الحالة واضغط <span class="ui">OK</span>.</li>
+</ol>
+
+<h3>تسجيل المتابعة بعد الزيارة</h3>
+<p>بعد انتهاء الزيارة أو تأجيلها أو إلغائها، اتصل بالعميل للتأكد من رضاه: حدد الزيارة واضغط <span class="ui">Follow</span>، واكتب الملاحظة في <span class="ui">متابعة اتصال</span>، ثم اضغط <span class="ui">OK</span>. تنتقل الزيارة إلى <span class="ui">تم المتابعة</span>.</p>
+<p class="tip">زر <span class="ui">Follow</span> لا يعمل على الزيارات التي حالتها Waiting أو Inprogress. غيّر حالتها أولًا.</p>
+<p>ويمكنك إرسال رسالة للعميل بزر <span class="ui">SMS</span> كما في شاشة التذاكر.</p>
+</section>
+
+<section id="report">
+<h2>تقرير متابعة المستخدمين</h2>
+<p>يقيس أداء موظفي الدعم في فترة محددة.</p>
+<!--shot:crm__report-->
+<figure class="shot" id="shot-crm__report">
+<div class="shot-frame"><a href="assets/screens/crm__report.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/crm__report.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: تقرير متابعة المستخدمين"></a></div>
+<figcaption>شاشة «تقرير متابعة المستخدمين» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>افتح <span class="ui">تقرير متابعة المستخدمين</span>. تظهر الفترة افتراضيًا من أول الشهر الحالي إلى آخره.</li>
+  <li>عدّل <span class="ui">من</span> و<span class="ui">الى</span> إن أردت. ولموظف واحد علّم على <span class="ui">المستخدم</span> واختره.</li>
+  <li>اضغط زر العرض. ولطباعة النتيجة اضغط زر الطباعة.</li>
+</ol>
+<div class="table-wrap"><table>
+<thead><tr><th>العمود</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td>يوزر / الاسم</td><td>اسم المستخدم واسم الموظف المرتبط به.</td></tr>
+<tr><td>عدد تذاكر كلى</td><td>كل التذاكر المفتوحة في الفترة لكل الموظفين.</td></tr>
+<tr><td>تذاكر يوزر</td><td>تذاكر هذا الموظف.</td></tr>
+<tr><td>مفتوح / متابعة / مغلق</td><td>توزيع تذاكر الموظف حسب حالتها.</td></tr>
+<tr><td>تقييم عميل</td><td>متوسط تقييم العملاء (من 5) للتذاكر التي تمت متابعتها.</td></tr>
+<tr><td>نسبةالعدد الكلى</td><td>نسبة تذاكر الموظف من إجمالي التذاكر.</td></tr>
+</tbody></table></div>
+<p class="note">يظهر في التقرير المستخدمون النشطون الذين لهم تذاكر في الفترة فقط.</p>
+</section>
+
+<section id="keys">
+<h2>اختصارات لوحة المفاتيح</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>المفتاح</th><th>الوظيفة</th></tr></thead>
+<tbody>
+<tr><td><kbd>F1</kbd></td><td>جديد.</td></tr>
+<tr><td><kbd>F2</kbd></td><td>حفظ.</td></tr>
+<tr><td><kbd>F4</kbd></td><td>طباعة نموذج الزيارة.</td></tr>
+<tr><td><kbd>F6</kbd></td><td>حذف التذكرة أو الزيارة المفتوحة، أو الزيارات المحددة في القائمة.</td></tr>
+<tr><td><kbd>F9</kbd></td><td>اختيار العميل في التذكرة والزيارة.</td></tr>
+<tr><td><kbd>F7</kbd></td><td>اختيار المنتج في التذكرة والزيارة.</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>إغلاق شاشة التذكرة أو الزيارة.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td><span class="msg">هذا السجل موجود مسبقا</span></td><td>يوجد عميل مستهدف بنفس الاسم أو بنفس الكود.</td></tr>
+<tr><td><span class="msg">عفوا هذا التوقيت مسجل سابقا لنفس المندوب...</span></td><td>للمندوب زيارة متداخلة مع هذا الوقت. اترك نصف ساعة بين الزيارات أو اختر مندوبًا آخر.</td></tr>
+<tr><td><span class="msg">لا يمكن اجراء تعديل لهذا السجل لاستخدامه من قبل اخر</span></td><td>لا يمكن حذف نوع زيارة أو قسم دعم مستخدم، أو حذف عميل له فواتير أو قيود.</td></tr>
+<tr><td><span class="msg">عفو هذا السجل مرتبط بسجلات اخرى لا يمكن تعديله</span></td><td>محاولة حذف القسم الأول في أقسام الدعم.</td></tr>
+<tr><td><span class="msg">عفوا تأكد من بياناتك أولا</span></td><td>لم تكتب المسمى في شاشات الإعدادات.</td></tr>
+<tr><td><span class="msg">من فضلك قم باختيار السجل اولا</span></td><td>اضغط على سجل في الجدول قبل الحذف أو التعليم.</td></tr>
+<tr><td><span class="msg">عفوا هذا السجل تم ترحيله الى وحدة طرفية...</span></td><td>العميل منقول إلى جهاز آخر ولا يمكن حذفه من هنا.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="faq">
+<h2>أسئلة شائعة</h2>
+<details><summary>ما الفرق بين العميل المستهدف والعميل الدائم؟</summary>
+<p>العميل المستهدف عميل محتمل لم يتعامل معك بعد، وليس له حساب في الدليل المحاسبي. وعند <a href="#convert">تحويله</a> ينتقل إلى شاشة العملاء ويمكن البيع له.</p></details>
+<details><summary>لماذا لا يظهر لي أي قسم عند تسجيل تذكرة؟</summary>
+<p>تظهر لك الأقسام التي أُضفت إليها فقط. افتح <span class="ui">اقسام الدعم</span>، واختر القسم، ثم علّم على اسمك في تبويب <span class="ui">المستخدمين</span> واحفظ.</p></details>
+<details><summary>لماذا يرفض البرنامج حفظ الزيارة؟</summary>
+<p>إما أن هناك حقلًا إلزاميًا فارغًا (تظهر بجانبه أيقونة حمراء)، أو أن للمندوب زيارة أخرى في نفس الوقت أو قريبة منه بأقل من نصف ساعة.</p></details>
+<details><summary>هل يمكن تسجيل تذكرة أو زيارة لعميل دائم؟</summary>
+<p>نعم. قائمة الاختيار (<kbd>F9</kbd>) تعرض العملاء الدائمين والمستهدفين معًا، ويُعلَّم <span class="ui">عميل سابق</span> تلقائيًا للعميل الدائم.</p></details>
+<details><summary>لا أرى العميل بعد تعليمه Active في القائمة بلون مختلف؟</summary>
+<p>اضغط <span class="ui">تحديث</span> في شريط الأدوات، فيتلوّن صف العميل بالأزرق الفاتح.</p></details>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="customers.html">العملاء</a> · <a href="sales-reps.html">المندوبين</a> · <a href="sales-order.html">أمر البيع</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-08">8 أكتوبر 2026</time></div></footer>
+</body>
+</html>

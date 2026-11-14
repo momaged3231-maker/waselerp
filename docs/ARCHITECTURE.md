@@ -24,13 +24,13 @@
 │ apps/api — NestJS Modular Monolith                         │
 │  Guards: JwtAuthGuard → PermissionsGuard → BranchScope     │
 │  Slices: auth · catalog · parties · sales · inventory ·    │
-│          treasury · hr · reports · admin                   │
+│          treasury · hr · reports · admin · installments · reminders · customer-groups · events │
 │  common/: database.service (pg pool + tx + numbering)      │
 │            stock.ts (دفتر المخزون) · security.ts            │
 └───────────────┬───────────────────────────────────────────┘
                 │ Connection pool (منطقة داخلية فقط)
 ┌───────────────▼───────────────────────────────────────────┐
-│ PostgreSQL — 38 جدول · 86 FK · 61 Index                    │
+│ PostgreSQL — 71 جدول · 86 FK · 61 Index                    │
 └───────────────────────────────────────────────────────────┘
 ```
 
@@ -56,6 +56,7 @@
 | الخزينة | `cash_accounts, cash_categories, cash_transactions, shifts` |
 | العملاء والموردون | `parties, ledger_entries, installment_plans, installment_schedule` |
 | الموارد البشرية | `departments, employees, attendances, leave_requests, salary_pays` |
+| التذكيرات والمجموعات والتقسيط (ضامنون) | `reminders, customer_groups, customer_group_members, installment_guarantors, installment_plans, installment_schedule` |
 | التدقيق | `activity_log, app_settings` |
 
 ## 5) الأمان
@@ -129,3 +130,25 @@
 
 - **منع البيع عند نفاد الرصيد**: حالياً يُسمح به (سلبي) — يحتاج قرار سياسة (يُنفّذ كـ setting).
 - **تسعير متعدد الوحدات**: متاح في نقطة البيع، لكن قوائم الأسعار حسب العميل غير مكتملة (`price_lists` جاهزة في المخطط).
+
+## 9) تحديثات الدليل (Epees ERP) والتمثيل المعماري
+
+### 9.1 مبادئ من الدليل إلى WaselERP (مطبقة فعليًا)
+1. **الفاتورة المؤقتة (معلقة)**: مسودة → معتمدة → مرحّلة/ملغاة. (تنفيذ: `held_invoices` في POS + states في sales.)
+2. **الرد النقدي**: المتبقى يُعاد للعميل (المسدد − المبلغ المدفوع).
+3. **القيد المحاسبي**: يُنشأ عند حقل «المرحل» + الصلاحيات (`accounting.post`).
+4. **الجرد**: سند → كمية متوقعة → فرق → اعتماد → قيد تسوية.
+5. **التقارير**: فلاتر + عرض + طباعة/تصدير.
+
+### 9.2 توسعات معمارية المنفذة (من الدليل إلى الكود)
+| الدليل | الوحدة | الأثر المعماري |
+|---|---|---|
+| P4 (جرد/أذون/تحويل) | `modules/inventory/*` + `common/stock.ts` + `common/posting.ts` | فصل تدفق المخزون عن التسوية. |
+| P5 (أسعار/كوبونات/هدايا) | `common/pricing.ts` + `modules/pricing` + `modules/sales/documents` | محرك سعر موحّد. |
+| P6 (HR) | `modules/hr/*` + `modules/reports/reports-hr` | وحدة مستقلة. |
+| P5.5 (تذكيرات) | `modules/reminders/*` | وحدة صغيرة + جدول. |
+
+### 9.3 ما تبقى من الدليل (خطة مستمرة)
+- الربط الحقيقي ببوابات الضرائب (ETA/ZATCA).
+- المساعد الذكي/واتساب (P9).
+- الأنظمة المتخصصة (P8).

@@ -5,8 +5,9 @@ import AppShell from '@/components/AppShell';
 import { apiFetch, formatDate, formatMoney } from '@/lib/api';
 
 export default function InventoryPage() {
-  const [tab, setTab] = useState<'balances' | 'movements' | 'operations'>('balances');
+  const [tab, setTab] = useState<'balances' | 'alerts' | 'movements' | 'operations'>('balances');
   const [balances, setBalances] = useState<any[]>([]);
+  const [alerts, setAlerts] = useState<any[]>([]);
   const [movements, setMovements] = useState<any[]>([]);
   const [operations, setOperations] = useState<any[]>([]);
   const [warehouses, setWarehouses] = useState<any[]>([]);
@@ -25,6 +26,7 @@ export default function InventoryPage() {
     apiFetch('/catalog/warehouses').then(setWarehouses).catch(() => {});
     apiFetch('/inventory/movements?limit=100').then(setMovements).catch(() => {});
     apiFetch('/inventory/operations').then(setOperations).catch(() => {});
+    apiFetch('/inventory/reorder-alerts').then(setAlerts).catch(() => {});
   }, []);
 
   useEffect(() => { load(); }, [search, warehouseId, lowStock]);
@@ -33,8 +35,8 @@ export default function InventoryPage() {
 
   return (
     <AppShell title="المخزون">
-      <div className="flex gap-2 mb-4">
-        {([['balances', 'الأرصدة'], ['movements', 'الحركات'], ['operations', 'التحويلات والجرد']] as const).map(([key, label]) => (
+      <div className="flex flex-wrap gap-2 mb-4">
+        {([['balances', 'الأرصدة'], ['alerts', 'تنبيهات حد الطلب'], ['movements', 'الحركات'], ['operations', 'التحويلات والجرد']] as const).map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)} className={tab === key ? 'btn-primary' : 'btn-soft'}>{label}</button>
         ))}
         <div className="flex-1" />
@@ -73,6 +75,33 @@ export default function InventoryPage() {
                   </tr>
                 ))}
                 {balances.length === 0 && <tr><td colSpan={7} className="text-center text-slate-400 py-8">لا توجد أرصدة</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {tab === 'alerts' && (
+        <div className="card">
+          <div className="card-title"><span>أصناف وصلت أو نزلت عن حد الطلب</span></div>
+          <div className="table-wrap">
+            <table className="table">
+              <thead><tr><th>الكود</th><th>الصنف</th><th>المخزن</th><th>المتاح</th><th>حد الطلب</th><th>العجز</th></tr></thead>
+              <tbody>
+                {alerts.map((row, idx) => {
+                  const shortage = Math.max(0, Number(row.reorderPoint) - Number(row.onHand));
+                  return (
+                    <tr key={`${row.itemId}-${row.warehouseName}-${idx}`}>
+                      <td className="font-mono text-xs">{row.code}</td>
+                      <td className="font-semibold">{row.name}</td>
+                      <td>{row.warehouseName ?? '—'}</td>
+                      <td className="font-bold text-rose-600">{Number(row.onHand).toFixed(2)} {row.unitName ?? ''}</td>
+                      <td>{Number(row.reorderPoint).toFixed(2)}</td>
+                      <td>{shortage.toFixed(2)}</td>
+                    </tr>
+                  );
+                })}
+                {alerts.length === 0 && <tr><td colSpan={6} className="text-center text-slate-400 py-8">لا توجد تنبيهات</td></tr>}
               </tbody>
             </table>
           </div>

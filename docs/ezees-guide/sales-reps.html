@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>المندوبين والمشرفين وعمولات البيع | دليل Ezees ERP</title>
+<meta name="description" content="شرح تسجيل المندوبين والمشرفين في Ezees ERP وإعداد العمولات: شرائح المبيعات، التارجت الثابت، شرائح الفئات والأصناف، والتارجت العام، وطريقة حساب العمولة.">
+<meta name="keywords" content="المندوبين, عمولة المندوب, تارجت المبيعات, شرائح العمولة, المشرفين, مندوب مبيعات, Ezees ERP">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/sales-reps.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="المندوبين والمشرفين وعمولات البيع في Ezees ERP">
+<meta property="og:description" content="عرّف المندوبين ومشرفيهم وحدد قواعد العمولات والتارجت.">
+<meta property="og:url" content="https://help.tebalink.com/sales-reps.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"المندوبين والمشرفين وعمولات البيع في Ezees ERP","inLanguage":"ar","dateModified":"2026-10-26","proficiencyLevel":"Intermediate","mainEntityOfPage":"https://help.tebalink.com/sales-reps.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"كيف تُحسب عمولة شرائح المبيعات؟","acceptedAnswer":{"@type":"Answer","text":"يُبحث عن الشريحة التي يقع فيها صافي المبيعات، والعمولة = صافي المبيعات × نسبة الشريحة ÷ 100. إذا لم تقع المبيعات في أي شريحة تُستخدم أعلى نسبة."}},
+{"@type":"Question","name":"لماذا قائمة الفئات فارغة في شاشة المندوب؟","acceptedAnswer":{"@type":"Answer","text":"المندوب يرث الفئات والأصناف من مشرفه. اختر المشرف أولًا وتأكد أن له قواعد عمولة على فئات أو أصناف."}},
+{"@type":"Question","name":"هل يمكن إضافة مندوب بدون مشرف؟","acceptedAnswer":{"@type":"Answer","text":"شاشة المندوبين تطلب المشرف إلزاميًا. سجّل مشرفًا عامًا واجعل المندوبين تابعين له، أو فعّل «مندوب» في بطاقة الموظف من شئون العاملين فيظهر في الفواتير بدون مشرف."}},
+{"@type":"Question","name":"كيف أحذف مشرفًا أو مندوبًا؟","acceptedAnswer":{"@type":"Answer","text":"من شئون العاملين ← ادارة الموظفين ← حذف. انقل مندوبي المشرف لمشرف آخر أولًا. إذا كان له فواتير أو قيود فالحذف ممنوع: اجعله غير نشط، أو ألغِ «مشرف» في بطاقته."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"المندوبين والمشرفين","item":"https://help.tebalink.com/sales-reps.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#pos">نقاط البيع والمطاعم</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#parties">العملاء والموردون</a></li><li>المندوبين والمشرفين</li></ol>
+<article>
+<h1>المندوبين والمشرفين وعمولات البيع</h1>
+<p class="lead">شاشتا <span class="ui">المندوبين</span> و<span class="ui">المشرفين</span> متشابهتان. فيهما تسجل بيانات الشخص، ثم تحدد قواعد عمولته وأهدافه (التارجت). كل مندوب يتبع مشرفًا، وقواعد المشرف تحدد الفئات والأصناف المتاحة لمندوبيه. حساب العمولة الفعلي يتم في تقارير العمولات.</p>
+<!--shot:sales-reps-->
+<figure class="shot" id="shot-sales-reps">
+<div class="shot-frame"><a href="assets/screens/sales-reps.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/sales-reps.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: المندوبين والمشرفين وعمولات البيع"></a></div>
+<details class="shot-tabs"><summary>باقي تبويبات الشاشة (4)</summary><div class="shot-thumbs"><a href="assets/screens/sales-reps--tab2.png" target="_blank" rel="noopener"><img src="assets/screens/sales-reps--tab2.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: المندوبين والمشرفين وعمولات البيع - التبويب 2"></a><a href="assets/screens/sales-reps--tab3.png" target="_blank" rel="noopener"><img src="assets/screens/sales-reps--tab3.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: المندوبين والمشرفين وعمولات البيع - التبويب 3"></a><a href="assets/screens/sales-reps--tab4.png" target="_blank" rel="noopener"><img src="assets/screens/sales-reps--tab4.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: المندوبين والمشرفين وعمولات البيع - التبويب 4"></a><a href="assets/screens/sales-reps--tab5.png" target="_blank" rel="noopener"><img src="assets/screens/sales-reps--tab5.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: المندوبين والمشرفين وعمولات البيع - التبويب 5"></a></div></details>
+<figcaption>شاشة «المندوبين والمشرفين وعمولات البيع» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#order">الترتيب الصحيح للإعداد</a></li>
+  <li><a href="#basic">البيانات الأساسية</a></li>
+  <li><a href="#tabs">تبويبات العمولة</a></li>
+  <li><a href="#calc">كيف تُحسب العمولة؟</a></li>
+  <li><a href="#change">تغيير مشرف المندوب</a></li>
+  <li><a href="#add-rep">إضافة مندوب، وهل يمكن بدون مشرف؟</a></li>
+  <li><a href="#delete">حذف مندوب أو مشرف</a></li>
+  <li><a href="#toolbar">الأزرار والاختصارات</a></li>
+  <li><a href="#messages">الرسائل والتنبيهات</a></li>
+</ol></nav>
+
+<section id="order">
+<h2>الترتيب الصحيح للإعداد</h2>
+<ol class="steps">
+  <li>سجّل <strong>المشرف</strong> أولًا من شاشة <span class="ui">المشرفين</span>، وحدد قواعد عمولته على الفئات والأصناف.</li>
+  <li>سجّل <strong>المندوب</strong> من شاشة <span class="ui">المندوبين</span>، واختر <span class="ui">المشرف</span>.</li>
+  <li>حدد قواعد عمولة المندوب. تظهر له فقط الفئات والأصناف الموجودة في قواعد مشرفه.</li>
+</ol>
+<p class="tip">عند الحفظ يُنشئ البرنامج تلقائيًا حسابين للشخص في دليل الحسابات: «راتب شهرى - الاسم» و«سلف وقروض - الاسم».</p>
+</section>
+
+<section id="basic">
+<h2>البيانات الأساسية</h2>
+<!--shot:sales-reps__basic-->
+<figure class="shot" id="shot-sales-reps__basic">
+<div class="shot-frame"><a href="assets/screens/sales-reps__basic.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/sales-reps__basic.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: البيانات الأساسية"></a></div>
+<details class="shot-tabs"><summary>باقي تبويبات الشاشة (4)</summary><div class="shot-thumbs"><a href="assets/screens/sales-reps__basic--tab2.png" target="_blank" rel="noopener"><img src="assets/screens/sales-reps__basic--tab2.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: البيانات الأساسية - التبويب 2"></a><a href="assets/screens/sales-reps__basic--tab3.png" target="_blank" rel="noopener"><img src="assets/screens/sales-reps__basic--tab3.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: البيانات الأساسية - التبويب 3"></a><a href="assets/screens/sales-reps__basic--tab4.png" target="_blank" rel="noopener"><img src="assets/screens/sales-reps__basic--tab4.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: البيانات الأساسية - التبويب 4"></a><a href="assets/screens/sales-reps__basic--tab5.png" target="_blank" rel="noopener"><img src="assets/screens/sales-reps__basic--tab5.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: البيانات الأساسية - التبويب 5"></a></div></details>
+<figcaption>شاشة «البيانات الأساسية» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<div class="table-wrap"><table>
+<thead><tr><th>الحقل</th><th>الوصف</th></tr></thead>
+<tbody>
+<tr><td>كود</td><td>رقم تلقائي.</td></tr>
+<tr><td>الاسم</td><td>إلزامي، ولا يُسمح بتكراره.</td></tr>
+<tr><td>المشرف</td><td>في شاشة المندوبين فقط، وهو إلزامي.</td></tr>
+<tr><td>SuperVisor</td><td>تفعيله يحوّل المندوب إلى مشرف، فينتقل إلى شاشة المشرفين.</td></tr>
+<tr><td>تليفون / موبايــل</td><td>أرقام التواصل.</td></tr>
+<tr><td>تصنيف رئيسى / تصنيف فرعى</td><td>المحافظة والمدينة (إلزاميان).</td></tr>
+<tr><td>الفرع</td><td>إلزامي.</td></tr>
+<tr><td>حد الإئتمان</td><td>الحد الأقصى لمديونية عملاء المندوب، ويُراجَع في فواتير البيع الآجلة.</td></tr>
+<tr><td>GPS Meter / GPS Locked / Map</td><td>إعدادات الموقع الجغرافي للمندوب. زر Map يحدد موقعه على الخريطة.</td></tr>
+<tr><td>مـلاحظـــــــات</td><td>ملاحظات.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="tabs">
+<h2>تبويبات العمولة</h2>
+<h3>1. المبيعات</h3>
+<ul>
+  <li><strong>تارجت ثابت:</strong> <span class="ui">القيمة</span> هي هدف المبيعات، و<span class="ui">اجمالى العمولة</span> هي المكافأة، و<span class="ui">تحقق %</span> هي نسبة التحقيق الدنيا لاستحقاق العمولة (الافتراضي 100).</li>
+  <li><strong>شرائح مبيعات:</strong> لكل شريحة <span class="ui">من</span> و<span class="ui">الى</span> ونسبة العمولة %.</li>
+</ul>
+<h3>2. شرائح الفئات / 3. شرائح الاصناف</h3>
+<p>نفس فكرة شرائح المبيعات، لكن لكل فئة أو صنف على حدة. زر <span class="ui">اضافة الكل</span> يضيف كل الفئات أو الأصناف المتاحة دفعة واحدة. لكل فئة أو صنف صف واحد فقط.</p>
+<h3>4. فئات عام / 5. اصناف عام</h3>
+<p>تارجت موزع على الفئات أو الأصناف:</p>
+<ul>
+  <li>حدد <span class="ui">اجمالى العمولة</span> للتبويب كله.</li>
+  <li>حدد لكل فئة أو صنف <span class="ui">القيمة</span> المستهدفة و<span class="ui">تحقق %</span>.</li>
+  <li>يحسب البرنامج <span class="ui">نسبة البند</span> تلقائيًا، وهي نصيب البند من إجمالي العمولة.</li>
+</ul>
+<div class="warn">
+  <ul>
+    <li>تأكد أن كل شريحة «من» فيها أقل من «الى»، وأن الشرائح لا تتداخل، لأن البرنامج لا يتحقق من ذلك.</li>
+    <li>في تبويب «فئات عام» راجع خانة «تحقق %» قبل كل إضافة، لأنها تُصفَّر بعد الإضافة.</li>
+  </ul>
+</div>
+</section>
+
+<section id="calc">
+<h2>كيف تُحسب العمولة؟</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>القاعدة</th><th>طريقة الحساب</th></tr></thead>
+<tbody>
+<tr><td>شرائح المبيعات / الفئات / الأصناف</td><td>العمولة = المبيعات × نسبة الشريحة التي تقع فيها المبيعات ÷ 100. إذا لم تقع في أي شريحة تُستخدم أعلى نسبة.</td></tr>
+<tr><td>التارجت الثابت</td><td>نسبة التحقيق = المبيعات ÷ القيمة × 100. إذا وصلت إلى «تحقق %» أو تجاوزتها: العمولة = نسبة التحقيق (بحد أقصى 100%) × إجمالي العمولة ÷ 100. وإلا فلا عمولة.</td></tr>
+<tr><td>الفئات / الأصناف العامة</td><td>نفس طريقة التارجت الثابت لكل بند، مع ضرب العمولة في «نسبة البند».</td></tr>
+</tbody></table></div>
+<p class="note"><strong>مثال على التارجت الثابت:</strong> الهدف 100,000، والمكافأة 2,000، وحد التحقيق 80%. إذا باع المندوب 90,000 فنسبة التحقيق 90%، والعمولة = 90% × 2,000 = 1,800. وإذا باع 70,000 فلا يستحق عمولة.</p>
+<p>تقارير المشرفين تطبق قواعد المشرف على مبيعات المندوبين التابعين له.</p>
+</section>
+
+<section id="change">
+<h2>تغيير مشرف المندوب</h2>
+<p>عند تغيير <span class="ui">المشرف</span> لمندوب مسجل، يسألك البرنامج: «تم تغيير المشرف سيتم حذف شرائح التارجت للمندوب. هل ترغب فى الاستمرار؟». إذا وافقت تُحذف كل قواعد عمولة المندوب وتحتاج إعادة إدخالها. وإذا رفضت يعود المشرف السابق.</p>
+</section>
+
+<section id="add-rep">
+<h2>إضافة مندوب جديد خطوة بخطوة، وهل يمكن بدون مشرف؟</h2>
+<ol>
+  <li>افتح شاشة <span class="ui">المندوبين</span> واضغط <span class="ui">جديد</span> (<kbd>F1</kbd>).</li>
+  <li>اكتب <span class="ui">الاسم</span>، واختر <span class="ui">المشرف</span> و<span class="ui">الفرع</span> و<span class="ui">تصنيف رئيسى</span> / <span class="ui">تصنيف فرعى</span> (المحافظة والمدينة).</li>
+  <li>أضف التليفون والموبايل و<span class="ui">حد الإئتمان</span> إن أردت، ثم <span class="ui">حفظ</span> (<kbd>F2</kbd>).</li>
+  <li>حدد قواعد عمولته من التبويبات، ثم احفظ مرة أخرى.</li>
+</ol>
+<p><strong>بدون مشرف:</strong> شاشة المندوبين لا تحفظ بدون مشرف (يظهر بجانبه تنبيه أحمر). إذا لم يكن عندك مشرفون، لديك طريقتان:</p>
+<ul>
+  <li>سجّل مشرفًا واحدًا عامًا (مثل «الإدارة») من شاشة <span class="ui">المشرفين</span>، واجعل كل المندوبين تابعين له. هذه الطريقة الأفضل لو ستستخدم عمولات الفئات أو الأصناف، لأن المندوب يرث الفئات والأصناف من قواعد مشرفه.</li>
+  <li>أو سجّله من <span class="ui">شئون العاملين</span> ← بطاقة الموظف وفعّل <span class="ui">مندوب</span> واحفظ. يظهر بعدها في قوائم المندوبين في الفواتير بدون مشرف. لكن إذا فتحته لاحقًا في شاشة المندوبين لتعديل عمولته فسيطلب منك اختيار مشرف قبل الحفظ.</li>
+</ul>
+</section>
+
+<section id="delete">
+<h2>حذف مندوب أو مشرف</h2>
+<p>لا يوجد حذف من شاشتي المندوبين والمشرفين. الحذف يتم من <span class="ui">شئون العاملين</span> ← <span class="ui">ادارة الموظفين</span>: حدد الشخص ثم <span class="ui">حذف</span>، أو من بطاقته.</p>
+<ul>
+  <li>قبل حذف <strong>مشرف</strong>: انقل مندوبيه أولًا إلى مشرف آخر من شاشة المندوبين (تذكّر أن تغيير المشرف يحذف قواعد عمولة المندوب). البرنامج لا يمنع حذف مشرف له مندوبون، فيبقون بدون مشرف.</li>
+  <li>الحذف ممنوع إذا كان الشخص مسجلًا كمندوب في فواتير بيع، أو على حساباته (الراتب والسلف) قيود.</li>
+  <li>في هذه الحالة، أو إذا أردت الاحتفاظ بتاريخه: اجعل حالته <strong>غير نشط</strong> من بطاقة الموظف، فيختفي من القوائم وتبقى فواتيره وتقاريره. ولإلغاء كونه مشرفًا فقط: ألغِ تفعيل <span class="ui">مشرف</span> في بطاقته واحفظ.</li>
+</ul>
+</section>
+
+<section id="toolbar">
+<h2>الأزرار والاختصارات</h2>
+<ul>
+  <li><span class="ui">جديد</span> (<kbd>F1</kbd>)، <span class="ui">حفظ</span> (<kbd>F2</kbd>)، <span class="ui">طباعة</span> (قائمة المندوبين)، <span class="ui">تحديث</span>.</li>
+  <li><span class="ui">بحث</span>: تصفية القائمة بالاسم. اضغط على أي صف لتحميل بياناته وقواعده.</li>
+  <li>زر <span class="ui">Map</span> في شريط الأدوات يعرض مواقع كل المندوبين على الخريطة.</li>
+  <li><kbd>Delete</kbd> على جدول شرائح المبيعات يحذف الشريحة المحددة. في باقي التبويبات استخدم زر الحذف.</li>
+</ul>
+<div class="warn">الضغط على <kbd>Enter</kbd> في أي حقل من البيانات الأساسية <strong>يحفظ مباشرة</strong>.</div>
+<p class="note">لا يمكن حذف المندوبين أو المشرفين من هذه الشاشات؛ انظر <a href="#delete">حذف مندوب أو مشرف</a>.</p>
+</section>
+
+<section id="messages">
+<h2>الرسائل والتنبيهات</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td>أيقونة حمراء (Require)</td><td>حقل إلزامي فارغ: الاسم، أو الفرع، أو المشرف، أو المحافظة، أو المدينة.</td></tr>
+<tr><td><span class="msg">هذا السجل موجود مسبقا</span></td><td>الاسم مسجل لموظف آخر.</td></tr>
+<tr><td><span class="msg">الحساب غير موجود في شجرة الحسابات حتى الآن</span></td><td>يجب إعداد الحساب الرئيسي للرواتب والسلف في الإعدادات.</td></tr>
+<tr><td><span class="msg">عفوا تأكد من بياناتك أولا</span></td><td>قاعدة عمولة بقيمة صفر، أو بدون فئة أو صنف.</td></tr>
+</tbody></table></div>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="customers.html">العملاء</a> · <a href="sales-invoice.html">فاتورة البيع</a> · <a href="sales-order.html">أمر البيع</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-26">26 أكتوبر 2026</time></div></footer>
+</body>
+</html>

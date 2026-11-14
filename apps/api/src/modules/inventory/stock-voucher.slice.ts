@@ -47,6 +47,7 @@ export class StockVoucherService {
                 WHERE l.stock_voucher_id = v.stock_voucher_id) AS "lineCount"
          FROM stock_vouchers v
          JOIN warehouses w ON w.warehouse_id = v.warehouse_id
+         LEFT JOIN users u ON u.user_id = v.created_by
         WHERE ($1::int = 0 OR v.branch_id = $1::int)
           AND ($2::int = 0 OR v.status = $2::int)
           AND ($3::int = 0 OR v.voucher_type = $3::int)

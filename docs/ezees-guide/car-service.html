@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>مراكز خدمة وصيانة السيارات | دليل Ezees ERP</title>
+<meta name="description" content="شرح نظام مراكز خدمة السيارات في Ezees ERP: تسجيل السيارة والعميل، استلام السيارة وقراءة العداد وشكوى العميل، أمر الصيانة بالقطع والمصنعيات، إدارة الورشة والفنيين، صرف قطع الغيار، الفاتورة، إذن خروج السيارة، التقارير ورسائل SMS.">
+<meta name="keywords" content="مركز خدمة سيارات, برنامج صيانة سيارات, أمر صيانة, أمر شغل, إدارة الورشة, الفنيين, إذن خروج سيارة, صرف قطع غيار, عداد الكيلومترات, Ezees ERP">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/car-service.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="مراكز خدمة وصيانة السيارات في Ezees ERP">
+<meta property="og:description" content="من استلام السيارة وتسجيل العداد إلى أمر الصيانة والورشة والفاتورة وإذن الخروج.">
+<meta property="og:url" content="https://help.tebalink.com/car-service.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"مراكز خدمة وصيانة السيارات في Ezees ERP","inLanguage":"ar","dateModified":"2026-10-10","proficiencyLevel":"Beginner","mainEntityOfPage":"https://help.tebalink.com/car-service.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"HowTo","name":"استقبال سيارة وفتح أمر صيانة","inLanguage":"ar","step":[
+{"@type":"HowToStep","position":1,"text":"سجّل السيارة مرة واحدة من تسجيل بيانات السيارات واربطها بالعميل."},
+{"@type":"HowToStep","position":2,"text":"افتح امر صيانة واختر السيارة بالمفتاح F10 فيظهر العميل والعداد السابق تلقائيًا."},
+{"@type":"HowToStep","position":3,"text":"أدخل العداد الحالي وملاحظات العميل ونوع الصيانة والمهندس والفني."},
+{"@type":"HowToStep","position":4,"text":"أضف باقة الصيانة أو القطع والمصنعيات ثم احفظ بالمفتاح F2 واطبع أمر الصيانة."},
+{"@type":"HowToStep","position":5,"text":"حوّل الأمر إلى الورشة، وعند الانتهاء أصدر الفاتورة ثم إذن خروج السيارة."}]},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"كيف يُغلق أمر الصيانة؟","acceptedAnswer":{"@type":"Answer","text":"لا يُغلق يدويًا. يُغلق تلقائيًا عند إصدار فاتورة الصيانة له بعد وصوله إلى حالة تم الانتهاء."}},
+{"@type":"Question","name":"لماذا لا تظهر السيارة في إذن الخروج؟","acceptedAnswer":{"@type":"Answer","text":"إذن الخروج يعرض فقط أوامر الصيانة المغلقة بالفاتورة والتي لم يصدر لها إذن خروج من قبل."}},
+{"@type":"Question","name":"من أين يأتي العداد السابق؟","acceptedAnswer":{"@type":"Answer","text":"من قراءة العداد المسجلة في آخر أمر صيانة لنفس السيارة."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"الأنظمة المتخصصة","item":"https://help.tebalink.com/index.html#modules"},
+{"@type":"ListItem","position":3,"name":"مراكز خدمة وصيانة السيارات","item":"https://help.tebalink.com/car-service.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#pos">نقاط البيع والمطاعم</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#modules">الأنظمة المتخصصة</a></li><li>مراكز خدمة وصيانة السيارات</li></ol>
+<article>
+<h1>مراكز خدمة وصيانة السيارات</h1>
+<p class="lead">نظام مراكز الخدمة في Ezees ERP يدير دورة السيارة كاملة داخل المركز: تسجيل السيارة وصاحبها، واستلامها وتسجيل <strong>قراءة العداد</strong> و<strong>شكوى العميل</strong>، ثم <span class="ui">امر صيانة</span> بالقطع والمصنعيات، وتوزيع العمل على الفنيين في <span class="ui">ادارة الورشة</span>، وصرف قطع الغيار من المخزن، ثم الفاتورة و<span class="ui">اذن خروج سيارة</span>. توجد الشاشات في تبويب <span class="ui">الصيانات</span> وتبويب <span class="ui">البيانات الاساسية</span> وتبويب <span class="ui">التقارير</span>.</p>
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#workflow">دورة العمل في المركز</a></li>
+  <li><a href="#setup">البيانات الأساسية</a></li>
+  <li><a href="#packages">باقات الصيانة (ادارة الصيانات)</a></li>
+  <li><a href="#cars">العملاء وتسجيل السيارات</a></li>
+  <li><a href="#order">استقبال السيارة وفتح أمر الصيانة</a></li>
+  <li><a href="#items">القطع والمصنعيات والإجماليات</a></li>
+  <li><a href="#status">متابعة أمر الصيانة وحالاته</a></li>
+  <li><a href="#workshop">إدارة الورشة والفنيين</a></li>
+  <li><a href="#parts">صرف قطع الغيار</a></li>
+  <li><a href="#invoice">الفاتورة والسداد</a></li>
+  <li><a href="#exit">إذن خروج السيارة</a></li>
+  <li><a href="#reports">التقارير</a></li>
+  <li><a href="#sms">الرسائل القصيرة والبريد</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+</ol></nav>
+
+<section id="workflow">
+<h2>دورة العمل في المركز</h2>
+<ol class="steps">
+  <li><strong>تسجيل العميل والسيارة</strong> مرة واحدة: رقم اللوحة والشاسيه والموديل والمالك.</li>
+  <li><strong>الاستقبال:</strong> افتح <span class="ui">امر صيانة</span>، واختر السيارة، وسجّل <span class="ui">عداد حالى</span> و<span class="ui">ملاحظات العميل</span> (الشكوى). يبدأ الأمر بحالة <span class="ui">الاستقبال</span>.</li>
+  <li><strong>التسعير:</strong> أضف باقة الصيانة أو القطع والمصنعيات، ثم احفظ واطبع أمر الصيانة للعميل.</li>
+  <li><strong>الورشة:</strong> من <span class="ui">متابعة امر صيانة</span> غيّر الحالة إلى <span class="ui">الورشة</span>، ثم وزّع البنود على الفنيين وسجّل أوقات العمل من <span class="ui">ادارة الورشة</span>.</li>
+  <li><strong>قطع الغيار:</strong> اصرف القطع من المخزن على الأمر بـ<span class="ui">اذن صرف قطع غيار</span>.</li>
+  <li><strong>الانتهاء:</strong> غيّر الحالة إلى <span class="ui">تم الانتهاء</span>.</li>
+  <li><strong>الفاتورة:</strong> أصدر فاتورة الصيانة من الأمر، فيُغلق الأمر تلقائيًا (<span class="ui">مغلق</span>).</li>
+  <li><strong>الخروج:</strong> أصدر <span class="ui">تصريح خروج سيارة</span> واطبعه.</li>
+</ol>
+<p class="note">شاشات الدخول وقواعد البيانات وسجل الأخطاء وإعدادات البرنامج عامة، وتجد شرحها في <a href="settings.html">الإعدادات</a> و<a href="system-tools.html">أدوات النظام</a>.</p>
+</section>
+
+<section id="setup">
+<h2>البيانات الأساسية</h2>
+<p>من تبويب <span class="ui">البيانات الاساسية</span> جهّز ما يلي قبل استقبال أول سيارة:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>الشاشة</th><th>الحقول</th><th>ملاحظات</th></tr></thead>
+<tbody>
+<tr><td><span class="ui">الشركات المصنعه</span></td><td><span class="ui">الشركه المصنعه</span>، <span class="ui">الفرع</span>، <span class="ui">ملاحظات</span></td><td>الشركات تتبع الفرع. تظهر في شاشات السيارات والباقات شركات الفرع الحالي وموديلاتها فقط. لا يمكن حذف شركة لها موديلات.</td></tr>
+<tr><td><span class="ui">موديل السيارات</span></td><td><span class="ui">الشركه المصنعه</span>، <span class="ui">اسم الموديل</span>، <span class="ui">ملاحظات</span></td><td>لا يمكن حذف موديل مسجلة عليه سيارات.</td></tr>
+<tr><td><span class="ui">نوع الصيانة</span> (نوع امر الشغل)</td><td><span class="ui">المسمى</span>، <span class="ui">ملاحظات</span></td><td>تأتي أنواع جاهزة: <code>PM</code> (صيانة دورية)، و<code>GR</code> (إصلاح عام)، و<code>B&amp;P</code> (سمكرة ودهان). النوع الأول له معاملة خاصة في الأمر (انظر <a href="#items">القطع والمصنعيات</a>).</td></tr>
+<tr><td><span class="ui">ادارة الصيانات</span></td><td>باقات الصيانة الدورية وسعر ساعة المصنعيات</td><td>انظر القسم التالي.</td></tr>
+</tbody></table></div>
+<p>القطع والخدمات (المصنعيات) نفسها أصناف عادية في <a href="items.html">الأصناف</a>: القطعة صنف مخزني، والمصنعية صنف من نوع <strong>خدمة</strong>.</p>
+</section>
+
+<section id="packages">
+<h2>باقات الصيانة (ادارة الصيانات)</h2>
+<p>شاشة <span class="ui">ادارة الصيانات الدورية</span> تعرّف باقات جاهزة مثل «صيانة 10,000 كم» لتُضاف إلى أمر الصيانة بضغطة واحدة.</p>
+<ol class="steps">
+  <li>اكتب <span class="ui">الخدمه</span> (اسم الباقة) واختر <span class="ui">الموديل</span>.</li>
+  <li>أدخل <span class="ui">سعر المصنعيات</span> بالجنيه للساعة.</li>
+  <li>فعّل <span class="ui">صنف مجمع</span> فيظهر تبويب <span class="ui">الاصناف</span>. اختر <span class="ui">الصنف</span> و<span class="ui">الوحده</span> و<span class="ui">الكميه</span> ثم أضفه. عدّل عمود <span class="ui">الوقت</span> (بالدقائق) مباشرة في الجدول.</li>
+  <li>احفظ (<kbd>F2</kbd>).</li>
+</ol>
+<div class="tip">سعر المصنعية في الأمر = سعر الساعة ÷ 60 لكل وحدة، أي سعر الدقيقة. لذلك اجعل <strong>كمية صنف الخدمة بالدقائق</strong> (مثلًا 90 لساعة ونصف). أما القطع فتُسعّر بسعر بيعها.</div>
+<p>لا تظهر الباقة في أمر الصيانة إلا إذا كانت <span class="ui">صنف مجمع</span> وفيها صنف واحد على الأقل.</p>
+<div class="warn">اختر <span class="ui">الموديل</span> دائمًا عند تعريف الباقة. الباقة المحفوظة بدون موديل لا تظهر في قائمة الباقات داخل أمر الصيانة. إذا أردت باقة لعدة موديلات، أنشئ نسخة لكل موديل.</div>
+</section>
+
+<section id="cars">
+<h2>العملاء وتسجيل السيارات</h2>
+<h3>العميل</h3>
+<p>العملاء هم نفس عملاء النظام، وتضيفهم من <a href="customers.html">إدارة العملاء</a>، أو من زر الإضافة بجانب حقل <span class="ui">العميل</span> في بطاقة السيارة.</p>
+<h3>بطاقة السيارة (تسجيل بيانات سيارة)</h3>
+<p>افتح <span class="ui">تسجيل بيانات السيارات</span> فتظهر <span class="ui">ادارة السيارات</span> بقائمة السيارات، واضغط <span class="ui">جديد</span>.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>الحقل</th><th>الوصف</th></tr></thead>
+<tbody>
+<tr><td><span class="ui">رقم اللوحه</span></td><td>إلزامي، ولا يُسمح بتكراره.</td></tr>
+<tr><td><span class="ui">رقم الهيكل</span> (الشاسيه)</td><td>إلزامي.</td></tr>
+<tr><td><span class="ui">الطراز</span></td><td>فئة السيارة (ملاكي، نقل، ...)، إلزامي.</td></tr>
+<tr><td><span class="ui">الشركه المصنعه</span> / <span class="ui">الموديل</span></td><td>إلزاميان. يُفلتر الموديل حسب الشركة.</td></tr>
+<tr><td><span class="ui">سنه الانتاج</span> / <span class="ui">اللون</span> / <span class="ui">السعة اللترية</span></td><td>بيانات وصفية تظهر في أمر الصيانة وإذن الخروج.</td></tr>
+<tr><td><span class="ui">ناقل الحركه</span></td><td><span class="ui">يدوي</span> أو <span class="ui">اوتوماتيك</span>.</td></tr>
+<tr><td><span class="ui">رقم المحرك</span> / <span class="ui">نوع المحرك</span></td><td>نوع الوقود: بنزين، سولار، غاز، كهرباء، هيدروجين.</td></tr>
+<tr><td><span class="ui">العميل</span></td><td>مالك السيارة. اضغط الحقل أو <kbd>F9</kbd> للبحث. يُملأ العميل تلقائيًا في أمر الصيانة عند اختيار السيارة.</td></tr>
+<tr><td><span class="ui">الفرع</span> / <span class="ui">ملاحظات</span></td><td>فرع تسجيل السيارة.</td></tr>
+</tbody></table></div>
+<div class="warn">
+<ul>
+  <li><span class="ui">نوع المحرك</span> لا يُحفظ حاليًا، فاكتبه في <span class="ui">ملاحظات</span> إن كان مهمًا.</li>
+  <li>عند فتح سيارة للتعديل لا تظهر <span class="ui">السعة اللترية</span> المحفوظة، وإذا حفظت بدون إعادة كتابتها تُمسح. أعد كتابتها قبل الحفظ.</li>
+  <li>لفتح سيارة أخرى بالنقر المزدوج من القائمة، أغلق بطاقة السيارة المفتوحة أولًا، وإلا تُعرض البطاقة القديمة كما هي.</li>
+</ul>
+</div>
+<p><strong>قائمة السيارات:</strong> البحث بالكل أو برقم اللوحة أو الشاسيه أو الشركة أو الموديل، و<span class="ui">طباعة</span> القائمة كما تظهر.</p>
+<div class="warn">لا تحذف سيارة لها أوامر صيانة. البرنامج لا يمنع حذفها حاليًا، وبعد الحذف تختفي أوامرها من قوائم المتابعة والتقارير.</div>
+</section>
+
+<section id="order">
+<h2>استقبال السيارة وفتح أمر الصيانة</h2>
+<p>من <span class="ui">امر صيانة</span> (أو <kbd>F1</kbd> من شاشة المتابعة):</p>
+<ol class="steps">
+  <li>اضغط حقل الشاسيه أو <kbd>F10</kbd> وابحث عن السيارة. تظهر تلقائيًا: <span class="ui">اللوحة</span> و<span class="ui">المحرك</span> و<span class="ui">الصانع</span> و<span class="ui">الموديل</span> و<span class="ui">السنة</span>، واسم العميل وحسابه، و<span class="ui">عداد سابق</span> من آخر أمر صيانة لنفس السيارة.</li>
+  <li>اكتب <span class="ui">عداد حالى</span> (قراءة الكيلومترات عند الاستلام).</li>
+  <li>اكتب شكوى العميل في <span class="ui">ملاحظات العميل</span>، وملاحظات المعاينة في <span class="ui">ملاحظات</span>. في <span class="ui">السيد .</span> اكتب اسم من سلّم السيارة إن كان غير المالك.</li>
+  <li>اختر <span class="ui">نوع الصيانة</span> و<span class="ui">المهندس</span> و<span class="ui">الفنى</span> و<span class="ui">المندوب</span>، وحدد <span class="ui">تاريخ التنفيذ</span> المتوقع.</li>
+  <li>أضف البنود (القسم التالي)، ثم احفظ (<kbd>F2</kbd>). يسألك البرنامج عن الطباعة: تُطبع ورقة أمر الصيانة ببيانات السيارة والعميل وصورة فحص السيارة لتوقيع العميل.</li>
+</ol>
+<p class="note">رقم الأمر يتسلسل تلقائيًا لكل فرع. يمكن تسجيل رقمين دفتريين في <span class="ui">م.دفترى 1</span> و<span class="ui">م.دفترى 2</span>. لفتح أمر سابق اكتب رقمه في البحث، أو استخدم البحث المتقدم بالعميل والفترة والحالة.</p>
+<p>اختصارات الشاشة: <kbd>F1</kbd> جديد، <kbd>F2</kbd> حفظ، <kbd>F4</kbd> طباعة، <kbd>F6</kbd> حذف، <kbd>F9</kbd> اختيار العميل، <kbd>F10</kbd> اختيار السيارة.</p>
+</section>
+
+<section id="items">
+<h2>القطع والمصنعيات والإجماليات</h2>
+<h3>حسب نوع الصيانة</h3>
+<ul>
+  <li><strong>النوع الأول (<code>PM</code> صيانة دورية):</strong> لوحة الأصناف مقفلة حتى تضيف باقة. اضغط <span class="ui">اضافة مجموعة اصناف</span>، واختر الباقة والمخزن ثم أضفها. تُضاف كل قطعها ومصنعياتها بالكمية والوقت، وتُفتح لوحة الأصناف لإضافة المزيد.</li>
+  <li><strong>الأنواع الأخرى (<code>GR</code> و<code>B&amp;P</code>):</strong> لوحة الأصناف مفتوحة مباشرة. أضف كل قطعة أو خدمة يدويًا بسعر بيعها.</li>
+</ul>
+<p class="note">زر <span class="ui">اضافة مجموعة اصناف</span> يتطلب اختيار السيارة أولًا، وتظهر فيه باقات موديل السيارة فقط.</p>
+<h3>إضافة بند يدويًا</h3>
+<ol class="steps">
+  <li>اكتب كود الصنف أو الباركود، أو اختر <span class="ui">الصنف</span> من القائمة.</li>
+  <li>اختر <span class="ui">المخزن</span> و<span class="ui">الوحده</span> وأدخل <span class="ui">الكميه</span>. يظهر رصيد الصنف في المخزن إن كانت لك صلاحية رؤيته.</li>
+  <li>اضغط <kbd>Enter</kbd> للإضافة. إذا أضفت نفس الصنف بنفس المخزن مرة أخرى، تُستبدل الكمية والسعر ولا يُضاف سطر جديد.</li>
+</ol>
+<p>في الجدول يمكنك تعديل <span class="ui">الكميه</span> و<span class="ui">السعر</span> و<span class="ui">%خصم</span> أو <span class="ui">خ مبلغ</span> ومدة البند <code>Duration</code> (بالدقائق). عمودا <span class="ui">ك منفذة</span> و<span class="ui">ك متبقية</span> يوضحان ما صُرف من المخزن وما تبقى. لا يمكن تقليل الكمية عن المنفذ فعليًا.</p>
+<h3>الإجماليات</h3>
+<p>تُحسب تلقائيًا: <span class="ui">اجمالى</span>، ثم الخصومات (<span class="ui">خصم  اضافى  2</span> و<span class="ui">خصم  اضافى  3</span> نسبة أو قيمة)، ثم <span class="ui">ض . قيمة مضافة %</span> و<span class="ui">ض . خصم %</span>، ثم <span class="ui">اجمالى القيمة</span>. يأخذ الأمر خصم العميل وعملته ومندوبه تلقائيًا إن كانت مسجلة في بطاقته.</p>
+<p class="tip">مجموع مدد البنود يُضاف إلى وقت فتح الأمر ليعطي <strong>وقت الخروج المتوقع</strong> الذي يظهر في شاشة المتابعة وعلى الورقة المطبوعة.</p>
+<div class="warn">
+<ul>
+  <li>لا تضف نفس الصنف في سطرين (من مخزنين مختلفين أو كهدية). عند الحفظ يُدمج السطران وتُحفظ بيانات أحدهما فقط.</li>
+  <li>حذف بند من أمر محفوظ يُنفَّذ في قاعدة البيانات فورًا، حتى لو لم تضغط حفظ بعده.</li>
+</ul>
+</div>
+</section>
+
+<section id="status">
+<h2>متابعة أمر الصيانة وحالاته</h2>
+<p>شاشة <span class="ui">متابعة امر الصيانة</span> تعرض الأوامر في الفترة والفرع المحددين، مع العميل والهاتف والسيارة والشاسيه والموديل والمهندس ووقت الخروج المتوقع ونوع الأمر. تفتح الشاشة على حالة <span class="ui">الاستقبال</span>، ويمكن اختيار حالة أخرى أو <code>--All--</code>.</p>
+<ul>
+  <li><strong>البحث:</strong> بالاسم أو اللوحة أو الموديل أو الشاسيه أو المحرك أو رقم الفاتورة، أو برقم الأمر، أو بالمحافظة أو المدينة.</li>
+  <li><strong>نقر مزدوج</strong> أو زر <code>Sell Order</code>: فتح الأمر.</li>
+  <li><span class="ui">تغيير حالة</span>: لأمر أو أكثر، مع ملاحظة تُسجَّل في سجل تتبع الأمر.</li>
+  <li><span class="ui">ارسال SMS</span>: إرسال رسالة للعميل المحدد (انظر <a href="#sms">الرسائل</a>).</li>
+  <li><span class="ui">طباعة</span>: طباعة القائمة كما تظهر.</li>
+</ul>
+<div class="table-wrap"><table>
+<thead><tr><th>الحالة</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td><span class="ui">الاستقبال</span></td><td>الحالة الافتراضية عند حفظ الأمر.</td></tr>
+<tr><td><span class="ui">الورشة</span></td><td>السيارة في العمل. يظهر الأمر في <span class="ui">ادارة الورشة</span>، ويمكن صرف قطعه من المخزن.</td></tr>
+<tr><td><span class="ui">تم الانتهاء</span></td><td>العمل انتهى، ويمكن إصدار الفاتورة.</td></tr>
+<tr><td><span class="ui">تم الالغاء</span></td><td>العميل رفض أو أُلغي الأمر. اكتب السبب في الملاحظات.</td></tr>
+<tr><td><span class="ui">تم التأجيل</span></td><td>يظهر حقل تاريخ التأجيل، وتُحفظ الملاحظة كسبب التأجيل.</td></tr>
+<tr><td><span class="ui">مغلق</span></td><td>يُضبط تلقائيًا بالفاتورة فقط. لا يمكن تغيير حالة أمر مغلق ولا تعديله.</td></tr>
+</tbody></table></div>
+<div class="warn">خيار إرسال SMS أثناء <span class="ui">تغيير حالة</span> لا يعمل حاليًا، وقد تظهر رسالة خطأ بعد تغيير حالة الأمر الأول فقط. غيّر الحالة بدون هذا الخيار، ثم أرسل الرسالة بزر <span class="ui">ارسال SMS</span>.</div>
+<div class="warn">الحذف من هذه الشاشة لا يتحقق من حالة الأمر. لا تحذف أمرًا مغلقًا له فاتورة.</div>
+</section>
+
+<section id="workshop">
+<h2>إدارة الورشة والفنيين</h2>
+<p>شاشة <span class="ui">ادارة الصيانات</span> (من زر <span class="ui">ادارة الورشة</span>) تعرض الأوامر التي في حالة <span class="ui">الورشة</span> فقط. عند اختيار أمر تظهر بنوده أسفل الشاشة بالكمية والمنفذ والمتبقي والفني ووقت البداية والنهاية.</p>
+<ol class="steps">
+  <li>اختر الأمر، ثم حدد بندًا أو أكثر.</li>
+  <li><code>Assign Eng</code>: اختر <span class="ui">الفنى</span> المسؤول عن البنود المحددة.</li>
+  <li><code>Time On</code>: سجّل <span class="ui">فتح وقت</span> عند بدء العمل (الوقت الحالي افتراضيًا).</li>
+  <li><code>Time Off</code>: سجّل <span class="ui">اغلاق وقت</span> عند الانتهاء.</li>
+  <li>من <span class="ui">تغيير حالة</span> انقل الأمر إلى <span class="ui">تم الانتهاء</span> عند انتهاء كل البنود.</li>
+</ol>
+<p class="tip">تُجمع أوقات الفنيين في <a href="#reports">تقرير عمليات الفنيين</a>، فسجّل وقتي البداية والنهاية لكل بند.</p>
+</section>
+
+<section id="parts">
+<h2>صرف قطع الغيار</h2>
+<p>زر <span class="ui">اذن صرف قطع غيار</span> يفتح <span class="ui">اذن مخازن</span> بنوع <strong>صادر</strong> ثابت:</p>
+<ol class="steps">
+  <li>اكتب رقم أمر الصيانة في خانة الاستيراد واضغط الزر بجانبها (<code>Sell order</code>). يجب أن يكون الأمر في حالة <span class="ui">الورشة</span>.</li>
+  <li>تُستورد القطع المتبقية فقط (بدون المصنعيات) بمخزنها وكميتها.</li>
+  <li>عدّل الكمية إن صرفت جزءًا فقط، فلا يُسمح بتجاوز المتبقي. أدخل الأرقام التسلسلية للقطع التي تتطلبها.</li>
+  <li>احفظ (<kbd>F2</kbd>). يُخصم المخزون ويزيد عمود <span class="ui">ك منفذة</span> في الأمر.</li>
+</ol>
+<p>تفاصيل أذون المخازن والأرقام التسلسلية في <a href="stores.html">المخازن</a>.</p>
+</section>
+
+<section id="invoice">
+<h2>الفاتورة والسداد</h2>
+<p>تصدر فاتورة الصيانة من شاشة <span class="ui">فواتير صيانة</span> (قائمة <span class="ui">فاتورة صيانة خارجية</span>) في Ezees ERP:</p>
+<!--shot:car-service__invoice-->
+<figure class="shot" id="shot-car-service__invoice">
+<div class="shot-frame"><a href="assets/screens/car-service__invoice.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/car-service__invoice.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: الفاتورة والسداد"></a></div>
+<details class="shot-tabs"><summary>باقي تبويبات الشاشة (2)</summary><div class="shot-thumbs"><a href="assets/screens/car-service__invoice--tab2.png" target="_blank" rel="noopener"><img src="assets/screens/car-service__invoice--tab2.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: الفاتورة والسداد - التبويب 2"></a><a href="assets/screens/car-service__invoice--tab3.png" target="_blank" rel="noopener"><img src="assets/screens/car-service__invoice--tab3.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: الفاتورة والسداد - التبويب 3"></a></div></details>
+<figcaption>شاشة «الفاتورة والسداد» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ol class="steps">
+  <li>اكتب رقم أمر الصيانة في خانة <span class="ui">امر بيع</span> واستورده. يجب أن يكون الأمر في حالة <span class="ui">تم الانتهاء</span>.</li>
+  <li>تُنقل بنود الأمر وأسعاره وخصوماته والعميل. اختر طريقة الدفع (نقدي أو آجل) وأكمل الفاتورة كما في <a href="sales-invoice.html">فاتورة البيع</a>.</li>
+  <li>احفظ. يتحول الأمر إلى <span class="ui">مغلق</span>، ويُسجَّل رقم الفاتورة عليه، وتُطبع فاتورة الصيانة بنموذج خاص ببيانات السيارة.</li>
+</ol>
+<p>التحصيل بعد ذلك يتم من <a href="vouchers.html">سند القبض</a> إذا كانت الفاتورة آجلة.</p>
+<div class="warn">إذا صرفت القطع من المخزن بـ<span class="ui">اذن صرف قطع غيار</span>، فراجع رصيد المخزن بعد إصدار الفاتورة للتأكد من عدم خصم نفس القطع مرتين.</div>
+</section>
+
+<section id="exit">
+<h2>إذن خروج السيارة</h2>
+<p>زر <span class="ui">اذن خروج سيارة</span> يعرض قائمة الأذون في الفترة والفرع، مع البحث باللوحة أو الموديل أو الشاسيه أو رقم الأمر أو المحرك. اضغط <kbd>F1</kbd> لإذن جديد:</p>
+<ol class="steps">
+  <li>اضغط حقل السيارة أو <kbd>F10</kbd>. تظهر فقط الأوامر <span class="ui">المغلقة</span> بالفاتورة التي لم يصدر لها إذن خروج.</li>
+  <li>اختر الأمر فتظهر <span class="ui">اللوحة</span> و<span class="ui">المحرك</span> و<span class="ui">الصانع</span> و<span class="ui">الموديل</span> و<span class="ui">امر الصيانة</span>، و<span class="ui">تاريخ الدخول</span> من تاريخ الأمر.</li>
+  <li>حدد <span class="ui">تاريخ الخروج</span> وأضف <span class="ui">ملاحظات</span>، ثم احفظ (<kbd>F2</kbd>).</li>
+  <li>للطباعة افتح الإذن بنقر مزدوج من القائمة واضغط <kbd>F4</kbd>، فيُطبع <span class="ui">تصريح خروج سيارة</span>.</li>
+</ol>
+<div class="warn">بعد فتح إذن قديم وحفظه، أغلق الشاشة وافتحها من جديد قبل تسجيل إذن جديد. إذا ضغطت <span class="ui">جديد</span> في نفس الشاشة، قد يُكتب الإذن الجديد فوق الإذن القديم.</div>
+</section>
+
+<section id="reports">
+<h2>التقارير</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>التقرير</th><th>التصفية</th><th>المحتوى</th></tr></thead>
+<tbody>
+<tr><td><span class="ui">تقرير اوامر الصيانة</span></td><td>الفترة، والعميل، والمندوب، و<span class="ui">المهندس</span>، و<span class="ui">الفنى</span>، و<span class="ui">المستخدم</span>، و<span class="ui">الفرع</span>، و<span class="ui">الحالة</span></td><td>أوامر الفترة المالية الحالية مع السيارة والإجمالي. النقر المزدوج يفتح الأمر، و<span class="ui">طباعة</span> تطبع التقرير.</td></tr>
+<tr><td><span class="ui">تقرير عمليات الفنيين</span></td><td>الفترة، والفني، والمستخدم، والفرع، والحالة</td><td>بنود كل فني بوقت البداية والنهاية وساعات العمل، وإجمالي الساعات.</td></tr>
+<tr><td><span class="ui">تقرير السيارات</span></td><td><span class="ui">الفرع</span>، و<span class="ui">الشركه المصنعه</span>، و<span class="ui">الموديل</span></td><td>بيانات السيارات المسجلة.</td></tr>
+</tbody></table></div>
+<p class="note">في <span class="ui">تقرير عمليات الفنيين</span>، البند الذي لم يُسجَّل له وقت بداية أو نهاية يُحسب حتى لحظة عرض التقرير، فتظهر ساعاته صفرًا أو غير دقيقة. والنقر المزدوج في هذا التقرير لا يفتح الأمر، فافتحه من شاشة المتابعة.</p>
+</section>
+
+<section id="sms">
+<h2>الرسائل القصيرة والبريد</h2>
+<ul>
+  <li><span class="ui">ارسال SMS</span> من تبويب <span class="ui">مراسلات SMS</span>: اكتب <span class="ui">رقم الموبايل</span> (أكثر من رقم مفصولة بفاصلة) أو انقر نقرًا مزدوجًا على موظف من القائمة، واختر <span class="ui">لغه الرساله</span>، واكتب <span class="ui">نص الرساله</span>. يعرض البرنامج عدد الأحرف وعدد الرسائل (70 حرفًا عربيًا أو 160 إنجليزيًا للرسالة الواحدة).</li>
+  <li><span class="ui">ارسال SMS</span> من شاشة المتابعة: يملأ رقم العميل تلقائيًا، ويمكن اختيار نص جاهز من القوالب.</li>
+  <li><span class="ui">ارسال بريد</span>: اكتب <span class="ui">البريد الالكتروني</span> و<span class="ui">عنوان الرساله</span> و<span class="ui">نص الرساله</span>، واختر نوعها (نص أو HTML).</li>
+  <li>جهّز أولًا <span class="ui">اعدادات الرسائل القصيرة</span> (مزود الخدمة واسم المستخدم وكلمة المرور واسم الراسل) و<span class="ui">اعدادات البريد الالكتروني</span> (عنوان السيرفر ورقم البورت وSSL والبريد وكلمة المرور).</li>
+</ul>
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td><span class="msg">عفوا تأكد من بياناتك أولا</span></td><td>في أمر الصيانة: لم تُختر السيارة أو العميل أو لا توجد بنود. في البند: الصنف أو المخزن أو الكمية أو السعر ناقص.</td></tr>
+<tr><td><span class="msg">يرجى اختيار موديل السيارة اولا</span></td><td>اختر السيارة قبل <span class="ui">اضافة مجموعة اصناف</span>.</td></tr>
+<tr><td><span class="msg">من فضلك اختر المخزن اولا</span></td><td>حدد المخزن قبل إضافة الباقة.</td></tr>
+<tr><td><span class="msg">رصيد الصنف فى المخزن لايكفى لاتمام هذه العملية...</span></td><td>رصيد القطعة غير كافٍ. يُلوَّن سطرها بالوردي.</td></tr>
+<tr><td><span class="msg">الكمية اقل من المنفذ فعليا</span></td><td>لا يمكن تقليل الكمية عن ما صُرف من المخزن.</td></tr>
+<tr><td><span class="msg">عفوا لقد تجاوزت اقل سعر بيع مسموح به لبيع هذا الصنف</span></td><td>السعر أقل من الحد الأدنى للصنف.</td></tr>
+<tr><td><span class="msg">عفوا اغلاق الامر يتم من خلال فاتورة الحسابات فقط</span></td><td>لا يمكن اختيار حالة <span class="ui">مغلق</span> يدويًا.</td></tr>
+<tr><td><span class="msg">عفوا امر الشغل مغلق لا يمكن تغييره يمكنك اضافة امر شغل جديد</span></td><td>الأمر مفوتر. افتح أمرًا جديدًا لأي عمل إضافي.</td></tr>
+<tr><td><span class="msg">لا يمكن اجراء تعديل لهذا السجل لاستخدامه من قبل اخر</span></td><td>محاولة حفظ أمر مغلق، أو حذف شركة لها موديلات، أو موديل عليه سيارات.</td></tr>
+<tr><td><span class="msg">عفوا امر الصيانة غير متاح</span></td><td>في إذن الصرف: الأمر ليس في حالة <span class="ui">الورشة</span>.</td></tr>
+<tr><td><span class="msg">عفوا امر الصيانة غير متوفر</span></td><td>في الفاتورة: الأمر ليس في حالة <span class="ui">تم الانتهاء</span>.</td></tr>
+<tr><td><span class="msg">هذا السجل موجود مسبقا</span></td><td>رقم اللوحة مسجل لسيارة أخرى.</td></tr>
+<tr><td><span class="msg">التاريخ المحدد خارج نطاق الفترة المحاسبية</span></td><td>تاريخ الأمر خارج الفترة المالية المفتوحة.</td></tr>
+<tr><td><span class="msg">يجب اختيار المهندس</span></td><td>في <span class="ui">ادارة الورشة</span>: اختر الفني قبل <code>Assign Eng</code>.</td></tr>
+</tbody></table></div>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="customers.html">العملاء</a> · <a href="sales-order.html">أمر البيع</a> · <a href="sales-invoice.html">فاتورة البيع</a> · <a href="stores.html">المخازن</a> · <a href="items.html">الأصناف</a> · <a href="equipment-maintenance.html">صيانة المعدات</a> · <a href="maintenance-centers.html">مراكز الصيانة</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-10">10 أكتوبر 2026</time></div></footer>
+</body>
+</html>

@@ -17,6 +17,9 @@ export interface PartyDto {
   isActive?: boolean;
   notes?: string;
   priceListId?: number | null;
+  customerGroupId?: number | null;
+  classificationId?: number | null;
+  salesRepId?: number | null;
 }
 
 @Injectable()
@@ -37,10 +40,16 @@ export class PartiesService {
               p.phone, p.mobile, p.address, p.tax_number AS "taxNumber",
               p.credit_limit AS "creditLimit", p.discount_pct AS "discountPct", p.is_active AS "isActive",
               p.price_list_id AS "priceListId", pl.name AS "priceListName",
+              p.customer_group_id AS "customerGroupId", cg.name AS "customerGroupName",
+              p.classification_id AS "classificationId", cc.name AS "classificationName",
+              p.sales_rep_id AS "salesRepId", u.full_name AS "salesRepName",
               COALESCE((SELECT SUM(CASE WHEN l.direction = 1 THEN l.amount ELSE -l.amount END)
                           FROM ledger_entries l WHERE l.party_id = p.party_id), p.opening_balance) AS balance
          FROM parties p
-         LEFT JOIN price_lists pl ON pl.price_list_id = p.price_list_id ${where}
+         LEFT JOIN price_lists pl ON pl.price_list_id = p.price_list_id
+         LEFT JOIN customer_groups cg ON cg.customer_group_id = p.customer_group_id
+         LEFT JOIN customer_classifications cc ON cc.classification_id = p.classification_id
+         LEFT JOIN users u ON u.user_id = p.sales_rep_id ${where}
         ORDER BY p.name LIMIT $4 OFFSET $5`,
       [search, like, type, params.pageSize, offset],
     );
@@ -55,10 +64,17 @@ export class PartiesService {
               p.phone, p.mobile, p.address, p.tax_number AS "taxNumber", p.city, p.area,
               p.credit_limit AS "creditLimit", p.discount_pct AS "discountPct", p.is_active AS "isActive",
               p.price_list_id AS "priceListId", pl.name AS "priceListName",
+              p.customer_group_id AS "customerGroupId", cg.name AS "customerGroupName",
+              p.classification_id AS "classificationId", cc.name AS "classificationName",
+              p.sales_rep_id AS "salesRepId", u.full_name AS "salesRepName",
               p.notes, p.opening_balance AS "openingBalance",
               COALESCE((SELECT SUM(CASE WHEN l.direction = 1 THEN l.amount ELSE -l.amount END)
                           FROM ledger_entries l WHERE l.party_id = p.party_id), p.opening_balance) AS balance
-         FROM parties p LEFT JOIN price_lists pl ON pl.price_list_id = p.price_list_id
+         FROM parties p
+         LEFT JOIN price_lists pl ON pl.price_list_id = p.price_list_id
+         LEFT JOIN customer_groups cg ON cg.customer_group_id = p.customer_group_id
+         LEFT JOIN customer_classifications cc ON cc.classification_id = p.classification_id
+         LEFT JOIN users u ON u.user_id = p.sales_rep_id
         WHERE p.party_id = $1`,
       [id],
     );
@@ -77,13 +93,16 @@ export class PartiesService {
   async create(dto: PartyDto, user: AuthUser) {
     const row = await this.db.one(
       `INSERT INTO parties (code, name, name_en, party_type, branch_id, address, phone, mobile, tax_number,
-                            credit_limit, discount_pct, is_active, notes, price_list_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING party_id`,
+                            credit_limit, discount_pct, is_active, notes, price_list_id, customer_group_id, classification_id, sales_rep_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17) RETURNING party_id`,
       [
         dto.code ?? null, dto.name, dto.nameEn ?? null, dto.partyType, user.defaultBranchId,
         dto.address ?? null, dto.phone ?? null, dto.mobile ?? null, dto.taxNumber ?? null,
         dto.creditLimit ?? 0, dto.discountPct ?? 0, dto.isActive ?? true, dto.notes ?? null,
         dto.priceListId ? Number(dto.priceListId) : null,
+        dto.customerGroupId ? Number(dto.customerGroupId) : null,
+        dto.classificationId ? Number(dto.classificationId) : null,
+        dto.salesRepId ? Number(dto.salesRepId) : null,
       ],
     );
     return { partyId: row.party_id };
@@ -93,13 +112,16 @@ export class PartiesService {
     await this.db.query(
       `UPDATE parties SET code=$2, name=$3, name_en=$4, party_type=$5, address=$6, phone=$7, mobile=$8,
               tax_number=$9, credit_limit=$10, discount_pct=$11, is_active=$12, notes=$13,
-              price_list_id=$14, version = version + 1
+              price_list_id=$14, customer_group_id=$15, classification_id=$16, sales_rep_id=$17, version = version + 1
         WHERE party_id=$1`,
       [
         id, dto.code ?? null, dto.name, dto.nameEn ?? null, dto.partyType, dto.address ?? null,
         dto.phone ?? null, dto.mobile ?? null, dto.taxNumber ?? null, dto.creditLimit ?? 0,
         dto.discountPct ?? 0, dto.isActive ?? true, dto.notes ?? null,
-        dto.priceListId === undefined ? undefined : (dto.priceListId ? Number(dto.priceListId) : null),
+        dto.priceListId === undefined ? null : (dto.priceListId ? Number(dto.priceListId) : null),
+        dto.customerGroupId === undefined ? null : (dto.customerGroupId ? Number(dto.customerGroupId) : null),
+        dto.classificationId === undefined ? null : (dto.classificationId ? Number(dto.classificationId) : null),
+        dto.salesRepId === undefined ? null : (dto.salesRepId ? Number(dto.salesRepId) : null),
       ],
     );
     return { partyId: id };

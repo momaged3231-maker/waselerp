@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>شرح القيود اليومية والقيد المتكرر | دليل Ezees ERP</title>
+<meta name="description" content="دليل شاشة القيود اليومية في Ezees ERP: إنشاء قيد يومية متعدد العملات، مراكز التكلفة والمشاريع، القيد العكسي والافتتاحي، تكرار القيد شهريًا، الترحيل والبحث عن القيود.">
+<meta name="keywords" content="قيد يومية, القيود اليومية, قيد محاسبي, قيد متكرر, قيد افتتاحي, مراكز التكلفة, برنامج محاسبة, Ezees ERP">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/journal-entry.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="شرح القيود اليومية في Ezees ERP">
+<meta property="og:description" content="سجّل قيود اليومية متعددة العملات مع مراكز التكلفة، وكررها شهريًا بضغطة زر.">
+<meta property="og:url" content="https://help.tebalink.com/journal-entry.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"شرح القيود اليومية في Ezees ERP","inLanguage":"ar","dateModified":"2026-10-08","proficiencyLevel":"Beginner","mainEntityOfPage":"https://help.tebalink.com/journal-entry.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"HowTo","name":"تسجيل قيد يومية","inLanguage":"ar","step":[
+{"@type":"HowToStep","position":1,"text":"اضغط جديد أو F1."},
+{"@type":"HowToStep","position":2,"text":"حدد التاريخ ونوع القيد واكتب الملاحظات."},
+{"@type":"HowToStep","position":3,"text":"أدخل المبلغ في مدين أو دائن ثم اختر الحساب لكل سطر."},
+{"@type":"HowToStep","position":4,"text":"تأكد أن إجمالي المدين يساوي إجمالي الدائن بالعملة المحلية ثم اضغط F2."}]},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"لماذا لا يُحفظ القيد؟","acceptedAnswer":{"@type":"Answer","text":"غالبًا لأن إجمالي المدين لا يساوي إجمالي الدائن بالعملة المحلية، أو أن أحد الأسطر بلا حساب أو عملة، أو أن الحساب رئيسي وليس فرعيًا."}},
+{"@type":"Question","name":"كيف أكرر قيد الإيجار كل شهر؟","acceptedAnswer":{"@type":"Answer","text":"احفظ القيد ثم اضغط تكرار القيد بصوره شهريه، فيُنشأ قيد مماثل في نفس اليوم من كل شهر من باقي شهور السنة."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"القيود اليومية","item":"https://help.tebalink.com/journal-entry.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#pos">نقاط البيع والمطاعم</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li>القيود اليومية</li></ol>
+<article>
+<h1>شرح شاشة القيود اليومية</h1>
+<p class="lead">في شاشة <span class="ui">القيود اليوميه</span> تسجل القيود المحاسبية اليدوية، مثل المصروفات والتسويات والأرصدة الافتتاحية. يمكن أن يحتوي القيد على عدة أسطر بعملات مختلفة، وأن يرتبط كل سطر بمركز تكلفة، والقيد كله بمشروع وفرع. يمكنك أيضًا تكرار القيد مرة واحدة أو شهريًا.</p>
+<!--shot:journal-entry-->
+<figure class="shot" id="shot-journal-entry">
+<div class="shot-frame"><a href="assets/screens/journal-entry.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/journal-entry.png" width="1649" height="898" loading="lazy" decoding="async" data-ai-src="assets/screens/journal-entry-n.png" alt="صورة شاشة: شرح شاشة القيود اليومية"></a><span class="shot-n" style="left:86.17%;top:1.56%" aria-hidden="true">1</span><span class="shot-n" style="left:68.59%;top:11.14%" aria-hidden="true">2</span><span class="shot-n" style="left:13.4%;top:12.92%" aria-hidden="true">3</span><span class="shot-n" style="left:60.1%;top:57.91%" aria-hidden="true">4</span><span class="shot-n" style="left:43.24%;top:94.54%" aria-hidden="true">5</span><span class="shot-n" style="left:60.1%;top:95.77%" aria-hidden="true">6</span></div>
+<ol class="shot-keys"><li>شريط الأزرار، ومعه تكرار القيد وتكراره شهريًا. <a href="#repeat">التفاصيل</a></li><li>رقم القيد والتاريخ والفرع والملاحظات والمشروع. <a href="#header">التفاصيل</a></li><li>نوع القيد: عام أو عكسي أو متكرر أو افتتاحي. <a href="#types">التفاصيل</a></li><li>سطور القيد: مدين ودائن والحساب ومركز التكلفة والبيان. <a href="#grid">التفاصيل</a></li><li>إجمالي المدين والدائن والفرق بينهما، ويجب أن يكون الفرق صفرًا. <a href="#totals">التفاصيل</a></li><li>حالة الترحيل ومصدر القيد. <a href="#totals">التفاصيل</a></li></ol>
+<figcaption>شاشة «شرح شاشة القيود اليومية» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#quick">تسجيل قيد خطوة بخطوة</a></li>
+  <li><a href="#header">بيانات رأس القيد</a></li>
+  <li><a href="#types">أنواع القيود</a></li>
+  <li><a href="#grid">أسطر القيد</a></li>
+  <li><a href="#totals">الإجماليات والتوازن</a></li>
+  <li><a href="#repeat">تكرار القيد</a></li>
+  <li><a href="#search">البحث عن القيود</a></li>
+  <li><a href="#shortcuts">الأزرار والاختصارات</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+  <li><a href="#faq">أسئلة متكررة</a></li>
+</ol></nav>
+
+<section id="quick">
+<h2>تسجيل قيد يومية خطوة بخطوة</h2>
+<ol class="steps">
+  <li>اضغط <span class="ui">جديد</span> (<kbd>F1</kbd>)، فيظهر <span class="ui">رقم القيد</span> والرقم الدفتري تلقائيًا، ويقف المؤشر في خانة <span class="ui">مدين</span>.</li>
+  <li>حدد <span class="ui">التاريخ</span> و<span class="ui">نوع القيد</span>، واكتب <span class="ui">ملاحظات</span>. فعّل <span class="ui">تكرار</span> إذا أردت نسخ الملاحظات إلى بيان كل سطر.</li>
+  <li>اكتب المبلغ في <span class="ui">مدين</span> أو <span class="ui">دائن</span> واضغط <kbd>Enter</kbd> للانتقال.</li>
+  <li>اكتب <span class="ui">كود الحساب</span>، أو اضغط <kbd>Enter</kbd> على خانة <span class="ui">الحساب</span> لفتح نافذة البحث. يمكنك اختيار عدة حسابات دفعة واحدة، فيُنشأ سطر لكل حساب.</li>
+  <li>اكتب <span class="ui">البيان</span>، واختر <span class="ui">مركز التكلفه</span> إن وُجد.</li>
+  <li>كرر الخطوات لباقي الأسطر حتى يتساوى المدين والدائن، ثم اضغط <span class="ui">حفظ</span> (<kbd>F2</kbd>).</li>
+</ol>
+<div class="tip">ترتيب الانتقال بمفتاح <kbd>Enter</kbd>: مدين ← دائن ← كود الحساب ← الحساب ← البيان ← السطر التالي.</div>
+</section>
+
+<section id="header">
+<h2>بيانات رأس القيد</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الحقل</th><th>الوصف</th></tr></thead>
+<tbody>
+<tr><td>رقم القيد</td><td>رقم تلقائي داخل الفترة المالية.</td></tr>
+<tr><td>م دفترى</td><td>رقم دفتري تلقائي، ولا يمكن تكراره.</td></tr>
+<tr><td>التاريخ</td><td>يجب أن يقع داخل الفترة المحاسبية المفتوحة.</td></tr>
+<tr><td>الفرع</td><td>فرع المستخدم، وتغييره يحتاج صلاحية.</td></tr>
+<tr><td>المشروع</td><td>اختياري، ويُلغى بالزر الأحمر المجاور.</td></tr>
+<tr><td>مصدر القيد</td><td>مصدر القيد، مثل قيد يدوي.</td></tr>
+<tr><td>مرحل / غير مرحل</td><td>حالة الترحيل، وتغييرها يحتاج صلاحية.</td></tr>
+<tr><td>ملاحظات</td><td>شرح عام للقيد.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="types">
+<h2>أنواع القيود</h2>
+<ul>
+  <li><strong>قيد عام:</strong> النوع الافتراضي للعمليات اليومية.</li>
+  <li><strong>قيد عكسى:</strong> لعكس قيد سابق أو تسويته.</li>
+  <li><strong>قيد متكرر:</strong> للقيود التي تتكرر دوريًا، مثل الإيجار والرواتب.</li>
+  <li><strong>قيد افتتاحى:</strong> لتسجيل أرصدة أول المدة.</li>
+</ul>
+</section>
+
+<section id="grid">
+<h2>أسطر القيد</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>العمود</th><th>الوصف</th></tr></thead>
+<tbody>
+<tr><td>مدين / دائن</td><td>المبلغ بعملة السطر.</td></tr>
+<tr><td>كود الحساب</td><td>اكتب الكود، فيظهر اسم الحساب وعملته تلقائيًا. تُقبل الحسابات الفرعية فقط.</td></tr>
+<tr><td>الحساب</td><td>اضغط عليه لفتح نافذة البحث عن الحسابات.</td></tr>
+<tr><td>مركز التكلفه</td><td>قائمة مع إكمال تلقائي، ويكون إلزاميًا لبعض الحسابات.</td></tr>
+<tr><td>البيان</td><td>شرح السطر.</td></tr>
+<tr><td>العملة / المعامل</td><td>عملة السطر وسعر صرفها، ويُملأ سعر الصرف تلقائيًا عند اختيار العملة.</td></tr>
+</tbody></table></div>
+<p>لحذف سطر: حدده واضغط <kbd>Delete</kbd>، ثم أكّد الحذف. الأسطر الفارغة، أو التي يساوي فيها المدين والدائن صفرًا، تُحذف تلقائيًا عند الحفظ.</p>
+</section>
+
+<section id="totals">
+<h2>الإجماليات والتوازن</h2>
+<ul>
+  <li><span class="ui">اجمالي مدين / اجمالي دائن</span>: مجموع المبالغ كما أُدخلت.</li>
+  <li><span class="ui">اجمالي م-ع.م / اجمالي د-ع.م</span>: المجموع بالعملة المحلية (المبلغ × سعر الصرف). <strong>هذان الرقمان يجب أن يتساويا.</strong></li>
+  <li><span class="ui">الفرق مدين / الفرق دائن</span>: يوضح مقدار عدم التوازن.</li>
+</ul>
+<div class="warn">لا يُحفظ القيد إلا إذا تساوى المدين والدائن بالعملة المحلية، ولم يكن أي منهما صفرًا.</div>
+</section>
+
+<section id="repeat">
+<h2>تكرار القيد</h2>
+<h3>تكرار القيد (مرة واحدة)</h3>
+<p>افتح قيدًا محفوظًا واضغط <span class="ui">تكرار القيد</span>. ينسخ البرنامج القيد الحالي إلى قيد جديد برقم جديد من نوع «متكرر»، وتعدّل ما تريد ثم تضغط حفظ. هذه هي الطريقة المتاحة لنسخ أي قيد.</p>
+<h3>تكرار القيد بصورة شهرية</h3>
+<p>بعد حفظ القيد اضغط <span class="ui">تكرار القيد بصوره شهريه</span>. ينشئ البرنامج نسخة في <strong>نفس اليوم من كل شهر من باقي شهور السنة الحالية</strong>، ما عدا الشهر الحالي. إذا لم يكن اليوم موجودًا في شهر ما (مثل يوم 31)، يُستخدم آخر يوم في ذلك الشهر.</p>
+<div class="warn"><strong>تنبيه:</strong> لا يمكن التراجع عن التكرار الشهري بعد تنفيذه، ولا تحمل النسخ بيانات المشروع. تأكد من القيد قبل التنفيذ.</div>
+</section>
+
+<section id="search">
+<h2>البحث عن القيود</h2>
+<ul>
+  <li><strong>بحث سريع:</strong> اكتب الرقم في مربع <span class="ui">بحث</span>، واختر قبلها هل هو رقم القيد أم الرقم الدفتري.</li>
+  <li><strong>لوحة البحث:</strong> تصفية بالتاريخ (من / الى)، والحالة (مرحل / غير مرحل / كلاهما)، والنوع، والمصدر، والفرع، والحساب (<kbd>F10</kbd>)، والقيمة.</li>
+  <li>في النتائج تظهر القيود غير المرحلة بخط عريض، والقيود العكسية والمتكررة باللون الأخضر الفاتح. اضغط على أي قيد لفتحه.</li>
+</ul>
+</section>
+
+<section id="shortcuts">
+<h2>الأزرار والاختصارات</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الزر / المفتاح</th><th>الوظيفة</th></tr></thead>
+<tbody>
+<tr><td>جديد <kbd>F1</kbd></td><td>قيد جديد.</td></tr>
+<tr><td>حفظ <kbd>F2</kbd></td><td>حفظ القيد، ثم يعرض البرنامج الطباعة.</td></tr>
+<tr><td>طباعة</td><td>طباعة القيد المحفوظ مع الإجماليات بالعملة المحلية.</td></tr>
+<tr><td>تحديث</td><td>إعادة تحميل الحسابات والفروع.</td></tr>
+<tr><td>Attachment</td><td>إرفاق مستندات بالقيد بعد حفظه.</td></tr>
+<tr><td><kbd>F10</kbd></td><td>اختيار حساب في لوحة البحث.</td></tr>
+<tr><td><kbd>Delete</kbd></td><td>حذف الأسطر المحددة.</td></tr>
+</tbody></table></div>
+<p class="note">لا يمكن حذف القيد بالكامل من هذه الشاشة. لإلغاء أثر قيد، استخدم <strong>قيدًا عكسيًا</strong>.</p>
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى والحل</th></tr></thead>
+<tbody>
+<tr><td><span class="msg">عفوا تأكد من بياناتك أولا</span></td><td>القيد غير متوازن، أو أحد الأسطر بلا حساب أو عملة.</td></tr>
+<tr><td><span class="msg">عفوا الحساب رئيسى لا يمكن اضافة قيد</span></td><td>اختر حسابًا فرعيًا.</td></tr>
+<tr><td><span class="msg">عفوا مركز التكلفه أجباري لهذا الحساب</span></td><td>اختر مركز تكلفة للسطر الملوّن بالوردي.</td></tr>
+<tr><td><span class="msg">عفوا هذا الحساب غير مرتبط باي مركز تكلفه</span></td><td>هذا الحساب لا يقبل مركز تكلفة.</td></tr>
+<tr><td><span class="msg">التاريخ المحدد خارج نطاق الفترة المحاسبية</span></td><td>غيّر التاريخ.</td></tr>
+<tr><td><span class="msg">عفوا المسلسل الدفترى مسجل سابقا</span></td><td>الرقم الدفتري مستخدم من قبل.</td></tr>
+<tr><td><span class="msg">عفوا لقد تم ترحيل هذا القيد</span></td><td>لا يمكن تعديل قيد مرحل.</td></tr>
+<tr><td><span class="msg">عفوا فترة مالية مغلقة...</span></td><td>الفترة المالية مغلقة.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="faq">
+<h2>أسئلة متكررة</h2>
+<details><summary>لماذا لا يُحفظ القيد؟</summary><p>راجع أن <span class="ui">اجمالي م-ع.م</span> يساوي <span class="ui">اجمالي د-ع.م</span>، وأن كل سطر له حساب فرعي وعملة.</p></details>
+<details><summary>هل يمكن تسجيل قيد بعملتين؟</summary><p>نعم، لكل سطر عملته وسعر صرفه، ويُشترط التوازن بالعملة المحلية.</p></details>
+<details><summary>هل يمكن استرجاع قيد لم أحفظه؟</summary><p>نعم. عند فتح الشاشة مرة أخرى يسألك البرنامج: «يوجد سجلات لم يتم حفظها هل ترغب فى استعادتها؟».</p></details>
+<details><summary>أين أجد القيود الناتجة عن الفواتير؟</summary><p>اضغط زر <span class="ui">قيد محاسبى</span> داخل الفاتورة، أو ابحث هنا بالمصدر.</p></details>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="sales-invoice.html">فاتورة البيع</a> · <a href="purchase-invoice.html">فاتورة الشراء</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-08">8 أكتوبر 2026</time></div></footer>
+</body>
+</html>

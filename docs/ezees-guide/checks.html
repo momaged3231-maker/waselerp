@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تحصيل الشيكات الواردة والصادرة | دليل Ezees ERP</title>
+<meta name="description" content="شرح متابعة أوراق القبض وأوراق الدفع في Ezees ERP: تحصيل الشيك، إلغاء التحصيل، الشيك المرفوض، تحديد موقع الورقة، والقيود المحاسبية الناتجة عن كل إجراء.">
+<meta name="keywords" content="تحصيل الشيكات, أوراق القبض, أوراق الدفع, شيك مرفوض, شيكات واردة, شيكات صادرة, Ezees ERP, برنامج محاسبة">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://help.tebalink.com/checks.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:site_name" content="Ezees ERP - مركز المساعدة">
+<meta property="og:title" content="تحصيل الشيكات الواردة والصادرة في Ezees ERP">
+<meta property="og:description" content="تابع شيكات العملاء والموردين من الاستحقاق حتى التحصيل أو الرفض.">
+<meta property="og:url" content="https://help.tebalink.com/checks.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/help.css">
+<script src="assets/help-search.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"TechArticle","headline":"تحصيل الشيكات الواردة والصادرة في Ezees ERP","inLanguage":"ar","dateModified":"2026-10-08","proficiencyLevel":"Beginner","mainEntityOfPage":"https://help.tebalink.com/checks.html","publisher":{"@type":"Organization","name":"Ezees ERP"}},
+{"@type":"HowTo","name":"تحصيل شيك وارد","inLanguage":"ar","step":[
+{"@type":"HowToStep","position":1,"text":"افتح تحصيل شيكات واردة واختر غير محصل."},
+{"@type":"HowToStep","position":2,"text":"حدد الشيك واضغط سداد."},
+{"@type":"HowToStep","position":3,"text":"اختر حساب التحصيل (الخزينة أو البنك) والتاريخ ثم اضغط تنفيذ."}]},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"كيف أسجل شيكًا في شاشة التحصيل؟","acceptedAnswer":{"@type":"Answer","text":"لا يُسجل الشيك من هذه الشاشة. يظهر تلقائيًا عند حفظ سند قبض أو سند صرف مرحل بطريقة سداد شيك."}},
+{"@type":"Question","name":"هل يمكن رفض شيك تم تحصيله؟","acceptedAnswer":{"@type":"Answer","text":"ألغِ التحصيل أولًا ليعود الشيك غير محصل، ثم اضغط رفض."}}]},
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"مركز المساعدة","item":"https://help.tebalink.com/"},
+{"@type":"ListItem","position":2,"name":"تحصيل الشيكات","item":"https://help.tebalink.com/checks.html"}]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">تخطَّ إلى المحتوى</a>
+<header class="site"><div class="inner">
+  <a class="brand" href="index.html"><span class="logo" dir="ltr"><b>ezees</b> ERP</span><span class="brand-sub">مركز المساعدة</span></a>
+  <div class="hdr-actions"><a class="hdr-home" href="https://assistant.tebalink.com/">المساعد الذكي ✦</a><a class="hdr-cta" href="https://wa.me/201207888836?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B9%D8%B1%D8%B6%D9%8B%D8%A7%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D9%8B%D8%A7%20%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20Ezees%20ERP" target="_blank" rel="noopener">اطلب عرضًا تجريبيًا</a></div>
+  <nav class="top" aria-label="الأقسام"><ul>
+    <li><a href="index.html#sales">المبيعات والمشتريات</a></li>
+    <li><a href="index.html#pos">نقاط البيع والمطاعم</a></li>
+    <li><a href="index.html#stock">المخازن والأصناف</a></li>
+    <li><a href="index.html#accounts">الحسابات</a></li>
+    <li><a href="index.html#parties">العملاء والموردون</a></li>
+    <li><a href="index.html#hr">الموارد البشرية</a></li>
+    <li><a href="index.html#modules">الأنظمة المتخصصة</a></li>
+    <li><a href="index.html#reports">التقارير</a></li>
+    <li><a href="index.html#setup">الإعدادات والأدوات</a></li>
+    <li><a href="articles.html">المقالات</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="content">
+<ol class="breadcrumb"><li><a href="index.html">مركز المساعدة</a></li><li><a href="index.html#accounts">الحسابات</a></li><li>تحصيل الشيكات</li></ol>
+<article>
+<h1>تحصيل الشيكات الواردة والصادرة</h1>
+<p class="lead">تُستخدم شاشتان لمتابعة الشيكات حتى تحصيلها أو رفضها:</p>
+<!--shot:checks-->
+<figure class="shot" id="shot-checks">
+<div class="shot-frame"><a href="assets/screens/checks.png" target="_blank" rel="noopener" title="عرض الصورة بالحجم الكامل"><img src="assets/screens/checks.png" width="1649" height="898" loading="lazy" decoding="async" alt="صورة شاشة: تحصيل الشيكات الواردة والصادرة"></a></div>
+<figcaption>شاشة «تحصيل الشيكات الواردة والصادرة» كما تظهر في البرنامج. اضغط الصورة لتكبيرها.</figcaption>
+</figure>
+<!--/shot-->
+<ul class="lead">
+  <li><span class="ui">تحصيل الشيكات الواردة</span>: أوراق القبض، أي الشيكات التي استلمتها من العملاء.</li>
+  <li><span class="ui">تحصيل الشيكات الصادرة</span>: أوراق الدفع، أي الشيكات التي أعطيتها للموردين.</li>
+</ul>
+<p class="lead">الشاشتان متطابقتان في طريقة العمل.</p>
+
+<nav class="toc" aria-label="محتويات الصفحة"><strong>في هذه الصفحة</strong><ol>
+  <li><a href="#source">من أين تأتي الشيكات؟</a></li>
+  <li><a href="#filters">التصفية والبحث</a></li>
+  <li><a href="#columns">أعمدة الجدول</a></li>
+  <li><a href="#collect">تحصيل شيك</a></li>
+  <li><a href="#undo">إلغاء التحصيل</a></li>
+  <li><a href="#refuse">شيك مرفوض</a></li>
+  <li><a href="#location">تحديد موقع الورقة</a></li>
+  <li><a href="#entries">القيود المحاسبية</a></li>
+  <li><a href="#messages">الرسائل الشائعة</a></li>
+</ol></nav>
+
+<section id="source">
+<h2>من أين تأتي الشيكات؟</h2>
+<p>لا تُسجَّل الشيكات من هذه الشاشات. يظهر الشيك تلقائيًا عند حفظ <a href="vouchers.html">سند قبض أو سند صرف</a> <strong>مرحل</strong> طريقة سداده شيك. تتحدث الشاشتان تلقائيًا عند حفظ أي سند.</p>
+<figure class="fig" id="fig-check-lifecycle">
+<div class="fig-scroll"><svg viewBox="0 0 720 250" role="img" aria-labelledby="fig-check-lifecycle-cap">
+<defs><marker id="ah-check-lifecycle" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" class="f-ah"/></marker></defs>
+<rect class="f-node" x="570" y="30" width="140" height="60" rx="10"/><text class="f-tb" x="640" y="66">سند قبض بشيك</text>
+<rect class="f-node" x="390" y="30" width="140" height="60" rx="10"/><text class="f-tb" x="460" y="66">حافظة الشيكات</text>
+<rect class="f-node" x="210" y="30" width="140" height="60" rx="10"/><text class="f-tb" x="280" y="66">إيداع للتحصيل</text>
+<rect class="f-node" x="30" y="30" width="140" height="60" rx="10"/><text class="f-tb" x="100" y="66">محصّل في البنك</text>
+<line class="f-arrow" x1="568" y1="60" x2="533" y2="60" marker-end="url(#ah-check-lifecycle)"/>
+<line class="f-arrow" x1="388" y1="60" x2="353" y2="60" marker-end="url(#ah-check-lifecycle)"/>
+<line class="f-arrow" x1="208" y1="60" x2="173" y2="60" marker-end="url(#ah-check-lifecycle)"/>
+<text class="f-ts" x="640" y="112">يظهر الشيك تلقائيًا</text>
+<text class="f-ts" x="460" y="112">أوراق قبض حتى الاستحقاق</text>
+<text class="f-ts" x="280" y="112">في موعد الاستحقاق</text>
+<text class="f-ts" x="100" y="112">يزيد رصيد البنك</text>
+<line class="f-arrow f-dash" x1="280" y1="122" x2="280" y2="168" marker-end="url(#ah-check-lifecycle)"/>
+<rect class="f-node-bad" x="210" y="170" width="140" height="52" rx="10"/><text class="f-tb" x="280" y="202">مرفوض (مرتد)</text>
+<text class="f-ts" x="280" y="242">يعود دينًا على العميل مع مصاريف الارتداد</text>
+</svg></div>
+<figcaption id="fig-check-lifecycle-cap">رحلة الشيك الوارد: سند قبض طريقة سداده شيك ← يُحفظ في حافظة الشيكات (أوراق قبض) ← يُودع للتحصيل في موعده ← يُحصّل في البنك. إن رُفض يعود المبلغ دينًا على العميل ويُتابع فورًا.</figcaption>
+</figure>
+</section>
+
+<section id="filters">
+<h2>التصفية والبحث</h2>
+<ul>
+  <li><span class="ui">ت الاستحقاق</span> (من / إلى): الافتراضي سنة قبل اليوم وسنة بعده.</li>
+  <li><strong>الفرع:</strong> <code>--Select--</code> لعرض كل الفروع.</li>
+  <li><strong>الموقع:</strong> اختر <span class="ui">البنك</span> لعرض الشيكات المودعة في البنك فقط.</li>
+  <li><strong>الحالة:</strong> <span class="ui">غير محصل</span> (الافتراضي)، أو <span class="ui">تم التحصيل</span>، أو <span class="ui">مرفوض</span>.</li>
+  <li><span class="ui">بحث</span>: اختر الحقل (الحساب، أو البنك، أو رقم الورقة، أو رقم القيد، أو المندوب، أو اليوزر) واكتب جزءًا من النص.</li>
+</ul>
+<p>أسفل الشاشة يظهر <span class="ui">اجمالى القيمة</span> و<span class="ui">اجمالى القيمة ع.م</span> (بالعملة المحلية) للشيكات المعروضة فقط.</p>
+<div class="tip">بعد أي إجراء، أو بعد تغيير الحالة أو الفرع، يعرض الجدول كل التواريخ من جديد. أعد تعديل التاريخ أو نص البحث لتطبيقهما مرة أخرى.</div>
+</section>
+
+<section id="columns">
+<h2>أعمدة الجدول</h2>
+<p>رقم السند، البنك (حساب الشيكات)، الحساب (العميل أو المورد)، رقم الورقة، ت السند، ت الاصدار، ت الاستحقاق، الغرض، القيمة، العملة، سعر الصرف، قيمة م.ع، المصدر (مثل «سند قبض رقم 15»)، القيد، المندوب، حساب التحصيل، والموقع.</p>
+<p>في الشيكات الصادرة تُقسم القيمة إلى <span class="ui">القيمة</span> و<span class="ui">الضريبة</span> و<span class="ui">الاجمالى</span>.</p>
+<p class="tip">انقر نقرًا مزدوجًا على عمود <span class="ui">رقم</span> لفتح السند الأصلي.</p>
+<div class="note">بعد التحصيل أو الرفض، يعرض عمود <span class="ui">ت الاستحقاق</span> تاريخ الإجراء بدلًا من تاريخ الاستحقاق الأصلي.</div>
+</section>
+
+<section id="collect">
+<h2>تحصيل شيك</h2>
+<ol class="steps">
+  <li>اختر الحالة <span class="ui">غير محصل</span> وحدد الشيك.</li>
+  <li>اضغط <span class="ui">سداد</span>، فتظهر لوحة <span class="ui">حساب التحصيل</span>.</li>
+  <li>اختر <span class="ui">حساب رقم</span> (خزينتك أو أحد البنوك)، وعدّل <span class="ui">التاريخ</span> إن لزم، وهو افتراضيًا تاريخ الاستحقاق.</li>
+  <li>اضغط <span class="ui">تنفيذ</span> وأكّد. ينتقل الشيك إلى <span class="ui">تم التحصيل</span>، ويُنشأ قيد التحصيل.</li>
+</ol>
+</section>
+
+<section id="undo">
+<h2>إلغاء التحصيل</h2>
+<p>من حالة <span class="ui">تم التحصيل</span>، حدد الشيك واضغط <span class="ui">الغاء تحصيل</span>. يعود الشيك إلى <span class="ui">غير محصل</span>، ويُلغى أثر قيد التحصيل. يعمل ذلك فقط إذا كان قيد التحصيل في الفترة المالية الحالية.</p>
+</section>
+
+<section id="refuse">
+<h2>شيك مرفوض (مرتد)</h2>
+<ol class="steps">
+  <li>من <span class="ui">غير محصل</span>، حدد الشيك واضغط <span class="ui">رفض</span>.</li>
+  <li>حدد <span class="ui">التاريخ</span> في لوحة <span class="ui">رفض ورقة</span>، ثم اضغط <span class="ui">تنفيذ</span>.</li>
+</ol>
+<div class="warn">
+  <ul>
+    <li>لا يمكن رفض شيك تم تحصيله مباشرة. ألغِ التحصيل أولًا.</li>
+    <li><strong>لا يمكن التراجع عن الرفض</strong> من هذه الشاشة، فتأكد قبل التنفيذ.</li>
+  </ul>
+</div>
+</section>
+
+<section id="location">
+<h2>تحديد موقع الورقة</h2>
+<p>زر <span class="ui">تحديد موقع</span> يسجل مكان الشيك الفعلي: <span class="ui">الخزينة</span> أو <span class="ui">البنك</span>. هذا الإجراء للمتابعة فقط، ولا يُنشئ أي قيد محاسبي.</p>
+</section>
+
+<section id="entries">
+<h2>القيود المحاسبية الناتجة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الإجراء</th><th>شيك وارد (من عميل)</th><th>شيك صادر (لمورد)</th></tr></thead>
+<tbody>
+<tr><td>تحصيل</td><td>من حـ/ الخزينة أو البنك<br>إلى حـ/ أوراق القبض</td><td>من حـ/ أوراق الدفع<br>إلى حـ/ الخزينة أو البنك</td></tr>
+<tr><td>رفض</td><td>من حـ/ العميل<br>إلى حـ/ أوراق القبض</td><td>من حـ/ أوراق الدفع<br>إلى حـ/ المورد (+ حساب الضريبة إن وجدت)</td></tr>
+<tr><td>إلغاء التحصيل</td><td colspan="2">إلغاء أثر قيد التحصيل.</td></tr>
+<tr><td>تحديد الموقع</td><td colspan="2">لا يوجد قيد.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="messages">
+<h2>الرسائل الشائعة</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الرسالة</th><th>المعنى</th></tr></thead>
+<tbody>
+<tr><td><span class="msg">هل تريد فعلا تنفيذ الأمر؟</span></td><td>تأكيد قبل أي إجراء.</td></tr>
+<tr><td><span class="msg">عفوا تأكد من بياناتك أولا</span></td><td>لم تختر حساب التحصيل.</td></tr>
+<tr><td><span class="msg">عفوا لم يتم التراجع عن العملية عدم وجود قيد محاسبى</span></td><td>قيد التحصيل ليس في الفترة الحالية.</td></tr>
+<tr><td><span class="msg">حساب الضريبة غير موجود في شجرة الحسابات</span></td><td>عند رفض شيك صادر عليه ضريبة. يجب إعداد حساب الضريبة أولًا.</td></tr>
+<tr><td><span class="msg">لايوجد بيانات متاحة</span></td><td>لا توجد شيكات للطباعة.</td></tr>
+</tbody></table></div>
+</section>
+
+<aside class="related"><strong>شروحات ذات صلة:</strong>
+  <a href="vouchers.html">سند القبض وسند الصرف</a> · <a href="chart-of-accounts.html">دليل الحسابات</a> · <a href="journal-entry.html">القيود اليومية</a>
+</aside>
+</article>
+</main>
+<footer class="site"><div class="inner">© Ezees ERP · مركز المساعدة · آخر تحديث: <time datetime="2026-10-08">8 أكتوبر 2026</time></div></footer>
+</body>
+</html>
