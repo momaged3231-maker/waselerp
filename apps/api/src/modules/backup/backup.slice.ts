@@ -18,7 +18,7 @@ interface BackupPayload {
 export class BackupService {
   constructor(private readonly db: DatabaseService) {}
 
-  async create() {
+  async create(user: AuthUser) {
     return this.db.transaction(async (client) => {
       const tableRows = await client.query<any>(
         `SELECT table_name
@@ -32,9 +32,17 @@ export class BackupService {
         const data = await client.query<any>(`SELECT * FROM "${tableName}"`);
         tables[tableName] = data.rows.map((r) => this.serializeRow(r));
       }
+      const totalRows = Object.values(tables).reduce((sum, rows) => sum + rows.length, 0);
+      const meta = { tables: tableRows.rows.length, rows: totalRows };
+      await client.query(
+        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
+         VALUES ($1::int, NULL, 'backup.export', 'database', NULL, $2::text)`,
+        [user.userId, `تصدير نسخة احتياطية (${meta.tables} جدول، ${meta.rows} سطر)`],
+      );
       return {
         version: 1,
         createdAt: new Date().toISOString(),
+        meta,
         tables,
       };
     });
@@ -43,6 +51,14 @@ export class BackupService {
   async restore(payload: BackupPayload, user: AuthUser) {
     if (!payload || typeof payload !== 'object' || !payload.tables || typeof payload.tables !== 'object') {
       throw new BadRequestException('ملف النسخة الاحتياطية غير صالح');
+    }
+    // D3 guards: refuse anything that is not our own export format, or an empty dump.
+    if (payload.version !== 1) {
+      throw new BadRequestException('نسخة احتياطية غير مدعومة (version غير معروف) — استخدم نسخة من هذا النظام');
+    }
+    const payloadTables = Object.entries(payload.tables);
+    if (payloadTables.length === 0) {
+      throw new BadRequestException('النسخة الاحتياطية لا تحتوي أي جداول');
     }
     return this.db.transaction(async (client) => {
       await client.query("SET session_replication_role = 'replica'");
@@ -58,8 +74,14 @@ export class BackupService {
         await client.query(`TRUNCATE TABLE "${tableName}" RESTART IDENTITY CASCADE`);
       }
 
-      for (const [tableName, raw] of Object.entries(payload.tables)) {
-        if (!tableNames.includes(tableName)) continue;
+      const skipped: string[] = [];
+      let restoredRows = 0;
+      let restoredTables = 0;
+      for (const [tableName, raw] of payloadTables) {
+        if (!tableNames.includes(tableName)) {
+          skipped.push(tableName);
+          continue;
+        }
         const rows = Array.isArray(raw) ? raw : (raw as any)?.rows;
         if (!Array.isArray(rows) || rows.length === 0) continue;
 
@@ -86,6 +108,8 @@ export class BackupService {
             values,
           );
         }
+        restoredTables += 1;
+        restoredRows += rows.length;
       }
 
       for (const tableName of tableNames) {
@@ -118,11 +142,11 @@ export class BackupService {
       await client.query("SET session_replication_role = 'origin'");
       await client.query(
         `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int, NULL, 'backup.restore', 'database', NULL, $2)`,
-        [user.userId, `استعادة نسخة احتياطية by ${user.userName}`],
+         VALUES ($1::int, NULL, 'backup.restore', 'database', NULL, $2::text)`,
+        [user.userId, `استعادة نسخة احتياطية (${restoredTables} جدول، ${restoredRows} سطر${skipped.length ? `، تجاهل ${skipped.length} جدول غير معروف` : ''}) — بواسطة ${user.userName}`],
       );
 
-      return { restored: true, tables: Object.keys(payload.tables).length };
+      return { restored: true, tables: restoredTables, rows: restoredRows, skipped };
     });
   }
 
@@ -153,7 +177,7 @@ export class BackupController {
   @RequirePermissions('users.manage')
   @Get()
   create(@CurrentUser() user: AuthUser) {
-    return this.service.create();
+    return this.service.create(user);
   }
 
   @RequirePermissions('users.manage')
