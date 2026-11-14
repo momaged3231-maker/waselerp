@@ -39,6 +39,8 @@ const PERMISSIONS: [string, string, string][] = [
   ['accounting.manage', 'المحاسبة', 'إدارة شجرة الحسابات والقيود والسندات'],
   ['accounting.post', 'المحاسبة', 'ترحيل القيود وإقفال الفترات'],
   ['accounting.close', 'المحاسبة', 'إقفال الفترات المحاسبية وفتحها'],
+  ['attachments.view', 'المرفقات', 'عرض المرفقات'],
+  ['attachments.manage', 'المرفقات', 'إضافة وحذف المرفقات'],
 ];
 
 const ROLES: { name: string; nameEn: string; codes: string[] }[] = [
@@ -60,7 +62,7 @@ const ROLES: { name: string; nameEn: string; codes: string[] }[] = [
   {
     name: 'أمين مخزن', nameEn: 'StoreKeeper',
     codes: ['dashboard.view', 'items.view', 'items.manage', 'stock.view', 'stock.manage',
-      'purchases.view', 'purchases.manage'],
+      'purchases.view', 'purchases.manage', 'attachments.view', 'attachments.manage'],
   },
 ];
 
