@@ -69,7 +69,17 @@ export default function CrmPage() {
   }
 
   async function updateStage(id: number, newStage: number) {
-    try { await apiFetch(`/crm/leads/${id}`, { method: 'PUT', body: JSON.stringify({ stage: newStage }) }); await refresh(); } catch (e: any) { setError(e.message); }
+    try {
+      if (newStage === 6) {
+        // Marking a lead as lost — ask why (it is the only way to learn from lost deals).
+        const reason = window.prompt('سبب الخسارة (اختياري — ألغِ لعدم تغيير المرحلة):');
+        if (reason === null) return;
+        await apiFetch(`/crm/leads/${id}`, { method: 'PUT', body: JSON.stringify({ stage: 6, lostReason: reason.trim() || null }) });
+      } else {
+        await apiFetch(`/crm/leads/${id}`, { method: 'PUT', body: JSON.stringify({ stage: newStage }) });
+      }
+      await refresh();
+    } catch (e: any) { setError(e.message); }
   }
 
   async function convertLead(id: number) {
@@ -123,11 +133,17 @@ export default function CrmPage() {
         {message && <div className="text-green-700 text-sm">{message}</div>}
 
         {summary && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <div className="card p-3"><div className="text-xs text-slate-500">إجمالي العملاء المحتملين</div><div className="text-xl font-bold">{(summary.byStage ?? []).reduce((s: number, r: any) => s + Number(r.count || 0), 0)}</div></div>
             <div className="card p-3"><div className="text-xs text-slate-500">القيمة المتوقعة</div><div className="text-xl font-bold">{formatMoney((summary.byStage ?? []).reduce((s: number, r: any) => s + Number(r.value || 0), 0))}</div></div>
             <div className="card p-3"><div className="text-xs text-slate-500">تذاكر مفتوحة</div><div className="text-xl font-bold">{summary.openTickets ?? 0}</div></div>
             <div className="card p-3"><div className="text-xs text-slate-500">أنشطة مستحقة (7 أيام)</div><div className="text-xl font-bold">{summary.dueActivities ?? 0}</div></div>
+            {(() => {
+              const wins = Number((summary.byStage ?? []).find((r: any) => Number(r.stage) === 5)?.count ?? 0);
+              const losses = Number((summary.byStage ?? []).find((r: any) => Number(r.stage) === 6)?.count ?? 0);
+              const decided = wins + losses;
+              return <div className="card p-3"><div className="text-xs text-slate-500">معدل الكسب (محسوم)</div><div className="text-xl font-bold">{decided ? `${Math.round((wins / decided) * 100)}٪` : '—'}</div><div className="text-[10px] text-slate-400">{wins} مكسوب / {losses} خاسر</div></div>;
+            })()}
           </div>
         )}
 
@@ -207,6 +223,9 @@ export default function CrmPage() {
                         <button key={s.id} disabled={!canManage} className={`text-xs px-2 py-1 rounded border ${selected.stage===s.id?'bg-blue-600 text-white border-blue-600':''}`} onClick={()=>updateStage(selected.leadId,s.id)}>{s.label}</button>
                       ))}
                     </div>
+                    {selected.stage === 6 && selected.lostReason && (
+                      <div className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">سبب الخسارة: {selected.lostReason}</div>
+                    )}
                     {canManage && <div className="flex gap-2 pt-1">
                       {!selected.partyId && <button className="btn-soft text-xs" onClick={()=>convertLead(selected.leadId)}>تحويل إلى عميل</button>}
                       <button className="text-red-600 text-xs" onClick={()=>deleteLead(selected.leadId)}>حذف</button>

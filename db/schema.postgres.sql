@@ -1582,6 +1582,8 @@ CREATE TABLE IF NOT EXISTS maintenance_tickets (
     created_by integer REFERENCES users(user_id),
     delivered_by integer REFERENCES users(user_id),
     delivered_at timestamptz,
+    is_warranty boolean NOT NULL DEFAULT false,
+    warranty_ref varchar(120),
     created_at timestamptz NOT NULL DEFAULT now(),
     UNIQUE (branch_id, ticket_no)
 );

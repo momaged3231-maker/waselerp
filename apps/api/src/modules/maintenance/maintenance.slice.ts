@@ -29,6 +29,7 @@ const TICKET_LIST_SELECT = `
       t.estimated_cost AS "estimatedCost", t.actual_cost AS "actualCost", t.total_paid AS "totalPaid",
       t.advance_amount AS "advanceAmount", t.last_payment_amount AS "lastPaymentAmount",
       t.inspection_status AS "inspectionStatus", t.delivery_status AS "deliveryStatus",
+      t.is_warranty AS "isWarranty", t.warranty_ref AS "warrantyRef",
       t.check_report AS "checkReport", t.engineer_id AS "engineerId", u.full_name AS "engineerName",
       COALESCE((SELECT SUM(pt.quantity * pt.unit_cost) FROM maintenance_ticket_parts pt
                  WHERE pt.ticket_id = t.ticket_id), 0) AS "partsCost",
@@ -280,7 +281,7 @@ export class MaintenanceService {
   async listTickets(params: {
     branchId: number; all?: boolean; from?: string; to?: string; search?: string;
     productId?: number; modelId?: number; inspectionStatus?: number; deliveryStatus?: number;
-    paymentStatus?: number; page?: number; pageSize?: number;
+    paymentStatus?: number; warrantyOnly?: boolean; page?: number; pageSize?: number;
   }) {
     const w: string[] = [];
     const values: any[] = [];
@@ -302,6 +303,7 @@ export class MaintenanceService {
     }
     if (params.paymentStatus === 1) w.push(`COALESCE(t.actual_cost, t.estimated_cost) - t.total_paid <= 0.004`);
     if (params.paymentStatus === 0) w.push(`COALESCE(t.actual_cost, t.estimated_cost) - t.total_paid > 0.004`);
+    if (params.warrantyOnly) w.push(`t.is_warranty = true`);
     const search = String(params.search ?? '').trim();
     if (search.length >= 2) {
       const idx = values.length + 1;
@@ -328,7 +330,8 @@ export class MaintenanceService {
               COALESCE(SUM(t.total_paid), 0) AS "totalPaid",
               COALESCE(SUM(COALESCE(t.actual_cost, t.estimated_cost) - t.total_paid), 0) AS "totalRemaining",
               COALESCE(SUM((SELECT COALESCE(SUM(p2.quantity * p2.unit_cost), 0) FROM maintenance_ticket_parts p2
-                             WHERE p2.ticket_id = t.ticket_id)), 0) AS "partsCost"
+                             WHERE p2.ticket_id = t.ticket_id)), 0) AS "partsCost",
+              COUNT(*) FILTER (WHERE t.is_warranty)::int AS "warrantyCount"
          FROM maintenance_tickets t ${where}`,
       whereValues,
     );
@@ -343,6 +346,7 @@ export class MaintenanceService {
         totalPaid: Number(row?.totalPaid ?? 0),
         totalRemaining: Number(row?.totalRemaining ?? 0),
         partsCost: Number(row?.partsCost ?? 0),
+        warrantyCount: Number(row?.warrantyCount ?? 0),
       },
     };
   }
@@ -403,10 +407,12 @@ export class MaintenanceService {
         `INSERT INTO maintenance_tickets
            (branch_id, branch_cash_account_id, ticket_no, customer_name, phone, phone2, product_id, model_id,
             serial_no, item_color, accessories, product_condition, customer_notes, max_charge,
-            expected_delivery, estimated_cost, total_paid, advance_amount, created_by)
+            expected_delivery, estimated_cost, total_paid, advance_amount, created_by,
+            is_warranty, warranty_ref)
          VALUES ($1::int, $2::int, $3::text, $4::text, $5::text, $6::text, $7::int, $8::int,
                  $9::text, $10::text, $11::jsonb, $12::text, $13::text, $14::numeric,
-                 $15::date, $16::numeric, $17::numeric, $17::numeric, $18::int)
+                 $15::date, $16::numeric, $17::numeric, $17::numeric, $18::int,
+                 $19::boolean, $20::text)
          RETURNING ticket_id`,
         [
           branchId, cashAccountId, ticketNo, input.customerName, input.phone, input.phone2,
@@ -420,6 +426,8 @@ export class MaintenanceService {
           Number(dto?.estimatedCost ?? 0),
           paid,
           user.userId,
+          dto?.isWarranty === true || String(dto?.isWarranty) === 'true',
+          String(dto?.warrantyRef ?? '').trim() || null,
         ],
       );
       const ticketId = Number(result.rows[0].ticket_id);
@@ -480,7 +488,8 @@ export class MaintenanceService {
             max_charge = $13::numeric, expected_delivery = $14::date, estimated_cost = $15::numeric,
             advance_amount = $16::numeric, advance_journal_id = $17::bigint,
             advance_posted = $19::boolean,
-            total_paid = total_paid + $18::numeric
+            total_paid = total_paid + $18::numeric,
+            is_warranty = COALESCE($20::boolean, is_warranty), warranty_ref = $21::text
           WHERE ticket_id = $1::bigint`,
         [
           id, cashAccountId, input.customerName, input.phone, input.phone2, input.productId, input.modelId,
@@ -489,6 +498,8 @@ export class MaintenanceService {
           String(dto?.customerNotes ?? '').trim() || null, Number(dto?.maxCharge ?? 0),
           dto?.expectedDelivery ? String(dto.expectedDelivery) : null,
           Number(dto?.estimatedCost ?? 0), paid, advanceJournalId, diff, paid > 0,
+          dto?.isWarranty === undefined ? null : dto?.isWarranty === true || String(dto?.isWarranty) === 'true',
+          String(dto?.warrantyRef ?? '').trim() || null,
         ],
       );
       return { updated: true };
@@ -703,6 +714,7 @@ export class MaintenanceService {
   async serviceReport(params: {
     branchId: number; all?: boolean; from?: string; to?: string; engineerId?: number;
     paymentStatus?: number; deliveryStatus?: number; inspectionStatus?: number; customer?: string;
+    warranty?: boolean;
   }) {
     const w: string[] = [];
     const values: any[] = [];
@@ -722,6 +734,7 @@ export class MaintenanceService {
     }
     if (params.paymentStatus === 1) w.push(`COALESCE(t.actual_cost, t.estimated_cost) - t.total_paid <= 0.004`);
     if (params.paymentStatus === 0) w.push(`COALESCE(t.actual_cost, t.estimated_cost) - t.total_paid > 0.004`);
+    if (params.warranty) w.push(`t.is_warranty = true`);
     if (params.customer) w.push(`t.customer_name ILIKE ${put(`%${params.customer}%`, 'text')}`);
     const where = w.length ? `WHERE ${w.join(' AND ')}` : '';
 
@@ -736,8 +749,9 @@ export class MaintenanceService {
       acc.paid += Number(row.totalPaid ?? 0);
       acc.remaining += value - Number(row.totalPaid ?? 0);
       acc.partsCost += Number(row.partsCost ?? 0);
+      acc.warrantyCount += row.isWarranty ? 1 : 0;
       return acc;
-    }, { total: 0, paid: 0, remaining: 0, partsCost: 0 });
+    }, { total: 0, paid: 0, remaining: 0, partsCost: 0, warrantyCount: 0 });
 
     return { items: rows, totals: { ...totals, profit: totals.total - totals.partsCost } };
   }
@@ -865,6 +879,7 @@ export class MaintenanceController {
       inspectionStatus: query?.inspectionStatus !== undefined ? Number(query.inspectionStatus) : undefined,
       deliveryStatus: query?.deliveryStatus !== undefined ? Number(query.deliveryStatus) : undefined,
       paymentStatus: query?.paymentStatus !== undefined ? Number(query.paymentStatus) : undefined,
+      warrantyOnly: query?.warranty === '1',
       page: query?.page ? Number(query.page) : undefined,
       pageSize: query?.pageSize ? Number(query.pageSize) : undefined,
     });
@@ -919,6 +934,8 @@ export class MaintenanceController {
       serialNo: ticket.serialNo,
       estimatedCost: ticket.estimatedCost,
       advanceAmount: ticket.advanceAmount,
+      isWarranty: ticket.isWarranty,
+      warrantyRef: ticket.warrantyRef,
     };
   }
 
@@ -935,6 +952,7 @@ export class MaintenanceController {
       deliveryStatus: query?.deliveryStatus !== undefined ? Number(query.deliveryStatus) : undefined,
       inspectionStatus: query?.inspectionStatus !== undefined ? Number(query.inspectionStatus) : undefined,
       customer: query?.customer,
+      warranty: query?.warranty === '1',
     });
   }
 }

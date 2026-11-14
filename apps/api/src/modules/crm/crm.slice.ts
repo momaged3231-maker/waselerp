@@ -110,13 +110,15 @@ export class CrmService {
       `UPDATE crm_leads SET
          name = COALESCE($3::text,name), company = $4::text, phone = $5::text, email = $6::text,
          source_id = $7::int, stage = COALESCE($8::int,stage), expected_value = COALESCE($9::numeric,expected_value),
-         assigned_to = $10::int, notes = $11::text, lost_reason = $12::text, updated_at = now()
+         assigned_to = $10::int, notes = $11::text, updated_at = now(),
+         lost_reason = CASE WHEN $13::boolean THEN $12::text ELSE lost_reason END
        WHERE lead_id = $1::int AND branch_id = $2::int
        RETURNING lead_id AS "leadId", name, stage`,
       [id, branchId, dto.name?.trim() || null, dto.company ?? null, dto.phone ?? null, dto.email ?? null,
        dto.sourceId ? Number(dto.sourceId) : null, dto.stage != null ? Number(dto.stage) : null,
        dto.expectedValue != null ? Number(dto.expectedValue) : null,
-       dto.assignedTo ? Number(dto.assignedTo) : null, dto.notes ?? null, dto.lostReason ?? null],
+       dto.assignedTo ? Number(dto.assignedTo) : null, dto.notes ?? null, dto.lostReason ?? null,
+       dto.lostReason !== undefined],
     );
   }
 

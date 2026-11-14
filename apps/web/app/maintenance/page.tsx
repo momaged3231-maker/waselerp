@@ -29,6 +29,7 @@ const emptyForm = () => ({
   customerName: '', phone: '', phone2: '', productId: '', modelId: '', serialNo: '', itemColor: '',
   battery: false, charger: false, otherAccessory: '', productCondition: '', customerNotes: '',
   maxCharge: '', expectedDelivery: '', estimatedCost: '', paidAmount: '',
+  isWarranty: false, warrantyRef: '',
 });
 
 export default function MaintenancePage() {
@@ -50,7 +51,7 @@ export default function MaintenancePage() {
 
   const [items, setItems] = useState<any[]>([]);
   const [totals, setTotals] = useState<any>(null);
-  const [filters, setFilters] = useState({ from: '', to: '', search: '', inspectionStatus: '', all: false });
+  const [filters, setFilters] = useState({ from: '', to: '', search: '', inspectionStatus: '', all: false, warrantyOnly: false });
   const [selected, setSelected] = useState<Ticket | null>(null);
 
   const [inspectForm, setInspectForm] = useState<any>({
@@ -62,7 +63,7 @@ export default function MaintenancePage() {
   const [deliverForm, setDeliverForm] = useState<any>({ paidAmount: '', delivered: true, cashAccountId: '' });
 
   const [report, setReport] = useState<any>(null);
-  const [reportFilters, setReportFilters] = useState({ from: '', to: '', paymentStatus: '', deliveryStatus: '', inspectionStatus: '', customer: '' });
+  const [reportFilters, setReportFilters] = useState({ from: '', to: '', paymentStatus: '', deliveryStatus: '', inspectionStatus: '', customer: '', warranty: '' });
 
   const [newProduct, setNewProduct] = useState('');
   const [newModel, setNewModel] = useState({ productId: '', name: '' });
@@ -106,6 +107,7 @@ export default function MaintenancePage() {
     if (filters.search.trim()) params.set('search', filters.search.trim());
     if (filters.inspectionStatus !== '') params.set('inspectionStatus', filters.inspectionStatus);
     if (filters.all) params.set('all', '1');
+    if (filters.warrantyOnly) params.set('warranty', '1');
     try {
       const data = await apiFetch<any>(`/maintenance/tickets?${params}`);
       setItems(data.items ?? []);
@@ -124,6 +126,7 @@ export default function MaintenancePage() {
     if (reportFilters.deliveryStatus !== '') params.set('deliveryStatus', reportFilters.deliveryStatus);
     if (reportFilters.inspectionStatus !== '') params.set('inspectionStatus', reportFilters.inspectionStatus);
     if (reportFilters.customer.trim()) params.set('customer', reportFilters.customer.trim());
+    if (reportFilters.warranty !== '') params.set('warranty', reportFilters.warranty);
     try {
       setReport(await apiFetch<any>(`/maintenance/reports/services?${params}`));
     } catch {
@@ -169,6 +172,8 @@ export default function MaintenancePage() {
     estimatedCost: Number(form.estimatedCost || 0),
     paidAmount: Number(form.paidAmount || 0),
     cashAccountId: form.cashAccountId ? Number(form.cashAccountId) : undefined,
+    isWarranty: !!form.isWarranty,
+    warrantyRef: form.warrantyRef.trim() || undefined,
   });
 
   function resetForm() {
@@ -301,6 +306,8 @@ export default function MaintenancePage() {
       expectedDelivery: ticket.expectedDelivery ? String(ticket.expectedDelivery).slice(0, 10) : '',
       estimatedCost: String(ticket.estimatedCost ?? ''),
       paidAmount: String(ticket.advanceAmount ?? 0),
+      isWarranty: !!ticket.isWarranty,
+      warrantyRef: ticket.warrantyRef ?? '',
     });
     setEditingTicket(ticket.ticketId);
     setTab('new');
@@ -406,6 +413,17 @@ export default function MaintenancePage() {
 
           <div className="card p-5 space-y-3 h-fit">
             <div className="font-bold text-slate-800">التكلفة والسداد</div>
+            <div className="rounded-xl border border-sky-200 bg-sky-50 p-3 space-y-2">
+              <label className="flex items-center justify-between gap-3 cursor-pointer">
+                <span className="text-sm font-bold text-sky-900">تحت الضمان (بدون مقابل للعميل)</span>
+                <input type="checkbox" className="w-5 h-5 accent-sky-600" checked={form.isWarranty}
+                  onChange={(e) => setForm({ ...form, isWarranty: e.target.checked })} />
+              </label>
+              {form.isWarranty && (
+                <input className="input" placeholder="مرجع الضمان (فاتورة بيع / عقد / رقم الإذن الأصلي)"
+                  value={form.warrantyRef} onChange={(e) => setForm({ ...form, warrantyRef: e.target.value })} />
+              )}
+            </div>
             <div>
               <label className="label">أقصى تكلفة وافق عليها العميل</label>
               <input className="input" type="number" step="0.01" dir="ltr" value={form.maxCharge} onChange={(e) => setForm({ ...form, maxCharge: e.target.value })} />
@@ -471,6 +489,10 @@ export default function MaintenancePage() {
               <input type="checkbox" className="w-4 h-4 accent-brand-600" checked={filters.all} onChange={(e) => setFilters({ ...filters, all: e.target.checked })} />
               كل الفروع (للاطلاع فقط)
             </label>
+            <label className="flex items-center gap-2 text-xs text-sky-800 bg-sky-50 border border-sky-200 rounded-xl px-3 py-2 cursor-pointer">
+              <input type="checkbox" className="w-4 h-4 accent-sky-600" checked={filters.warrantyOnly} onChange={(e) => setFilters({ ...filters, warrantyOnly: e.target.checked })} />
+              تحت الضمان فقط
+            </label>
           </div>
 
           {filters.all && (
@@ -483,7 +505,7 @@ export default function MaintenancePage() {
             <div className="card-title"><span>الأذون</span>
               {totals && (
                 <span className="text-xs font-normal text-slate-500">
-                  الإجمالي {formatMoney(totals.totalValue)} · مدفوع {formatMoney(totals.totalPaid)} · متبقي {formatMoney(totals.totalRemaining)} · خامات {formatMoney(totals.partsCost)}
+                  الإجمالي {formatMoney(totals.totalValue)} · مدفوع {formatMoney(totals.totalPaid)} · متبقي {formatMoney(totals.totalRemaining)} · خامات {formatMoney(totals.partsCost)} · ضمان {totals.warrantyCount ?? 0}
                 </span>
               )}
             </div>
@@ -503,6 +525,7 @@ export default function MaintenancePage() {
                       <td>
                         <span className={`badge ${INSPECTION_BADGE[t.inspectionStatus] ?? 'bg-slate-100'}`}>{INSPECTION_LABEL[t.inspectionStatus]}</span>
                         {Number(t.deliveryStatus) === 1 && <span className="badge bg-emerald-50 text-emerald-700 mr-1">مسلّم</span>}
+                        {t.isWarranty && <span className="badge bg-sky-50 text-sky-700 mr-1">ضمان</span>}
                       </td>
                       <td>
                         {!filters.all && (
@@ -537,6 +560,7 @@ export default function MaintenancePage() {
                   <div>العميل: <b>{selected.customerName}</b> — {selected.phone}</div>
                   <div>الجهاز: {selected.productName} {selected.modelName} {selected.serialNo ? `· ${selected.serialNo}` : ''}</div>
                   <div className="sm:col-span-2">الشكوى: {selected.customerNotes || '—'}</div>
+                  {selected.isWarranty && <div className="sm:col-span-2 font-bold text-sky-800">تحت الضمان — مرجع: {selected.warrantyRef || '—'}</div>}
                 </div>
                 <div className="grid sm:grid-cols-2 gap-3">
                   <div>
@@ -634,6 +658,7 @@ export default function MaintenancePage() {
                   <div>تكلفة: <b>{formatMoney(selected.actualCost ?? selected.estimatedCost)}</b></div>
                   <div>مقدم/مدفوع: <b>{formatMoney(selected.totalPaid)}</b></div>
                   <div className="col-span-2">الحالة: {INSPECTION_LABEL[selected.inspectionStatus]}</div>
+                  {selected.isWarranty && <div className="col-span-2 font-bold text-sky-800">تحت الضمان — بدون مقابل (أو بالمبلغ المتفق عليه)</div>}
                 </div>
                 <div>
                   <label className="label">المبلغ المدفوع الآن</label>
@@ -684,6 +709,11 @@ export default function MaintenancePage() {
                 <option value="">الكل</option><option value="1">تم التسليم</option><option value="0">لم يتم التسليم</option>
               </select>
             </div>
+            <div><label className="label">الضمان</label>
+              <select className="input" value={reportFilters.warranty} onChange={(e) => setReportFilters({ ...reportFilters, warranty: e.target.value })}>
+                <option value="">الكل</option><option value="1">تحت الضمان فقط</option>
+              </select>
+            </div>
             <div className="flex-1 min-w-40"><label className="label">اسم العميل</label>
               <input className="input" value={reportFilters.customer} onChange={(e) => setReportFilters({ ...reportFilters, customer: e.target.value })} placeholder="تصفية بالاسم" />
             </div>
@@ -692,12 +722,13 @@ export default function MaintenancePage() {
 
           {report && (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                 {[
                   { label: 'إجمالي القيمة', value: formatMoney(report.totals.total) },
                   { label: 'المدفوع', value: formatMoney(report.totals.paid) },
                   { label: 'المتبقي', value: formatMoney(report.totals.remaining) },
                   { label: 'الربح', value: formatMoney(report.totals.profit) },
+                  { label: 'تحت الضمان', value: String(report.totals.warrantyCount ?? 0) },
                 ].map((card) => (
                   <div key={card.label} className="card p-4">
                     <div className="text-[11px] text-slate-500">{card.label}</div>
@@ -720,7 +751,7 @@ export default function MaintenancePage() {
                           <td>{formatMoney(t.totalPaid)}</td>
                           <td>{formatMoney(Math.max(0, Number(t.actualCost ?? t.estimatedCost ?? 0) - Number(t.totalPaid ?? 0)))}</td>
                           <td>{formatMoney(t.partsCost)}</td>
-                          <td>{INSPECTION_LABEL[t.inspectionStatus]}</td>
+                          <td>{INSPECTION_LABEL[t.inspectionStatus]}{t.isWarranty ? <span className="badge bg-sky-50 text-sky-700 mr-1">ضمان</span> : null}</td>
                         </tr>
                       ))}
                       {report.items.length === 0 && <tr><td colSpan={8} className="text-center text-slate-400 py-8">لا توجد نتائج</td></tr>}
