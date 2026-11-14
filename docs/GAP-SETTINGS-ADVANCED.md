@@ -5,6 +5,23 @@
 > **مقارنة مع:** حالة WaselERP الحالية (Next.js 14 static/PWA + NestJS 10 + PostgreSQL + Print Agent محلي + ETA/ZATCA) وملفات الخطة: `docs/EEYES-STEPS.md`, `docs/EZEES-COVERAGE.md`, `docs/ARCHITECTURE.md`, `AGENTS.md`.
 >
 > **تاريخ التحليل:** 2026-11-14 (تحليل ثابت/مقارنة قدرات). لا يفترض تنفيذًا غير موجود في الكود.
+>
+> **تحديث 2026-11-15 — مواءمة مع آخر الكوميتات (حتى `24f979a`):** جزء كبير من الفجوات أدناه أُغلق بعد كتابة هذا التحليل. الحالة الفعلية الآن:
+>
+> | بند | الحالة الفعلية | الدليل في الكود |
+> |---|---|---|
+> | الطباعة: عدد النسخ/المقاس/إظهار الأقسام/الضريبة/تذكرة المطبخ | ✅ منجز | `ReceiptCopies` (1–5) · `ReceiptPaperSize` (حراري 80/58 عبر الوكيل؛ A5/A4 بالمتصفح مع `@page`) · `ShowTaxOnReceipt`/`TaxName` · إظهار/إخفاء أقسام الإيصال · تذكرة مطبخ (`KitchenTicketEnabled`/`KitchenTicketCopies`/`KitchenPrinterName`) — تبويب الإعدادات في `apps/web/app/admin/page.tsx` + `GET /sales/print-context` |
+> | تكوين الوكيل لكل جهاز (طابعة افتراضية/فتح الدرج/عرض الورق/طابعات شبكة) | ✅ منجز (إعداد محلي على الوكيل، مشابه لتبويب Ezees) | تبويب الوكيل في `/admin` + `apps/web/lib/print.ts` (`agentHealth`, `getAgentConfig`, `listPrinters`, `saveAgentConfig`) |
+> | النسخ الاحتياطي/الاستعادة | ✅ منجز (مركز نسخ احتياطي) | `apps/api/src/modules/backup/backup.slice.ts` — `GET /admin/backup` تصدير JSON كامل + `POST /admin/backup/restore` (مسح وإعادة إدراج + audit). **المتبقي:** جدولة/سحابي/مسار — تشغيلي لاحقًا |
+> | المرفقات | ✅ منجز (فواتير/أصناف/عملاء، حد 5MB، صلاحيات `attachments.view/manage`) | `apps/api/src/modules/attachments/attachments.slice.ts` + `apps/web/components/AttachmentsPanel.tsx` — **المتبقي:** FTP/سحابة، حدود عدد، كيانات إضافية |
+> | مفاتيح تحكم/سياسات POS | ✅ منجز | `ItemCodeAuto` · `RequireRepOnSale` · `BlockBelowCostSale` · `DefaultPaymentType` — راجع `docs/GAP-SETTINGS-EZEES.md` |
+> | تقييد مخازن/صناديق لكل مستخدم | ✅ منجز | `GET/PUT /admin/users/:id/restrictions` + `GET /admin/restrictions/options` + مودال في تبويب المستخدمين |
+> | هوامش الورق كإعداد مركزي | ❌ | لم يُنفذ بعد (جزء من دفعة الطباعة/المحطات D2) |
+> | نموذج محطات/ملفات طباعة من الخادم | ❌ | الطباعة تُدار محليًا على الوكيل لكل جهاز — التحويل لملف محطات مركزي = الدفعة D2 |
+> | Email/SMS/واتساب | ❌ مؤجل | ضمن Gate 7 / حزمة إشعارات لاحقًا |
+> | Style/تصنيع/أجهزة COM/اتصال DB من العميل/مزامنة قواعد محلية | ❌ خارج النطاق | كما هو موثق في الجداول أدناه |
+>
+> **الخلاصة المحدثة:** الأولوية المتبقية الفعلية من هذا المرجع: **(1)** نموذج محطات/ملفات طباعة مركزية من الخادم (D2) · **(2)** تحصين النسخ الاحتياطي كقدرة منتج (D3) · **(3)** توسيع المرفقات وسياساتها (D4) · **(4)** سياسات POS القابلة للتهيئة (D5) — بالتوازي مع جدول الدفعات في `docs/EEYES-STEPS.md`.
 
 ---
 
