@@ -45,6 +45,13 @@ DELETE FROM gl_entries;
 DELETE FROM invoices;
 DELETE FROM gl_journals;
 
+-- CRM / report builder
+DELETE FROM crm_activities;
+DELETE FROM crm_tickets;
+DELETE FROM crm_leads;
+DELETE FROM crm_sources;
+DELETE FROM report_definitions;
+
 -- operations
 DELETE FROM shifts;
 DELETE FROM reminders;

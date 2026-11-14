@@ -42,6 +42,9 @@ const PERMISSIONS: [string, string, string][] = [
   ['attachments.view', 'المرفقات', 'عرض المرفقات'],
   ['attachments.manage', 'المرفقات', 'إضافة وحذف المرفقات'],
   ['maintenance.view', 'الصيانة', 'عرض أذون الصيانة والتقارير'],
+  ['reports.manage', 'التقارير', 'إدارة تقارير مخصصة'],
+  ['crm.view', 'إدارة العملاء CRM', 'عرض العملاء المحتملين والتذاكر'],
+  ['crm.manage', 'إدارة العملاء CRM', 'إدارة العملاء المحتملين والأنشطة والتذاكر'],
   ['maintenance.manage', 'الصيانة', 'استلام وفحص وتسليم وتعديل وحذف أذون الصيانة'],
 ];
 
@@ -52,7 +55,7 @@ const ROLES: { name: string; nameEn: string; codes: string[] }[] = [
     codes: ['dashboard.view', 'items.view', 'parties.view', 'parties.manage', 'parties.ledger',
       'sales.view', 'purchases.view', 'purchases.manage', 'stock.view', 'cash.view', 'cash.manage',
       'reports.view', 'hr.view', 'accounting.view', 'accounting.manage', 'accounting.post',
-      'attachments.view', 'attachments.manage'],
+      'attachments.view', 'attachments.manage', 'crm.view'],
   },
   {
     name: 'كاشير', nameEn: 'Cashier',
@@ -62,7 +65,7 @@ const ROLES: { name: string; nameEn: string; codes: string[] }[] = [
   {
     name: 'مندوب مبيعات', nameEn: 'SalesRep',
     codes: ['dashboard.view', 'items.view', 'parties.view', 'sales.view', 'sales.manage', 'stock.view', 'cash.view',
-      'attachments.view', 'attachments.manage'],
+      'attachments.view', 'attachments.manage', 'crm.view', 'crm.manage'],
   },
   {
     name: 'أمين مخزن', nameEn: 'StoreKeeper',

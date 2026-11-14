@@ -70,6 +70,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: '/treasury', label: 'الخزينة', icon: IconWallet, permission: 'cash.view' },
       { href: '/accounting', label: 'المحاسبة', icon: IconBookOpen, permission: 'accounting.view' },
+      { href: '/reports/builder', label: 'منشئ التقارير', icon: IconChartBar, permission: 'reports.view' },
       { href: '/reports', label: 'التقارير', icon: IconChartBar, permission: 'reports.view' },
     ],
   },
@@ -78,6 +79,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'النظام والإدارة',
     items: [
       { href: '/hr', label: 'شئون العاملين', icon: IconBriefcase, permission: 'hr.view' },
+      { href: '/crm', label: 'إدارة العملاء CRM', icon: IconUsers, permission: 'crm.view' },
       { href: '/definitions', label: 'البيانات الأساسية', icon: IconFolder, permission: 'items.view' },
       { href: '/admin', label: 'الإعدادات', icon: IconSettings, permission: 'users.manage' },
     ],

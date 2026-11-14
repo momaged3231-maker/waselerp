@@ -15,6 +15,7 @@ import { SalesModule } from './modules/sales/sales.module';
 import { InventoryModule } from './modules/inventory/inventory.slice';
 import { TreasuryModule } from './modules/treasury/treasury.slice';
 import { ReportsModule } from './modules/reports/reports.slice';
+import { ReportBuilderModule } from './modules/reports/report-builder.slice';
 import { EventsModule } from './modules/events/events.slice';
 import { InstallmentsModule } from './modules/installments/installments.slice';
 import { ZatcaModule } from './modules/zatca/zatca.slice';
@@ -26,6 +27,7 @@ import { AttachmentsModule } from './modules/attachments/attachments.slice';
 import { BackupModule } from './modules/backup/backup.slice';
 import { ShippingModule } from './modules/shipping/shipping.slice';
 import { MaintenanceModule } from './modules/maintenance/maintenance.slice';
+import { CrmModule } from './modules/crm/crm.slice';
 
 @Module({
   imports: [
@@ -51,6 +53,7 @@ import { MaintenanceModule } from './modules/maintenance/maintenance.slice';
     InventoryModule,
     TreasuryModule,
     ReportsModule,
+    ReportBuilderModule,
     EventsModule,
     InstallmentsModule,
     ZatcaModule,
@@ -62,6 +65,7 @@ import { MaintenanceModule } from './modules/maintenance/maintenance.slice';
     BackupModule,
     ShippingModule,
     MaintenanceModule,
+    CrmModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

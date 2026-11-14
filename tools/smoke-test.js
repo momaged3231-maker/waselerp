@@ -1844,6 +1844,76 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     partyAttachments.some((row) => Number(row.attachmentId) === Number(partyAttachment.attachmentId)));
   await call('DELETE', `/attachments/${partyAttachment.attachmentId}`);
 
+  // 49. P9 — report builder
+  const rbDatasets = await call('GET', '/reports/builder/datasets');
+  check('report builder datasets listed', Array.isArray(rbDatasets) && rbDatasets.length >= 4, String(rbDatasets.length));
+  check('report builder includes sales dataset', rbDatasets.some((d) => d.key === 'sales_invoices'));
+
+  const rbRun = await call('POST', '/reports/builder/run', {
+    dataset: 'sales_invoices', columns: ['invoiceNo', 'totalAmount', 'invoiceDate'],
+  });
+  check('report builder runs sales dataset', Array.isArray(rbRun.rows) && Array.isArray(rbRun.columns), String(rbRun.rows?.length));
+  check('report builder returns requested columns', (rbRun.columns || []).some((c) => c.key === 'invoiceNo'));
+
+  const rbDef = await call('POST', '/reports/builder/definitions', {
+    name: `RB Smoke ${stamp}`, dataset: 'parties', columns: ['name', 'phone', 'partyType'],
+  });
+  check('report builder definition saved', !!rbDef.definitionId, String(rbDef.definitionId));
+  const rbDefs = await call('GET', '/reports/builder/definitions');
+  check('report builder definitions listed', rbDefs.some((d) => Number(d.definitionId) === Number(rbDef.definitionId)));
+
+  const rbXlsx = await call('GET', '/reports/builder/export-xlsx?dataset=parties&columns=name,phone');
+  const rbXlsxBuffer = Buffer.from(String(rbXlsx.base64 ?? ''), 'base64');
+  check('report builder xlsx export valid', rbXlsxBuffer.slice(0, 2).toString() === 'PK', String(rbXlsxBuffer.length));
+  await call('DELETE', `/reports/builder/definitions/${rbDef.definitionId}`);
+
+  // 50. P9 — CRM
+  const crmSummary0 = await call('GET', '/crm/summary');
+  check('crm summary endpoint works', crmSummary0 && Array.isArray(crmSummary0.byStage), JSON.stringify(crmSummary0.openTickets));
+
+  const crmSources = await call('GET', '/crm/sources');
+  check('crm sources listed', Array.isArray(crmSources) && crmSources.length > 0, String(crmSources.length));
+  const crmSource = await call('POST', '/crm/sources', { name: `مصدر اختبار ${stamp}` });
+  check('crm source created', !!crmSource.sourceId, String(crmSource.sourceId));
+
+  const crmLead = await call('POST', '/crm/leads', {
+    name: `عميل محتمل ${stamp}`, phone: '0500000001', company: 'شركة اختبار',
+    sourceId: crmSource.sourceId, expectedValue: 2500, stage: 1, notes: 'smoke',
+  });
+  check('crm lead created', !!crmLead.leadId, String(crmLead.leadId));
+
+  const crmLeadDetail = await call('GET', `/crm/leads/${crmLead.leadId}`);
+  check('crm lead detail loaded', Number(crmLeadDetail.leadId) === Number(crmLead.leadId));
+
+  await call('PUT', `/crm/leads/${crmLead.leadId}`, { stage: 2, notes: 'updated' });
+  const crmLeads = await call('GET', '/crm/leads?stage=2');
+  check('crm lead updated and filtered', crmLeads.some((l) => Number(l.leadId) === Number(crmLead.leadId)));
+
+  const crmActivity = await call('POST', `/crm/leads/${crmLead.leadId}/activities`, {
+    activityType: 1, subject: 'مكالمة أولى', notes: 'تم', dueAt: new Date().toISOString(),
+  });
+  check('crm activity created', !!crmActivity.activityId, String(crmActivity.activityId));
+  await call('PUT', `/crm/activities/${crmActivity.activityId}/done`, { isDone: true });
+  const crmLeadAfterActivity = await call('GET', `/crm/leads/${crmLead.leadId}`);
+  check('crm activity marked done', crmLeadAfterActivity.activities?.some((a) => Number(a.activityId) === Number(crmActivity.activityId) && a.isDone === true));
+
+  const crmTicket = await call('POST', '/crm/tickets', {
+    subject: `تذكرة CRM ${stamp}`, description: 'اختبار', priority: 3, leadId: crmLead.leadId,
+  });
+  check('crm ticket created', !!crmTicket.ticketId, String(crmTicket.ticketId));
+  await call('PUT', `/crm/tickets/${crmTicket.ticketId}`, { status: 3 });
+  const crmTickets = await call('GET', '/crm/tickets');
+  check('crm ticket updated and listed', crmTickets.some((t) => Number(t.ticketId) === Number(crmTicket.ticketId) && Number(t.status) === 3));
+
+  const crmConverted = await call('POST', `/crm/leads/${crmLead.leadId}/convert`);
+  check('crm lead converted to party', !!crmConverted.partyId, String(crmConverted.partyId));
+  const crmLeadConverted = await call('GET', `/crm/leads/${crmLead.leadId}`);
+  check('crm lead linked to converted party', Number(crmLeadConverted.partyId) === Number(crmConverted.partyId));
+
+  const crmSummary1 = await call('GET', '/crm/summary');
+  check('crm summary reflects data', (crmSummary1.byStage || []).some((r) => Number(r.count) >= 1));
+
+
   const failed = results.filter((r) => !r.ok);
   console.log(`\n${results.length - failed.length}/${results.length} checks passed`);
   if (failed.length) process.exit(1);
