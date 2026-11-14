@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import AppShell from '@/components/AppShell';
 import { apiFetch, formatDate } from '@/lib/api';
+import { agentHealth, getAgentConfig, listPrinters, openDrawer, saveAgentConfig } from '@/lib/print';
 
 function ZatcaList() {
   const [rows, setRows] = useState<any[]>([]);
@@ -162,8 +164,303 @@ function SettingFieldRow({ field, value, onChange }: {
   );
 }
 
+function PrintAgentPanel() {
+  const [online, setOnline] = useState<boolean | null>(null);
+  const [version, setVersion] = useState('');
+  const [config, setConfig] = useState<any>(null);
+  const [printers, setPrinters] = useState<any[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [saved, setSaved] = useState(false);
+  const [netName, setNetName] = useState('');
+  const [netHost, setNetHost] = useState('');
+  const [netPort, setNetPort] = useState('9100');
+
+  async function refresh() {
+    setError('');
+    const health = await agentHealth();
+    setOnline(!!health?.ok);
+    setVersion(health?.version ?? '');
+    if (health?.ok) {
+      const [cfg, printers] = await Promise.all([
+        getAgentConfig().catch(() => null),
+        listPrinters().catch(() => []),
+      ]);
+      setConfig(cfg ?? { defaultPrinter: '', autoOpenDrawer: true, paperWidth: 42, networkPrinters: [] });
+      setPrinters(printers);
+    }
+  }
+
+  useEffect(() => { refresh(); }, []);
+
+  async function save() {
+    if (!config) return;
+    setBusy(true);
+    setError('');
+    try {
+      await saveAgentConfig(config);
+      const fresh = await getAgentConfig().catch(() => config);
+      setConfig(fresh ?? config);
+      setSaved(true);
+      window.setTimeout(() => setSaved(false), 4000);
+    } catch (err: any) {
+      setError(err?.message ?? 'تعذر حفظ إعدادات الوكيل');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function addNetworkPrinter() {
+    setError('');
+    if (!netHost.trim()) { setError('اكتب عنوان الطابعة الشبكية'); return; }
+    setConfig({
+      ...config,
+      networkPrinters: [
+        ...(config?.networkPrinters ?? []),
+        { type: 'network', name: netName.trim() || netHost.trim(), host: netHost.trim(), port: Number(netPort) || 9100 },
+      ],
+    });
+    setNetName('');
+    setNetHost('');
+    setNetPort('9100');
+  }
+
+  function removeNetworkPrinter(index: number) {
+    const next = [...(config?.networkPrinters ?? [])];
+    next.splice(index, 1);
+    setConfig({ ...config, networkPrinters: next });
+  }
+
+  const printerOptions = [
+    ...printers.map((p: any) => ({
+      value: p.name ?? p.host,
+      label: `${p.name ?? p.host}${p.type === 'network' ? ' (شبكة)' : ' (Windows)'}`,
+    })),
+    ...(config?.networkPrinters ?? []).map((p: any) => ({
+      value: p.name,
+      label: `${p.name} (مواصفة شبكية)`,
+    })),
+  ];
+
+  return (
+    <div className="card p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div className="font-bold text-slate-800">وكيل الطباعة — على هذا الجهاز فقط</div>
+          <div className="text-xs text-slate-500 mt-0.5">طابعة الكاشير ودرج النقود — مشابهة لتبويب «اعدادات الطابعه» في Ezees (تُحفظ للجهاز الحالي، وتُضبط على كل محطة طباعة على حدة)</div>
+        </div>
+        <span className={`badge ${online ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+          {online === null ? 'جارٍ الفحص…' : online ? `وكيل متصل${version ? ` · v${version}` : ''}` : 'وكيل غير متصل'}
+        </span>
+      </div>
+
+      {online === false && (
+        <div className="rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm px-4 py-3 mt-4">
+          وكيل الطباعة غير يعمل — للتشغيل:
+          <code dir="ltr" className="block bg-amber-100 text-amber-900 px-3 py-2 rounded-lg mt-2 font-mono text-xs">cd apps\print-agent && npm install && node server.js</code>
+          يعمل على <code dir="ltr" className="bg-amber-100 px-1 py-0.5 rounded">http://127.0.0.1:4100</code>
+        </div>
+      )}
+
+      <div className="grid sm:grid-cols-2 gap-4 mt-4">
+        <div>
+          <label className="label">الطابعة الافتراضية</label>
+          <input
+            className="input"
+            list="wasel-printers"
+            disabled={!online}
+            value={config?.defaultPrinter ?? ''}
+            onChange={(e) => setConfig({ ...config, defaultPrinter: e.target.value })}
+            placeholder="اختر من القائمة أو اكتب اسم الطابعة"
+          />
+          <datalist id="wasel-printers">
+            {printerOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </datalist>
+          <div className="text-[11px] text-slate-500 mt-1">تُستخدم للإيصالات وأذون المخزن ما لم تُحدد طابعة أخرى.</div>
+        </div>
+
+        <div>
+          <label className="label">مقاس الإيصال الحراري</label>
+          <div className="grid grid-cols-2 gap-2">
+            {[{ value: 42, label: '80 ملم' }, { value: 32, label: '58 ملم' }].map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                disabled={!online}
+                onClick={() => setConfig({ ...config, paperWidth: option.value })}
+                className={`py-2 rounded-xl text-sm font-bold transition disabled:opacity-50 ${
+                  Number(config?.paperWidth ?? 42) === option.value
+                    ? 'bg-brand-600 text-white'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <label className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 p-4 sm:col-span-2 cursor-pointer hover:border-slate-300">
+          <span>
+            <span className="block text-sm font-bold text-slate-700">فتح درج النقود تلقائيًا بعد الطباعة</span>
+            <span className="block text-xs text-slate-500 mt-1">يرسل ESC/POS لفتح الدرج بعد كل إيصال مطبوع (مشابه لـ autoOpenDrawer)</span>
+          </span>
+          <input
+            type="checkbox"
+            className="w-5 h-5 accent-brand-600 shrink-0"
+            disabled={!online}
+            checked={!!config?.autoOpenDrawer}
+            onChange={() => setConfig({ ...config, autoOpenDrawer: !config?.autoOpenDrawer })}
+          />
+        </label>
+      </div>
+
+      <div className="mt-4">
+        <label className="label">طابعات الشبكة (TCP 9100)</label>
+        <div className="space-y-2 mt-1">
+          {(config?.networkPrinters ?? []).map((p: any, index: number) => (
+            <div key={`${p.host}:${p.port}:${index}`} className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm">
+              <span className="min-w-0 flex-1"><b>{p.name}</b> — <span dir="ltr" className="text-slate-500">{p.host}:{p.port}</span></span>
+              <button type="button" className="w-8 h-8 rounded-lg text-rose-500 hover:bg-rose-50 flex items-center justify-center" onClick={() => removeNetworkPrinter(index)} aria-label="حذف">×</button>
+            </div>
+          ))}
+          {(config?.networkPrinters ?? []).length === 0 && (
+            <div className="text-xs text-slate-400">لا توجد طابعات شبكية مُعرّفة</div>
+          )}
+        </div>
+        <div className="grid grid-cols-[1fr_1fr_80px_auto] gap-2 mt-2">
+          <input className="input" disabled={!online} placeholder="اسم الطابعة" value={netName} onChange={(e) => setNetName(e.target.value)} />
+          <input className="input" disabled={!online} dir="ltr" placeholder="العنوان 192.168.1.50" value={netHost} onChange={(e) => setNetHost(e.target.value)} />
+          <input className="input" disabled={!online} dir="ltr" type="number" value={netPort} onChange={(e) => setNetPort(e.target.value)} />
+          <button type="button" className="btn-soft" disabled={!online} onClick={addNetworkPrinter}>إضافة</button>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-3 mt-5 border-t border-slate-100 pt-4">
+        <button className="btn-soft text-xs" disabled={!online} onClick={() => openDrawer().catch(() => {})}>اختبار درج الكاشير</button>
+        <div className="flex items-center gap-2">
+          {saved && <span className="badge bg-emerald-50 text-emerald-700">✓ تم الحفظ على هذا الجهاز</span>}
+          {error && <span className="text-xs text-rose-600">{error}</span>}
+          <button className="btn-primary" onClick={save} disabled={!online || busy}>{busy ? 'جارٍ الحفظ…' : 'حفظ إعدادات الوكيل'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BranchServiceChargeCard() {
+  const [settings, setSettings] = useState<any>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [saved, setSaved] = useState(false);
+
+  async function load() {
+    try {
+      setSettings(await apiFetch('/pos/settings'));
+    } catch {
+      setSettings(null);
+    }
+  }
+
+  useEffect(() => { load(); }, []);
+
+  async function save() {
+    if (!settings) return;
+    setBusy(true);
+    setError('');
+    try {
+      await apiFetch('/pos/settings', {
+        method: 'PUT',
+        body: {
+          serviceChargePerGuest: Number(settings.serviceChargePerGuest ?? 0),
+          serviceChargeMinimum: Number(settings.serviceChargeMinimum ?? 0),
+          serviceChargeMode: Number(settings.serviceChargeMode ?? 1),
+          kitchenColumns: settings.kitchenColumns ?? [],
+          notes: settings.notes ?? null,
+        },
+      });
+      setSaved(true);
+      window.setTimeout(() => setSaved(false), 4000);
+    } catch (err: any) {
+      setError(err?.message ?? 'تعذر حفظ إعدادات الفرع');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="card p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div className="font-bold text-slate-800">رسوم الخدمة والكاشير (للفرع النشط)</div>
+          <div className="text-xs text-slate-500 mt-0.5">تُطبق على طلبات الصالة/التوصيل في الفرع المحدد أعلى الشاشة — مشابهة لتبويب «POS» في الإعدادات المتقدمة لـ Ezees</div>
+        </div>
+        <Link href="/restaurant" className="btn-soft text-xs">إدارة المطاعم والتاعات ←</Link>
+      </div>
+
+      {settings === null && (
+        <div className="text-sm text-slate-400 py-6 text-center">تعذر تحميل إعدادات الفرع</div>
+      )}
+      {settings && (
+        <>
+          <div className="grid sm:grid-cols-2 gap-4 mt-4">
+            <div>
+              <label className="label">رسوم الخدمة لكل ضيف</label>
+              <input className="input" type="number" step="0.01" dir="ltr" value={settings.serviceChargePerGuest ?? 0}
+                onChange={(e) => setSettings({ ...settings, serviceChargePerGuest: e.target.value })} />
+            </div>
+            <div>
+              <label className="label">الحد الأدنى للفاتورة (للخدمة)</label>
+              <input className="input" type="number" step="0.01" dir="ltr" value={settings.serviceChargeMinimum ?? 0}
+                onChange={(e) => setSettings({ ...settings, serviceChargeMinimum: e.target.value })} />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="label">طريقة احتساب رسوم الخدمة</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {[
+                  { value: 1, label: 'مبلغ ثابت لكل ضيف' },
+                  { value: 2, label: 'حد أدنى لإجمالي الفاتورة (يُضاف الفرق)' },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setSettings({ ...settings, serviceChargeMode: option.value })}
+                    className={`py-2.5 px-3 rounded-xl text-xs font-bold transition text-right ${
+                      Number(settings.serviceChargeMode ?? 1) === option.value
+                        ? 'bg-brand-600 text-white'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          {error && <div className="text-sm text-rose-600 mt-3">{error}</div>}
+          <div className="flex items-center gap-2 justify-end mt-4 pt-4 border-t border-slate-100">
+            {saved && <span className="badge bg-emerald-50 text-emerald-700">✓ تم الحفظ للفرع النشط</span>}
+            <button className="btn-primary" onClick={save} disabled={busy}>{busy ? 'جارٍ الحفظ…' : 'حفظ إعدادات الفرع'}</button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+const ADVANCED_UNAVAILABLE: { title: string; reason: string }[] = [
+  { title: 'البريد والرسائل (Email / SMS / واتساب)', reason: 'يحتاج مزود خارجي وفاتورة شهرية — يبقى ضمن P7 عند اختيار مزود' },
+  { title: 'المظهر/الخط/اللغة لكل جهاز (Style)', reason: 'واجهة ويب بحجم واحد — العربي افتراضيًا؛ لا توجد مقاربة تنفيذ للاستعداد' },
+  { title: 'إعدادات اتصال قاعدة البيانات من الجهاز', reason: 'الاتصال عبر بيئة الـ API و`DATABASE_URL` — ليست واجهة مستخدم عميل لأسباب أمنية' },
+  { title: 'ميزان الباركود وشاشة عرض العميل والمودم', reason: 'أجهزة COM/تسلسلي — خارج قدرات الويب؛ تحتاج وكيل/جسر أجهزة محلي' },
+  { title: 'تصنيع الأصناف المجمعة تلقائيًا', reason: 'وحدة BOM/تصنيع لم تُطلب سوقيًا بعد' },
+  { title: 'مستخلصات المقاولات (Contractor)', reason: 'وحدة متخصصة (P8) — لا تُبنى إلا بطلب سوقي واضح' },
+  { title: 'إظهار/إخفاء الوحدات بكود دعم (ExtraModule)', reason: 'مُستبدلة بأدوار RBAC وتقييد المخازن/الصناديق للمستخدمين (P7)' },
+  { title: 'النسخ الاحتياطي من جهاز الكاشير', reason: 'يُنفذ على مستوى السيرفر/PostgreSQL (أدوات `tools/pg` والنسخ الاحتياطي الخارجي ضمن P7)' },
+];
+
 export default function AdminPage() {
-  const [tab, setTab] = useState<'branches' | 'users' | 'roles' | 'settings' | 'audit' | 'zatca' | 'eta'>('branches');
+  const [tab, setTab] = useState<'branches' | 'users' | 'roles' | 'settings' | 'advanced' | 'audit' | 'zatca' | 'eta'>('branches');
   const [branches, setBranches] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [roles, setRoles] = useState<any[]>([]);
@@ -257,7 +554,7 @@ export default function AdminPage() {
   return (
     <AppShell title="الإعدادات">
       <div className="flex gap-2 mb-4 flex-wrap">
-        {([['branches', 'الفروع'], ['users', 'المستخدمون'], ['roles', 'الأدوار والصلاحيات'], ['settings', 'إعدادات النظام'], ['eta', 'الفاتورة الإلكترونية (مصر)'], ['zatca', 'الضريبة الإلكترونية (السعودية)'], ['audit', 'سجل العمليات']] as const).map(([key, label]) => (
+        {([['branches', 'الفروع'], ['users', 'المستخدمون'], ['roles', 'الأدوار والصلاحيات'], ['settings', 'إعدادات النظام'], ['advanced', 'الإعدادات المتقدمة'], ['eta', 'الفاتورة الإلكترونية (مصر)'], ['zatca', 'الضريبة الإلكترونية (السعودية)'], ['audit', 'سجل العمليات']] as const).map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)} className={tab === key ? 'btn-primary' : 'btn-soft'}>{label}</button>
         ))}
       </div>
@@ -419,6 +716,34 @@ export default function AdminPage() {
               <button className="btn-primary mt-4" onClick={saveSettings}>حفظ الإعدادات</button>
             </div>
           )}
+        </div>
+      )}
+
+      {tab === 'advanced' && (
+        <div className="space-y-4 max-w-5xl">
+          <div className="card p-4">
+            <div className="font-extrabold text-slate-800">الإعدادات المتقدمة</div>
+            <div className="text-xs text-slate-500 mt-1">
+              القابلة للتطبيق في WaselERP (ويب + PostgreSQL + وكيل طباعة) — مقسمة حسب «على الجهاز» / «للفرع النشط»، مثل تبويبات «اعدادات الطابعه» و«POS» و«اعدادات السيرفر» في دليل Ezees.
+              البنود غير المدعومة موضحة بالأسباب في أسفل الصفحة بدل حقول وهمية.
+            </div>
+          </div>
+
+          <PrintAgentPanel />
+          <BranchServiceChargeCard />
+
+          <div className="card p-5">
+            <div className="font-bold text-slate-800 mb-1">غير مدعوم في هذا الإصدار (مع الأسباب)</div>
+            <div className="text-xs text-slate-500 mb-3">هذه البنود من دليل Ezees («الإعدادات المتقدمة») وتُترك حتى يُطلب سوقيًا، أو لأن المعمارية تختلف (سطح مكتب + SQL Server).</div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {ADVANCED_UNAVAILABLE.map((item) => (
+                <div key={item.title} className="rounded-xl border border-slate-200 bg-slate-50/60 p-3">
+                  <div className="text-[13px] font-bold text-slate-700">{item.title}</div>
+                  <div className="text-[11px] text-slate-500 mt-1 leading-5">{item.reason}</div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
