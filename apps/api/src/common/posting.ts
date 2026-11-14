@@ -295,7 +295,7 @@ export interface InvoicePostingInput {
   journalDate?: string;
 }
 
-async function cashAccountGlId(client: PoolClient, cashAccountId?: number | null): Promise<number | null> {
+export async function cashAccountGlId(client: PoolClient, cashAccountId?: number | null): Promise<number | null> {
   if (!cashAccountId) return null;
   const { rows } = await client.query<{ gl_account_id: number | null }>(
     'SELECT gl_account_id FROM cash_accounts WHERE cash_account_id = $1::int',

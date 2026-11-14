@@ -1500,6 +1500,54 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
       transferJournal.lines.length >= 2, `${transferJournal.lines.length} lines`);
   }
 
+  // 43. P8 — maintenance centers (إدارة مراكز الصيانة)
+  const maintProduct = await call('POST', '/maintenance/products', { name: `منتج صيانة ${Date.now()}` });
+  check('maintenance product created', !!maintProduct.productId, String(maintProduct.productId ?? ''));
+  const maintModel = await call('POST', '/maintenance/models', { productId: maintProduct.productId, name: 'موديل تجريبي' });
+  check('maintenance model created', !!maintModel.modelId, String(maintModel.modelId ?? ''));
+
+  const maintTicket = await call('POST', '/maintenance/tickets', {
+    customerName: 'عميل صيانة', phone: '01000000999',
+    productId: maintProduct.productId, modelId: maintModel.modelId,
+    productCondition: 'خدوش في الجهاز', customerNotes: 'لا تعمل الشاشة',
+    estimatedCost: 100, paidAmount: 40, cashAccountId,
+  });
+  check('maintenance ticket created with advance', !!maintTicket.ticketNo, maintTicket.ticketNo ?? '');
+
+  const maintDetail = await call('GET', `/maintenance/tickets/${maintTicket.ticketId}`);
+  check('advance tracked on the ticket', Number(maintDetail.totalPaid) === 40, String(maintDetail.totalPaid));
+
+  const stockBeforeParts = Number((await call('GET', `/inventory/balances?warehouseId=${warehouseId}`))
+    .find((row) => row.itemId === itemB.itemId)?.onHandQty ?? 0);
+  const maintInspect = await call('POST', `/maintenance/tickets/${maintTicket.ticketId}/inspect`, {
+    engineerId: repId, inspectionStatus: 3, checkReport: 'تم الاصلاح',
+    actualCost: 120,
+    parts: [{ itemId: itemB.itemId, quantity: 2 }],
+  });
+  check('inspection saved', maintInspect.saved === true, JSON.stringify(maintInspect));
+
+  const stockAfterParts = Number((await call('GET', `/inventory/balances?warehouseId=${warehouseId}`))
+    .find((row) => row.itemId === itemB.itemId)?.onHandQty ?? 0);
+  check('inspection consumed 2 spare parts from the warehouse', Math.abs((stockAfterParts - stockBeforeParts) - (-2)) < 0.01,
+    `${stockBeforeParts} -> ${stockAfterParts}`);
+
+  const maintDetail2 = await call('GET', `/maintenance/tickets/${maintTicket.ticketId}`);
+  check('parts cost recorded', Number(maintDetail2.partsCost ?? 0) > 0, String(maintDetail2.partsCost ?? 0));
+
+  const maintDeliver = await call('POST', `/maintenance/tickets/${maintTicket.ticketId}/deliver`, {
+    paidAmount: 80, delivered: true, cashAccountId,
+  });
+  check('delivery settles the ticket', maintDeliver.delivered === true, JSON.stringify(maintDeliver));
+
+  const maintDetail3 = await call('GET', `/maintenance/tickets/${maintTicket.ticketId}`);
+  check('total paid = advance + final payment', Math.abs(Number(maintDetail3.totalPaid) - 120) < 0.01, String(maintDetail3.totalPaid));
+
+  const maintReport = await call('GET', '/maintenance/reports/services');
+  check('services report returned', Array.isArray(maintReport.items), `${maintReport.items?.length ?? 0} items`);
+
+  const maintList = await call('GET', `/maintenance/tickets?from=${daysAgoIso(7)}`);
+  check('ticket list returned', Array.isArray(maintList.items), `${maintList.items?.length ?? 0} items`);
+
   const failed = results.filter((r) => !r.ok);
   console.log(`\n${results.length - failed.length}/${results.length} checks passed`);
   if (failed.length) process.exit(1);

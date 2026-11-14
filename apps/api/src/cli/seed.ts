@@ -41,6 +41,8 @@ const PERMISSIONS: [string, string, string][] = [
   ['accounting.close', 'المحاسبة', 'إقفال الفترات المحاسبية وفتحها'],
   ['attachments.view', 'المرفقات', 'عرض المرفقات'],
   ['attachments.manage', 'المرفقات', 'إضافة وحذف المرفقات'],
+  ['maintenance.view', 'الصيانة', 'عرض أذون الصيانة والتقارير'],
+  ['maintenance.manage', 'الصيانة', 'استلام وفحص وتسليم وتعديل وحذف أذون الصيانة'],
 ];
 
 const ROLES: { name: string; nameEn: string; codes: string[] }[] = [

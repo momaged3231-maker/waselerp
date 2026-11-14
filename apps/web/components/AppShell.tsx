@@ -12,6 +12,7 @@ const NAV: NavItem[] = [
   { href: '/', label: 'الرئيسية', icon: '🏠', permission: 'dashboard.view' },
   { href: '/pos', label: 'نقطة البيع', icon: '🛒', permission: 'pos.operate' },
   { href: '/restaurant', label: 'المطاعم', icon: '🍽️', permission: 'pos.operate' },
+  { href: '/maintenance', label: 'الصيانة', icon: '🔧', permission: 'maintenance.view' },
   { href: '/invoices', label: 'الفواتير', icon: '🧾', permission: 'sales.view' },
   { href: '/documents', label: 'العروض والأوامر', icon: '📑', permission: 'sales.view' },
   { href: '/items', label: 'الأصناف', icon: '📦', permission: 'items.view' },

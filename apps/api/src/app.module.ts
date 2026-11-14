@@ -25,6 +25,7 @@ import { EtaModule } from './modules/eta/eta.slice';
 import { AttachmentsModule } from './modules/attachments/attachments.slice';
 import { BackupModule } from './modules/backup/backup.slice';
 import { ShippingModule } from './modules/shipping/shipping.slice';
+import { MaintenanceModule } from './modules/maintenance/maintenance.slice';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { ShippingModule } from './modules/shipping/shipping.slice';
     AttachmentsModule,
     BackupModule,
     ShippingModule,
+    MaintenanceModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
