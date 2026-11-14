@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import AppShell from '@/components/AppShell';
+import AttachmentsPanel from '@/components/AttachmentsPanel';
 import { apiFetch, formatMoney } from '@/lib/api';
 import { useSession } from '@/lib/session';
 
@@ -568,6 +569,7 @@ export default function MaintenancePage() {
                   <label className="label">تقرير الفحص</label>
                   <textarea className="input h-20" value={inspectForm.checkReport} onChange={(e) => setInspectForm({ ...inspectForm, checkReport: e.target.value })} placeholder="ما وُجد في الجهاز وما تم عمله" />
                 </div>
+                <AttachmentsPanel entityType="maintenance_ticket" entityId={Number(selected.ticketId)} />
               </>
             )}
           </div>

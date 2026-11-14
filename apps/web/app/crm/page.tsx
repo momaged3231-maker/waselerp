@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
+import AttachmentsPanel from '@/components/AttachmentsPanel';
 import { apiFetch, formatDate, formatMoney } from '@/lib/api';
 import { useSession } from '@/lib/session';
 
@@ -238,6 +239,10 @@ export default function CrmPage() {
                       ))}
                       {(!selected.activities || selected.activities.length===0) && <div className="text-xs text-slate-400">لا توجد أنشطة</div>}
                     </div>
+                  </div>
+
+                  <div className="card p-3">
+                    <AttachmentsPanel entityType="lead" entityId={Number(selected.leadId)} compact />
                   </div>
                 </>
               )}

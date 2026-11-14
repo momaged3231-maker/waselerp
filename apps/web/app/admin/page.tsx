@@ -180,6 +180,15 @@ const SETTING_SECTIONS: { id: string; title: string; desc: string; fields: Setti
       },
     ],
   },
+  {
+    id: 'attachments',
+    title: 'المرفقات',
+    desc: 'سياسات رفع الملفات — تُطبق على كل الكيانات: فواتير، أصناف، عملاء/موردين، أذون صيانة، موظفون، عملاء محتملون',
+    fields: [
+      { key: 'AttachmentMaxKb', label: 'أقصى حجم للملف الواحد', type: 'number', dir: 'ltr', unit: 'KB', desc: 'الافتراضي 5120 كيلوبايت (5MB) — يُفحص على الخادم عند الرفع وعلى الشاشة قبل الرفع' },
+      { key: 'AttachmentMaxPerEntity', label: 'أقصى عدد مرفقات لكل كيان', type: 'number', dir: 'ltr', unit: 'ملف', desc: 'الافتراضي 20 ملفًا لكل فاتورة/صنف/عميل/إذن صيانة… — الرفع يُرفض بعد تجاوز الحد' },
+    ],
+  },
 ];
 
 const KNOWN_SETTING_KEYS = new Set(SETTING_SECTIONS.flatMap((section) => section.fields.map((field) => field.key)));

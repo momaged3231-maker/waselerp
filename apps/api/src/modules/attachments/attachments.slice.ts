@@ -3,24 +3,66 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
+import { getSetting } from '../../common/settings';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
 
-const MAX_BYTES = 5 * 1024 * 1024;
+/**
+ * D4 — entities that may carry attachments.
+ * Table/idColumn come from this constant map only (never from user input),
+ * so interpolating them into the existence check is safe.
+ * `branchScoped: false` = global rows shared across branches (items).
+ */
+const ENTITIES: Record<string, { label: string; table: string; idColumn: string; branchScoped: boolean }> = {
+  invoice: { label: 'فاتورة', table: 'invoices', idColumn: 'invoice_id', branchScoped: true },
+  item: { label: 'صنف', table: 'items', idColumn: 'item_id', branchScoped: false },
+  party: { label: 'عميل/مورد', table: 'parties', idColumn: 'party_id', branchScoped: true },
+  maintenance_ticket: { label: 'إذن صيانة', table: 'maintenance_tickets', idColumn: 'ticket_id', branchScoped: true },
+  employee: { label: 'موظف', table: 'employees', idColumn: 'employee_id', branchScoped: true },
+  lead: { label: 'عميل محتمل', table: 'crm_leads', idColumn: 'lead_id', branchScoped: true },
+};
+
+/** Allowed content categories — kept in sync with the upload input in AttachmentsPanel. */
+const ALLOWED_EXT = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv', 'txt'];
+const ALLOWED_LABEL = 'صور (png/jpg/gif/webp)، PDF، Word، Excel، CSV، نص';
+
+function isAllowedFile(fileName: string, mimeType: string | null): boolean {
+  const ext = (fileName.split('.').pop() ?? '').toLowerCase();
+  if (ALLOWED_EXT.includes(ext)) return true;
+  if (mimeType && mimeType.startsWith('image/')) return true;
+  if (mimeType && ['application/pdf', 'text/plain', 'text/csv'].includes(mimeType)) return true;
+  return false;
+}
+
+function clampInt(value: string | null, min: number, max: number, fallback: number): number {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, Math.trunc(n)));
+}
 
 @Injectable()
 export class AttachmentsService {
   constructor(private readonly db: DatabaseService) {}
 
+  async limits() {
+    return this.db.transaction(async (client) => {
+      const maxKb = clampInt(await getSetting(client, 'AttachmentMaxKb'), 64, 20480, 5120);
+      const maxPerEntity = clampInt(await getSetting(client, 'AttachmentMaxPerEntity'), 1, 100, 20);
+      return { maxKb, maxPerEntity, allowedTypes: ALLOWED_LABEL, entityTypes: Object.keys(ENTITIES) };
+    });
+  }
+
   async list(params: { branchId: number; entityType: string; entityId: number }) {
     return this.db.query<any>(
-      `SELECT attachment_id AS "attachmentId", branch_id AS "branchId",
-              entity_type AS "entityType", entity_id AS "entityId",
-              file_name AS "fileName", mime_type AS "mimeType",
-              file_size AS "fileSize", uploaded_by AS "uploadedBy",
-              created_at AS "createdAt"
-         FROM attachments
-        WHERE branch_id = $1::int AND entity_type = $2::text AND entity_id = $3::bigint
-        ORDER BY created_at DESC`,
+      `SELECT a.attachment_id AS "attachmentId", a.branch_id AS "branchId",
+              a.entity_type AS "entityType", a.entity_id AS "entityId",
+              a.file_name AS "fileName", a.mime_type AS "mimeType",
+              a.file_size AS "fileSize", a.uploaded_by AS "uploadedBy",
+              u.full_name AS "uploadedByName",
+              a.created_at AS "createdAt"
+         FROM attachments a
+         LEFT JOIN users u ON u.user_id = a.uploaded_by
+        WHERE a.branch_id = $1::int AND a.entity_type = $2::text AND a.entity_id = $3::bigint
+        ORDER BY a.created_at DESC`,
       [params.branchId, params.entityType, params.entityId],
     );
   }
@@ -49,9 +91,18 @@ export class AttachmentsService {
     const entityType = String(dto.entityType ?? '').trim();
     const entityId = Number(dto.entityId);
     const fileName = String(dto.fileName ?? '').trim();
-    if (!entityType || !entityId || !fileName) {
-      throw new BadRequestException('نوع الكيان ورقمه واسم الملف مطلوبة');
+    if (!entityId || !fileName) {
+      throw new BadRequestException('رقم الكيان واسم الملف مطلوبة');
     }
+    const entity = ENTITIES[entityType];
+    if (!entity) {
+      throw new BadRequestException(`نوع كيان غير مدعوم — الأنواع المتاحة: ${Object.keys(ENTITIES).join('، ')}`);
+    }
+    const mimeType = dto.mimeType ? String(dto.mimeType) : null;
+    if (!isAllowedFile(fileName, mimeType)) {
+      throw new BadRequestException(`نوع ملف غير مسموح — الأنواع المسموحة: ${ALLOWED_LABEL}`);
+    }
+
     const raw = String(dto.contentBase64 ?? '');
     const base64 = raw.includes(',') ? raw.split(',').pop() ?? '' : raw;
     let buffer: Buffer;
@@ -60,26 +111,80 @@ export class AttachmentsService {
     } catch {
       throw new BadRequestException('محتوى الملف غير صالح');
     }
-    if (!buffer.length || buffer.length > MAX_BYTES) {
-      throw new BadRequestException('حجم الملف غير صالح (الحد 5MB)');
-    }
-    const mimeType = dto.mimeType ? String(dto.mimeType) : null;
 
-    const row = await this.db.one<any>(
-      `INSERT INTO attachments
-         (branch_id, entity_type, entity_id, file_name, mime_type, file_size, content, uploaded_by)
-       VALUES ($1::int,$2::text,$3::bigint,$4::text,$5::text,$6::int,$7::bytea,$8::int)
-       RETURNING attachment_id`,
-      [branchId, entityType, entityId, fileName, mimeType, buffer.length, buffer, user.userId],
-    );
-    return { attachmentId: Number(row.attachment_id) };
+    return this.db.transaction(async (client) => {
+      // Policies: size + count per entity, from configurable app_settings.
+      const maxKb = clampInt(await getSetting(client, 'AttachmentMaxKb'), 64, 20480, 5120);
+      const maxBytes = maxKb * 1024;
+      if (!buffer.length || buffer.length > maxBytes) {
+        throw new BadRequestException(`حجم الملف غير صالح (الحد ${maxKb} كيلوبايت)`);
+      }
+      const maxPerEntity = clampInt(await getSetting(client, 'AttachmentMaxPerEntity'), 1, 100, 20);
+      const countRow = await client.query<any>(
+        `SELECT count(*)::int AS count FROM attachments
+          WHERE branch_id = $1::int AND entity_type = $2::text AND entity_id = $3::bigint`,
+        [branchId, entityType, entityId],
+      );
+      if (Number(countRow.rows[0]?.count ?? 0) >= maxPerEntity) {
+        throw new BadRequestException(`وصلت الحد الأقصى (${maxPerEntity} مرفقًا) لهذا الكيان — احذف مرفقًا أولًا`);
+      }
+
+      // The target row must exist in this branch (items are global — no branch filter).
+      const exists = await client.query<any>(
+        entity.branchScoped
+          ? `SELECT 1 FROM ${entity.table} WHERE ${entity.idColumn} = $1::int AND branch_id = $2::int`
+          : `SELECT 1 FROM ${entity.table} WHERE ${entity.idColumn} = $1::int`,
+        [entityId, branchId],
+      );
+      if (!exists.rows.length) {
+        throw new BadRequestException(`${entity.label} رقم ${entityId} غير موجود${entity.branchScoped ? ' في هذا الفرع' : ''}`);
+      }
+
+      let attachmentId: number;
+      try {
+        const row = await client.query<any>(
+          `INSERT INTO attachments
+             (branch_id, entity_type, entity_id, file_name, mime_type, file_size, content, uploaded_by)
+           VALUES ($1::int,$2::text,$3::bigint,$4::text,$5::text,$6::int,$7::bytea,$8::int)
+           RETURNING attachment_id`,
+          [branchId, entityType, entityId, fileName, mimeType, buffer.length, buffer, user.userId],
+        );
+        attachmentId = Number(row.rows[0].attachment_id);
+      } catch (err: any) {
+        if (err?.code === '23505') {
+          throw new BadRequestException('يوجد مرفق بنفس الاسم لهذا الكيان — غيّر اسم الملف');
+        }
+        throw err;
+      }
+
+      await client.query(
+        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
+         VALUES ($1::int, $2::int, 'attachment.create', $3::text, $4::text, $5::text)`,
+        [user.userId, branchId, entityType, String(entityId), `رفع مرفق: ${fileName} (${Math.ceil(buffer.length / 1024)} KB)`],
+      );
+      return { attachmentId };
+    });
   }
 
-  async remove(id: number, branchId: number) {
-    await this.db.query(
-      'DELETE FROM attachments WHERE attachment_id = $1::bigint AND branch_id = $2::int',
-      [id, branchId],
-    );
+  async remove(id: number, user: AuthUser, branchId: number) {
+    await this.db.transaction(async (client) => {
+      const row = await client.query<any>(
+        `SELECT entity_type, entity_id, file_name FROM attachments
+          WHERE attachment_id = $1::bigint AND branch_id = $2::int FOR UPDATE`,
+        [id, branchId],
+      );
+      if (!row.rows.length) throw new BadRequestException('المرفق غير موجود');
+      const target = row.rows[0];
+      await client.query(
+        'DELETE FROM attachments WHERE attachment_id = $1::bigint AND branch_id = $2::int',
+        [id, branchId],
+      );
+      await client.query(
+        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
+         VALUES ($1::int, $2::int, 'attachment.delete', $3::text, $4::text, $5::text)`,
+        [user.userId, branchId, target.entity_type, String(target.entity_id), `حذف مرفق: ${target.file_name}`],
+      );
+    });
     return { attachmentId: id, deleted: true };
   }
 }
@@ -87,6 +192,13 @@ export class AttachmentsService {
 @Controller('attachments')
 export class AttachmentsController {
   constructor(private readonly service: AttachmentsService) {}
+
+  /** Upload policies, readable by every attachments user (the panel needs them client-side). */
+  @RequirePermissions('attachments.view')
+  @Get('limits')
+  limits() {
+    return this.service.limits();
+  }
 
   @RequirePermissions('attachments.view')
   @Get()
@@ -116,8 +228,8 @@ export class AttachmentsController {
 
   @RequirePermissions('attachments.manage')
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number, @CurrentBranch() branchId: number) {
-    return this.service.remove(id, branchId);
+  remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
+    return this.service.remove(id, user, branchId);
   }
 }
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import AppShell from '@/components/AppShell';
+import AttachmentsPanel from '@/components/AttachmentsPanel';
 import { apiFetch, formatDate, formatMoney } from '@/lib/api';
 import { useSession } from '@/lib/session';
 
@@ -576,6 +577,9 @@ export default function HrPage() {
                 <button className="btn-primary flex-1" disabled={busy}>حفظ</button>
                 {employeeForm.employeeId && <button type="button" className="btn-soft" onClick={() => setEmployeeForm(emptyEmployee)}>جديد</button>}
               </div>
+              {employeeForm.employeeId && (
+                <AttachmentsPanel entityType="employee" entityId={Number(employeeForm.employeeId)} compact />
+              )}
             </form>
           )}
         </div>

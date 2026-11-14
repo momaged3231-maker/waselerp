@@ -4,8 +4,6 @@ import { useEffect, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/api';
 import { IconFolder, IconBox } from '@/components/icons';
 
-const MAX_BYTES = 5 * 1024 * 1024;
-
 function formatSize(bytes: number): string {
   if (!Number.isFinite(bytes)) return '';
   if (bytes < 1024) return `${bytes} بايت`;
@@ -31,6 +29,7 @@ export default function AttachmentsPanel({
   compact?: boolean;
 }) {
   const [rows, setRows] = useState<any[]>([]);
+  const [limits, setLimits] = useState<{ maxKb: number; maxPerEntity: number }>({ maxKb: 5120, maxPerEntity: 20 });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -48,15 +47,27 @@ export default function AttachmentsPanel({
   }
 
   useEffect(() => {
-    if (entityId) load();
+    if (!entityId) return;
+    load();
+    // D4 policies: max size / count per entity come from server settings.
+    apiFetch<any>('/attachments/limits').then((data: any) => {
+      if (data && Number(data.maxKb) > 0) {
+        setLimits({ maxKb: Number(data.maxKb), maxPerEntity: Number(data.maxPerEntity) || 20 });
+      }
+    }).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entityType, entityId]);
 
   async function onFilePicked(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (file.size > MAX_BYTES) {
-      setError('حجم الملف أكبر من 5MB');
+    const maxBytes = limits.maxKb * 1024;
+    if (file.size > maxBytes) {
+      setError(`حجم الملف أكبر من الحد المسموح (${limits.maxKb} كيلوبايت)`);
+      return;
+    }
+    if (rows.length >= limits.maxPerEntity) {
+      setError(`وصلت الحد الأقصى (${limits.maxPerEntity} مرفقًا) — احذف مرفقًا أولًا`);
       return;
     }
     setBusy(true);
@@ -134,7 +145,7 @@ export default function AttachmentsPanel({
       {error && <div className="text-xs text-rose-600 mb-2">{error}</div>}
 
       {rows.length === 0 ? (
-        <div className="text-xs text-slate-400">لا توجد مرفقات — أقصى حجم 5MB (صور، PDF، مستندات).</div>
+        <div className="text-xs text-slate-400">لا توجد مرفقات — الحد {limits.maxKb} كيلوبايت (صور، PDF، مستندات).</div>
       ) : (
         <ul className="space-y-1.5">
           {rows.map((row) => (
@@ -142,7 +153,10 @@ export default function AttachmentsPanel({
               <IconBox className="w-4 h-4 text-slate-400 shrink-0" />
               <div className="min-w-0 flex-1">
                 <div className="text-xs font-semibold text-slate-700 truncate" title={row.fileName}>{row.fileName}</div>
-                <div className="text-[10px] text-slate-400">{formatSize(Number(row.fileSize))} · {formatDateTime(row.createdAt)}</div>
+                <div className="text-[10px] text-slate-400">
+                  {formatSize(Number(row.fileSize))} · {formatDateTime(row.createdAt)}
+                  {row.uploadedByName ? ` · ${row.uploadedByName}` : ''}
+                </div>
               </div>
               <button className="text-[11px] font-semibold text-brand-700 hover:underline" onClick={() => download(row)}>تنزيل</button>
               <button className="text-[11px] font-semibold text-rose-600 hover:underline" onClick={() => remove(row)}>حذف</button>
