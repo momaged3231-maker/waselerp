@@ -44,6 +44,124 @@ function ZatcaList() {
   );
 }
 
+type SettingField = {
+  key: string;
+  label: string;
+  type: 'text' | 'number' | 'boolean';
+  desc?: string;
+  placeholder?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  unit?: string;
+};
+
+const SETTING_SECTIONS: { id: string; title: string; desc: string; fields: SettingField[] }[] = [
+  {
+    id: 'company',
+    title: 'الشركة والفاتورة',
+    desc: 'البيانات التي تُطبع على الفاتورة والإيصال والسندات',
+    fields: [
+      { key: 'CompanyName', label: 'اسم الشركة', type: 'text', placeholder: 'مثال: شركة الوصل للتجارة' },
+      { key: 'CompanyPhone', label: 'تليفون الشركة', type: 'text', dir: 'ltr' },
+      { key: 'CompanyAddress', label: 'العنوان', type: 'text' },
+      { key: 'TaxNumber', label: 'الرقم الضريبي', type: 'text', dir: 'ltr' },
+      { key: 'InvoiceFooter', label: 'نص تذييل الفاتورة', type: 'text', desc: 'يظهر أسفل الفاتورة المطبوعة' },
+    ],
+  },
+  {
+    id: 'tax',
+    title: 'الضرائب',
+    desc: 'النسبة الافتراضية للضريبة على الفواتير الجديدة',
+    fields: [
+      { key: 'DefaultVatPct', label: 'النسبة الافتراضية لضريبة القيمة المضافة', type: 'number', unit: '%', dir: 'ltr' },
+    ],
+  },
+  {
+    id: 'stock',
+    title: 'المخزون',
+    desc: 'سلوك حركات المخزون والرصيد السالب',
+    fields: [
+      {
+        key: 'AllowNegativeStock',
+        label: 'السماح برصيد الصنف بالسالب',
+        type: 'boolean',
+        desc: 'يتيح البيع والتحويل والتصنيع حتى لو لم يكفِ الرصيد فيصبح رصيد الصنف سالبًا',
+      },
+    ],
+  },
+  {
+    id: 'pos',
+    title: 'نقطة البيع والكاشير',
+    desc: 'سلوك نقطة البيع وإلزام فتح وردية',
+    fields: [
+      {
+        key: 'RequireCashierShift',
+        label: 'إلزام فتح وردية قبل البيع',
+        type: 'boolean',
+        desc: 'لا يمكن إتمام بيع من نقطة البيع بدون وردية مفتوحة على الخزينة',
+      },
+    ],
+  },
+  {
+    id: 'accounting',
+    title: 'المحاسبة',
+    desc: 'الترحيل التلقائي للقيود المحاسبية',
+    fields: [
+      {
+        key: 'EnableGLPosting',
+        label: 'ترحيل القيود المحاسبية تلقائيًا',
+        type: 'boolean',
+        desc: 'إنشاء قيد مزدوج متوازن لكل معاملة مالية (فاتورة / حركة خزينة / سداد قسط / مرتب)',
+      },
+    ],
+  },
+];
+
+const KNOWN_SETTING_KEYS = new Set(SETTING_SECTIONS.flatMap((section) => section.fields.map((field) => field.key)));
+
+function SettingFieldRow({ field, value, onChange }: {
+  field: SettingField;
+  value: string | undefined;
+  onChange: (next: string) => void;
+}) {
+  if (field.type === 'boolean') {
+    const checked = value === 'true' || value === '1';
+    return (
+      <label className="flex items-start justify-between gap-4 rounded-2xl border border-slate-200 p-4 hover:border-slate-300 transition cursor-pointer">
+        <span className="min-w-0">
+          <span className="block text-sm font-bold text-slate-700">{field.label}</span>
+          {field.desc && <span className="block text-xs text-slate-500 mt-1 leading-5">{field.desc}</span>}
+        </span>
+        <input
+          type="checkbox"
+          className="w-5 h-5 accent-brand-600 shrink-0 mt-0.5"
+          checked={checked}
+          onChange={() => onChange(checked ? 'false' : 'true')}
+        />
+      </label>
+    );
+  }
+
+  return (
+    <div>
+      <label className="label">{field.label}</label>
+      <div className="relative">
+        <input
+          className={`input ${field.unit ? 'pl-9' : ''}`}
+          type={field.type === 'number' ? 'number' : 'text'}
+          dir={field.dir ?? 'rtl'}
+          value={value ?? ''}
+          placeholder={field.placeholder}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        {field.unit && (
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400 pointer-events-none">{field.unit}</span>
+        )}
+      </div>
+      {field.desc && <div className="text-[11px] text-slate-500 mt-1">{field.desc}</div>}
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const [tab, setTab] = useState<'branches' | 'users' | 'roles' | 'settings' | 'audit' | 'zatca' | 'eta'>('branches');
   const [branches, setBranches] = useState<any[]>([]);
@@ -58,6 +176,7 @@ export default function AdminPage() {
   const [etaStatus, setEtaStatus] = useState<any>(null);
   const [etaDocuments, setEtaDocuments] = useState<any[]>([]);
   const [error, setError] = useState('');
+  const [settingsSaved, setSettingsSaved] = useState(false);
 
   async function load() {
     if (tab === 'branches') setBranches(await apiFetch('/admin/branches'));
@@ -120,8 +239,14 @@ export default function AdminPage() {
   }
 
   async function saveSettings() {
-    await apiFetch('/admin/settings', { method: 'PUT', body: settings });
     setError('');
+    try {
+      await apiFetch('/admin/settings', { method: 'PUT', body: settings });
+      setSettingsSaved(true);
+      window.setTimeout(() => setSettingsSaved(false), 4000);
+    } catch (err: any) {
+      setError(err?.message ?? 'تعذر حفظ الإعدادات');
+    }
   }
 
   const grouped = permissions.reduce<Record<string, any[]>>((acc, permission) => {
@@ -250,17 +375,50 @@ export default function AdminPage() {
       )}
 
       {tab === 'settings' && (
-        <div className="card p-5 max-w-xl">
-          <div className="font-bold mb-4">إعدادات النظام</div>
-          <div className="space-y-3">
-            {Object.entries(settings).map(([key, value]) => (
-              <div key={key}>
-                <label className="label">{key}</label>
-                <input className="input" value={value ?? ''} onChange={(e) => setSettings({ ...settings, [key]: e.target.value })} />
-              </div>
-            ))}
+        <div className="space-y-4 max-w-4xl">
+          <div className="card p-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="font-extrabold text-slate-800">إعدادات النظام</div>
+              <div className="text-xs text-slate-500">إعدادات عامة تسري على النظام كله (وليست لكل جهاز أو فرع). عدّل بعناية ثم اضغط حفظ.</div>
+            </div>
+            <div className="flex items-center gap-2">
+              {settingsSaved && <span className="badge bg-emerald-50 text-emerald-700">✓ تم الحفظ بنجاح</span>}
+              <button className="btn-primary" onClick={saveSettings}>حفظ الإعدادات</button>
+            </div>
           </div>
-          <button className="btn-primary mt-4" onClick={saveSettings}>حفظ الإعدادات</button>
+
+          {SETTING_SECTIONS.map((section) => (
+            <div key={section.id} className="card p-5">
+              <div className="font-bold text-slate-800">{section.title}</div>
+              <div className="text-xs text-slate-500 mb-3 mt-0.5">{section.desc}</div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                {section.fields.map((field) => (
+                  <SettingFieldRow
+                    key={field.key}
+                    field={field}
+                    value={settings[field.key]}
+                    onChange={(next) => setSettings({ ...settings, [field.key]: next })}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+
+          {Object.keys(settings).filter((k) => !KNOWN_SETTING_KEYS.has(k)).length > 0 && (
+            <div className="card p-5">
+              <div className="font-bold text-amber-800">مفاتيح أخرى (غير معروفة)</div>
+              <div className="text-xs text-amber-700 mt-1 mb-3">هذه القيم تُحفظ كما هي — غير موثقة أو موروثة من إصدار قديم.</div>
+              <div className="space-y-3">
+                {Object.keys(settings).filter((k) => !KNOWN_SETTING_KEYS.has(k)).map((key) => (
+                  <div key={key}>
+                    <label className="label font-mono">{key}</label>
+                    <input className="input" value={settings[key] ?? ''} onChange={(e) => setSettings({ ...settings, [key]: e.target.value })} />
+                  </div>
+                ))}
+              </div>
+              <button className="btn-primary mt-4" onClick={saveSettings}>حفظ الإعدادات</button>
+            </div>
+          )}
         </div>
       )}
 
