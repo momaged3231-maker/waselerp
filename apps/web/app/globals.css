@@ -2,16 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
-
 :root {
   --brand: #1447e1;
+}
+
+@layer base {
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
 html,
 body {
   font-family: 'Tajawal', 'Segoe UI', system-ui, sans-serif;
   height: 100%;
+}
+
+body {
+  background-color: #f1f5f9;
 }
 
 ::-webkit-scrollbar {
@@ -21,6 +46,9 @@ body {
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 8px;
+}
+.scrollbar-dark::-webkit-scrollbar-thumb {
+  background: #334155;
 }
 
 @layer components {

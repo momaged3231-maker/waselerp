@@ -5,6 +5,9 @@ import Link from 'next/link';
 import AppShell from '@/components/AppShell';
 import { apiFetch, formatMoney } from '@/lib/api';
 import { useSession } from '@/lib/session';
+import {
+  IconCart, IconReceipt, IconWarehouse, IconTrendUp, IconInboxDown, IconWallet, IconBox,
+} from '@/components/icons';
 
 export default function DashboardPage() {
   const { session, can } = useSession();
@@ -24,12 +27,12 @@ export default function DashboardPage() {
   const maxHour = Math.max(1, ...hours.map((h) => Number(h.total ?? 0)));
 
   const cards = [
-    { label: 'مبيعات اليوم', value: formatMoney(stats?.todaySales), icon: '🛒', tone: 'bg-emerald-50 text-emerald-700' },
-    { label: 'ربح اليوم', value: formatMoney(stats?.todayProfit), icon: '📈', tone: 'bg-blue-50 text-blue-700' },
-    { label: 'مشتريات اليوم', value: formatMoney(stats?.todayPurchases), icon: '📥', tone: 'bg-amber-50 text-amber-700' },
-    { label: 'رصيد الخزينة', value: formatMoney(stats?.cashBalance), icon: '💰', tone: 'bg-violet-50 text-violet-700' },
-    { label: 'مديونية العملاء', value: formatMoney(stats?.receivables), icon: '🧾', tone: 'bg-rose-50 text-rose-700' },
-    { label: 'قيمة المخزون', value: formatMoney(stats?.inventoryValue), icon: '🏬', tone: 'bg-slate-100 text-slate-700' },
+    { label: 'مبيعات اليوم', value: formatMoney(stats?.todaySales), icon: IconCart, tone: 'bg-emerald-50 text-emerald-600 ring-emerald-100' },
+    { label: 'ربح اليوم', value: formatMoney(stats?.todayProfit), icon: IconTrendUp, tone: 'bg-sky-50 text-sky-600 ring-sky-100' },
+    { label: 'مشتريات اليوم', value: formatMoney(stats?.todayPurchases), icon: IconInboxDown, tone: 'bg-amber-50 text-amber-600 ring-amber-100' },
+    { label: 'رصيد الخزينة', value: formatMoney(stats?.cashBalance), icon: IconWallet, tone: 'bg-violet-50 text-violet-600 ring-violet-100' },
+    { label: 'مديونية العملاء', value: formatMoney(stats?.receivables), icon: IconReceipt, tone: 'bg-rose-50 text-rose-600 ring-rose-100' },
+    { label: 'قيمة المخزون', value: formatMoney(stats?.inventoryValue), icon: IconBox, tone: 'bg-slate-100 text-slate-600 ring-slate-200' },
   ];
 
   return (
@@ -37,26 +40,29 @@ export default function DashboardPage() {
       <div className="space-y-5">
         <div className="flex flex-wrap gap-3">
           {can('pos.operate') && (
-            <Link href="/pos" className="btn-primary">🛒 فتح نقطة البيع</Link>
+            <Link href="/pos" className="btn-primary"><IconCart className="w-4 h-4" /> فتح نقطة البيع</Link>
           )}
           {can('sales.manage') && (
-            <Link href="/invoices" className="btn-soft">🧾 فواتير المبيعات</Link>
+            <Link href="/invoices" className="btn-soft"><IconReceipt className="w-4 h-4" /> فواتير المبيعات</Link>
           )}
           {can('stock.manage') && (
-            <Link href="/inventory" className="btn-soft">🏬 حركة المخزون</Link>
+            <Link href="/inventory" className="btn-soft"><IconWarehouse className="w-4 h-4" /> حركة المخزون</Link>
           )}
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-          {cards.map((card) => (
-            <div key={card.label} className="card p-4">
-              <div className={`inline-flex h-10 w-10 items-center justify-center rounded-xl ${card.tone} text-lg`}>
-                {card.icon}
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+          {cards.map((card) => {
+            const IconCmp = card.icon;
+            return (
+              <div key={card.label} className="card p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+                <div className={`inline-flex h-10 w-10 items-center justify-center rounded-xl ring-1 ${card.tone}`}>
+                  <IconCmp className="w-5 h-5" />
+                </div>
+                <div className="mt-3 text-[11px] text-slate-500 font-semibold">{card.label}</div>
+                <div className="text-[15px] font-extrabold text-slate-800 mt-0.5 tabular-nums">{card.value}</div>
               </div>
-              <div className="mt-3 text-xs text-slate-500 font-semibold">{card.label}</div>
-              <div className="text-base font-extrabold text-slate-800 mt-0.5">{card.value}</div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="grid lg:grid-cols-3 gap-4">
