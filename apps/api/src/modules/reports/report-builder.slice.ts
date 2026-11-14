@@ -3,7 +3,16 @@ import { DatabaseService } from '../../common/database/database.service';
 import { buildXlsx, type XlsxSheet } from '../../common/xlsx';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
 
-type DatasetKey = 'sales_invoices' | 'purchase_invoices' | 'items' | 'parties' | 'cash' | 'stock';
+type DatasetKey =
+  | 'sales_invoices'
+  | 'purchase_invoices'
+  | 'invoice_lines'
+  | 'items'
+  | 'parties'
+  | 'cash'
+  | 'stock'
+  | 'crm_leads'
+  | 'crm_tickets';
 
 interface DatasetDef {
   title: string;
@@ -59,6 +68,33 @@ const DATASETS: Record<DatasetKey, DatasetDef> = {
       paidAmount: { label: 'المدفوع', expr: 'i.paid_amount', type: 'number' },
       remaining: { label: 'المتبقي', expr: '(i.total_amount - i.paid_amount)', type: 'number' },
       status: { label: 'الحالة', expr: 'i.status', type: 'number' },
+    },
+  },
+  invoice_lines: {
+    title: 'بنود الفواتير',
+    from: `FROM invoice_lines l
+           JOIN invoices i ON i.invoice_id = l.invoice_id
+           LEFT JOIN items it ON it.item_id = l.item_id
+           LEFT JOIN units u ON u.unit_id = l.unit_id
+           LEFT JOIN parties p ON p.party_id = i.party_id
+           LEFT JOIN warehouses w ON w.warehouse_id = i.warehouse_id`,
+    branchColumn: 'i.branch_id',
+    dateColumn: 'i.invoice_date',
+    columns: {
+      invoiceNo: { label: 'رقم الفاتورة', expr: 'i.invoice_no', type: 'text' },
+      invoiceType: { label: 'نوع الفاتورة', expr: 'i.invoice_type', type: 'number' },
+      invoiceDate: { label: 'التاريخ', expr: 'i.invoice_date::date', type: 'date' },
+      partyName: { label: 'الطرف', expr: "COALESCE(p.name,'')", type: 'text' },
+      itemCode: { label: 'كود الصنف', expr: "COALESCE(it.code,'')", type: 'text' },
+      itemName: { label: 'الصنف', expr: "COALESCE(it.name,'')", type: 'text' },
+      unitName: { label: 'الوحدة', expr: "COALESCE(u.name,'')", type: 'text' },
+      quantity: { label: 'الكمية', expr: 'l.quantity', type: 'number' },
+      unitPrice: { label: 'السعر', expr: 'l.unit_price', type: 'number' },
+      discountAmount: { label: 'خصم السطر', expr: 'l.discount_amount', type: 'number' },
+      taxAmount: { label: 'ضريبة السطر', expr: 'l.tax_amount', type: 'number' },
+      lineTotal: { label: 'إجمالي السطر', expr: 'l.line_total', type: 'number' },
+      unitCost: { label: 'تكلفة الوحدة', expr: 'l.unit_cost', type: 'number' },
+      warehouseName: { label: 'المخزن', expr: "COALESCE(w.name,'')", type: 'text' },
     },
   },
   items: {
@@ -130,6 +166,49 @@ const DATASETS: Record<DatasetKey, DatasetDef> = {
       onHandQty: { label: 'الرصيد', expr: 'q.on_hand_qty', type: 'number' },
       avgCost: { label: 'متوسط التكلفة', expr: 'q.avg_cost', type: 'number' },
       stockValue: { label: 'قيمة المخزون', expr: '(q.on_hand_qty * q.avg_cost)', type: 'number' },
+    },
+  },
+  crm_leads: {
+    title: 'عملاء CRM المحتملون',
+    from: `FROM crm_leads l
+           LEFT JOIN crm_sources s ON s.source_id = l.source_id
+           LEFT JOIN users u ON u.user_id = l.assigned_to
+           LEFT JOIN parties p ON p.party_id = l.party_id`,
+    branchColumn: 'l.branch_id',
+    dateColumn: 'l.created_at',
+    columns: {
+      leadId: { label: 'المعرف', expr: 'l.lead_id', type: 'number' },
+      name: { label: 'الاسم', expr: 'l.name', type: 'text' },
+      company: { label: 'الشركة', expr: "COALESCE(l.company,'')", type: 'text' },
+      phone: { label: 'الهاتف', expr: "COALESCE(l.phone,'')", type: 'text' },
+      email: { label: 'البريد', expr: "COALESCE(l.email,'')", type: 'text' },
+      sourceName: { label: 'المصدر', expr: "COALESCE(s.name,'')", type: 'text' },
+      stage: { label: 'المرحلة', expr: 'l.stage', type: 'number' },
+      expectedValue: { label: 'القيمة المتوقعة', expr: 'l.expected_value', type: 'number' },
+      assignedName: { label: 'المسؤول', expr: "COALESCE(u.full_name,'')", type: 'text' },
+      partyName: { label: 'العميل المحوّل', expr: "COALESCE(p.name,'')", type: 'text' },
+      createdAt: { label: 'تاريخ الإنشاء', expr: 'l.created_at::date', type: 'date' },
+      convertedAt: { label: 'تاريخ التحويل', expr: 'l.converted_at::date', type: 'date' },
+    },
+  },
+  crm_tickets: {
+    title: 'تذاكر CRM',
+    from: `FROM crm_tickets t
+           LEFT JOIN crm_leads l ON l.lead_id = t.lead_id
+           LEFT JOIN parties p ON p.party_id = t.party_id
+           LEFT JOIN users u ON u.user_id = t.assigned_to`,
+    branchColumn: 't.branch_id',
+    dateColumn: 't.created_at',
+    columns: {
+      ticketId: { label: 'المعرف', expr: 't.ticket_id', type: 'number' },
+      subject: { label: 'الموضوع', expr: 't.subject', type: 'text' },
+      status: { label: 'الحالة', expr: 't.status', type: 'number' },
+      priority: { label: 'الأولوية', expr: 't.priority', type: 'number' },
+      leadName: { label: 'عميل محتمل', expr: "COALESCE(l.name,'')", type: 'text' },
+      partyName: { label: 'عميل', expr: "COALESCE(p.name,'')", type: 'text' },
+      assignedName: { label: 'المسؤول', expr: "COALESCE(u.full_name,'')", type: 'text' },
+      createdAt: { label: 'تاريخ الإنشاء', expr: 't.created_at::date', type: 'date' },
+      closedAt: { label: 'تاريخ الإغلاق', expr: 't.closed_at::date', type: 'date' },
     },
   },
 };
@@ -214,6 +293,7 @@ export class ReportBuilderService {
 
     if (datasetKey === 'sales_invoices') { where.push(`i.invoice_type = 1 AND i.status <> 3`); }
     if (datasetKey === 'purchase_invoices') { where.push(`i.invoice_type = 2 AND i.status <> 3`); }
+    if (datasetKey === 'invoice_lines') { where.push(`i.status <> 3`); }
     if (def.branchColumn) { where.push(`${def.branchColumn} = $${idx++}::int`); values.push(branchId); }
     if (def.dateColumn && params.from) { where.push(`${def.dateColumn} >= $${idx++}::date`); values.push(params.from); }
     if (def.dateColumn && params.to) { where.push(`${def.dateColumn} <= ($${idx++}::date + interval '1 day' - interval '1 second')`); values.push(params.to); }

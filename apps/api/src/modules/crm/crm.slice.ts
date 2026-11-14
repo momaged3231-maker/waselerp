@@ -33,8 +33,9 @@ export class CrmService {
   }
 
   // --- Leads ---
-  async listLeads(branchId: number, q?: { stage?: number; search?: string }) {
+  async listLeads(branchId: number, q?: { stage?: number; search?: string; assignedTo?: number }) {
     const stage = q?.stage ? Number(q.stage) : 0;
+    const assignedTo = q?.assignedTo ? Number(q.assignedTo) : 0;
     const search = (q?.search ?? '').trim();
     const like = `%${search}%`;
     return this.db.query<any>(
@@ -50,9 +51,10 @@ export class CrmService {
          LEFT JOIN parties p ON p.party_id = l.party_id
         WHERE l.branch_id = $1::int
           AND ($2::int = 0 OR l.stage = $2::int)
-          AND ($3::text = '' OR l.name ILIKE $4::text OR COALESCE(l.phone,'') ILIKE $4::text OR COALESCE(l.company,'') ILIKE $4::text)
+          AND ($3::int = 0 OR l.assigned_to = $3::int)
+          AND ($4::text = '' OR l.name ILIKE $5::text OR COALESCE(l.phone,'') ILIKE $5::text OR COALESCE(l.company,'') ILIKE $5::text)
         ORDER BY l.updated_at DESC, l.lead_id DESC`,
-      [branchId, stage, search, like],
+      [branchId, stage, assignedTo, search, like],
     );
   }
 
@@ -247,8 +249,17 @@ export class CrmController {
   @RequirePermissions('crm.manage') @Post('sources') createSource(@Body() body: any) { return this.svc.createSource(body); }
   @RequirePermissions('crm.manage') @Put('sources/:id') updateSource(@Param('id', ParseIntPipe) id: number, @Body() body: any) { return this.svc.updateSource(id, body); }
 
-  @RequirePermissions('crm.view') @Get('leads') leads(@CurrentBranch() b: number, @Query('stage') stage?: string, @Query('search') search?: string) {
-    return this.svc.listLeads(b, { stage: stage ? Number(stage) : undefined, search });
+  @RequirePermissions('crm.view') @Get('leads') leads(
+    @CurrentBranch() b: number,
+    @Query('stage') stage?: string,
+    @Query('search') search?: string,
+    @Query('assignedTo') assignedTo?: string,
+  ) {
+    return this.svc.listLeads(b, {
+      stage: stage ? Number(stage) : undefined,
+      search,
+      assignedTo: assignedTo ? Number(assignedTo) : undefined,
+    });
   }
   @RequirePermissions('crm.view') @Get('leads/:id') lead(@Param('id', ParseIntPipe) id: number, @CurrentBranch() b: number) { return this.svc.getLead(id, b); }
   @RequirePermissions('crm.manage') @Post('leads') createLead(@Body() body: any, @CurrentBranch() b: number, @CurrentUser() u: AuthUser) { return this.svc.createLead(body, b, u); }

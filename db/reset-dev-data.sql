@@ -43,6 +43,10 @@ DELETE FROM cash_transactions;
 DELETE FROM ledger_entries;
 DELETE FROM gl_entries;
 DELETE FROM invoices;
+DELETE FROM advance_deductions;
+DELETE FROM salary_pay_lines;
+DELETE FROM employee_advances;
+DELETE FROM salary_pays;
 DELETE FROM gl_journals;
 
 -- CRM / report builder
@@ -75,9 +79,13 @@ DELETE FROM item_components;
 DELETE FROM items;
 
 -- HR
+DELETE FROM advance_deductions;
+DELETE FROM salary_pay_lines;
+DELETE FROM employee_advances;
+DELETE FROM employee_salary_components;
+DELETE FROM salary_pays;
 DELETE FROM attendances;
 DELETE FROM leave_requests;
-DELETE FROM salary_pays;
 DELETE FROM employees;
 
 -- parties last (referenced by many documents)
