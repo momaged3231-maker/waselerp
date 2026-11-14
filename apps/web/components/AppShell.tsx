@@ -30,6 +30,7 @@ const NAV: NavItem[] = [
   { href: '/labels', label: 'ملصقات الأصناف', icon: '🏷️', permission: 'stock.view' },
   { href: '/mobile-stocktake', label: 'جرد موبايل', icon: '📱', permission: 'stock.manage' },
   { href: '/reminders', label: 'التذكيرات', icon: '🔔', permission: 'dashboard.view' },
+  { href: '/definitions', label: 'البيانات الأساسية', icon: '🗂️', permission: 'items.view' },
   { href: '/admin', label: 'الإعدادات', icon: '⚙️', permission: 'users.manage' },
 ];
 
