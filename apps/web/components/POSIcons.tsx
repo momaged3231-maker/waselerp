@@ -124,3 +124,12 @@ export function IconGift(props: IconProps) {
     </Icon>
   );
 }
+
+export function IconRefresh(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M20 12a8 8 0 1 1-2.34-5.66" />
+      <path d="M20 4v4h-4" />
+    </Icon>
+  );
+}

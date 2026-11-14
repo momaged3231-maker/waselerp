@@ -8,7 +8,7 @@ import { useSession } from '@/lib/session';
 import { useLiveEvents } from '@/lib/live';
 import { isNetworkError, offlineQueue, useOfflineQueue } from '@/lib/offline';
 import { agentHealth, openDrawer, printReceipt } from '@/lib/print';
-import { IconCash, IconCart, IconCheck, IconMinus, IconPlus, IconPrinter, IconSearch, IconTrash, IconX, IconGift } from '@/components/POSIcons';
+import { IconCash, IconCart, IconCheck, IconMinus, IconPlus, IconPrinter, IconSearch, IconTrash, IconX, IconGift, IconRefresh } from '@/components/POSIcons';
 
 type ItemUnit = {
   unitId: number; unitName: string; factor: number;
@@ -18,7 +18,7 @@ type ItemUnit = {
 type Line = {
   itemId: number; code: string; name: string; unitId: number; unitName?: string;
   quantity: number; unitPrice: number; discountPct: number; taxPct: number; onHandQty: number;
-  factor: number; units: ItemUnit[]; isGift?: boolean;
+  factor: number; units: ItemUnit[]; isGift?: boolean; discountAmount?: number;
 };
 
 export default function PosPage() {
@@ -54,6 +54,8 @@ export default function PosPage() {
   const [driverName, setDriverName] = useState('');
   const [driverPhone, setDriverPhone] = useState('');
   const [heldCarts, setHeldCarts] = useState<any[]>([]);
+  const [reps, setReps] = useState<any[]>([]);
+  const [repId, setRepId] = useState<number | null>(null);
   const [returnMode, setReturnMode] = useState(false);
   const [returnNo, setReturnNo] = useState('');
   const [returnInvoice, setReturnInvoice] = useState<any>(null);
@@ -67,6 +69,9 @@ export default function PosPage() {
   const [bulkValue, setBulkValue] = useState('');
   const [lastInvoiceNo, setLastInvoiceNo] = useState('');
   const [draftAvailable, setDraftAvailable] = useState(false);
+  const [invoiceDate, setInvoiceDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [discountModes, setDiscountModes] = useState<Record<number, 'pct' | 'amount'>>({});
 
   async function loadHeld() {
     apiFetch<any[]>('/pos/held').then(setHeldCarts).catch(() => {});
@@ -200,6 +205,7 @@ export default function PosPage() {
       setCashAccountId((value) => value ?? rows[0]?.cashAccountId ?? null);
       setShiftAccountId((value) => value ?? rows[0]?.cashAccountId ?? null);
     });
+    apiFetch<any[]>('/sales/reps').then(setReps).catch(() => setReps([]));
     loadShift();
     agentHealth().then((health) => setAgentOnline(!!health?.ok)).catch(() => setAgentOnline(false));
   }, [session?.activeBranchId]);
@@ -244,7 +250,7 @@ export default function PosPage() {
         .catch(() => {});
     }, 220);
     return () => clearTimeout(timer);
-  }, [search, session?.activeBranchId, partyId]);
+  }, [search, session?.activeBranchId, partyId, refreshKey]);
 
   async function searchParty(term: string) {
     const data = await apiFetch<any>(`/parties?search=${encodeURIComponent(term)}&type=1&pageSize=20`);
@@ -319,7 +325,30 @@ export default function PosPage() {
   function setLineDiscount(itemId: number, pct: number) {
     const max = session?.user.maxDiscountPct ?? 0;
     const value = Math.min(pct, max);
-    setCart((current) => current.map((l) => (l.itemId === itemId ? { ...l, discountPct: value } : l)));
+    setCart((current) => current.map((l) => {
+      if (l.itemId !== itemId) return l;
+      const gross = l.quantity * l.unitPrice;
+      return { ...l, discountPct: value, discountAmount: gross * (value / 100) };
+    }));
+  }
+
+  function setLineDiscountAmount(itemId: number, amount: number) {
+    const max = session?.user.maxDiscountPct ?? 0;
+    setCart((current) => current.map((l) => {
+      if (l.itemId !== itemId) return l;
+      const gross = l.quantity * l.unitPrice;
+      const raw = Math.max(0, amount);
+      const pct = gross > 0 ? Math.min((raw / gross) * 100, max) : 0;
+      return { ...l, discountPct: pct, discountAmount: gross * (pct / 100) };
+    }));
+  }
+
+  function lineDiscountMode(lineId: number): 'pct' | 'amount' {
+    return discountModes[lineId] ?? 'pct';
+  }
+
+  function toggleLineDiscountMode(lineId: number) {
+    setDiscountModes((m) => ({ ...m, [lineId]: (m[lineId] ?? 'pct') === 'pct' ? 'amount' : 'pct' }));
   }
 
   function toggleGift(itemId: number) {
@@ -520,6 +549,8 @@ export default function PosPage() {
       driverPhone: orderType === 2 ? driverPhone : undefined,
       discountPct,
       discountAmount: 0,
+      invoiceDate: invoiceDate || undefined,
+      repId: repId ?? undefined,
       couponCode: couponCode.trim() || undefined,
       clientRequestId,
       lines: cart.map((l) => ({
@@ -645,12 +676,42 @@ export default function PosPage() {
         </div>
       )}
 
+      {/* invoice date + manual refresh — visible always, like the Ezees toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <label className="flex items-center gap-2 text-xs font-bold text-slate-600">
+          <span dir="ltr">تاريخ الفاتورة</span>
+          <input
+            type="date"
+            className="input py-1.5 w-40"
+            dir="ltr"
+            value={invoiceDate}
+            onChange={(e) => setInvoiceDate(e.target.value)}
+            aria-label="تاريخ الفاتورة"
+          />
+          {invoiceDate !== new Date().toISOString().slice(0, 10) && (
+            <button className="text-brand-600 underline text-[11px]" onClick={() => setInvoiceDate(new Date().toISOString().slice(0, 10))}>
+              اليوم
+            </button>
+          )}
+        </label>
+      </div>
+
       <div className="pos-grid gap-4">
         {/* ---------------- Products ---------------- */}
         <div className="card p-3 lg:order-1 flex flex-col">
           <div className="flex items-center justify-between px-1 mb-2">
             <h2 className="font-extrabold text-slate-700">منيو المخزون</h2>
-            <span className="badge bg-slate-100 text-slate-600">{results.length} منتج</span>
+            <div className="flex items-center gap-2">
+              <button
+                className="w-8 h-8 rounded-xl text-slate-500 hover:bg-slate-100 flex items-center justify-center"
+                onClick={() => setRefreshKey((k) => k + 1)}
+                aria-label="تحديث البيانات"
+                title="تحديث البيانات"
+              >
+                <IconRefresh className="w-4 h-4" />
+              </button>
+              <span className="badge bg-slate-100 text-slate-600">{results.length} منتج</span>
+            </div>
           </div>
 
           <div className="relative mb-2">
@@ -821,14 +882,27 @@ export default function PosPage() {
                     {line.isGift ? (
                       <input className="input px-2 h-9 text-sm bg-emerald-100/50 text-emerald-700 font-bold" readOnly value="0" aria-label="خصم هدية" />
                     ) : (
-                      <input
-                        className="input px-2 h-9 text-sm"
-                        type="number"
-                        value={line.discountPct}
-                        onChange={(e) => setLineDiscount(line.itemId, Number(e.target.value))}
-                        title="خصم %"
-                        aria-label="خصم الفاتورة"
-                      />
+                      <div className="flex items-center gap-1">
+                        <input
+                          className="input px-2 h-9 text-sm w-full"
+                          type="number"
+                          value={lineDiscountMode(line.itemId) === 'pct' ? line.discountPct : (line.discountAmount ?? 0)}
+                          onChange={(e) => lineDiscountMode(line.itemId) === 'pct'
+                            ? setLineDiscount(line.itemId, Number(e.target.value))
+                            : setLineDiscountAmount(line.itemId, Number(e.target.value))}
+                          title={lineDiscountMode(line.itemId) === 'pct' ? 'خصم %' : 'خصم مبلغ'}
+                          aria-label={lineDiscountMode(line.itemId) === 'pct' ? 'خصم الفاتورة بالنسبة' : 'خصم الفاتورة بالمبلغ'}
+                        />
+                        <button
+                          type="button"
+                          className="btn-soft px-2 h-9 text-[11px] font-extrabold shrink-0 rounded-xl"
+                          onClick={() => toggleLineDiscountMode(line.itemId)}
+                          title="التبديل بين نسبة٪ ومبلغ"
+                          aria-label="تبديل نوع الخصم"
+                        >
+                          {lineDiscountMode(line.itemId) === 'pct' ? '٪' : 'ج'}
+                        </button>
+                      </div>
                     )}
                   </div>
 
@@ -929,7 +1003,8 @@ export default function PosPage() {
                         onClick={() => { setPartyId(p.partyId); setParties([]); }}
                         className="w-full text-right px-3 py-2 text-sm hover:bg-slate-50"
                       >
-                        {p.name} {Number(p.balance) !== 0 && <span className="text-xs text-rose-500">({formatMoney(p.balance)})</span>}
+                        {p.name} {p.phone && <span dir="ltr" className="text-[11px] text-slate-400">{p.phone}</span>}
+                        {Number(p.balance) !== 0 && <span className="text-xs text-rose-500">({formatMoney(p.balance)})</span>}
                       </button>
                     ))}
                   </div>
@@ -966,6 +1041,16 @@ export default function PosPage() {
                 ))}
               </div>
             </div>
+
+            {reps.length > 0 && (
+              <div className="mt-2">
+                <label className="text-[11px] font-extrabold text-slate-600 mb-1 block">المندوب (اختياري)</label>
+                <select className="input" value={repId ?? ''} onChange={(e) => setRepId(e.target.value ? Number(e.target.value) : null)}>
+                  <option value="">— بدون مندوب —</option>
+                  {reps.map((r) => <option key={r.userId} value={r.userId}>{r.fullName}</option>)}
+                </select>
+              </div>
+            )}
 
             {paymentType === 3 && (
               <div className="mt-2 grid grid-cols-2 gap-2">
@@ -1024,7 +1109,7 @@ export default function PosPage() {
           </div>
 
           {selectedParty && (
-            <div className="mt-2 text-xs text-slate-500">العميل: {selectedParty.name}</div>
+            <div className="mt-2 text-xs text-slate-500">العميل: {selectedParty.name}{selectedParty.phone ? <span dir="ltr"> · {selectedParty.phone}</span> : null}</div>
           )}
 
           <button className={`w-full mt-2 text-xs ${returnMode ? 'btn-primary' : 'btn-soft'}`}
@@ -1104,7 +1189,10 @@ export default function PosPage() {
       {paymentOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setPaymentOpen(false)}>
           <div className="card w-full max-w-sm p-5" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="تأكيد الدفع">
-            <div className="text-[11px] text-slate-400">نافذة الدفع</div>
+            <div className="text-[11px] text-slate-400 flex items-center justify-between">
+              <span>نافذة الدفع</span>
+              <span>رقم الفاتورة — جديد</span>
+            </div>
             <div className="flex items-baseline justify-between mt-1">
               <span className="text-sm font-bold text-slate-600">الإجمالي</span>
               <span className="text-2xl font-extrabold text-brand-700">{formatMoney(totals.total)}</span>

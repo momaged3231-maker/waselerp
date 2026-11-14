@@ -84,6 +84,16 @@ const round2 = (value: number) => Math.round((Number(value) + Number.EPSILON) * 
 export class SalesService {
   constructor(private readonly db: DatabaseService, private readonly live: LiveEventsService) {}
 
+  /** Sales representatives active in the system (used by POS to assign repId). */
+  reps() {
+    return this.db.query(
+      `SELECT user_id AS "userId", full_name AS "fullName", user_name AS "userName", commission_pct AS "commissionPct"
+         FROM users
+        WHERE is_active = true AND is_sales_rep = true
+        ORDER BY full_name`,
+    );
+  }
+
   async create(dto: InvoiceInput, user: AuthUser, branchId: number, editOf?: number) {
     if (!dto.lines?.length) throw new BadRequestException('لا توجد أصناف في الفاتورة');
 
@@ -1171,6 +1181,12 @@ export class SalesService {
 @Controller('sales')
 export class SalesController {
   constructor(private readonly service: SalesService) {}
+
+  @RequireAnyPermission('sales.view', 'purchases.view', 'pos.operate')
+  @Get('reps')
+  reps() {
+    return this.service.reps();
+  }
 
   @RequireAnyPermission('sales.view', 'purchases.view', 'pos.operate')
   @Get('invoices')
