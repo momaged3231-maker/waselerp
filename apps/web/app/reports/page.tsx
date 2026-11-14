@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import { apiFetch, formatMoney } from '@/lib/api';
-import { downloadCsv, printPage } from '@/lib/export';
+import { downloadBase64File, downloadCsv, printPage } from '@/lib/export';
+
+const XLSX_TABS = ['sales', 'items', 'stock', 'parties', 'cash', 'reorder', 'aging', 'commissions'];
 
 export default function ReportsPage() {
   const [tab, setTab] = useState<'sales' | 'items' | 'stock' | 'parties' | 'cash' | 'reorder' | 'aging' | 'commissions' | 'pivot'>('sales');
@@ -11,6 +13,7 @@ export default function ReportsPage() {
   const [to, setTo] = useState('');
   const [groupBy, setGroupBy] = useState('day');
   const [data, setData] = useState<any>(null);
+  const [exporting, setExporting] = useState(false);
 
   async function load() {
     const query = new URLSearchParams({ from, to });
@@ -38,6 +41,23 @@ export default function ReportsPage() {
 
   useEffect(() => { load(); }, [tab, from, to, groupBy]);
 
+  async function exportXlsx() {
+    if (!XLSX_TABS.includes(tab)) return;
+    setExporting(true);
+    try {
+      const query = new URLSearchParams({ report: tab, from, to });
+      if (tab === 'sales') query.set('groupBy', groupBy);
+      const file = await apiFetch<{ fileName: string; mimeType: string; base64: string }>(
+        `/reports/xlsx?${query.toString()}`,
+      );
+      downloadBase64File(file.fileName, file.mimeType, file.base64);
+    } catch (error: any) {
+      alert(error?.message ?? 'تعذر تصدير ملف Excel');
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <AppShell title="التقارير">
       <div className="flex flex-wrap gap-2 mb-4 items-center">
@@ -50,8 +70,15 @@ export default function ReportsPage() {
           <button key={key} onClick={() => setTab(key)} className={tab === key ? 'btn-primary' : 'btn-soft'}>{label}</button>
         ))}
         <div className="flex-1" />
+        <button
+          className="btn-primary no-print"
+          disabled={exporting || !XLSX_TABS.includes(tab)}
+          onClick={exportXlsx}
+        >
+          {exporting ? 'جاري التصدير…' : 'تصدير Excel (.xlsx)'}
+        </button>
         <button className="btn-soft no-print" onClick={() => downloadCsv(`report-${tab}.csv`, Array.isArray(data) ? data : [])}>
-          تصدير Excel (CSV)
+          تصدير CSV
         </button>
         <button className="btn-soft no-print" onClick={printPage}>
           طباعة (PDF)

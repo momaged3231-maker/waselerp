@@ -1,6 +1,99 @@
-import { Controller, Get, Injectable, Module, Query } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Injectable, Module, Query } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
+import { buildXlsx, type XlsxSheet } from '../../common/xlsx';
 import { CurrentBranch, RequireAnyPermission, RequirePermissions } from '../../common/security';
+
+type XlsxColumn = { key: string; label: string; type?: 'number' | 'date' };
+
+/** Arabic columns for every report that can be exported as a real workbook. */
+const XLSX_REPORTS: Record<string, { title: string; columns: XlsxColumn[] }> = {
+  sales: {
+    title: 'ملخص المبيعات',
+    columns: [
+      { key: 'label', label: 'الفترة', type: 'date' },
+      { key: 'invoiceCount', label: 'عدد الفواتير', type: 'number' },
+      { key: 'subTotal', label: 'الإجمالي قبل الخصم', type: 'number' },
+      { key: 'discount', label: 'الخصم', type: 'number' },
+      { key: 'tax', label: 'الضريبة', type: 'number' },
+      { key: 'total', label: 'الإجمالي', type: 'number' },
+      { key: 'paid', label: 'المحصّل', type: 'number' },
+      { key: 'profit', label: 'الربح', type: 'number' },
+    ],
+  },
+  items: {
+    title: 'أكثر الأصناف مبيعًا',
+    columns: [
+      { key: 'itemCode', label: 'الكود' },
+      { key: 'itemName', label: 'الصنف' },
+      { key: 'quantity', label: 'الكمية', type: 'number' },
+      { key: 'total', label: 'الإيراد', type: 'number' },
+      { key: 'cost', label: 'التكلفة', type: 'number' },
+      { key: 'profit', label: 'الربح', type: 'number' },
+    ],
+  },
+  stock: {
+    title: 'قيمة المخزون',
+    columns: [
+      { key: 'categoryName', label: 'الفئة' },
+      { key: 'itemCount', label: 'عدد الأصناف', type: 'number' },
+      { key: 'quantity', label: 'الكمية', type: 'number' },
+      { key: 'costValue', label: 'قيمة التكلفة', type: 'number' },
+      { key: 'sellValue', label: 'قيمة البيع', type: 'number' },
+    ],
+  },
+  parties: {
+    title: 'أرصدة العملاء والموردين',
+    columns: [
+      { key: 'name', label: 'الاسم' },
+      { key: 'phone', label: 'التليفون' },
+      { key: 'balance', label: 'الرصيد', type: 'number' },
+      { key: 'creditLimit', label: 'حد الائتمان', type: 'number' },
+      { key: 'lastMovement', label: 'آخر حركة', type: 'date' },
+    ],
+  },
+  cash: {
+    title: 'حركة الخزينة',
+    columns: [
+      { key: 'cashAccountName', label: 'الحساب' },
+      { key: 'totalIn', label: 'وارد', type: 'number' },
+      { key: 'totalOut', label: 'منصرف', type: 'number' },
+      { key: 'balance', label: 'الرصيد', type: 'number' },
+    ],
+  },
+  reorder: {
+    title: 'أصناف تحت حد الطلب',
+    columns: [
+      { key: 'itemCode', label: 'الكود' },
+      { key: 'itemName', label: 'الصنف' },
+      { key: 'onHand', label: 'الكمية المتاحة', type: 'number' },
+      { key: 'reorderPoint', label: 'حد الطلب', type: 'number' },
+      { key: 'unitName', label: 'الوحدة' },
+    ],
+  },
+  aging: {
+    title: 'أعمار الديون',
+    columns: [
+      { key: 'name', label: 'العميل' },
+      { key: 'phone', label: 'التليفون' },
+      { key: 'balance', label: 'الإجمالي', type: 'number' },
+      { key: 'bucket0_30', label: '0 - 30 يوم', type: 'number' },
+      { key: 'bucket31_60', label: '31 - 60 يوم', type: 'number' },
+      { key: 'bucket61_90', label: '61 - 90 يوم', type: 'number' },
+      { key: 'bucket90plus', label: 'أكثر من 90 يوم', type: 'number' },
+    ],
+  },
+  commissions: {
+    title: 'عمولات المندوبين',
+    columns: [
+      { key: 'repName', label: 'المندوب' },
+      { key: 'invoiceCount', label: 'عدد الفواتير', type: 'number' },
+      { key: 'totalSales', label: 'إجمالي المبيعات', type: 'number' },
+      { key: 'totalProfit', label: 'إجمالي الربح', type: 'number' },
+      { key: 'commissionPct', label: 'نسبة العمولة', type: 'number' },
+      { key: 'commissionAmount', label: 'قيمة العمولة', type: 'number' },
+    ],
+  },
+};
 
 @Injectable()
 export class ReportsService {
@@ -307,6 +400,60 @@ export class ReportsService {
     }
     return { warehouses: [...warehouses].sort(), categories: [...categories.entries()].map(([categoryName, values]) => ({ categoryName, values })) };
   }
+
+  /** Builds a real .xlsx workbook (base64) for one of the tabular reports. */
+  async exportXlsx(params: { report: string; from: string; to: string; groupBy: string; branchId: number }) {
+    const definition = XLSX_REPORTS[params.report];
+    if (!definition) throw new BadRequestException('تقرير غير معروف للتصدير');
+    let rows: any[] = [];
+    switch (params.report) {
+      case 'sales':
+        rows = await this.salesSummary({ from: params.from, to: params.to, branchId: params.branchId, groupBy: params.groupBy || 'day' });
+        break;
+      case 'items':
+        rows = await this.topItems({ from: params.from, to: params.to, branchId: params.branchId, limit: 1000 });
+        break;
+      case 'stock':
+        rows = await this.stockValue(params.branchId);
+        break;
+      case 'parties':
+        rows = await this.partyBalances(params.branchId, 0);
+        break;
+      case 'cash':
+        rows = await this.cashSummary(params.branchId, params.from, params.to);
+        break;
+      case 'reorder':
+        rows = await this.reorderReport(params.branchId);
+        break;
+      case 'aging':
+        rows = await this.debtAging(params.branchId);
+        break;
+      case 'commissions':
+        rows = await this.commissions(params.branchId, params.from, params.to);
+        break;
+      default:
+        throw new BadRequestException('تقرير غير معروف للتصدير');
+    }
+    const header = definition.columns.map((column) => column.label);
+    const body = (rows ?? []).map((row) => definition.columns.map((column) => {
+      const value = row[column.key];
+      if (value === null || value === undefined || value === '') return '';
+      if (column.type === 'number') {
+        const number = Number(value);
+        return Number.isFinite(number) ? number : 0;
+      }
+      if (column.type === 'date') return String(value).slice(0, 10);
+      return String(value);
+    }));
+    const sheet: XlsxSheet = { name: definition.title, rows: [header, ...body] };
+    const buffer = buildXlsx([sheet]);
+    return {
+      fileName: `${params.report}-${new Date().toISOString().slice(0, 10)}.xlsx`,
+      mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      base64: buffer.toString('base64'),
+      rows: body.length,
+    };
+  }
 }
 
 
@@ -385,6 +532,18 @@ export class ReportsController {
   @Get('pivot/stock')
   stockPivot(@CurrentBranch() branchId: number) {
     return this.service.stockPivotByCategoryWarehouse(branchId);
+  }
+
+  @RequirePermissions('reports.view')
+  @Get('xlsx')
+  xlsx(
+    @CurrentBranch() branchId: number,
+    @Query('report') report: string,
+    @Query('from') from: string,
+    @Query('to') to: string,
+    @Query('groupBy') groupBy: string,
+  ) {
+    return this.service.exportXlsx({ report: report || 'sales', from, to, groupBy, branchId });
   }
 }
 

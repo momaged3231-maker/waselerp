@@ -413,7 +413,7 @@ async function main() {
   // ---------------- a receipt voucher that settles an invoice ----------------
   const creditSales = await call('GET', '/sales/invoices?type=1&pageSize=200');
   const openInvoice = (creditSales.items ?? [])
-    .filter((row) => Number(row.paidAmount) < Number(row.totalAmount))
+    .filter((row) => row.partyId && Number(row.paidAmount) < Number(row.totalAmount))
     .sort((a, b) => Number(a.totalAmount) - Number(b.totalAmount))[0];
   if (openInvoice) {
     // Settle half of whatever is still open on the invoice.

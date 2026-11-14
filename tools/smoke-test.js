@@ -1285,7 +1285,7 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
 
   // 40. P4 — stock count document (سند الجرد)
   const employee = await call('POST', '/hr/employees', {
-    name: 'أمين مخزن الجرد', phone: '01099998877', baseSalary: 4000,
+    name: 'أمين مخزن الجرد', phone: '01099998877', basicSalary: 4000,
   });
   check('counting employee created', !!employee.employeeId, String(employee.employeeId));
 
@@ -1688,6 +1688,161 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
   check('control toggles restored after round-trip',
     (togglesRestored.defaultPaymentType ?? 1) === Number(settingsNow.DefaultPaymentType ?? 1)
       && togglesRestored.kitchenPrinterName === (settingsNow.KitchenPrinterName ?? ''));
+
+  // 48. P6/P7 — HR depth (components, attendance import, advances, payroll) + xlsx + item/party attachments
+  const currentMonth = new Date().toISOString().slice(0, 7);
+
+  const payrollEmployee = await call('POST', '/hr/employees', {
+    code: `EMP-${stamp}`, name: `موظف مرتبات ${stamp}`, jobTitle: 'محاسب',
+    basicSalary: 10000, allowances: 500, deductions: 100, hireDate: daysAgoIso(60),
+  });
+  check('payroll employee created', !!payrollEmployee.employeeId, String(payrollEmployee.employeeId));
+
+  const department = await call('POST', '/hr/departments', { name: `إدارة ${stamp}` });
+  check('department created', !!department.departmentId, String(department.departmentId));
+  await call('PUT', `/hr/employees/${payrollEmployee.employeeId}`, {
+    departmentId: department.departmentId, jobTitle: 'محاسب أول',
+  });
+  const employeeDetail = await call('GET', `/hr/employees/${payrollEmployee.employeeId}`);
+  check('employee detail carries the department',
+    Number(employeeDetail.departmentId) === Number(department.departmentId)
+      && employeeDetail.jobTitle === 'محاسب أول',
+    JSON.stringify({ departmentId: employeeDetail.departmentId, jobTitle: employeeDetail.jobTitle }));
+
+  const allowanceComponent = await call('POST', '/hr/components', {
+    name: `بدل مواصلات ${stamp}`, componentType: 1, calcType: 1, amount: 400,
+  });
+  const percentComponent = await call('POST', '/hr/components', {
+    name: `حافز نسبة ${stamp}`, componentType: 1, calcType: 2, amount: 10,
+  });
+  check('salary components created',
+    !!allowanceComponent.componentId && !!percentComponent.componentId,
+    `${allowanceComponent.componentId}/${percentComponent.componentId}`);
+
+  await call('PUT', `/hr/employees/${payrollEmployee.employeeId}/components`, {
+    components: [
+      { componentId: allowanceComponent.componentId, assigned: true },
+      { componentId: percentComponent.componentId, assigned: true, amountOverride: 12 },
+    ],
+  });
+  const assignedComponents = await call('GET', `/hr/employees/${payrollEmployee.employeeId}/components`);
+  const assignedAllowance = assignedComponents.find(
+    (row) => Number(row.componentId) === Number(allowanceComponent.componentId));
+  check('component assigned to the employee', assignedAllowance?.assigned === true, JSON.stringify(assignedAllowance));
+
+  const attendance = await call('POST', '/hr/attendance', {
+    employeeId: payrollEmployee.employeeId, workDate: daysAgoIso(1), status: 1, overtimeMinutes: 120,
+  });
+  check('attendance recorded', !!attendance.attendanceId, JSON.stringify(attendance));
+
+  const importCsv = [
+    'code,date,status,overtime',
+    `EMP-${stamp},${daysAgoIso(2)},present,60`,
+    `EMP-${stamp},${daysAgoIso(3)},absent,0`,
+  ].join('\n');
+  const imported = await call('POST', '/hr/attendance/import', { csv: importCsv });
+  check('attendance CSV imported', imported.imported === 2, JSON.stringify(imported));
+  const attendanceList = await call('GET', `/hr/attendance?employeeId=${payrollEmployee.employeeId}`);
+  check('imported attendance is listed', attendanceList.length >= 3, String(attendanceList.length));
+
+  const leave = await call('POST', '/hr/leaves', {
+    employeeId: payrollEmployee.employeeId, leaveType: 3,
+    startDate: `${currentMonth}-01`, endDate: `${currentMonth}-02`,
+  });
+  check('leave request created', !!leave.leaveId, JSON.stringify(leave));
+  await call('PUT', `/hr/leaves/${leave.leaveId}/status`, { status: 2 });
+  const approvedLeaves = await call('GET', '/hr/leaves?status=2');
+  check('leave approved',
+    approvedLeaves.some((row) => Number(row.leaveId) === Number(leave.leaveId)));
+
+  const advance = await call('POST', '/hr/advances', {
+    employeeId: payrollEmployee.employeeId, amount: 1200, monthlyDeduction: 200, notes: 'سلفة اختبار',
+  });
+  check('advance created', !!advance.advanceId, String(advance.advanceId));
+  const paidAdvance = await call('POST', `/hr/advances/${advance.advanceId}/pay`, { cashAccountId });
+  check('advance paid and journaled', !!paidAdvance.journalId, String(paidAdvance.journalId));
+  const advanceJournal = await call('GET', `/accounting/journals/${paidAdvance.journalId}`);
+  const advanceDebit = advanceJournal.lines.reduce((sum, line) => sum + Number(line.debit ?? 0), 0);
+  const advanceCredit = advanceJournal.lines.reduce((sum, line) => sum + Number(line.credit ?? 0), 0);
+  check('advance journal is balanced', Math.abs(advanceDebit - advanceCredit) < 0.01,
+    `${advanceDebit} / ${advanceCredit}`);
+
+  const stockBeforePayroll = Number((await call('GET', `/inventory/balances?warehouseId=${warehouseId}`))
+    .find((row) => row.itemId === itemB.itemId)?.onHandQty ?? 0);
+  const payroll = await call('POST', '/hr/payroll/generate', { periodMonth: currentMonth });
+  check('payroll generated', payroll.generated >= 1, JSON.stringify(payroll));
+
+  const monthSalaries = await call('GET', `/hr/salaries?month=${currentMonth}`);
+  const salaryRow = monthSalaries.find((row) => Number(row.employeeId) === Number(payrollEmployee.employeeId));
+  check('payroll row created for the employee', !!salaryRow, JSON.stringify(salaryRow));
+  check('payroll deducted the open advance', Number(salaryRow?.advanceDeduction) === 200,
+    String(salaryRow?.advanceDeduction));
+  check('payroll gross includes components and overtime', Number(salaryRow?.grossPay) > 12000,
+    String(salaryRow?.grossPay));
+
+  const salaryJournal = await call('GET', `/accounting/journals/${salaryRow?.glJournalId}`);
+  const salaryDebit = salaryJournal.lines.reduce((sum, line) => sum + Number(line.debit ?? 0), 0);
+  const salaryCredit = salaryJournal.lines.reduce((sum, line) => sum + Number(line.credit ?? 0), 0);
+  check('payroll accrual journal is balanced', Math.abs(salaryDebit - salaryCredit) < 0.01,
+    `${salaryDebit} / ${salaryCredit}`);
+
+  const stockAfterPayroll = Number((await call('GET', `/inventory/balances?warehouseId=${warehouseId}`))
+    .find((row) => row.itemId === itemB.itemId)?.onHandQty ?? 0);
+  check('payroll does not touch the stock', stockAfterPayroll === stockBeforePayroll,
+    `${stockBeforePayroll} -> ${stockAfterPayroll}`);
+
+  const payslip = await call('GET', `/hr/salaries/${salaryRow?.salaryPayId}/payslip`);
+  check('payslip has component lines', Array.isArray(payslip.lines) && payslip.lines.length > 0,
+    String(payslip.lines?.length));
+  check('payslip shows the unpaid leave days', Number(payslip.unpaidLeaveDays) >= 2,
+    String(payslip.unpaidLeaveDays));
+
+  const payrollPaid = await call('POST', '/hr/payroll/pay', {
+    cashAccountId, salaryPayIds: [salaryRow.salaryPayId],
+  });
+  check('payroll paid from the cash account', payrollPaid.paid === 1, JSON.stringify(payrollPaid));
+  const paidSalaries = await call('GET', `/hr/salaries?month=${currentMonth}`);
+  const paidRow = paidSalaries.find((row) => Number(row.salaryPayId) === Number(salaryRow.salaryPayId));
+  check('payroll row marked as paid', Number(paidRow?.status) === 2, String(paidRow?.status));
+
+  const payrollSummary = await call('GET', `/hr/reports/payroll-summary?month=${currentMonth}`);
+  check('payroll summary reports the month', Array.isArray(payrollSummary.items) && payrollSummary.items.length > 0,
+    JSON.stringify(payrollSummary.totals));
+
+  const attendanceSummary = await call('GET', `/hr/reports/attendance-summary?from=${currentMonth}-01&to=${currentMonth}-28`);
+  const employeeSummary = attendanceSummary.find(
+    (row) => Number(row.employeeId) === Number(payrollEmployee.employeeId));
+  check('attendance summary aggregates the employee',
+    !!employeeSummary && Number(employeeSummary.presentDays) >= 1, JSON.stringify(employeeSummary));
+
+  // Real .xlsx export decodes to a zip package.
+  const xlsx = await call('GET', '/reports/xlsx?report=sales');
+  const xlsxBuffer = Buffer.from(String(xlsx.base64 ?? ''), 'base64');
+  check('xlsx export returns a valid zip', xlsxBuffer.slice(0, 2).toString() === 'PK', `${xlsxBuffer.length} bytes`);
+  check('xlsx export has a filename', String(xlsx.fileName ?? '').endsWith('.xlsx'), String(xlsx.fileName));
+  const unknownXlsx = await raw('GET', '/reports/xlsx?report=unknown');
+  check('unknown xlsx report is rejected', unknownXlsx.status === 400, String(unknownXlsx.status));
+
+  // Attachments work for items and parties too (generic entity type).
+  const itemAttachment = await call('POST', '/attachments', {
+    entityType: 'item', entityId: itemB.itemId, fileName: 'item-spec.txt', mimeType: 'text/plain',
+    contentBase64: `data:text/plain;base64,${Buffer.from('item spec sheet').toString('base64')}`,
+  });
+  check('item attachment uploaded', !!itemAttachment.attachmentId, String(itemAttachment.attachmentId));
+  const itemAttachments = await call('GET', `/attachments?entityType=item&entityId=${itemB.itemId}`);
+  check('item attachment listed',
+    itemAttachments.some((row) => Number(row.attachmentId) === Number(itemAttachment.attachmentId)));
+  await call('DELETE', `/attachments/${itemAttachment.attachmentId}`);
+
+  const partyAttachment = await call('POST', '/attachments', {
+    entityType: 'party', entityId: party.partyId, fileName: 'party-contract.txt', mimeType: 'text/plain',
+    contentBase64: `data:text/plain;base64,${Buffer.from('signed contract').toString('base64')}`,
+  });
+  check('party attachment uploaded', !!partyAttachment.attachmentId, String(partyAttachment.attachmentId));
+  const partyAttachments = await call('GET', `/attachments?entityType=party&entityId=${party.partyId}`);
+  check('party attachment listed',
+    partyAttachments.some((row) => Number(row.attachmentId) === Number(partyAttachment.attachmentId)));
+  await call('DELETE', `/attachments/${partyAttachment.attachmentId}`);
 
   const failed = results.filter((r) => !r.ok);
   console.log(`\n${results.length - failed.length}/${results.length} checks passed`);

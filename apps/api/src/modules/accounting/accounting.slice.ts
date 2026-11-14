@@ -1103,7 +1103,7 @@ export class AccountingService {
     const type = params.type ?? 1;
     return this.db.query<any>(
       `SELECT i.invoice_id AS "invoiceId", i.invoice_no AS "invoiceNo", i.invoice_date AS "invoiceDate",
-              i.invoice_type AS "invoiceType", i.total_amount AS "totalAmount",
+              i.invoice_type AS "invoiceType", i.party_id AS "partyId", i.total_amount AS "totalAmount",
               i.paid_amount AS "paidAmount",
               (i.total_amount - i.paid_amount) AS remaining,
               i.due_date AS "dueDate"

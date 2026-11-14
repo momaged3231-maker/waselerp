@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
+import AttachmentsPanel from '@/components/AttachmentsPanel';
 import { apiFetch, formatMoney } from '@/lib/api';
 import { useSession } from '@/lib/session';
 
@@ -268,6 +269,12 @@ export default function ItemsPage() {
                 <button type="button" className="btn-soft" onClick={() => setForm(empty)}>جديد</button>
               )}
             </div>
+
+            {form.itemId && (
+              <div className="border-t border-slate-100 pt-3">
+                <AttachmentsPanel entityType="item" entityId={form.itemId} compact />
+              </div>
+            )}
           </form>
         )}
       </div>

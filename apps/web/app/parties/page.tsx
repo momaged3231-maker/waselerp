@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
+import AttachmentsPanel from '@/components/AttachmentsPanel';
 import { apiFetch, formatMoney } from '@/lib/api';
 import { useSession } from '@/lib/session';
 
@@ -175,6 +176,12 @@ export default function PartiesPage() {
               <button className="btn-primary flex-1">حفظ</button>
               {form.partyId && <button type="button" className="btn-soft" onClick={() => setForm(empty)}>جديد</button>}
             </div>
+
+            {form.partyId && (
+              <div className="border-t border-slate-100 pt-3">
+                <AttachmentsPanel entityType="party" entityId={form.partyId} compact />
+              </div>
+            )}
           </form>
         )}
       </div>
