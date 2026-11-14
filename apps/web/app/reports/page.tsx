@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import { apiFetch, formatMoney } from '@/lib/api';
+import { downloadCsv, printPage } from '@/lib/export';
 
 export default function ReportsPage() {
   const [tab, setTab] = useState<'sales' | 'items' | 'stock' | 'parties' | 'cash' | 'reorder' | 'aging' | 'commissions'>('sales');
@@ -40,6 +41,12 @@ export default function ReportsPage() {
           <button key={key} onClick={() => setTab(key)} className={tab === key ? 'btn-primary' : 'btn-soft'}>{label}</button>
         ))}
         <div className="flex-1" />
+        <button className="btn-soft no-print" onClick={() => downloadCsv(`report-${tab}.csv`, Array.isArray(data) ? data : [])}>
+          تصدير Excel (CSV)
+        </button>
+        <button className="btn-soft no-print" onClick={printPage}>
+          طباعة (PDF)
+        </button>
         <input className="input w-40 py-1.5" type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
         <input className="input w-40 py-1.5" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
         {tab === 'sales' && (

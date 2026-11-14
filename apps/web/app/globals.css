@@ -85,10 +85,14 @@ body {
 }
 
 @media print {
-  .no-print {
+  .no-print, aside, header, nav {
     display: none !important;
   }
   body {
     background: #fff;
+  }
+  .card {
+    box-shadow: none;
+    border: 1px solid #e2e8f0;
   }
 }
