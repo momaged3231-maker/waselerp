@@ -98,15 +98,46 @@ const SETTING_SECTIONS: { id: string; title: string; desc: string; fields: Setti
     ],
   },
   {
+    id: 'items',
+    title: 'الأصناف',
+    desc: 'سلوك تعريف الأصناف',
+    fields: [
+      { key: 'ItemCodeAuto', label: 'كود الصنف تلقائيًا', type: 'boolean', desc: 'عند الحفظ بكود فارغ، يُولّد النظام كودًا ITM-000001 تلقائيًا (مخصص لكل فرع/قاعدة بيانات)' },
+    ],
+  },
+  {
     id: 'pos',
     title: 'نقطة البيع والكاشير',
-    desc: 'سلوك نقطة البيع وإلزام فتح وردية',
+    desc: 'سلوك نقطة البيع وإلزام فتح وردية وطلبات المبيعات',
     fields: [
       {
         key: 'RequireCashierShift',
         label: 'إلزام فتح وردية قبل البيع',
         type: 'boolean',
         desc: 'لا يمكن إتمام بيع من نقطة البيع بدون وردية مفتوحة على الخزينة',
+      },
+      {
+        key: 'RequireRepOnSale',
+        label: 'المندوب إلزامي عند تسجيل فاتورة',
+        type: 'boolean',
+        desc: 'رفض حفظ فاتورة المبيعات/المرتجع بدون اختيار مندوب مبيعات',
+      },
+      {
+        key: 'BlockBelowCostSale',
+        label: 'منع البيع بأقل من التكلفة',
+        type: 'boolean',
+        desc: 'رفض حفظ بيع/مرتجع بسعر أقل من تكلفة الصنف (الهدايا مستثناة)',
+      },
+      {
+        key: 'DefaultPaymentType',
+        label: 'نمط الدفع الافتراضي في نقطة البيع',
+        type: 'select',
+        desc: 'الخيار الذي يفتح عليه شاشة الدفع دائمًا',
+        options: [
+          { value: '1', label: 'نقدي' },
+          { value: '2', label: 'آجل' },
+          { value: '3', label: 'مختلط (نقدي + بطاقة/محفظة)' },
+        ],
       },
     ],
   },
@@ -133,6 +164,7 @@ const SETTING_SECTIONS: { id: string; title: string; desc: string; fields: Setti
       },
       { key: 'KitchenTicketEnabled', label: 'طباعة تذكرة مطبخ عند إرسال الطلب للمطبخ', type: 'boolean', desc: 'تذكرة بلا أسعار تُطبع على طابعة الكاشير/المطبخ عند «إرسال للمطبخ» من شاشة المطاعم' },
       { key: 'KitchenTicketCopies', label: 'عدد نسخ تذكرة المطبخ', type: 'number', dir: 'ltr', unit: 'نسخة', desc: '1–3 نسخ لكل تذكرة مطبخ' },
+      { key: 'KitchenPrinterName', label: 'طابعة تذكرة المطبخ (اسم طابعة Windows)', type: 'text', dir: 'ltr', desc: 'اتركه فارغًا = الطابعة الافتراضية للوكيل. مثال: "KitchenPrinter" — نفس الاسم كما يظهر في قائمة الطابعات' },
     ],
   },
   {

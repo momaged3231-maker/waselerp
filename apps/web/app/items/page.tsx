@@ -136,8 +136,8 @@ export default function ItemsPage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="label">الكود</label>
-                <input className="input" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} required dir="ltr" />
+                <label className="label">الكود <span className="font-normal text-[10px] text-slate-400">(فارغ = كود تلقائي)</span></label>
+                <input className="input" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} dir="ltr" placeholder="ITM-000001" />
               </div>
               <div>
                 <label className="label">الباركود</label>

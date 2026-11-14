@@ -1,5 +1,6 @@
 import {
   Body, Controller, Delete, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Query,
+  BadRequestException,
 } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
 import { resolvePrices } from '../../common/pricing';
@@ -152,19 +153,35 @@ export class ItemsService {
   }
 
   async create(dto: ItemDto, user: AuthUser) {
-    const row = await this.db.one(
-      `INSERT INTO items (code, barcode, name, name_en, category_id, base_unit_id, cost_price, sell_price,
-                          vat_pct, discount_pct, reorder_point, is_service, has_serial, is_active, notes)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
-       RETURNING item_id`,
-      [
-        dto.code, dto.barcode ?? null, dto.name, dto.nameEn ?? null, dto.categoryId ?? null,
-        dto.baseUnitId, dto.costPrice, dto.sellPrice, dto.vatPct ?? 0, dto.discountPct ?? 0,
-        dto.reorderPoint ?? 0, dto.isService ?? false, dto.hasSerial ?? false, dto.isActive ?? true, dto.notes ?? null,
-      ],
-    );
-    this.live.publish({ type: 'item.updated', itemIds: [Number(row.item_id)] });
-    return { itemId: row.item_id };
+    const result = await this.db.transaction(async (client) => {
+      let code = String(dto.code ?? '').trim();
+      if (!code) {
+        const settingRows = await client.query<{ setting_value: string | null }>(
+          `SELECT setting_value FROM app_settings WHERE setting_key = $1::text`,
+          ['ItemCodeAuto'],
+        );
+        const auto = ['true', '1'].includes(String(settingRows.rows[0]?.setting_value ?? '').toLowerCase());
+        if (!auto) {
+          throw new BadRequestException('كود الصنف مطلوب — أو فعّل «كود الصنف تلقائيًا» من الإعدادات ← إعدادات النظام');
+        }
+        const seq = await this.db.nextNumber(client, 'ITEM');
+        code = `ITM-${String(seq).padStart(6, '0')}`;
+      }
+      const row = await client.query(
+        `INSERT INTO items (code, barcode, name, name_en, category_id, base_unit_id, cost_price, sell_price,
+                            vat_pct, discount_pct, reorder_point, is_service, has_serial, is_active, notes)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+         RETURNING item_id`,
+        [
+          code, dto.barcode ?? null, dto.name, dto.nameEn ?? null, dto.categoryId ?? null,
+          dto.baseUnitId, dto.costPrice, dto.sellPrice, dto.vatPct ?? 0, dto.discountPct ?? 0,
+          dto.reorderPoint ?? 0, dto.isService ?? false, dto.hasSerial ?? false, dto.isActive ?? true, dto.notes ?? null,
+        ],
+      );
+      return { itemId: Number(row.rows[0].item_id), code };
+    });
+    this.live.publish({ type: 'item.updated', itemIds: [result.itemId] });
+    return result;
   }
 
   async update(id: number, dto: ItemDto) {

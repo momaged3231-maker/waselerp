@@ -95,7 +95,8 @@ export class SalesService {
       [['CompanyName', 'CompanyPhone', 'CompanyAddress', 'TaxNumber',
         'InvoiceFooter', 'ShowTaxOnReceipt', 'TaxName',
         'ReceiptShowBranchName', 'ReceiptShowPartyName', 'ReceiptShowTotals',
-        'ReceiptCopies', 'ReceiptPaperSize', 'KitchenTicketEnabled', 'KitchenTicketCopies']],
+        'ReceiptCopies', 'ReceiptPaperSize', 'KitchenTicketEnabled', 'KitchenTicketCopies', 'KitchenPrinterName',
+        'DefaultPaymentType']],
     );
     const map = new Map(rows.map((row) => [row.setting_key, row.setting_value]));
     const value = (key: string) => map.get(key) ?? '';
@@ -111,6 +112,9 @@ export class SalesService {
     const paperSize = ['thermal80', 'thermal58', 'a5', 'a4'].includes(value('ReceiptPaperSize'))
       ? value('ReceiptPaperSize')
       : 'thermal80';
+    const defaultPaymentType = [1, 2, 3].includes(Number(value('DefaultPaymentType')))
+      ? Number(value('DefaultPaymentType'))
+      : 1;
     return {
       companyName: value('CompanyName'),
       companyPhone: value('CompanyPhone'),
@@ -126,6 +130,8 @@ export class SalesService {
       receiptPaperSize: paperSize,
       kitchenTicketEnabled: bool('KitchenTicketEnabled', false),
       kitchenTicketCopies: int('KitchenTicketCopies', 1, 3, 1),
+      kitchenPrinterName: value('KitchenPrinterName'),
+      defaultPaymentType,
     };
   }
 
@@ -199,6 +205,38 @@ export class SalesService {
     }
 
     return this.db.transaction(async (client) => {
+      // Sales rep may be mandatory (settings: RequireRepOnSale) — sales types only.
+      if (!isPurchase && !dto.repId) {
+        const repRequired = await getBooleanSetting(client, 'RequireRepOnSale', false);
+        if (repRequired) {
+          throw new BadRequestException('المندوب إلزامي عند تسجيل الفاتورة — حدده من خانة «المندوب» أو عطّل «طلب المندوب إلزامي» من الإعدادات');
+        }
+      }
+
+      // Block selling below cost (settings: BlockBelowCostSale) — sales types only.
+      if (!isPurchase) {
+        const blockBelowCost = await getBooleanSetting(client, 'BlockBelowCostSale', false);
+        if (blockBelowCost) {
+          const itemIds = [...new Set(dto.lines.map((line) => Number(line.itemId)).filter((n) => Number.isFinite(n) && n > 0))];
+          if (itemIds.length) {
+            const itemRows = await client.query<any>(
+              `SELECT item_id, name, cost_price FROM items WHERE item_id = ANY($1::int[])`,
+              [itemIds],
+            );
+            const nameById = new Map(itemRows.rows.map((row: any) => [Number(row.item_id), String(row.name)]));
+            const costById = new Map(itemRows.rows.map((row: any) => [Number(row.item_id), Number(row.cost_price ?? 0)]));
+            const below = [...new Set(
+              dto.lines
+                .filter((line) => !line.isGift && Number(line.unitPrice) < Number(costById.get(Number(line.itemId)) ?? 0) - 0.0001)
+                .map((line) => nameById.get(Number(line.itemId)) ?? `#${line.itemId}`),
+            )];
+            if (below.length) {
+              throw new BadRequestException(`سعر البيع أقل من التكلفة ل: ${below.slice(0, 3).join('، ')} — نظام يرفض البيع بأقل من التكلفة (عطّله من الإعدادات لو محتاج)`);
+            }
+          }
+        }
+      }
+
       const warehouse = await client.query<{ branch_id: number }>(
         'SELECT branch_id FROM warehouses WHERE warehouse_id = $1',
         [dto.warehouseId],

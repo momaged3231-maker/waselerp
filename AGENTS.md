@@ -36,7 +36,7 @@ cd apps/print-agent && npm install && node server.js
 ## 2) الاختبارات (مهم جدًا)
 
 ```bash
-npm test          # tools/smoke-test.js — 333 فحص end-to-end
+npm test          # tools/smoke-test.js — 337 فحص end-to-end
 npm run test:print   # tools/print-agent-test.js — توليد ESC/POS بدون طابعة
 ```
 
@@ -106,7 +106,8 @@ tools/              pg/ (تشغيل + فحص DB + pglite) · smoke-test.js · de
 - ✅ **P7 — الإعدادات والأدوات (2026-11-14)**: تقييد مخازن/صناديق لكل مستخدم (API `GET/PUT /admin/users/:id/restrictions` + `GET /admin/restrictions/options` + مودال «مخازن / صناديق» في تبويب المستخدمون + تنفيذ فعلي في قوائم المخزن/الصندوق للكاشير/المندوب) · تبويب «النسخ الاحتياطي» في الإعدادات (تنزيل JSON كامل + استعادة مع تأكيد ومسح/إعادة إدراج مع audit) · مرفقات الفواتير (`AttachmentsPanel` في تفاصيل الفاتورة — رفع/تنزيل/حذف، حد 5MB) · تصدير CSV + طباعة/PDF من التقارير · جدول محوري (`/reports/pivot/sales`, `/reports/pivot/stock`) · دول/مدن/شحن + البيانات الأساسية
 - ✅ **الواجهة (2026-11-14)**: Sidebar مجمّع بنمط SaaS (SVG icons, 6 مجموعات) + لوحة معلومات بأيقونات SVG — راجع commit 8b44683
 - ✅ **هوية الشركة للطباعة (2026-11-14)**: `GET /sales/print-context` (sales.view/pos.operate) تغذّي CompanyName/Phone/Address/TaxNumber/InvoiceFooter + إظهار/إخفاء أقسام الإيصال (`ReceiptShowBranchName/PartyName/Totals`) + `ReceiptCopies` 1–5 + `ReceiptPaperSize` (thermal80/58 عبر الوكيل؛ A5/A4 بالمتصفح مع @page) + **تذكرة مطبخ** (`KitchenTicketEnabled` + نسخ، `/kitchen-ticket` بلا أسعار من شاشة المطاعم) + **حد الائتمان استباقي في POS** (عرض المديونية/المتاح + تحذير قبل الحفظ) + `ShowTaxOnReceipt` + `TaxName` — راجع `docs/GAP-SETTINGS-EZEES.md`
-- ✅ `npm test` → 333/333 فحصًا ناجحًا (الأقسام 44–46)
+- ✅ **مفاتيح تحكم حقيقية (2026-11-14، الجولة 2)**: `ItemCodeAuto` (كود تلقائي ITM-… من number_sequences داخل transaction) · `RequireRepOnSale` (رفض الحفظ بلا مندوب — server-side + رسالة واضحة) · `BlockBelowCostSale` (منع البيع بأقل من التكلفة — الهدايا مستثناة) · `DefaultPaymentType` (نمط الدفع الافتراضي في POS) · `KitchenPrinterName` (طابعة مطبخ Windows مخصصة، فارغ = الطابعة الافتراضية) — كلها في «الإعدادات ← إعدادات النظام» وكل مفتاح يُستهلك فعليًا في الكود
+- ✅ `npm test` → 337/337 فحصًا ناجحًا (الأقسام 44–47)
 
 ## 6) الشغل اللي فاضل (مرتّب بالأولوية)
 

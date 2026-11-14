@@ -89,6 +89,11 @@ const SETTINGS: [string, string][] = [
   ['ReceiptPaperSize', 'thermal80'],
   ['KitchenTicketEnabled', 'false'],
   ['KitchenTicketCopies', '1'],
+  ['KitchenPrinterName', ''],
+  ['DefaultPaymentType', '1'],
+  ['ItemCodeAuto', 'false'],
+  ['RequireRepOnSale', 'false'],
+  ['BlockBelowCostSale', 'false'],
 ];
 
 function hashPassword(password: string) {

@@ -197,6 +197,7 @@ export default function RestaurantPage() {
             const agentReady = await agentHealth();
             if (agentReady?.ok) {
               const order = await apiFetch<any>(`/pos/table-orders/${id}`);
+              const printerName = String(ctx.kitchenPrinterName ?? '').trim();
               await printKitchenTicket({
                 branch: ctx.companyName || undefined,
                 table: order?.header?.tableName,
@@ -208,7 +209,10 @@ export default function RestaurantPage() {
                   name: line.itemName,
                   note: line.notes ?? undefined,
                 })),
-              }, { copies: Number(ctx.kitchenTicketCopies ?? 1) });
+              }, {
+                copies: Number(ctx.kitchenTicketCopies ?? 1),
+                printer: printerName ? { type: 'windows', name: printerName } : undefined,
+              });
             } else {
               setMessage('تم الإرسال للمطبخ — وكيل الطباعة غير متصل (تذكرة المطبخ لم تُطبع)');
             }

@@ -1652,6 +1652,43 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
       && presentationRestored.receiptPaperSize === (printSnapshot.ReceiptPaperSize ?? 'thermal80')
       && presentationRestored.kitchenTicketEnabled === ((printSnapshot.KitchenTicketEnabled ?? 'false') === 'true'));
 
+  // 47. settings — control toggles (auto item code, rep required, below-cost block)
+  const settingsNow = await call('GET', '/admin/settings');
+  await call('PUT', '/admin/settings', { ...settingsNow, ItemCodeAuto: 'true', RequireRepOnSale: 'true', BlockBelowCostSale: 'true', DefaultPaymentType: '2' });
+
+  const autoItem = await call('POST', '/items', {
+    name: `صنف كود تلقائي ${stamp}`, baseUnitId: 1, costPrice: 100, sellPrice: 150, vatPct: 0,
+  });
+  check('item created with auto code when ItemCodeAuto is on', typeof autoItem.code === 'string' && autoItem.code.startsWith('ITM-'), JSON.stringify(autoItem));
+
+  const belowCost = await raw('POST', '/sales/invoices', {
+    invoiceType: 1, branchId, warehouseId, paymentType: 1, paidAmount: 1,
+    cashAccountId, repId,
+    lines: [{ itemId: autoItem.itemId, unitId: 1, quantity: 1, unitPrice: 1, taxPct: 0 }],
+  });
+  check('sale below cost is rejected when BlockBelowCostSale is on',
+    belowCost.status === 400 && String(belowCost.data?.message ?? '').includes('التكلفة'),
+    String(belowCost.status));
+
+  const noRepSale = await raw('POST', '/sales/invoices', {
+    invoiceType: 1, branchId, warehouseId, paymentType: 1, paidAmount: 10,
+    cashAccountId,
+    lines: [{ itemId: itemB.itemId, unitId: 1, quantity: 1, unitPrice: 10000, taxPct: 0 }],
+  });
+  check('sale without rep is rejected when RequireRepOnSale is on', noRepSale.status === 400, String(noRepSale.status));
+
+  await call('PUT', '/admin/settings', {
+    ...settingsNow,
+    ItemCodeAuto: settingsNow.ItemCodeAuto ?? 'false',
+    RequireRepOnSale: settingsNow.RequireRepOnSale ?? 'false',
+    BlockBelowCostSale: settingsNow.BlockBelowCostSale ?? 'false',
+    DefaultPaymentType: settingsNow.DefaultPaymentType ?? '1',
+  });
+  const togglesRestored = await call('GET', '/sales/print-context');
+  check('control toggles restored after round-trip',
+    (togglesRestored.defaultPaymentType ?? 1) === Number(settingsNow.DefaultPaymentType ?? 1)
+      && togglesRestored.kitchenPrinterName === (settingsNow.KitchenPrinterName ?? ''));
+
   const failed = results.filter((r) => !r.ok);
   console.log(`\n${results.length - failed.length}/${results.length} checks passed`);
   if (failed.length) process.exit(1);

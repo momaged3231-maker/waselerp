@@ -208,7 +208,11 @@ export default function PosPage() {
       setShiftAccountId((value) => value ?? rows[0]?.cashAccountId ?? null);
     });
     apiFetch<any[]>('/sales/reps').then(setReps).catch(() => setReps([]));
-    apiFetch('/sales/print-context').then(setPrintContext).catch(() => {});
+    apiFetch('/sales/print-context').then((ctx: any) => {
+      setPrintContext(ctx);
+      const def = Number(ctx?.defaultPaymentType);
+      if ([1, 2, 3].includes(def)) setPaymentType(def);
+    }).catch(() => {});
     loadShift();
     agentHealth().then((health) => setAgentOnline(!!health?.ok)).catch(() => setAgentOnline(false));
   }, [session?.activeBranchId]);
