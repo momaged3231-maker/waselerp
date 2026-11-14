@@ -56,6 +56,7 @@ export async function apiFetch<T = any>(
     method: options.method ?? 'GET',
     headers,
     body: options.body ? JSON.stringify(options.body) : undefined,
+    cache: 'no-store',
   });
 
   if (response.status === 401 && session?.refreshToken) {
@@ -65,6 +66,7 @@ export async function apiFetch<T = any>(
         method: options.method ?? 'GET',
         headers: { ...headers, Authorization: `Bearer ${refreshed.accessToken}` },
         body: options.body ? JSON.stringify(options.body) : undefined,
+        cache: 'no-store',
       });
       if (retry.ok) return retry.json();
     }
