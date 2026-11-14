@@ -17,6 +17,13 @@ using System;
 using System.Runtime.InteropServices;
 
 public class WaselRawPrinter {
+  [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+  public class DOC_INFO_1 {
+    [MarshalAs(UnmanagedType.LPWStr)] public string pDocName;
+    [MarshalAs(UnmanagedType.LPWStr)] public string pOutputFile;
+    [MarshalAs(UnmanagedType.LPWStr)] public string pDatatype;
+  }
+
   [DllImport("winspool.drv", EntryPoint = "OpenPrinterA", CharSet = CharSet.Ansi, SetLastError = true)]
   public static extern IntPtr OpenPrinter(string pPrinterName, out IntPtr pHandle, IntPtr pDefault);
 
@@ -24,7 +31,8 @@ public class WaselRawPrinter {
   public static extern bool ClosePrinter(IntPtr hPrinter);
 
   [DllImport("winspool.drv", CharSet = CharSet.Unicode, EntryPoint = "StartDocPrinterW", SetLastError = true)]
-  public static extern bool StartDocPrinter(IntPtr hPrinter, int Level, IntPtr pDocInfo);
+  public static extern bool StartDocPrinter(IntPtr hPrinter, int Level,
+    [In, MarshalAs(UnmanagedType.LPStruct)] DOC_INFO_1 pDocInfo);
 
   [DllImport("winspool.drv", CharSet = CharSet.Unicode, EntryPoint = "EndDocPrinter", SetLastError = true)]
   public static extern bool EndDocPrinter(IntPtr hPrinter);
@@ -47,10 +55,20 @@ function Send-RawBytes {
   $printer = [IntPtr]::Zero
   try {
     $printer = [WaselRawPrinter]::OpenPrinter($PrinterName, [ref]$handle, [IntPtr]::Zero)
-    if ($printer -eq [IntPtr]::Zero) { throw "Cannot open printer '$PrinterName'" }
+    if ($printer -eq [IntPtr]::Zero) {
+      $code = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
+      throw "Cannot open printer '$PrinterName' (Win32 error $code)"
+    }
 
-    $started = [WaselRawPrinter]::StartDocPrinter($handle, 1, [IntPtr]::Zero)
-    if (-not $started) { throw "StartDocPrinter failed" }
+    $docInfo = New-Object WaselRawPrinter+DOC_INFO_1
+    $docInfo.pDocName = 'WaselERP Receipt'
+    $docInfo.pOutputFile = $null
+    $docInfo.pDatatype = 'RAW'
+    $started = [WaselRawPrinter]::StartDocPrinter($handle, 1, $docInfo)
+    if (-not $started) {
+      $code = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
+      throw "StartDocPrinter failed (Win32 error $code)"
+    }
 
     [WaselRawPrinter]::StartPagePrinter($handle) | Out-Null
     $written = 0
