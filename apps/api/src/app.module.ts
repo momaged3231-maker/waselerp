@@ -23,6 +23,7 @@ import { AccountingModule } from './modules/accounting/accounting.slice';
 import { PricingModule } from './modules/pricing/pricing.slice';
 import { EtaModule } from './modules/eta/eta.slice';
 import { AttachmentsModule } from './modules/attachments/attachments.slice';
+import { BackupModule } from './modules/backup/backup.slice';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { AttachmentsModule } from './modules/attachments/attachments.slice';
     PricingModule,
     EtaModule,
     AttachmentsModule,
+    BackupModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
