@@ -5,7 +5,13 @@ import { AppModule } from './app.module';
 import * as express from 'express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: true, bodyParser: false });
+  const app = await NestFactory.create(AppModule, {
+    cors: {
+      origin: process.env.FRONTEND_URL ?? true,
+      credentials: true,
+    },
+    bodyParser: false,
+  });
 
   app.use(express.json({ limit: 50 * 1024 * 1024 }));
   app.use(express.urlencoded({ extended: true, limit: 50 * 1024 * 1024 }));
