@@ -82,6 +82,11 @@ function line(text, { align = 'left', width = 42, bold = false, double = false }
 function buildReceiptBytes(receipt, width = 42) {
   const chunks = [cmd.init(), cmd.spacing(24)];
   const store = receipt.store ?? {};
+  const showBranch = receipt.showBranch !== false;
+  const showParty = receipt.showParty !== false;
+  const showTotals = receipt.showTotals !== false;
+  const showTax = receipt.showTax !== false;
+  const taxName = String(receipt.taxName ?? 'الضريبة');
 
   chunks.push(line(store.name ?? 'WaselERP', { align: 'center', width, bold: true, double: true }));
   if (store.address) chunks.push(line(store.address, { align: 'center', width }));
@@ -92,8 +97,8 @@ function buildReceiptBytes(receipt, width = 42) {
   const header = receipt.header ?? {};
   chunks.push(line(`فاتورة: ${header.invoiceNo ?? ''}`, { width }));
   chunks.push(line(`التاريخ: ${new Date(header.invoiceDate ?? Date.now()).toLocaleString('ar-EG')}`, { width }));
-  if (header.partyName) chunks.push(line(`العميل: ${header.partyName}`, { width }));
-  if (header.branchName) chunks.push(line(`الفرع: ${header.branchName}`, { width }));
+  if (showParty && header.partyName) chunks.push(line(`العميل: ${header.partyName}`, { width }));
+  if (showBranch && header.branchName) chunks.push(line(`الفرع: ${header.branchName}`, { width }));
   chunks.push(line('-'.repeat(width), { width }));
   chunks.push(line('الصنف', { width, bold: true }));
   chunks.push(line('كمية        سعر        إجمالي', { width, bold: true }));
@@ -110,18 +115,49 @@ function buildReceiptBytes(receipt, width = 42) {
   }
 
   chunks.push(line('-'.repeat(width), { width }));
-  chunks.push(line(`الإجمالي: ${Number(header.subTotal ?? 0).toFixed(2)}`, { align: 'right', width }));
-  if (Number(header.discountAmount ?? 0) !== 0) {
-    chunks.push(line(`الخصم: ${Number(header.discountAmount).toFixed(2)}`, { align: 'right', width }));
+  if (showTotals) {
+    chunks.push(line(`الإجمالي: ${Number(header.subTotal ?? 0).toFixed(2)}`, { align: 'right', width }));
+    if (Number(header.discountAmount ?? 0) !== 0) {
+      chunks.push(line(`الخصم: ${Number(header.discountAmount).toFixed(2)}`, { align: 'right', width }));
+    }
   }
-  const showTax = receipt.showTax !== false;
-  const taxName = String(receipt.taxName ?? 'الضريبة');
   if (showTax && Number(header.taxAmount ?? 0) !== 0) {
     chunks.push(line(`${taxName}: ${Number(header.taxAmount).toFixed(2)}`, { align: 'right', width }));
   }
   chunks.push(line(`المطلوب: ${Number(header.totalAmount ?? 0).toFixed(2)}`, { align: 'right', width, bold: true, double: true }));
   chunks.push(line(`المدفوع: ${Number(header.paidAmount ?? 0).toFixed(2)}`, { align: 'right', width }));
   if (receipt.footer) chunks.push(line(receipt.footer, { align: 'center', width }));
+  chunks.push(cmd.feed(3), cmd.cut());
+
+  return Buffer.concat(chunks);
+}
+
+/** Kitchen ticket (no prices) — sent when a table order goes to the kitchen. */
+function buildKitchenTicketBytes(order, width = 42) {
+  const chunks = [cmd.init(), cmd.spacing(24)];
+  const stamp = new Date().toLocaleString('ar-EG', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
+
+  chunks.push(line('تذكرة مطبخ', { align: 'center', width, bold: true, double: true }));
+  if (order.branch) chunks.push(line(order.branch, { align: 'center', width }));
+  const meta = [
+    order.table ? `الطاولة ${order.table}` : null,
+    order.orderId ? `#${order.orderId}` : null,
+    order.guests ? `${order.guests} ضيف` : null,
+  ].filter(Boolean).join(' · ');
+  if (meta) chunks.push(line(meta, { align: 'center', width, bold: true }));
+  chunks.push(line(stamp, { align: 'center', width }));
+  chunks.push(line('-'.repeat(width), { width }));
+
+  for (const item of order.lines ?? []) {
+    const qty = Number(item.quantity ?? 1);
+    chunks.push(line(`${qty} x ${String(item.name ?? '').slice(0, width - 4)}`, { width, bold: true }));
+    const mods = Array.isArray(item.modifiers) ? item.modifiers.filter(Boolean) : [];
+    for (const modifier of mods) chunks.push(line(`   + ${modifier}`, { width }));
+    if (item.note) chunks.push(line(`   ملاحظة: ${item.note}`, { width }));
+  }
+
+  chunks.push(line('-'.repeat(width), { width }));
+  if (order.note) chunks.push(line(`ملاحظة عامة: ${order.note}`, { width }));
   chunks.push(cmd.feed(3), cmd.cut());
 
   return Buffer.concat(chunks);
@@ -247,25 +283,61 @@ const server = http.createServer(async (request, response) => {
       });
     }
 
+    if (url.pathname === '/kitchen-ticket' && request.method === 'POST') {
+      const body = await readBody(request);
+      const config = loadConfig();
+      const order = body.order ?? body;
+      const width = Number(body.width ?? config.paperWidth ?? 42);
+      const copies = Math.min(3, Math.max(1, Number(body.copies) || 1));
+      const bytes = buildKitchenTicketBytes(order, width);
+
+      const target = body.printer ?? (config.defaultPrinter ? { type: 'windows', name: config.defaultPrinter } : null);
+      if (!target) return send(400, { ok: false, error: 'no printer configured' });
+
+      for (let copy = 0; copy < copies; copy += 1) {
+        if (target.type === 'network') {
+          await sendToNetworkPrinter(target.host, target.port, bytes);
+        } else if (target.type === 'file') {
+          await writeToFile(target.path ?? 'kitchen-ticket.bin', bytes);
+        } else {
+          await sendToWindowsPrinter(target.name, bytes);
+        }
+      }
+      return send(200, { ok: true, bytes: bytes.length, copies });
+    }
+
     if (url.pathname === '/print' && request.method === 'POST') {
       const body = await readBody(request);
       const config = loadConfig();
       const width = Number(body.width ?? config.paperWidth ?? 42);
+      const copies = Math.min(5, Math.max(1, Number(body.copies) || 1));
       const bytes = buildReceiptBytes(body.receipt ?? body, width);
 
       const target = body.printer ?? (config.defaultPrinter ? { type: 'windows', name: config.defaultPrinter } : null);
       if (!target) return send(400, { ok: false, error: 'no printer configured' });
 
-      const written = target.type === 'network'
-        ? await sendToNetworkPrinter(target.host, target.port, bytes)
-        : target.type === 'file'
-          ? await writeToFile(target.path ?? 'receipt.bin', bytes)
-          : await sendToWindowsPrinter(target.name, bytes);
-
-      if (config.autoOpenDrawer) {
-        await sendToWindowsPrinter(target.name, cmd.drawer()).catch(() => {});
+      for (let copy = 0; copy < copies; copy += 1) {
+        if (target.type === 'network') {
+          await sendToNetworkPrinter(target.host, target.port, bytes);
+        } else if (target.type === 'file') {
+          await writeToFile(target.path ?? 'receipt.bin', bytes);
+        } else {
+          await sendToWindowsPrinter(target.name, bytes);
+        }
       }
-      return send(200, { ok: true, bytes: written });
+      // Drawer kicks once per sale, not per copy. Skipped for file-target (tests).
+      if (config.autoOpenDrawer && target.type !== 'file') {
+        try {
+          if (target.type === 'network') {
+            await sendToNetworkPrinter(target.host, target.port, cmd.drawer());
+          } else {
+            await sendToWindowsPrinter(target.name, cmd.drawer());
+          }
+        } catch {
+          // Drawer is best-effort
+        }
+      }
+      return send(200, { ok: true, bytes: bytes.length, copies });
     }
 
     if (url.pathname === '/open-drawer' && request.method === 'POST') {

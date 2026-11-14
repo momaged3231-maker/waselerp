@@ -33,6 +33,7 @@ export default function PosPage() {
   const [parties, setParties] = useState<any[]>([]);
   const [partyId, setPartyId] = useState<number | null>(null);
   const [paymentType, setPaymentType] = useState(1);
+  const [party, setParty] = useState<any>(null);
   const [paidAmount, setPaidAmount] = useState<number>(0);
   const [discountPct, setDiscountPct] = useState<number>(0);
   const [message, setMessage] = useState('');
@@ -592,33 +593,44 @@ export default function PosPage() {
     }
   }
 
-  /** Prints the receipt through the local print agent, falling back to the browser. */
+  /** Prints the receipt: A4/A5 go through the browser; thermal goes through the agent. */
   async function printReceiptOf(detail: any) {
     if (!detail) return;
     setPrintError('');
-    const health = await agentHealth();
-    const company = printContext ?? {};
-    if (health?.ok) {
-      try {
-        await printReceipt({
-          store: {
-            name: company.companyName || 'واصل ERP',
-            address: company.companyAddress ?? '',
-            phone: company.companyPhone ?? '',
-            taxNumber: company.taxNumber ?? '',
-          },
-          header: detail.header,
-          lines: detail.lines,
-          footer: company.invoiceFooter || 'شكراً لتعاملكم معنا',
-          showTax: company.showTaxOnReceipt !== false,
-          taxName: company.taxName || 'الضريبة',
-        });
-        await openDrawer().catch(() => {});
-        return;
-      } catch (error: any) {
-        setPrintError(error?.message ?? 'فشلت الطباعة');
+    const ctx = printContext ?? {};
+    const paperSize = ctx.receiptPaperSize ?? 'thermal80';
+    const isBrowserPaper = paperSize === 'a5' || paperSize === 'a4';
+
+    if (!isBrowserPaper) {
+      const health = await agentHealth();
+      if (health?.ok) {
+        try {
+          const width = paperSize === 'thermal58' ? 32 : 42;
+          await printReceipt({
+            store: {
+              name: ctx.companyName || 'واصل ERP',
+              address: ctx.companyAddress ?? '',
+              phone: ctx.companyPhone ?? '',
+              taxNumber: ctx.taxNumber ?? '',
+            },
+            header: detail.header,
+            lines: detail.lines,
+            footer: ctx.invoiceFooter || 'شكراً لتعاملكم معنا',
+            showTax: ctx.showTaxOnReceipt !== false,
+            taxName: ctx.taxName || 'الضريبة',
+            showBranch: ctx.receiptShowBranchName !== false,
+            showParty: ctx.receiptShowPartyName !== false,
+            showTotals: ctx.receiptShowTotals !== false,
+          }, undefined, { width, copies: Number(ctx.receiptCopies ?? 1) });
+          await openDrawer().catch(() => {});
+          return;
+        } catch (error: any) {
+          setPrintError(error?.message ?? 'فشلت الطباعة');
+        }
       }
     }
+
+    // Browser fallback (also the primary path for A4/A5 paper)
     window.print();
   }
 
@@ -627,7 +639,7 @@ export default function PosPage() {
     return printReceiptOf(receipt);
   }
 
-  const selectedParty = parties.find((p) => p.partyId === partyId);
+  const selectedParty = party;
   const itemCount = cart.reduce((sum, l) => sum + l.quantity, 0);
 
   return (
@@ -1025,7 +1037,7 @@ export default function PosPage() {
                     {parties.map((p) => (
                       <button
                         key={p.partyId}
-                        onClick={() => { setPartyId(p.partyId); setParties([]); }}
+                        onClick={() => { setPartyId(p.partyId); setParty(p); setParties([]); }}
                         className="w-full text-right px-3 py-2 text-sm hover:bg-slate-50"
                       >
                         {p.name} {p.phone && <span dir="ltr" className="text-[11px] text-slate-400">{p.phone}</span>}
@@ -1134,8 +1146,39 @@ export default function PosPage() {
           </div>
 
           {selectedParty && (
-            <div className="mt-2 text-xs text-slate-500">العميل: {selectedParty.name}{selectedParty.phone ? <span dir="ltr"> · {selectedParty.phone}</span> : null}</div>
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+              <span>العميل: {selectedParty.name}{selectedParty.phone ? <span dir="ltr"> · {selectedParty.phone}</span> : null}</span>
+              <button className="text-rose-500 font-semibold hover:underline" onClick={() => { setPartyId(null); setParty(null); }}>
+                إزالة العميل
+              </button>
+            </div>
           )}
+
+          {selectedParty && paymentType !== 1 && Number(selectedParty.creditLimit ?? 0) > 0 && (() => {
+            const paid = paymentType === 2 ? 0 : Math.min(Number(totals.total), (Number(paidAmount) || 0) + (Number(secondPayment?.amount) || 0));
+            const remaining = Math.max(0, Number(totals.total) - paid);
+            const balance = Number(selectedParty.balance ?? 0);
+            const limit = Number(selectedParty.creditLimit);
+            const availableBefore = limit - balance;
+            const exceeds = remaining > availableBefore + 0.005;
+            return (
+              <div className={`mt-2 rounded-xl border px-3 py-2 text-[11px] leading-5 ${exceeds ? 'border-rose-300 bg-rose-50 text-rose-800' : 'border-emerald-200 bg-emerald-50 text-emerald-800'}`}>
+                <div className="font-extrabold">حد الائتمان</div>
+                <div className="flex flex-wrap gap-x-3">
+                  <span>المديونية الحالية: <b>{formatMoney(balance)}</b></span>
+                  <span>الحد: <b>{formatMoney(limit)}</b></span>
+                  <span>المتاح: <b>{formatMoney(Math.max(0, availableBefore))}</b></span>
+                </div>
+                {remaining > 0 && (
+                  <div className="mt-0.5">
+                    {exceeds
+                      ? <>ستتجاوز الحد بـ <b>{formatMoney(remaining - availableBefore)}</b> — النظام سيرفض الحفظ الآجل حتى سداد جزء من الرصيد.</>
+                      : <>بعد هذه الفاتورة: <b>{formatMoney(balance + remaining)}</b> من <b>{formatMoney(limit)}</b>.</>}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           <button className={`w-full mt-2 text-xs ${returnMode ? 'btn-primary' : 'btn-soft'}`}
             onClick={() => { setReturnMode((v) => !v); setReturnInvoice(null); setReturnLines([]); }}>
@@ -1263,6 +1306,8 @@ export default function PosPage() {
       {/* ---------------- Receipt ---------------- */}
       {receipt && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          {printContext?.receiptPaperSize === 'a5' && <style>{'@media print { @page { size: A5; } }'}</style>}
+          {printContext?.receiptPaperSize === 'a4' && <style>{'@media print { @page { size: A4; } }'}</style>}
           <div className="card w-full max-w-sm p-5 max-h-[90vh] overflow-y-auto">
             <div className="text-center border-b border-dashed border-slate-300 pb-3 mb-3">
               <div className="font-extrabold text-lg">{printContext?.companyName || 'واصل ERP'}</div>
@@ -1272,6 +1317,12 @@ export default function PosPage() {
               <div className="text-xs text-slate-500 mt-1">فاتورة مبيعات</div>
               <div className="text-xs text-slate-500">{receipt.header.invoiceNo}</div>
               <div className="text-xs text-slate-500">{new Date(receipt.header.invoiceDate).toLocaleString('ar-EG')}</div>
+              {printContext?.receiptShowPartyName !== false && receipt.header.partyName && (
+                <div className="text-xs text-slate-600 font-semibold">العميل: {receipt.header.partyName}</div>
+              )}
+              {printContext?.receiptShowBranchName !== false && receipt.header.branchName && (
+                <div className="text-xs text-slate-500">الفرع: {receipt.header.branchName}</div>
+              )}
             </div>
 
             <table className="w-full text-xs">
@@ -1286,8 +1337,12 @@ export default function PosPage() {
             </table>
 
             <div className="mt-3 space-y-1 text-xs border-t border-dashed border-slate-300 pt-2">
-              <div className="flex justify-between"><span>الإجمالي</span><span>{formatMoney(receipt.header.subTotal)}</span></div>
-              <div className="flex justify-between"><span>الخصم</span><span>{formatMoney(receipt.header.discountAmount)}</span></div>
+              {printContext?.receiptShowTotals !== false && (
+                <>
+                  <div className="flex justify-between"><span>الإجمالي</span><span>{formatMoney(receipt.header.subTotal)}</span></div>
+                  <div className="flex justify-between"><span>الخصم</span><span>{formatMoney(receipt.header.discountAmount)}</span></div>
+                </>
+              )}
               {printContext?.showTaxOnReceipt !== false && (
                 <div className="flex justify-between">
                   <span>{printContext?.taxName || 'الضريبة'}</span>
@@ -1303,7 +1358,11 @@ export default function PosPage() {
             {printError && <div className="text-xs text-rose-600">{printError}</div>}
             <div className="flex gap-2 mt-4">
               <button className="btn-soft flex-1" onClick={printCurrentReceipt}>
-                <IconPrinter className="w-4 h-4" /> طباعة {agentOnline ? '(الوكيل)' : '(المتصفح)'}
+                <IconPrinter className="w-4 h-4" /> طباعة{' '}
+                {printContext?.receiptPaperSize === 'a5' ? '(A5)'
+                  : printContext?.receiptPaperSize === 'a4' ? '(A4)'
+                    : printContext?.receiptPaperSize === 'thermal58' ? '(58مم)'
+                      : agentOnline ? '(الوكيل)' : '(المتصفح)'}
               </button>
               <button className="btn-primary flex-1" onClick={() => setReceipt(null)}>
                 <IconCheck className="w-4 h-4" /> إغلاق

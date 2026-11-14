@@ -1164,9 +1164,9 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     String(p3GiftDetail.lines[0].lineTotal));
 
   // 39. Ezees guide conformance — halls, service charge modes, modifiers, notes
-  const p3HallName = `قاعة اختبار ${Date.now() % 1000}`;
+  const p3HallName = `قاعة اختبار ${Date.now()}`;
   const p3Hall = await call('POST', '/pos/halls', {
-    name: p3HallName, code: `Z${Date.now() % 100}`, tableCount: 3,
+    name: p3HallName, code: `Z${String(Date.now()).slice(-8)}`, tableCount: 3,
     tableType: 1, capacity: 4,
   });
   check('hall created', !!p3Hall.hallId, String(p3Hall.hallId));
@@ -1177,7 +1177,7 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     generated.map((row) => row.name).join(','));
 
   const duplicateHall = await raw('POST', '/pos/halls', {
-    name: p3HallName, code: `Y${Date.now() % 100}`, tableCount: 2,
+    name: p3HallName, code: `Y${String(Date.now()).slice(-8)}`, tableCount: 2,
   });
   check('a hall with the same name is refused', duplicateHall.status === 400,
     String(duplicateHall.status));
@@ -1621,6 +1621,36 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
   check('receipt settings restored after round-trip',
     printContextRestored.showTaxOnReceipt === true && printContextRestored.taxName === (settingsSnapshot.TaxName ?? 'ضريبة القيمة المضافة'),
     `${printContextRestored.taxName} / showTax=${printContextRestored.showTaxOnReceipt}`);
+
+  // 46. settings — print presentation (copies, paper size, kitchen ticket) consumed by POS
+  const presentation = await call('GET', '/sales/print-context');
+  check('print context returns presentation flags',
+    typeof presentation.receiptShowBranchName === 'boolean' && typeof presentation.receiptShowPartyName === 'boolean'
+      && typeof presentation.receiptShowTotals === 'boolean' && typeof presentation.receiptCopies === 'number'
+      && ['thermal80', 'thermal58', 'a5', 'a4'].includes(presentation.receiptPaperSize)
+      && typeof presentation.kitchenTicketEnabled === 'boolean' && typeof presentation.kitchenTicketCopies === 'number',
+    JSON.stringify({ copies: presentation.receiptCopies, paper: presentation.receiptPaperSize, kitchen: presentation.kitchenTicketEnabled }));
+
+  const printSnapshot = await call('GET', '/admin/settings');
+  await call('PUT', '/admin/settings', { ...printSnapshot, ReceiptCopies: '3', ReceiptPaperSize: 'thermal58', KitchenTicketEnabled: 'true', KitchenTicketCopies: '2' });
+  const presentationAfter = await call('GET', '/sales/print-context');
+  check('copies + paper size + kitchen ticket round-trip',
+    presentationAfter.receiptCopies === 3 && presentationAfter.receiptPaperSize === 'thermal58'
+      && presentationAfter.kitchenTicketEnabled === true && presentationAfter.kitchenTicketCopies === 2,
+    JSON.stringify({ copies: presentationAfter.receiptCopies, paper: presentationAfter.receiptPaperSize, kitchenCopies: presentationAfter.kitchenTicketCopies }));
+
+  await call('PUT', '/admin/settings', {
+    ...printSnapshot,
+    ReceiptCopies: printSnapshot.ReceiptCopies ?? '1',
+    ReceiptPaperSize: printSnapshot.ReceiptPaperSize ?? 'thermal80',
+    KitchenTicketEnabled: printSnapshot.KitchenTicketEnabled ?? 'false',
+    KitchenTicketCopies: printSnapshot.KitchenTicketCopies ?? '1',
+  });
+  const presentationRestored = await call('GET', '/sales/print-context');
+  check('print presentation restored after round-trip',
+    presentationRestored.receiptCopies === Number(printSnapshot.ReceiptCopies ?? 1)
+      && presentationRestored.receiptPaperSize === (printSnapshot.ReceiptPaperSize ?? 'thermal80')
+      && presentationRestored.kitchenTicketEnabled === ((printSnapshot.KitchenTicketEnabled ?? 'false') === 'true'));
 
   const failed = results.filter((r) => !r.ok);
   console.log(`\n${results.length - failed.length}/${results.length} checks passed`);

@@ -85,25 +85,47 @@ export class SalesService {
   constructor(private readonly db: DatabaseService, private readonly live: LiveEventsService) {}
 
   /**
-   * Company identity + receipt presentation settings, readable by any POS/sales user.
-   * The raw app_settings table is admin-only; the printed receipt needs the same values.
+   * Company identity + receipt/print presentation settings, readable by any POS/sales user.
+   * The raw app_settings table is admin-only; printed output needs the same values.
+   * All presentation booleans default to visible; numbers are clamped to sane ranges.
    */
   async printContext() {
     const rows = await this.db.query<{ setting_key: string; setting_value: string | null }>(
       `SELECT setting_key, setting_value FROM app_settings WHERE setting_key = ANY($1::text[])`,
       [['CompanyName', 'CompanyPhone', 'CompanyAddress', 'TaxNumber',
-        'InvoiceFooter', 'ShowTaxOnReceipt', 'TaxName']],
+        'InvoiceFooter', 'ShowTaxOnReceipt', 'TaxName',
+        'ReceiptShowBranchName', 'ReceiptShowPartyName', 'ReceiptShowTotals',
+        'ReceiptCopies', 'ReceiptPaperSize', 'KitchenTicketEnabled', 'KitchenTicketCopies']],
     );
     const map = new Map(rows.map((row) => [row.setting_key, row.setting_value]));
-    const value = (key: string) => (map.get(key) ?? '') ?? '';
+    const value = (key: string) => map.get(key) ?? '';
+    const bool = (key: string, fallback = true) => {
+      const raw = (value(key) || (fallback ? 'true' : 'false')).trim().toLowerCase();
+      return raw !== 'false' && raw !== '0';
+    };
+    const int = (key: string, min: number, max: number, fallback: number) => {
+      const n = Number(value(key));
+      if (!Number.isFinite(n)) return fallback;
+      return Math.min(max, Math.max(min, Math.trunc(n)));
+    };
+    const paperSize = ['thermal80', 'thermal58', 'a5', 'a4'].includes(value('ReceiptPaperSize'))
+      ? value('ReceiptPaperSize')
+      : 'thermal80';
     return {
       companyName: value('CompanyName'),
       companyPhone: value('CompanyPhone'),
       companyAddress: value('CompanyAddress'),
       taxNumber: value('TaxNumber'),
       invoiceFooter: value('InvoiceFooter') || 'شكراً لتعاملكم معنا',
-      showTaxOnReceipt: (value('ShowTaxOnReceipt') || 'true') !== 'false',
+      showTaxOnReceipt: bool('ShowTaxOnReceipt', true),
       taxName: value('TaxName') || 'الضريبة',
+      receiptShowBranchName: bool('ReceiptShowBranchName', true),
+      receiptShowPartyName: bool('ReceiptShowPartyName', true),
+      receiptShowTotals: bool('ReceiptShowTotals', true),
+      receiptCopies: int('ReceiptCopies', 1, 5, 1),
+      receiptPaperSize: paperSize,
+      kitchenTicketEnabled: bool('KitchenTicketEnabled', false),
+      kitchenTicketCopies: int('KitchenTicketCopies', 1, 3, 1),
     };
   }
 

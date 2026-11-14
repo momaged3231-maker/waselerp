@@ -43,8 +43,19 @@ export async function saveAgentConfig(config: any) {
   return agent('/config', { method: 'POST', body: config });
 }
 
-export async function printReceipt(receipt: any, printer?: PrinterTarget) {
-  return agent('/print', { method: 'POST', body: { receipt, printer } });
+export async function printReceipt(
+  receipt: any,
+  printer?: PrinterTarget,
+  options: { width?: number; copies?: number } = {},
+) {
+  return agent('/print', { method: 'POST', body: { receipt, printer, ...options } });
+}
+
+export async function printKitchenTicket(
+  order: any,
+  options: { width?: number; copies?: number; printer?: PrinterTarget } = {},
+) {
+  return agent('/kitchen-ticket', { method: 'POST', body: { order, ...options } });
 }
 
 export async function openDrawer(printer?: PrinterTarget) {

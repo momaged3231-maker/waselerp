@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
+import { agentHealth, printKitchenTicket } from '@/lib/print';
 import { apiFetch, formatDate, formatMoney } from '@/lib/api';
 import { useSession } from '@/lib/session';
 
@@ -188,6 +189,34 @@ export default function RestaurantPage() {
     setError('');
     try {
       await apiFetch(`/pos/table-orders/${id}/kitchen`, { method: 'POST', body: { status } });
+      if (status === 2) {
+        // Opt-in kitchen ticket (settings: KitchenTicketEnabled / KitchenTicketCopies)
+        try {
+          const ctx = await apiFetch<any>('/sales/print-context');
+          if (ctx?.kitchenTicketEnabled) {
+            const agentReady = await agentHealth();
+            if (agentReady?.ok) {
+              const order = await apiFetch<any>(`/pos/table-orders/${id}`);
+              await printKitchenTicket({
+                branch: ctx.companyName || undefined,
+                table: order?.header?.tableName,
+                orderId: order?.header?.orderNo ?? order?.header?.tableOrderId,
+                guests: order?.header?.guestCount,
+                note: order?.header?.notes ?? undefined,
+                lines: (order?.lines ?? []).map((line: any) => ({
+                  quantity: Number(line.quantity),
+                  name: line.itemName,
+                  note: line.notes ?? undefined,
+                })),
+              }, { copies: Number(ctx.kitchenTicketCopies ?? 1) });
+            } else {
+              setMessage('تم الإرسال للمطبخ — وكيل الطباعة غير متصل (تذكرة المطبخ لم تُطبع)');
+            }
+          }
+        } catch {
+          setMessage('تم الإرسال للمطبخ — تعذرت طباعة تذكرة المطبخ (تحقق من الوكيل)');
+        }
+      }
       await load();
       if (selected) await openOrder(selected.header.tableOrderId);
     } catch (e: any) {

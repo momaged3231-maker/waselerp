@@ -31,6 +31,45 @@ const TOKEN = process.env.AGENT_TOKEN ?? 'wasel-local-agent';
 
   if (!response.ok) process.exit(1);
 
+  // Receipt with totals hidden — the print agent must omit the discount/subtotal lines
+  const hiddenResponse = await fetch(`${BASE}/print`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-agent-token': TOKEN },
+    body: JSON.stringify({ printer: { type: 'file', path: 'receipt-test-hidden.bin' }, receipt: { ...receipt, showTotals: false, showParty: false } }),
+  });
+  if (!hiddenResponse.ok) { console.log('hidden receipt FAILED:', hiddenResponse.status); process.exit(1); }
+  const hiddenBytes = fs.readFileSync(path.join(__dirname, '..', 'apps', 'print-agent', 'receipt-test-hidden.bin'));
+  const hiddenText = iconv.decode(hiddenBytes, 'win1256');
+  const totalsHidden = !hiddenText.includes('الإجمالي') && !hiddenText.includes('الخصم') && !hiddenText.includes('عميل اختبار');
+  console.log('hidden receipt omits totals + party:', totalsHidden);
+  if (!totalsHidden) process.exit(1);
+
+  // Kitchen ticket — goes to /kitchen-ticket
+  const kitchen = {
+    branch: 'وصل ERP',
+    table: 'طاولة ٢',
+    orderId: 'T-0001',
+    guests: 4,
+    note: 'بدون شطة في السلطة',
+    lines: [
+      { quantity: 2, name: 'فول مدمس', note: 'بدون حار' },
+      { quantity: 1, name: 'طاجن عكاوي' },
+    ],
+  };
+  const kitchenResponse = await fetch(`${BASE}/kitchen-ticket`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-agent-token': TOKEN },
+    body: JSON.stringify({ printer: { type: 'file', path: 'kitchen-ticket-test.bin' }, order: kitchen, copies: 1 }),
+  });
+  const kitchenResult = await kitchenResponse.json().catch(() => ({}));
+  console.log('kitchen-ticket:', kitchenResponse.status, JSON.stringify(kitchenResult));
+  if (!kitchenResponse.ok) process.exit(1);
+  const kitchenBytes = fs.readFileSync(path.join(__dirname, '..', 'apps', 'print-agent', 'kitchen-ticket-test.bin'));
+  const kitchenText = iconv.decode(kitchenBytes, 'win1256');
+  const hasKitchenBody = kitchenText.includes('تذكرة') && kitchenText.includes('فول مدمس') && !kitchenText.includes('250.00');
+  console.log('kitchen ticket built (no prices):', hasKitchenBody);
+  if (!hasKitchenBody) process.exit(1);
+
   const file = path.join(__dirname, '..', 'apps', 'print-agent', 'receipt-test.bin');
   const bytes = fs.readFileSync(file);
   console.log('bytes:', bytes.length);

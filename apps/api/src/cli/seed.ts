@@ -82,6 +82,13 @@ const SETTINGS: [string, string][] = [
   ['EnableGLPosting', 'true'],
   ['ShowTaxOnReceipt', 'true'],
   ['TaxName', 'ضريبة القيمة المضافة'],
+  ['ReceiptShowBranchName', 'true'],
+  ['ReceiptShowPartyName', 'true'],
+  ['ReceiptShowTotals', 'true'],
+  ['ReceiptCopies', '1'],
+  ['ReceiptPaperSize', 'thermal80'],
+  ['KitchenTicketEnabled', 'false'],
+  ['KitchenTicketCopies', '1'],
 ];
 
 function hashPassword(password: string) {

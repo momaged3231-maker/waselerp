@@ -49,11 +49,12 @@ function ZatcaList() {
 type SettingField = {
   key: string;
   label: string;
-  type: 'text' | 'number' | 'boolean';
+  type: 'text' | 'number' | 'boolean' | 'select';
   desc?: string;
   placeholder?: string;
   dir?: 'ltr' | 'rtl' | 'auto';
   unit?: string;
+  options?: { value: string; label: string }[];
 };
 
 const SETTING_SECTIONS: { id: string; title: string; desc: string; fields: SettingField[] }[] = [
@@ -110,6 +111,31 @@ const SETTING_SECTIONS: { id: string; title: string; desc: string; fields: Setti
     ],
   },
   {
+    id: 'print',
+    title: 'الطباعة والإيصال',
+    desc: 'تُطبّق على الإيصال المطبوع (وكيل الطباعة أو معاينة المتصفح) — تغييرها يسري على كل الفروع',
+    fields: [
+      { key: 'ReceiptShowBranchName', label: 'إظهار اسم الفرع في الإيصال', type: 'boolean', desc: 'سطر «الفرع: …» تحت رقم الفاتورة' },
+      { key: 'ReceiptShowPartyName', label: 'إظهار اسم العميل في الإيصال', type: 'boolean', desc: 'سطر «العميل: …» — للعملاء المحددين في البيع' },
+      { key: 'ReceiptShowTotals', label: 'إظهار إجماليات الفاتورة في الإيصال', type: 'boolean', desc: 'الإجمالي + الخصم (المطلوب/المدفوع يظهران دائمًا)' },
+      { key: 'ReceiptCopies', label: 'عدد نسخ الإيصال المطبوعة', type: 'number', dir: 'ltr', unit: 'نسخة', desc: '1–5 نسخ — كل نسخة تُرسل لطابعة الكاشير (وكيل الطباعة فقط)' },
+      {
+        key: 'ReceiptPaperSize',
+        label: 'مقاس ورق الإيصال',
+        type: 'select',
+        desc: 'حراري 80مم / 58مم عبر وكيل الطباعة، أو A5 / A4 في نافذة طباعة المتصفح',
+        options: [
+          { value: 'thermal80', label: 'إيصال حراري 80مم (وكيل الطباعة)' },
+          { value: 'thermal58', label: 'إيصال حراري 58مم (وكيل الطباعة)' },
+          { value: 'a5', label: 'شاشة A5 (طباعة المتصفح)' },
+          { value: 'a4', label: 'شاشة A4 (طباعة المتصفح)' },
+        ],
+      },
+      { key: 'KitchenTicketEnabled', label: 'طباعة تذكرة مطبخ عند إرسال الطلب للمطبخ', type: 'boolean', desc: 'تذكرة بلا أسعار تُطبع على طابعة الكاشير/المطبخ عند «إرسال للمطبخ» من شاشة المطاعم' },
+      { key: 'KitchenTicketCopies', label: 'عدد نسخ تذكرة المطبخ', type: 'number', dir: 'ltr', unit: 'نسخة', desc: '1–3 نسخ لكل تذكرة مطبخ' },
+    ],
+  },
+  {
     id: 'accounting',
     title: 'المحاسبة',
     desc: 'الترحيل التلقائي للقيود المحاسبية',
@@ -149,9 +175,24 @@ function SettingFieldRow({ field, value, onChange }: {
     );
   }
 
+  if (field.type === 'select') {
+    return (
+      <div>
+        <label className="label">{field.label}</label>
+        <span className="block text-xs text-slate-400 mb-1.5 -mt-1 leading-5">{field.desc}</span>
+        <select className="input" value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
+          {(field.options ?? []).map((option) => (
+            <option key={option.value} value={option.value}>{option.label}</option>
+          ))}
+        </select>
+      </div>
+    );
+  }
+
   return (
     <div>
       <label className="label">{field.label}</label>
+      <span className="block text-xs text-slate-400 mb-1.5 -mt-1 leading-5">{field.desc}</span>
       <div className="relative">
         <input
           className={`input ${field.unit ? 'pl-9' : ''}`}
