@@ -21,7 +21,7 @@ export interface CashTransactionInput {
 export class TreasuryService {
   constructor(private readonly db: DatabaseService) {}
 
-  async accounts(branchId: number) {
+  async accounts(branchId: number, userId: number) {
     return this.db.query(
       `SELECT c.cash_account_id AS "cashAccountId", c.branch_id AS "branchId", b.name AS "branchName",
               c.name, c.type, c.bank_name AS "bankName", c.account_no AS "accountNo",
@@ -33,8 +33,10 @@ export class TreasuryService {
          FROM cash_accounts c JOIN branches b ON b.branch_id = c.branch_id
          LEFT JOIN gl_accounts a ON a.account_id = c.gl_account_id
         WHERE ($1::int = 0 OR c.branch_id = $1)
+          AND (NOT EXISTS (SELECT 1 FROM user_cash_accounts u WHERE u.user_id = $2::int)
+               OR c.cash_account_id IN (SELECT cash_account_id FROM user_cash_accounts WHERE user_id = $2::int))
         ORDER BY c.cash_account_id`,
-      [branchId],
+      [branchId, userId],
     );
   }
 
@@ -478,8 +480,8 @@ export class TreasuryController {
 
   @RequirePermissions('cash.view')
   @Get('accounts')
-  accounts(@CurrentBranch() branchId: number) {
-    return this.service.accounts(branchId);
+  accounts(@CurrentBranch() branchId: number, @CurrentUser() user: AuthUser) {
+    return this.service.accounts(branchId, user.userId);
   }
 
   @RequirePermissions('cash.manage')

@@ -18,14 +18,16 @@ export class CatalogLookupService {
     );
   }
 
-  async warehouses(branchId?: number) {
+  async warehouses(branchId?: number, userId?: number) {
     return this.db.query(
       `SELECT w.warehouse_id AS "warehouseId", w.branch_id AS "branchId", b.name AS "branchName",
               w.name, w.code, w.is_default AS "isDefault", w.is_active AS "isActive"
          FROM warehouses w JOIN branches b ON b.branch_id = w.branch_id
         WHERE ($1::int IS NULL OR w.branch_id = $1)
+          AND ($2::int IS NULL OR NOT EXISTS (SELECT 1 FROM user_warehouses u WHERE u.user_id = $2)
+               OR w.warehouse_id IN (SELECT warehouse_id FROM user_warehouses WHERE user_id = $2))
         ORDER BY b.name, w.name`,
-      [branchId ?? null],
+      [branchId ?? null, userId ?? null],
     );
   }
 
@@ -107,8 +109,8 @@ export class CatalogController {
   }
 
   @Get('warehouses')
-  warehouses(@CurrentBranch() branchId: number) {
-    return this.service.warehouses(branchId);
+  warehouses(@CurrentBranch() branchId: number, @CurrentUser() user: AuthUser) {
+    return this.service.warehouses(branchId, user.userId);
   }
 
   @Get('units')
