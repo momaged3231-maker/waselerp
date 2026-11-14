@@ -101,7 +101,7 @@ export class SalesService {
         'InvoiceFooter', 'ShowTaxOnReceipt', 'TaxName',
         'ReceiptShowBranchName', 'ReceiptShowPartyName', 'ReceiptShowTotals',
         'ReceiptCopies', 'ReceiptPaperSize', 'KitchenTicketEnabled', 'KitchenTicketCopies', 'KitchenPrinterName',
-        'DefaultPaymentType']],
+        'DefaultPaymentType', 'AutoPrintReceipt', 'DefaultOrderType']],
     );
     const map = new Map(rows.map((row) => [row.setting_key, row.setting_value]));
     const value = (key: string) => map.get(key) ?? '';
@@ -137,6 +137,10 @@ export class SalesService {
       kitchenTicketCopies: int('KitchenTicketCopies', 1, 3, 1),
       kitchenPrinterName: value('KitchenPrinterName'),
       defaultPaymentType,
+      autoPrintReceipt: bool('AutoPrintReceipt', true),
+      defaultOrderType: [1, 2, 3, 4].includes(Number(value('DefaultOrderType')))
+        ? Number(value('DefaultOrderType'))
+        : 1,
       profileId: null as number | null,
       profileName: null as string | null,
       defaultPrinter: '',
@@ -261,6 +265,15 @@ export class SalesService {
         const repRequired = await getBooleanSetting(client, 'RequireRepOnSale', false);
         if (repRequired) {
           throw new BadRequestException('المندوب إلزامي عند تسجيل الفاتورة — حدده من خانة «المندوب» أو عطّل «طلب المندوب إلزامي» من الإعدادات');
+        }
+      }
+
+      // Customer may be mandatory (settings: RequireCustomerOnSale) — sales types only.
+      // Table orders (orderType 4) are anonymous by nature, so the guard never applies to them.
+      if (!isPurchase && Number(dto.orderType) !== 4 && !dto.partyId) {
+        const customerRequired = await getBooleanSetting(client, 'RequireCustomerOnSale', false);
+        if (customerRequired) {
+          throw new BadRequestException('تحديد العميل إلزامي عند تسجيل الفاتورة — اختر العميل أو عطّل «طلب تحديد العميل» من الإعدادات');
         }
       }
 

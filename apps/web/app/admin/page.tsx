@@ -139,6 +139,30 @@ const SETTING_SECTIONS: { id: string; title: string; desc: string; fields: Setti
           { value: '3', label: 'مختلط (نقدي + بطاقة/محفظة)' },
         ],
       },
+      {
+        key: 'RequireCustomerOnSale',
+        label: 'تحديد العميل إلزامي عند تسجيل فاتورة',
+        type: 'boolean',
+        desc: 'رفض حفظ فاتورة مبيعات/مرتجع بدون اختيار عميل — طلبات الطاولات مستثناة (عميلها غير معروف)',
+      },
+      {
+        key: 'AutoPrintReceipt',
+        label: 'طباعة الإيصال تلقائيًا بعد البيع',
+        type: 'boolean',
+        desc: 'عند التعطيل تظهر الفاتورة لطباعتها يدويًا دون إرسال تلقائي للطابعة',
+      },
+      {
+        key: 'DefaultOrderType',
+        label: 'نوع الطلب الافتراضي في نقطة البيع',
+        type: 'select',
+        desc: 'النوع الذي يُفتح عليه شاشة نقطة البيع (ماشر / توصيل / سفري / طاولة)',
+        options: [
+          { value: '1', label: 'ماشر' },
+          { value: '2', label: 'توصيل' },
+          { value: '3', label: 'سفري' },
+          { value: '4', label: 'طاولة' },
+        ],
+      },
     ],
   },
   {

@@ -223,6 +223,9 @@ export default function PosPage() {
       setPrintContext(ctx);
       const def = Number(ctx?.defaultPaymentType);
       if ([1, 2, 3].includes(def)) setPaymentType(def);
+      // D5: default order type opens the POS screen (draft restore overrides it later).
+      const defOrder = Number(ctx?.defaultOrderType);
+      if ([1, 2, 3, 4].includes(defOrder)) setOrderType(defOrder);
     }).catch(() => {});
     loadShift();
     agentHealth().then((health) => setAgentOnline(!!health?.ok)).catch(() => setAgentOnline(false));
@@ -590,8 +593,10 @@ export default function PosPage() {
       setCouponCode('');
       clearCart();
       searchRef.current?.focus();
-      // الطباعة التلقائية بعد الحفظ (حسب الدليل)؛ تمرر الإيصال الصريح للدالة
-      window.setTimeout(() => printReceiptOf(detail).catch(() => {}), 400);
+      // Auto-print after saving (settings: AutoPrintReceipt, default on) — D5 makes it optional.
+      if (printContext?.autoPrintReceipt !== false) {
+        window.setTimeout(() => printReceiptOf(detail).catch(() => {}), 400);
+      }
     } catch (error: any) {
       if (isNetworkError(error)) {
         // no connectivity: keep the sale locally and sync it automatically later
