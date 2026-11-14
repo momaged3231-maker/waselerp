@@ -15,7 +15,9 @@ out/
 *.log
 logs/
 apps/print-agent/agent-config.json
+apps/print-agent/agent.env
 apps/print-agent/*.bin
+smoke-out.txt
 tools/pg/data/
 tools/pg/node_modules/
 tmp/

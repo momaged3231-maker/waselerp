@@ -2,7 +2,9 @@
 
 هذا الملف موجّه للوكيل/المطوّر اللي هيكمّل. اقرأ `AGENTS.md` الأول (التشغيل + القواعد)، وبعدين الملف ده (خطة الشغل).
 
-**آخر تحديث:** 2026-11-13 — **230 فحص end-to-end ناجح** · 66 جدول · 16 slice · 20 شاشة · P0 و P1 و P2 و P3 منجزة + ETA مصر.
+**آخر تحديث:** 2026-11-14 — **369 فحص end-to-end ناجح** · 96 جدول · 16 slice · 30+ شاشة · P0–P3 منجزة + ETA مصر + P4.1/P4.2 + P6 + P7 + Print Agent مختبر على طابعة حقيقية ومثبّت كخدمة Windows.
+
+> **تحديث 2026-11-14 (مساءً):** اكتملت **P6 (الموارد البشرية)** — إدارات، موظفون، مكونات مرتب وإسناد، حضور واستيراد CSV، إجازات واعتماد، سلف وصرف، توليد مرتبات بقيد استحقاق متوازن، صرف جماعي بقيد خزينة، قسيمة راتب، تقارير رواتب/حضور — و**P7 (الإعدادات والأدوات)** — تقييد مخازن/صناديق لكل مستخدم، نسخ احتياطي/استعادة، مرفقات للفواتير والأصناف والعملاء، **تصدير Excel (.xlsx) حقيقي**، جدول محوري، دول/مدن/شحن. كذلك **Print Agent** اتجرّب فعليًا على `POS-80C` و`EPSON TM-T20II` واتثبّت كـ Scheduled Task مع إعادة تشغيل تلقائية. الحالة التفصيلية في `docs/EZEES-COVERAGE.md` و`AGENTS.md §5/§6`.
 
 > **تحديث 2026-11-13 (ليلًا):** اكتملت **P3** — نقطة البيع والمطاعم: أنواع الطلب (ماشر/توصيل/سفري/صالة) مع رسوم التوصيل والسائق، تعليق واسترجاع الفواتير، المرتجع من الكاشير، الطاولات والقاعات، طلبات الطاولة، شاشة المطبخ، والطبقات والإضافات.
 > حالة كل بند بالتفصيل في **`docs/EZEES-COVERAGE.md`** (§4.1 P0 · §4.2 P1 · §4.3 P2 · §4.4 ETA · §4.5 P3).
@@ -17,13 +19,13 @@
 
 | | |
 |---|---|
-| المستودع | `https://github.com/mohamedmagedalisalem-dotcom/waselerp` (**private**) |
+| المستودع | `https://github.com/momaged3231-maker/waselerp` (**private**) |
 | الفرع | `main` |
-| نسخة محلية | `C:\Users\Server-PC\Desktop\WaselERP` (Linux/Mac: clone عادي) |
-| الـ CI | `.github/workflows/ci.yml` — بيشتغل على كل push: type-check → build → schema → seed → **70 فحص end-to-end** → web build |
+| نسخة محلية | `D:\New folder (2)\waselerp` (Linux/Mac: clone عادي) |
+| الـ CI | `.github/workflows/ci.yml` — بيشتغل على كل push: type-check → build → schema → seed → **369 فحص end-to-end** → web build |
 
 ```bash
-git clone https://github.com/mohamedmagedalisalem-dotcom/waselerp.git
+git clone https://github.com/momaged3231-maker/waselerp.git
 cd waselerp && cat AGENTS.md          # اقراه الأول
 ```
 
@@ -33,10 +35,10 @@ cd waselerp && cat AGENTS.md          # اقراه الأول
 
 ## 2) حالة كل جزء (بالحقيقة، مش بالتمنّي)
 
-### ✅ شغّال ومتحقَّق (70/70 فحص + تحقق يدوي في المتصفح)
+### ✅ شغّال ومتحقَّق (369/369 فحص + تحقق يدوي في المتصفح)
 | 영역 | الدليل |
 |---|---|
-| auth / RBAC / branch scope | دخول + 23 صلاحية + 401/403 |
+| auth / RBAC / branch scope | دخول + 32 صلاحية + 401/403 |
 | دورة الفاتورة | شراء → بيع → **إلغاء مع عكس أثر المخزون** + idempotency |
 | دفتر المخزون | رصيد 97 بعد 100 شراء و3 بيع — مطابق |
 | الخزينة | إيداع 250 → الرصيد اتحدّث |
@@ -45,17 +47,19 @@ cd waselerp && cat AGENTS.md          # اقراه الأول
 | **التقسيط** | 3 أقساط (300+300+300) + سداد 300 + قائمة المستحقات |
 | **ZATCA** | XML + hash 44 حرف + QR PNG + حفظ المستند |
 | **SSE** | البث 200 + حدث `connected` |
-| **Print Agent** | توليد ESC/POS 987 بايت (init + cut + عربي سليم) |
+| **Print Agent** | ✅ **اختبار حقيقي** على `POS-80C` و`EPSON TM-T20II`: job اتسلّم للـ spooler + طباعة الإيصال · مثبّت كـ Scheduled Task + إعادة تشغيل تلقائية |
+| **P6 — HR** | موظف/إدارة/مكونات/حضور CSV/إجازة/سلفة/توليد مرتبات/قيد متوازن/صرف/قسيمة/تقارير — 369 فحص |
+| **P7 — أدوات** | تقييد مخازن/صناديق · نسخ احتياطي/استعادة · مرفقات (فاتورة/صنف/عميل) · **xlsx حقيقي (PK)** · جدول محوري |
 | **أوفلاين** | Service Worker مسجّل + IndexedDB read/write |
-| 12 شاشة | تحقّق بصري في المتصفح (RTL، باركود، سلة، وحدات، طباعة) |
+| 30+ شاشة | تحقّق بصري في المتصفح (RTL، باركود، سلة، وحدات، طباعة) |
 
 ### ⚠️ مُنفَّذ لكن **مش متحقَّق على أرض الواقع**
 | البند | السبب | المطلوب لإثباته |
 |---|---|---|
-| Print Agent على طابعة حقيقية | مفيش طابعة على جهاز التطوير | تجربة على Xprinter/Epson: ضبط `POST /config` + أمر طباعة + فتح الدرج |
 | ZATCA عند بوابة ZATCA | مفيش CSID حقيقي | onboarding (compliance) → CSID + مفاتيح → اختبار على simulation |
 | أوفلاين بإرسال فعلي | الاختبار تم على مستوى IndexedDB فقط | فصل النت → بيع → رجوع النت → التأكد من وصول الفاتورة |
 | SSE بين فرعين | اتختبر على نسخة واحدة | تشغيل نسختين على branchين مختلفين وتحديث المخزون لحظيًا |
+| طباعة A4/A5 | متحققة عبر المتصفح فقط | ضبط طابعة ليزر حقيقية + `ReceiptPaperSize=A4` ومراجعة الهوامش |
 
 ### 🟡 ناقص (مش موجود أصلًا)
 - قوائم الأسعار حسب العميل (`price_lists` في المخطط، الـ API ناقص)
@@ -69,7 +73,7 @@ cd waselerp && cat AGENTS.md          # اقراه الأول
 ## 3) خطة الشغل مرتّبة (خُدها بالتسلسل)
 
 ### المرحلة 1 — استكمال التحقق (الأعلى قيمة)
-1. **الطباعة على طابعة حقيقية** — ابدأ بـ `npm run agent:start` + `POST /config` ثم `POST /print`. لو الطابعة Windows: تأكد اسمها في `GET /printers` وغيّر ترميز العربية لو محتاج UTF-8.
+1. ~~**الطباعة على طابعة حقيقية**~~ ✅ **تمت 2026-11-14**: `POS-80C` (USB) و`EPSON TM-T20II` (مشتركة) طُبع عليهما فعليًا، والوكيل مثبّت كخدمة Windows — راجع `apps/print-agent/README.md`.
 2. **Oفلاين حقيقي** — في DevTools → Network → Offline → بيع → شوف شارة "فاتورة بانتظار الإرسال" → رجّع النت → اتأكد من وصولها + الـ idempotency.
 3. **SSE بين فرعين** — أنشئ فرع تاني، وبيع في الأول، وشوف التحديث في الثاني.
 
@@ -90,7 +94,7 @@ cd waselerp && cat AGENTS.md          # اقراه الأول
 8. TLS أمام الـ API (nginx / Caddy / IIS) + **الـ DB مقفول خارج الشبكة الداخلية**.
 9. `JWT_SECRET` قوي + `WASEL_AGENT_TOKEN` لكل كاشير (مش الافتراضي).
 10. PostgreSQL كخدمة Windows + backup يومي + مراقبة.
-11. الـ Print Agent كخدمة Windows (Task Scheduler / NSSM) على كل جهاز كاشير.
+11. ~~الـ Print Agent كخدمة Windows (Task Scheduler / NSSM)~~ ✅ **منجز**: `apps/print-agent/install-service.ps1` بيسجّل Scheduled Task باسم `WaselPrintAgent` (SYSTEM عند بدء التشغيل، إعادة تشغيل تلقائية، لوج `agent.log`). للطابعات المشتركة SMB استخدم `-User` أو TCP 9100.
 
 ---
 
@@ -125,8 +129,13 @@ cd waselerp && cat AGENTS.md          # اقراه الأول
 ## 6) آخر حالة للخدمات على جهاز التطوير
 
 ```
-PostgreSQL   localhost:5432/wasel   (postgres/postgres)
+PostgreSQL   localhost:5432/wasel   (PGlite — tools/pg/pglite/server.js)
 API          http://localhost:4000/api
 الواجهة      http://localhost:3000   (admin/admin123)
-Print Agent  http://127.0.0.1:4100
+Print Agent  http://127.0.0.1:4100   (Scheduled Task: WaselPrintAgent)
 ```
+
+- تشغيل الـ API محليًا على PGlite: `DB_POOL_MAX=6`, `PGHOST=127.0.0.1`, `JWT_SECRET=dev-local-secret`.
+- الويب static: بعد أي تعديل `npm run web:build` ثم `node tools/web-serve.js`.
+- فحص الصحة: `POST /api/auth/login` بـ `{ "userName": "admin", "password": "admin123" }` (مفيش `/api/health`).
+- اختبار الطباعة الحقيقي: `POST http://127.0.0.1:4100/print` بهيدر `x-agent-token` و`printer: { "type": "windows", "name": "POS-80C" }`.
