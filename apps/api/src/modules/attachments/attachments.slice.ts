@@ -134,7 +134,7 @@ export class AttachmentsService {
         entity.branchScoped
           ? `SELECT 1 FROM ${entity.table} WHERE ${entity.idColumn} = $1::int AND branch_id = $2::int`
           : `SELECT 1 FROM ${entity.table} WHERE ${entity.idColumn} = $1::int`,
-        [entityId, branchId],
+        entity.branchScoped ? [entityId, branchId] : [entityId],
       );
       if (!exists.rows.length) {
         throw new BadRequestException(`${entity.label} رقم ${entityId} غير موجود${entity.branchScoped ? ' في هذا الفرع' : ''}`);

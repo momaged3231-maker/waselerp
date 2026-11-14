@@ -344,6 +344,18 @@ async function seedChartOfAccounts(client: Client) {
     );
   }
 
+  // P9 — CRM: default lead sources (idempotent; the smoke suite and the demo
+  // rely on at least one source existing on a fresh install).
+  const CRM_SOURCES = ['فيسبوك', 'موقع الشركة', 'اتصال هاتفي', 'معرض', 'توصية عميل', 'حملة إعلانية'];
+  for (const name of CRM_SOURCES) {
+    await client.query(
+      `INSERT INTO crm_sources (name, is_active)
+       SELECT $1::text, true
+       WHERE NOT EXISTS (SELECT 1 FROM crm_sources WHERE name = $1::text)`,
+      [name],
+    );
+  }
+
   for (const [key, value] of SETTINGS) {
     await client.query(
       `INSERT INTO app_settings (setting_key, setting_value) VALUES ($1,$2)
