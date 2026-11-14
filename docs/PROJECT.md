@@ -145,10 +145,17 @@ npm run test:print    # tools/print-agent-test.js — توليد ESC/POS بدو�
 
 | المكوّن | الحالة |
 |---|---|
-| **Supabase DB** | مشروع `lkrywkixijclebyjxxoo` — pooler `aws-1-eu-west-2.pooler.supabase.com:6543` |
-| **Vercel (الواجهة)** | `https://web-7dsu7q7d0-momaged3231-1245s-projects.vercel.app` — production Ready · `vercel.json` في جذر repo (fix build) |
+| **Supabase DB** | مشروع `lkrywkixijclebyjxxoo` — pooler IPv4 `aws-1-eu-west-2.pooler.supabase.com:6543` |
+| **Vercel API** | `https://waselerp.vercel.app/api` — مشروع `wasel` (`prj_xA2MESu8xsQbWJ4Ls6DAXsjquR6s`) — production **Ready** · Serverless entry `apps/api/api/index.ts` + `apps/api/vercel.json` (`@vercel/node`) |
+| **Vercel (الواجهة)** | `https://web-two-alpha-85.vercel.app` — مشروع `web` (`prj_3dbyMnxH4ajrAVAH5vpsSLD3m9iF`) — production **Ready** · build: `npm install --prefix apps/web` / `npm --prefix apps/web run build` / output `apps/web/out` |
+| **Frontend API base** | `NEXT_PUBLIC_API_BASE = https://waselerp.vercel.app/api` |
+| **API env (Vercel)** | `DATABASE_URL` (Supabase pooler) · `JWT_SECRET` · `FRONTEND_URL = https://web-two-alpha-85.vercel.app` |
 | **Cloudflare quick tunnel** | `https://monica-daughters-search-tackle.trycloudflare.com/api` |
 | **ETA gateway** | **بانتظار** بيانات الـ client_id / secret + الشهادة + رابط الاختبار من العميل |
+
+- **الربط الإنتاجي**: الواجهة (`web-two-alpha-85.vercel.app`) بتتصل مباشرة بالـ API (`waselerp.vercel.app/api`) — مشروعين Vercel منفصلين، كل واحد ليه repo/entrypoint/env مستقل.
+- **قاعدة الإنتاج**: Supabase (PostgreSQL) — لازم تستخدم **Pooler** (IPv4: `aws-1-eu-west-2.pooler.supabase.com:6543`) لأن الـ direct host IPv6-only. SSL: `rejectUnauthorized: false`.
+- **CORS**: يتحكم فيها `FRONTEND_URL` على الـ API — لازم تكون نعمًا لهذا الـ frontend URL.
 
 ---
 
