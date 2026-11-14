@@ -8,7 +8,7 @@ import { useSession } from '@/lib/session';
 import { useLiveEvents } from '@/lib/live';
 import { isNetworkError, offlineQueue, useOfflineQueue } from '@/lib/offline';
 import { agentHealth, openDrawer, printReceipt } from '@/lib/print';
-import { IconCash, IconCart, IconCheck, IconMinus, IconPlus, IconPrinter, IconSearch, IconTrash, IconX } from '@/components/POSIcons';
+import { IconCash, IconCart, IconCheck, IconMinus, IconPlus, IconPrinter, IconSearch, IconTrash, IconX, IconGift } from '@/components/POSIcons';
 
 type ItemUnit = {
   unitId: number; unitName: string; factor: number;
@@ -18,11 +18,11 @@ type ItemUnit = {
 type Line = {
   itemId: number; code: string; name: string; unitId: number; unitName?: string;
   quantity: number; unitPrice: number; discountPct: number; taxPct: number; onHandQty: number;
-  factor: number; units: ItemUnit[];
+  factor: number; units: ItemUnit[]; isGift?: boolean;
 };
 
 export default function PosPage() {
-  const { session } = useSession();
+  const { session, can } = useSession();
   const [search, setSearch] = useState('');
   const [results, setResults] = useState<any[]>([]);
   const [cart, setCart] = useState<Line[]>([]);
@@ -58,6 +58,15 @@ export default function PosPage() {
   const [returnNo, setReturnNo] = useState('');
   const [returnInvoice, setReturnInvoice] = useState<any>(null);
   const [returnLines, setReturnLines] = useState<any[]>([]);
+  const [paymentOpen, setPaymentOpen] = useState(false);
+  const [tendered, setTendered] = useState('');
+  const [tenderError, setTenderError] = useState('');
+  const [couponCode, setCouponCode] = useState('');
+  const [showBulkDiscount, setShowBulkDiscount] = useState(false);
+  const [bulkMode, setBulkMode] = useState<'pct' | 'amount'>('pct');
+  const [bulkValue, setBulkValue] = useState('');
+  const [lastInvoiceNo, setLastInvoiceNo] = useState('');
+  const [draftAvailable, setDraftAvailable] = useState(false);
 
   async function loadHeld() {
     apiFetch<any[]>('/pos/held').then(setHeldCarts).catch(() => {});
@@ -313,17 +322,158 @@ export default function PosPage() {
     setCart((current) => current.map((l) => (l.itemId === itemId ? { ...l, discountPct: value } : l)));
   }
 
+  function toggleGift(itemId: number) {
+    if (!can('sales.giveaway')) { setMessage('ليست لديك صلاحية منح أصناف مجانًا'); return; }
+    setCart((c) => c.map((l) => (l.itemId === itemId
+      ? { ...l, isGift: !l.isGift, discountPct: !l.isGift ? 0 : l.discountPct }
+      : l)));
+  }
+
+  const giftLinePrice = (l: Line) => (l.isGift ? 0 : l.unitPrice);
+
+  function applyBulkDiscount() {
+    const value = Number(bulkValue);
+    if (!Number.isFinite(value) || value <= 0) { setBulkValue(''); return; }
+    const max = session?.user.maxDiscountPct ?? 0;
+    if (bulkMode === 'pct') {
+      const v = Math.min(value, max);
+      setCart((c) => c.map((l) => (l.isGift ? l : { ...l, discountPct: v })));
+    } else {
+      const billable = cart.filter((l) => !l.isGift);
+      if (!billable.length) { setMessage('السلة فارغة'); return; }
+      const each = value / billable.length;
+      setCart((c) => c.map((l) => {
+        if (l.isGift) return l;
+        const lineTotal = l.quantity * l.unitPrice;
+        const pct = lineTotal > 0 ? (each / lineTotal) * 100 : 0;
+        return { ...l, discountPct: Math.min(pct, max) };
+      }));
+    }
+    setShowBulkDiscount(false);
+    setBulkValue('');
+    setMessage('تم تطبيق الخصم على كل الأصناف');
+  }
+
+  function openPayment() {
+    if (!cart.length) { setMessage('السلة فارغة'); return; }
+    setTendered(String(totals.total.toFixed(2)));
+    setTenderError('');
+    setPaymentOpen(true);
+  }
+
+  function confirmPayment() {
+    if (paymentType === 1) {
+      const amount = Number(tendered || 0);
+      if (amount + 1e-9 < totals.total) {
+        setTenderError('المدفوع أقل من الإجمالي — الفارق لا يمكن أن يكون آجلًا في بيع نقدي (اختر مختلط أو آجل)');
+        return;
+      }
+    }
+    setPaymentOpen(false);
+    checkout();
+  }
+
+  function clearCart() {
+    setCart([]);
+    setPartyId(null);
+    setPaidAmount(0);
+    setDiscountPct(0);
+    window.localStorage.removeItem('wasel.pos.draft');
+  }
+
+  function restoreDraft() {
+    try {
+      const raw = window.localStorage.getItem('wasel.pos.draft');
+      if (!raw) { setDraftAvailable(false); return; }
+      const saved = JSON.parse(raw);
+      if (saved?.cart?.length) {
+        setCart(saved.cart);
+        setPartyId(saved.partyId ?? null);
+        if (saved.warehouseId) setWarehouseId(saved.warehouseId);
+        setOrderType(saved.orderType ?? 1);
+        setDiscountPct(Number(saved.discountPct ?? 0));
+        setMessage('تم استعادة الفاتورة غير المحفوظة');
+      }
+    } catch { /* ignore corrupt draft */ }
+    window.localStorage.removeItem('wasel.pos.draft');
+    setDraftAvailable(false);
+  }
+
+  function dismissDraft() {
+    window.localStorage.removeItem('wasel.pos.draft');
+    setDraftAvailable(false);
+  }
+
+  const tenderRef = useRef<HTMLInputElement>(null);
+
   const totals = useMemo(() => {
-    const subtotal = cart.reduce((sum, l) => sum + l.quantity * l.unitPrice, 0);
-    const lineDiscount = cart.reduce((sum, l) => sum + l.quantity * l.unitPrice * (l.discountPct / 100), 0);
+    const subtotal = cart.reduce((sum, l) => sum + l.quantity * giftLinePrice(l), 0);
+    const lineDiscount = cart.reduce((sum, l) => sum + l.quantity * giftLinePrice(l) * (l.discountPct / 100), 0);
     const afterLineDiscount = subtotal - lineDiscount;
     const headerDiscount = afterLineDiscount * (discountPct / 100);
     const taxable = afterLineDiscount - headerDiscount;
-    const tax = cart.reduce((sum, l) => sum + l.quantity * l.unitPrice * (1 - l.discountPct / 100) * (l.taxPct / 100), 0);
+    const tax = cart.reduce((sum, l) => sum + l.quantity * giftLinePrice(l) * (1 - l.discountPct / 100) * (l.taxPct / 100), 0);
     const fee = orderType === 2 ? Number(deliveryFee || 0) : 0;
     const total = taxable + tax + fee;
     return { subtotal, lineDiscount, headerDiscount, tax, fee, total, remaining: total - paidAmount };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cart, discountPct, paidAmount, orderType, deliveryFee]);
+
+  // ask to restore an unfinished invoice after a crash/reload, like Ezees does
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem('wasel.pos.draft');
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (saved?.cart?.length) setDraftAvailable(true);
+      }
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // keep the in-progress cart on the device so a power cut never loses the bill
+  useEffect(() => {
+    if (!cart.length) {
+      window.localStorage.removeItem('wasel.pos.draft');
+      return;
+    }
+    const timer = setTimeout(() => {
+      try {
+        window.localStorage.setItem('wasel.pos.draft', JSON.stringify({
+          cart, partyId, warehouseId, orderType, discountPct, at: Date.now(),
+        }));
+      } catch { /* ignore quota */ }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [cart, partyId, warehouseId, orderType, discountPct]);
+
+  // cashier keyboard shortcuts: F1 جديد · F2 حفظ/تأكيد · F4 طباعة · F6 حذف/إغلاق · F7 المدفوع
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const key = e.key;
+      if (!['F1', 'F2', 'F4', 'F6', 'F7', 'Escape'].includes(key)) return;
+      e.preventDefault();
+      if (key === 'F1') {
+        clearCart();
+        setMessage('تم تفريغ الفاتورة');
+      } else if (key === 'F2') {
+        if (paymentOpen) confirmPayment();
+        else openPayment();
+      } else if (key === 'F4') {
+        if (receipt) printCurrentReceipt();
+      } else if (key === 'F6') {
+        if (paymentOpen) setPaymentOpen(false);
+        else if (cart.length && window.confirm('مسح كل الأصناف من الفاتورة؟')) clearCart();
+      } else if (key === 'F7') {
+        if (paymentOpen) tenderRef.current?.focus();
+        else openPayment();
+      } else if (key === 'Escape') {
+        if (paymentOpen) setPaymentOpen(false);
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
 
   async function checkout() {
     if (!cart.length) { setMessage('السلة فارغة'); return; }
@@ -370,6 +520,7 @@ export default function PosPage() {
       driverPhone: orderType === 2 ? driverPhone : undefined,
       discountPct,
       discountAmount: 0,
+      couponCode: couponCode.trim() || undefined,
       clientRequestId,
       lines: cart.map((l) => ({
         itemId: l.itemId,
@@ -378,6 +529,7 @@ export default function PosPage() {
         unitPrice: l.unitPrice,
         discountPct: l.discountPct,
         taxPct: l.taxPct,
+        ...(l.isGift ? { isGift: true } : {}),
       })),
     };
 
@@ -385,20 +537,16 @@ export default function PosPage() {
       const result = await apiFetch<any>('/sales/invoices', { method: 'POST', body: payload });
       const detail = await apiFetch<any>(`/sales/invoices/${result.invoiceId}`);
       setReceipt(detail);
-      setCart([]);
-      setPartyId(null);
-      setPaidAmount(0);
-      setDiscountPct(0);
+      setLastInvoiceNo(detail?.header?.invoiceNo ?? '');
+      setCouponCode('');
+      clearCart();
       searchRef.current?.focus();
     } catch (error: any) {
       if (isNetworkError(error)) {
         // no connectivity: keep the sale locally and sync it automatically later
         await offlineQueue.enqueue({ id: clientRequestId, url: '/sales/invoices', body: payload });
         setMessage('تعذر الاتصال بالسيرفر — تم حفظ الفاتورة محليًا وسيتم إرسالها تلقائيًا عند رجوع الشبكة');
-        setCart([]);
-        setPartyId(null);
-        setPaidAmount(0);
-        setDiscountPct(0);
+        clearCart();
       } else {
         setMessage(error?.message ?? 'تعذر حفظ الفاتورة');
       }
@@ -436,6 +584,15 @@ export default function PosPage() {
 
   return (
     <AppShell title="نقطة البيع">
+      {draftAvailable && (
+        <div className="card p-3 mb-4 flex flex-wrap items-center gap-3 border-amber-200 bg-amber-50 text-sm text-amber-900">
+          <span>توجد فاتورة غير محفوظة من جلسة سابقة — هل ترغب في استعادتها؟</span>
+          <div className="flex gap-2 mr-auto">
+            <button className="btn-soft text-xs" onClick={dismissDraft}>تجاهل</button>
+            <button className="btn-primary text-xs" onClick={restoreDraft}>استعادة</button>
+          </div>
+        </div>
+      )}
       {requireShift && !currentShift && (
         <div className="card p-4 mb-4 border-amber-300 bg-amber-50 space-y-3">
           <div className="flex items-center gap-3">
@@ -571,26 +728,46 @@ export default function PosPage() {
               <IconCart className="w-5 h-5 text-brand-600" />
               الفاتورة الحالية
               {itemCount > 0 && <span className="badge bg-brand-50 text-brand-700">{itemCount}</span>}
+              {lastInvoiceNo && (
+                <span className="text-[10px] font-normal text-slate-400 hidden sm:inline">آخر فاتورة {lastInvoiceNo}</span>
+              )}
             </h2>
-            <button className="btn-soft text-xs" onClick={() => setCart([])}>إفراغ</button>
+            <div className="flex items-center gap-2">
+              <button className="btn-soft text-xs" onClick={() => openDrawer().catch(() => {})} aria-label="فتح درج النقود" title="فتح درج النقود">فتح الدرج</button>
+              <button className="btn-soft text-xs" onClick={clearCart}>إفراغ</button>
+            </div>
           </div>
 
           <div className="flex-1 max-h-[40vh] overflow-y-auto space-y-2 pr-1">
             {cart.map((line) => (
-              <div key={line.itemId} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-2.5">
+              <div key={line.itemId} className={`rounded-2xl border p-2.5 ${line.isGift ? 'border-emerald-300 bg-emerald-50/60' : 'border-slate-200 bg-slate-50/70'}`}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <div className="font-bold text-sm truncate">{line.name}</div>
+                    <div className="font-bold text-sm truncate">
+                      {line.name}
+                      {line.isGift && <span className="badge bg-emerald-100 text-emerald-700 mr-2 align-middle">هدية</span>}
+                    </div>
                     <div className="text-[11px] text-slate-500">{line.code}</div>
                   </div>
-                  <button
-                    type="button"
-                    className="w-8 h-8 rounded-xl text-rose-500 hover:bg-rose-50 flex items-center justify-center shrink-0"
-                    onClick={() => setCart((c) => c.filter((l) => l.itemId !== line.itemId))}
-                    aria-label="حذف من الفاتورة"
-                  >
-                    <IconTrash className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      className={`w-8 h-8 rounded-xl flex items-center justify-center ${line.isGift ? 'bg-emerald-100 text-emerald-600' : 'text-slate-400 hover:bg-slate-200/60'}`}
+                      onClick={() => toggleGift(line.itemId)}
+                      aria-label={line.isGift ? 'تحويل لبيع عادي' : 'تحويل لهدية'}
+                      title="هدية للعميل (بسعر صفر)"
+                    >
+                      <IconGift className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      className="w-8 h-8 rounded-xl text-rose-500 hover:bg-rose-50 flex items-center justify-center"
+                      onClick={() => setCart((c) => c.filter((l) => l.itemId !== line.itemId))}
+                      aria-label="حذف من الفاتورة"
+                    >
+                      <IconTrash className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-12 gap-2 mt-2 items-center">
@@ -628,27 +805,35 @@ export default function PosPage() {
                   </div>
 
                   <div className="col-span-3">
-                    <input
-                      className="input px-2 h-9 text-sm"
-                      type="number"
-                      value={line.unitPrice}
-                      onChange={(e) => setLinePrice(line.itemId, Number(e.target.value))}
-                    />
+                    {line.isGift ? (
+                      <input className="input px-2 h-9 text-sm bg-emerald-100/50 text-emerald-700 font-bold" readOnly value="هدية 0.00" aria-label="هدية" />
+                    ) : (
+                      <input
+                        className="input px-2 h-9 text-sm"
+                        type="number"
+                        value={line.unitPrice}
+                        onChange={(e) => setLinePrice(line.itemId, Number(e.target.value))}
+                      />
+                    )}
                   </div>
 
                   <div className="col-span-2">
-                    <input
-                      className="input px-2 h-9 text-sm"
-                      type="number"
-                      value={line.discountPct}
-                      onChange={(e) => setLineDiscount(line.itemId, Number(e.target.value))}
-                      title="خصم %"
-                      aria-label="خصم الفاتورة"
-                    />
+                    {line.isGift ? (
+                      <input className="input px-2 h-9 text-sm bg-emerald-100/50 text-emerald-700 font-bold" readOnly value="0" aria-label="خصم هدية" />
+                    ) : (
+                      <input
+                        className="input px-2 h-9 text-sm"
+                        type="number"
+                        value={line.discountPct}
+                        onChange={(e) => setLineDiscount(line.itemId, Number(e.target.value))}
+                        title="خصم %"
+                        aria-label="خصم الفاتورة"
+                      />
+                    )}
                   </div>
 
                   <div className="col-span-2 font-bold text-sm text-left">
-                    {formatMoney(line.quantity * line.unitPrice * (1 - line.discountPct / 100))}
+                    {line.isGift ? <span className="text-emerald-700">هدية</span> : formatMoney(line.quantity * line.unitPrice * (1 - line.discountPct / 100))}
                   </div>
                 </div>
 
@@ -666,6 +851,26 @@ export default function PosPage() {
             )}
           </div>
 
+          {/* bulk discount on all lines */}
+          <div className="flex items-center gap-2 mt-2">
+            <button className="btn-soft text-xs" onClick={() => setShowBulkDiscount((v) => !v)} disabled={!cart.length}>
+              خصم على كل الأصناف
+            </button>
+          </div>
+          {showBulkDiscount && (
+            <div className="mt-2 flex flex-wrap items-center gap-2 rounded-2xl border border-dashed border-slate-300 p-2.5">
+              <input autoFocus className="input w-24 text-center" type="number" min={0} step="0.01" value={bulkValue}
+                onChange={(e) => setBulkValue(e.target.value)} placeholder="0" dir="ltr" />
+              <select className="input w-24" value={bulkMode} onChange={(e) => setBulkMode(e.target.value as 'pct' | 'amount')}>
+                <option value="pct">نسبة %</option>
+                <option value="amount">مبلغ</option>
+              </select>
+              <button className="btn-primary text-xs" onClick={applyBulkDiscount}>تطبيق</button>
+              <button className="btn-soft text-xs" onClick={() => { setShowBulkDiscount(false); setBulkValue(''); }}>إلغاء</button>
+              <span className="text-[10px] text-slate-400">في وضع «مبلغ» يُوزَّع الخصم بالتساوي على الأسطر</span>
+            </div>
+          )}
+
           {/* totals */}
           <div className="mt-3 pt-3 border-t border-dashed border-slate-200 space-y-1.5 text-sm">
             <div className="flex justify-between"><span className="text-slate-500">الإجمالي قبل الخصم</span><span>{formatMoney(totals.subtotal)}</span></div>
@@ -682,6 +887,10 @@ export default function PosPage() {
 
           {/* payment */}
           <div className="mt-3 pt-3 border-t border-dashed border-slate-200">
+            <div className="mb-2 flex items-center gap-2">
+              <input className="input" placeholder="كود الكوبون (اختياري)" value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value)} dir="ltr" aria-label="كود الكوبون" />
+            </div>
             <div className="text-xs font-extrabold text-slate-600 mb-2">طريقة الدفع</div>
             <div className="grid grid-cols-3 gap-2" role="group" aria-label="طريقة الدفع">
               {([
@@ -880,7 +1089,7 @@ export default function PosPage() {
             <div className="mt-2 rounded-xl bg-rose-50 text-rose-700 text-sm px-3 py-2 border border-rose-200">{error}</div>
           )}
 
-          <button className="btn-success w-full mt-3 py-3 text-base" onClick={checkout} disabled={busy || !cart.length}>
+          <button className="btn-success w-full mt-3 py-3 text-base" onClick={openPayment} disabled={busy || !cart.length}>
             {busy ? 'جارٍ الحفظ…' : `إتمام البيع — ${formatMoney(totals.total)}`}
           </button>
           {cart.length > 0 && (
@@ -890,6 +1099,53 @@ export default function PosPage() {
           )}
         </div>
       </div>
+
+      {/* ---------------- Payment window ---------------- */}
+      {paymentOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setPaymentOpen(false)}>
+          <div className="card w-full max-w-sm p-5" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="تأكيد الدفع">
+            <div className="text-[11px] text-slate-400">نافذة الدفع</div>
+            <div className="flex items-baseline justify-between mt-1">
+              <span className="text-sm font-bold text-slate-600">الإجمالي</span>
+              <span className="text-2xl font-extrabold text-brand-700">{formatMoney(totals.total)}</span>
+            </div>
+
+            <label className="label mt-4">المدفوع</label>
+            <input
+              ref={tenderRef}
+              className="input text-lg font-bold text-center"
+              type="number"
+              step="0.01"
+              dir="ltr"
+              value={tendered}
+              autoFocus
+              onChange={(e) => { setTendered(e.target.value); setTenderError(''); }}
+              onKeyDown={(e) => { if (e.key === 'Enter') confirmPayment(); }}
+              aria-label="المبلغ المدفوع"
+            />
+            <button className="btn-soft text-xs w-full mt-2" onClick={() => setTendered(String(totals.total.toFixed(2)))}>
+              المبلغ كامل
+            </button>
+
+            <div className="flex justify-between items-baseline mt-3 pt-3 border-t border-dashed border-slate-200">
+              <span className="text-sm text-slate-500">الباقي للعميل</span>
+              <span className="text-xl font-extrabold text-emerald-600">{formatMoney(Math.max(0, Number(tendered || 0) - totals.total))}</span>
+            </div>
+
+            {tenderError && (
+              <div className="mt-2 rounded-xl bg-rose-50 text-rose-700 text-xs px-3 py-2 border border-rose-200">{tenderError}</div>
+            )}
+
+            <div className="flex gap-2 mt-4">
+              <button className="btn-soft flex-1" onClick={() => setPaymentOpen(false)}>إلغاء</button>
+              <button className="btn-success flex-1 text-base" onClick={confirmPayment} disabled={busy}>
+                {busy ? 'جارٍ الحفظ…' : 'تأكيد وحفظ'}
+              </button>
+            </div>
+            <div className="text-[10px] text-slate-400 mt-2 text-center">Enter للتأكيد · Esc للإلغاء · F7 ينتقل للمبلغ المدفوع</div>
+          </div>
+        </div>
+      )}
 
       {/* ---------------- Receipt ---------------- */}
       {receipt && (

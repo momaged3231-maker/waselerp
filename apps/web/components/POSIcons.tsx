@@ -112,3 +112,15 @@ export function IconReceipt(props: IconProps) {
     </Icon>
   );
 }
+
+export function IconGift(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M20 12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8" />
+      <path d="M2 7h20v5H2z" />
+      <path d="M12 7v15" />
+      <path d="M12 7s-1.6-4.2-4.7-4.2S4 7 8.5 7H12z" />
+      <path d="M12 7s1.6-4.2 4.7-4.2S20 7 15.5 7H12z" />
+    </Icon>
+  );
+}
