@@ -213,6 +213,17 @@ const SETTING_SECTIONS: { id: string; title: string; desc: string; fields: Setti
       { key: 'AttachmentMaxPerEntity', label: 'أقصى عدد مرفقات لكل كيان', type: 'number', dir: 'ltr', unit: 'ملف', desc: 'الافتراضي 20 ملفًا لكل فاتورة/صنف/عميل/إذن صيانة… — الرفع يُرفض بعد تجاوز الحد' },
     ],
   },
+  {
+    id: 'hr',
+    title: 'الموارد البشرية',
+    desc: 'نسب ونطاق التأمينات المستخدمة عند توليد المرتبات',
+    fields: [
+      { key: 'InsuranceEmployeePct', label: 'نسبة تأمينات الموظف', type: 'number', dir: 'ltr', unit: '%', desc: 'تُخصم من صافي المرتب (الافتراضي 11%) — تُحسب على الأجر التأميني' },
+      { key: 'InsuranceEmployerPct', label: 'نسبة تأمينات الشركة', type: 'number', dir: 'ltr', unit: '%', desc: 'حصة الشركة في التأمينات وتُرحّل لمصروف المرتبات (الافتراضي 18.75%)' },
+      { key: 'InsuranceInsurableMin', label: 'الحد الأدنى للأجر التأميني', type: 'number', dir: 'ltr', unit: 'ج.م', desc: '0 = بلا حد — الراتب الأقل من هذا الحد يُحتسب التأمين عليه' },
+      { key: 'InsuranceInsurableMax', label: 'الحد الأقصى للأجر التأميني', type: 'number', dir: 'ltr', unit: 'ج.م', desc: '0 = بلا حد — الراتب الأعلى من هذا الحد يُحتسب التأمين على الحد فقط' },
+    ],
+  },
 ];
 
 const KNOWN_SETTING_KEYS = new Set(SETTING_SECTIONS.flatMap((section) => section.fields.map((field) => field.key)));

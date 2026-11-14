@@ -516,12 +516,15 @@ export class HrService {
     const period = monthStart(dto?.periodMonth);
     const end = monthEnd(dto?.periodMonth);
     const next = nextMonthStart(dto?.periodMonth);
-    const insuranceEmployeePct = Number(await this.db.one<any>(
-      `SELECT setting_value FROM app_settings WHERE setting_key = 'InsuranceEmployeePct'`,
+    const readNumSetting = async (key: string) => Number(await this.db.one<any>(
+      `SELECT setting_value FROM app_settings WHERE setting_key = $1::text`,
+      [key],
     ).then((row) => row?.setting_value ?? '0').catch(() => 0)) || 0;
-    const insuranceEmployerPct = Number(await this.db.one<any>(
-      `SELECT setting_value FROM app_settings WHERE setting_key = 'InsuranceEmployerPct'`,
-    ).then((row) => row?.setting_value ?? '0').catch(() => 0)) || 0;
+    const insuranceEmployeePct = await readNumSetting('InsuranceEmployeePct');
+    const insuranceEmployerPct = await readNumSetting('InsuranceEmployerPct');
+    // تأمينات متقدمة (D6): نطاق الأجر التأميني — 0 = بلا حد.
+    const insurableMin = await readNumSetting('InsuranceInsurableMin');
+    const insurableMax = await readNumSetting('InsuranceInsurableMax');
 
     return this.db.transaction(async (client) => {
       const employees = await client.query<any>(
@@ -624,8 +627,12 @@ export class HrService {
         const unpaidDays = Math.min(30, unpaidByEmployee.get(employeeId) ?? 0);
         const unpaidAmount = round2((basic / 30) * unpaidDays);
 
-        const insuranceEmployee = round2(basic * insuranceEmployeePct / 100);
-        const insuranceEmployer = round2(basic * insuranceEmployerPct / 100);
+        // Insurance runs on the insurable wage: the basic salary clamped into [min, max] (0 = uncapped).
+        let insurable = basic;
+        if (insurableMin > 0 && insurable < insurableMin) insurable = insurableMin;
+        if (insurableMax > 0 && insurable > insurableMax) insurable = insurableMax;
+        const insuranceEmployee = round2(insurable * insuranceEmployeePct / 100);
+        const insuranceEmployer = round2(insurable * insuranceEmployerPct / 100);
 
         // Open advances are repaid by their monthly deduction.
         const advances = await client.query<any>(
