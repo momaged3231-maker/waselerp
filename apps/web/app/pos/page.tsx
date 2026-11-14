@@ -572,6 +572,8 @@ export default function PosPage() {
       setCouponCode('');
       clearCart();
       searchRef.current?.focus();
+      // الطباعة التلقائية بعد الحفظ (حسب الدليل)؛ تمرر الإيصال الصريح للدالة
+      window.setTimeout(() => printReceiptOf(detail).catch(() => {}), 400);
     } catch (error: any) {
       if (isNetworkError(error)) {
         // no connectivity: keep the sale locally and sync it automatically later
@@ -589,16 +591,16 @@ export default function PosPage() {
   }
 
   /** Prints the receipt through the local print agent, falling back to the browser. */
-  async function printCurrentReceipt() {
-    if (!receipt) return;
+  async function printReceiptOf(detail: any) {
+    if (!detail) return;
     setPrintError('');
     const health = await agentHealth();
     if (health?.ok) {
       try {
         await printReceipt({
           store: { name: 'واصل ERP', phone: '', taxNumber: '' },
-          header: receipt.header,
-          lines: receipt.lines,
+          header: detail.header,
+          lines: detail.lines,
           footer: 'شكراً لتعاملكم معنا',
         });
         await openDrawer().catch(() => {});
@@ -608,6 +610,11 @@ export default function PosPage() {
       }
     }
     window.print();
+  }
+
+  async function printCurrentReceipt() {
+    if (!receipt) { setMessage('لا توجد فاتورة مطبوعة حاليًا'); return; }
+    return printReceiptOf(receipt);
   }
 
   const selectedParty = parties.find((p) => p.partyId === partyId);
@@ -709,6 +716,14 @@ export default function PosPage() {
                 title="تحديث البيانات"
               >
                 <IconRefresh className="w-4 h-4" />
+              </button>
+              <button
+                className="w-8 h-8 rounded-xl text-slate-500 hover:bg-slate-100 flex items-center justify-center"
+                onClick={() => printCurrentReceipt()}
+                aria-label="طباعة"
+                title="طباعة آخر إيصال (F4)"
+              >
+                <IconPrinter className="w-4 h-4" />
               </button>
               <span className="badge bg-slate-100 text-slate-600">{results.length} منتج</span>
             </div>
