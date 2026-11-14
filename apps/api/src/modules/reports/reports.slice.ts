@@ -252,7 +252,64 @@ export class ReportsService {
       [from || null, to || null, branchId],
     );
   }
+  /** Pivot: sales by item x month. */
+  async salesPivotByItemMonth(branchId: number, from: string, to: string) {
+    const rows = await this.db.query<any>(
+      `SELECT it.item_id AS "itemId", it.name AS "itemName",
+              to_char(i.invoice_date, 'YYYY-MM') AS "month",
+              COALESCE(SUM(l.line_total), 0) AS "amount"
+         FROM invoice_lines l
+         JOIN invoices i ON i.invoice_id = l.invoice_id
+         JOIN items it ON it.item_id = l.item_id
+        WHERE i.invoice_type = 1 AND i.status = 2
+          AND ($1::int = 0 OR i.branch_id = $1)
+          AND ($2::date IS NULL OR i.invoice_date >= $2::date)
+          AND ($3::date IS NULL OR i.invoice_date <= $3::date)
+        GROUP BY it.item_id, it.name, to_char(i.invoice_date, 'YYYY-MM')
+        ORDER BY it.name, "month"`,
+      [branchId, from || null, to || null],
+    );
+    const items = new Map<number, { itemId: number; itemName: string; months: Record<string, number> }>();
+    const months = new Set<string>();
+    for (const row of rows) {
+      const id = Number(row.itemId);
+      if (!items.has(id)) items.set(id, { itemId: id, itemName: row.itemName, months: {} });
+      const month = String(row.month);
+      months.add(month);
+      items.get(id)!.months[month] = Number(row.amount ?? 0);
+    }
+    return { months: [...months].sort(), items: [...items.values()] };
+  }
+
+  /** Pivot: stock value by category x warehouse. */
+  async stockPivotByCategoryWarehouse(branchId: number) {
+    const rows = await this.db.query<any>(
+      `SELECT COALESCE(c.name, 'بدون فئة') AS "categoryName",
+              w.name AS "warehouseName",
+              COALESCE(SUM(q.on_hand_qty * q.avg_cost), 0) AS "value"
+         FROM item_warehouse_qty q
+         JOIN items i ON i.item_id = q.item_id AND q.unit_id = i.base_unit_id
+         JOIN warehouses w ON w.warehouse_id = q.warehouse_id
+         LEFT JOIN categories c ON c.category_id = i.category_id
+        WHERE ($1::int = 0 OR w.branch_id = $1)
+        GROUP BY c.name, w.name
+        ORDER BY c.name, w.name`,
+      [branchId],
+    );
+    const categories = new Map<string, Record<string, number>>();
+    const warehouses = new Set<string>();
+    for (const row of rows) {
+      const cat = String(row.categoryName);
+      const wh = String(row.warehouseName);
+      warehouses.add(wh);
+      if (!categories.has(cat)) categories.set(cat, {});
+      categories.get(cat)![wh] = Number(row.value ?? 0);
+    }
+    return { warehouses: [...warehouses].sort(), categories: [...categories.entries()].map(([categoryName, values]) => ({ categoryName, values })) };
+  }
 }
+
+
 
 @Controller('reports')
 export class ReportsController {
@@ -316,6 +373,18 @@ export class ReportsController {
   @Get('commissions')
   commissions(@CurrentBranch() branchId: number, @Query('from') from: string, @Query('to') to: string) {
     return this.service.commissions(branchId, from, to);
+  }
+
+  @RequirePermissions('reports.view')
+  @Get('pivot/sales')
+  salesPivot(@CurrentBranch() branchId: number, @Query('from') from: string, @Query('to') to: string) {
+    return this.service.salesPivotByItemMonth(branchId, from, to);
+  }
+
+  @RequirePermissions('reports.view')
+  @Get('pivot/stock')
+  stockPivot(@CurrentBranch() branchId: number) {
+    return this.service.stockPivotByCategoryWarehouse(branchId);
   }
 }
 

@@ -6,7 +6,7 @@ import { apiFetch, formatMoney } from '@/lib/api';
 import { downloadCsv, printPage } from '@/lib/export';
 
 export default function ReportsPage() {
-  const [tab, setTab] = useState<'sales' | 'items' | 'stock' | 'parties' | 'cash' | 'reorder' | 'aging' | 'commissions'>('sales');
+  const [tab, setTab] = useState<'sales' | 'items' | 'stock' | 'parties' | 'cash' | 'reorder' | 'aging' | 'commissions' | 'pivot'>('sales');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [groupBy, setGroupBy] = useState('day');
@@ -15,6 +15,14 @@ export default function ReportsPage() {
   async function load() {
     const query = new URLSearchParams({ from, to });
     if (tab === 'sales') query.set('groupBy', groupBy);
+    if (tab === 'pivot') {
+      const [salesPivot, stockPivot] = await Promise.all([
+        apiFetch(`/reports/pivot/sales?${query.toString()}`),
+        apiFetch('/reports/pivot/stock'),
+      ]);
+      setData({ salesPivot, stockPivot });
+      return;
+    }
     const endpoint: Record<string, string> = {
       sales: '/reports/sales-summary',
       items: '/reports/top-items',
@@ -37,6 +45,7 @@ export default function ReportsPage() {
           ['sales', 'ملخص المبيعات'], ['items', 'أكثر الأصناف'], ['stock', 'قيمة المخزون'],
           ['parties', 'أرصدة العملاء والموردين'], ['cash', 'حركة الخزينة'],
           ['reorder', 'حد الطلب'], ['aging', 'أعمار الديون'], ['commissions', 'عمولات المندوبين'],
+          ['pivot', 'جدول محوري'],
         ] as const).map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)} className={tab === key ? 'btn-primary' : 'btn-soft'}>{label}</button>
         ))}
@@ -224,6 +233,64 @@ export default function ReportsPage() {
             </table>
           </div>
         )}
+         {tab === 'pivot' && (
+           <div className="space-y-6">
+             <div className="table-wrap">
+               <div className="font-bold mb-2">مبيعات: صنف × شهر</div>
+               <table className="table">
+                 <thead>
+                   <tr>
+                     <th>الصنف</th>
+                     {(data?.salesPivot?.months ?? []).map((m: string) => <th key={m}>{m}</th>)}
+                     <th>المجموع</th>
+                   </tr>
+                 </thead>
+                 <tbody>
+                   {(data?.salesPivot?.items ?? []).map((row: any) => {
+                     const total = (data?.salesPivot?.months ?? []).reduce((sum: number, m: string) => sum + Number(row.months?.[m] ?? 0), 0);
+                     return (
+                       <tr key={row.itemId}>
+                         <td className="font-semibold">{row.itemName}</td>
+                         {(data?.salesPivot?.months ?? []).map((m: string) => (
+                           <td key={m}>{formatMoney(row.months?.[m] ?? 0)}</td>
+                         ))}
+                         <td className="font-bold">{formatMoney(total)}</td>
+                       </tr>
+                     );
+                   })}
+                 </tbody>
+               </table>
+             </div>
+
+             <div className="table-wrap">
+               <div className="font-bold mb-2">قيمة المخزون: فئة × مخزن</div>
+               <table className="table">
+                 <thead>
+                   <tr>
+                     <th>الفئة</th>
+                     {(data?.stockPivot?.warehouses ?? []).map((w: string) => <th key={w}>{w}</th>)}
+                     <th>المجموع</th>
+                   </tr>
+                 </thead>
+                 <tbody>
+                   {(data?.stockPivot?.categories ?? []).map((row: any) => {
+                     const total = (data?.stockPivot?.warehouses ?? []).reduce((sum: number, w: string) => sum + Number(row.values?.[w] ?? 0), 0);
+                     return (
+                       <tr key={row.categoryName}>
+                         <td className="font-semibold">{row.categoryName}</td>
+                         {(data?.stockPivot?.warehouses ?? []).map((w: string) => (
+                           <td key={w}>{formatMoney(row.values?.[w] ?? 0)}</td>
+                         ))}
+                         <td className="font-bold">{formatMoney(total)}</td>
+                       </tr>
+                     );
+                   })}
+                 </tbody>
+               </table>
+             </div>
+           </div>
+         )}
+
       </div>
     </AppShell>
   );
