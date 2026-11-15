@@ -3,8 +3,13 @@
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import { apiFetch } from '@/lib/api';
-import { useSession } from '@/lib/session';
 import Link from 'next/link';
+import ItemsScreen from '@/components/screens/ItemsScreen';
+import PartiesScreen from '@/components/screens/PartiesScreen';
+import BranchesScreen from '@/components/screens/BranchesScreen';
+import CurrenciesScreen from '@/components/screens/CurrenciesScreen';
+import BankAccountsScreen from '@/components/screens/BankAccountsScreen';
+import CompanyScreen from '@/components/screens/CompanyScreen';
 
 type DefinitionKey =
   | 'branches' | 'warehouses' | 'units' | 'colors' | 'sizes'
@@ -25,7 +30,7 @@ const NAV: { key: DefinitionKey; label: string }[] = [
   { key: 'reps', label: 'تعريف المندوبين' },
   { key: 'currencies', label: 'أسعار العملات' },
   { key: 'banks', label: 'تعريف البنوك' },
-  { key: 'bank-accounts', label: 'تعريف الحسابات البنكية' },
+  { key: 'bank-accounts', label: 'الحسابات البنكية والخزائن' },
   { key: 'countries', label: 'الدول' },
   { key: 'governorates', label: 'المحافظات' },
   { key: 'cities', label: 'المدن' },
@@ -40,19 +45,6 @@ function MissingCard({ title, reason, alt }: { title: string; reason: string; al
       {alt ? (
         <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-sm px-4 py-3">البديل: {alt}</div>
       ) : null}
-    </div>
-  );
-}
-
-function LinkCard({ title, desc, href }: { title: string; desc: string; href: string }) {
-  return (
-    <div className="card p-6 max-w-3xl">
-      <div className="font-extrabold text-lg text-slate-700">{title}</div>
-      <div className="text-sm text-slate-500 mt-2">{desc}</div>
-      <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
-        هذه الشاشة موجودة بالفعل في النظام — استخدم الرابط:{' '}
-        <Link href={href} className="text-brand-700 font-bold underline">{href}</Link>
-      </div>
     </div>
   );
 }
@@ -78,7 +70,6 @@ function DataTable({ columns, rows, empty }: { columns: [string, string][]; rows
 }
 
 export default function DefinitionsPage() {
-  const { can } = useSession();
   const [key, setKey] = useState<DefinitionKey>('branches');
 
   const [warehouses, setWarehouses] = useState<any[]>([]);
@@ -111,7 +102,7 @@ export default function DefinitionsPage() {
 
   useEffect(() => { load(); }, [key]);
 
-  async function save(payload: any, path: string, reloadKey?: string) {
+  async function save(payload: any, path: string) {
     setError('');
     setMessage('');
     try {
@@ -143,19 +134,19 @@ export default function DefinitionsPage() {
 
     switch (key) {
       case 'branches':
-        return <LinkCard title="تعريف الفروع" desc="إدارة الفروع (إنشاء/تعديل/تفعيل) موجودة في شاشة الإعدادات." href="/admin" />;
+        return <BranchesScreen />;
       case 'items':
-        return <LinkCard title="تعريف صنف" desc="كتالوج الأصناف والباركود والوحدات والأسعار — في شاشة الأصناف." href="/items" />;
+        return <ItemsScreen />;
       case 'parties':
-        return <LinkCard title="تعريف العملاء" desc="العملاء (كود، اسم، رصيد، حد ائتمان، قائمة أسعار، مجموعة/تصنيف)." href="/parties" />;
+        return <PartiesScreen fixedType={1} />;
       case 'vendors':
-        return <LinkCard title="تعريف الموردين" desc="نفس شاشة العملاء — العملاء والموردون في صفحة واحدة بنمطين." href="/parties" />;
+        return <PartiesScreen fixedType={2} />;
       case 'currencies':
-        return <LinkCard title="أسعار العملات" desc="إدارة العملات وأسعار الصرف — في شاشة المحاسبة (تبويب العملات)." href="/accounting" />;
+        return <CurrenciesScreen />;
       case 'bank-accounts':
-        return <LinkCard title="تعريف الحسابات البنكية" desc="الحسابات البنكية والمحفظة والدفع على الحساب — في شاشة الخزينة (نوع = بنك)." href="/treasury" />;
+        return <BankAccountsScreen />;
       case 'company':
-        return <LinkCard title="بيانات الشركة" desc="الاسم التجاري، التليفون، العنوان، الرقم الضريبي، تذييل الفاتورة — في إعدادات النظام." href="/admin" />;
+        return <CompanyScreen />;
 
       case 'warehouses':
         return (
@@ -312,7 +303,7 @@ export default function DefinitionsPage() {
       case 'governorates':
         return <MissingCard title="المحافظات" reason="لا يوجد جدول محافظات في النظام. لدينا جدول المدن والدول ضمن وحدة الشحن والتسليم — المحافظات اختيارية ويمكن إضافتها كعمود/فقرة في نفس الجدول عند الحاجة." alt="التزم بـ «المدن» + «الدول» في وحدة الشحن — أو اطلب إضافة المحافظات كجدول مستقل." />;
       case 'banks':
-        return <MissingCard title="تعريف البنوك" reason="لا يوجد جدول مرجعي للبنوك في النظام. اسم البنك يُحفظ كنص حر مع الحساب البنكي (الخزينة › نوع = بنك). اختيار اسم البنك من قائمة ثابنة غير موحدة." alt="اختيار البنك يتم عند إنشاء الحساب البنكي («اسم البنك» نص حر). أضيف جدول «البنوك» كمرجع عند الرغبة." />;
+        return <MissingCard title="تعريف البنوك" reason="لا يوجد جدول مرجعي للبنوك في النظام. اسم البنك يُحفظ كنص حر مع الحساب البنكي («الحسابات البنكية والخزائن»)." alt="أدخل اسم البنك هنا كالحساب البنكي («البنك» نص حر) — أو اطلب إضافة جدول «البنوك» كمرجع." />;
       default:
         return <MissingCard title="قسم غير مكتمل" reason="هذي القيمة غير معرّفة." />;
     }

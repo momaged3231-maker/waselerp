@@ -59,18 +59,6 @@ type SettingField = {
 
 const SETTING_SECTIONS: { id: string; title: string; desc: string; fields: SettingField[] }[] = [
   {
-    id: 'company',
-    title: 'الشركة والفاتورة',
-    desc: 'بيانات الشركة — تُطبع على الإيصال والفاتورة المطبوعة تلقائيًا',
-    fields: [
-      { key: 'CompanyName', label: 'اسم الشركة', type: 'text', placeholder: 'مثال: شركة الوصل للتجارة', desc: 'يظهر بأعلى الإيصال والفاتورة المطبوعة' },
-      { key: 'CompanyPhone', label: 'تليفون الشركة', type: 'text', dir: 'ltr', desc: 'يظهر أسفل الاسم في الطباعة' },
-      { key: 'CompanyAddress', label: 'العنوان', type: 'text', desc: 'يظهر بأعلى الإيصال تحت اسم الشركة' },
-      { key: 'TaxNumber', label: 'الرقم الضريبي', type: 'text', dir: 'ltr', desc: 'يظهر في الطباعة والفوترة' },
-      { key: 'InvoiceFooter', label: 'نص تذييل الفاتورة', type: 'text', desc: 'يظهر أسفل كل إيصال/فاتورة مطبوعة (مثال: شكراً لزيارتكم)' },
-    ],
-  },
-  {
     id: 'tax',
     title: 'الضرائب',
     desc: 'تسمية الضريبة وكيفية عرضها على الإيصال المطبوع',
@@ -227,6 +215,8 @@ const SETTING_SECTIONS: { id: string; title: string; desc: string; fields: Setti
 ];
 
 const KNOWN_SETTING_KEYS = new Set(SETTING_SECTIONS.flatMap((section) => section.fields.map((field) => field.key)));
+// Company identity keys are managed in Definitions → «بيانات الشركة» and must not be duplicated here.
+const MOVED_SETTING_KEYS = new Set(['CompanyName', 'CompanyPhone', 'CompanyAddress', 'TaxNumber', 'InvoiceFooter']);
 
 function SettingFieldRow({ field, value, onChange }: {
   field: SettingField;
@@ -583,8 +573,8 @@ const ADVANCED_UNAVAILABLE: { title: string; reason: string }[] = [
 ];
 
 export default function AdminPage() {
-  const [tab, setTab] = useState<'branches' | 'users' | 'roles' | 'settings' | 'advanced' | 'print' | 'audit' | 'zatca' | 'eta' | 'backup'>('branches');
-  const [branches, setBranches] = useState<any[]>([]);
+  const [tab, setTab] = useState<'users' | 'roles' | 'settings' | 'advanced' | 'print' | 'audit' | 'zatca' | 'eta' | 'backup'>('users');
+
   const [users, setUsers] = useState<any[]>([]);
   const [roles, setRoles] = useState<any[]>([]);
   const [permissions, setPermissions] = useState<any[]>([]);
@@ -617,7 +607,6 @@ export default function AdminPage() {
   const [printBusy, setPrintBusy] = useState(false);
 
   async function load() {
-    if (tab === 'branches') setBranches(await apiFetch('/admin/branches'));
     if (tab === 'users') setUsers(await apiFetch('/admin/users'));
     if (tab === 'roles') {
       setRoles(await apiFetch('/admin/roles'));
@@ -734,19 +723,6 @@ export default function AdminPage() {
     }
   }
 
-  async function addBranch(event: React.FormEvent) {
-    event.preventDefault();
-    setError('');
-    const form = new FormData(event.target as any);
-    try {
-      await apiFetch('/admin/branches', {
-        method: 'POST',
-        body: { code: form.get('code'), name: form.get('name'), city: form.get('city'), phone: form.get('phone'), isActive: true },
-      });
-      load();
-    } catch (err: any) { setError(err?.message ?? 'تعذر الحفظ'); }
-  }
-
   async function addUser(event: React.FormEvent) {
     event.preventDefault();
     setError('');
@@ -859,48 +835,12 @@ export default function AdminPage() {
   return (
     <AppShell title="الإعدادات">
       <div className="flex gap-2 mb-4 flex-wrap">
-        {([['branches', 'الفروع'], ['users', 'المستخدمون'], ['roles', 'الأدوار والصلاحيات'], ['settings', 'إعدادات النظام'], ['advanced', 'الإعدادات المتقدمة'], ['print', 'ملفات الطباعة (المحطات)'], ['eta', 'الفاتورة الإلكترونية (مصر)'], ['zatca', 'الضريبة الإلكترونية (السعودية)'], ['backup', 'النسخ الاحتياطي'], ['audit', 'سجل العمليات']] as const).map(([key, label]) => (
+        {([['users', 'المستخدمون'], ['roles', 'الأدوار والصلاحيات'], ['settings', 'إعدادات النظام'], ['advanced', 'الإعدادات المتقدمة'], ['print', 'ملفات الطباعة (المحطات)'], ['eta', 'الفاتورة الإلكترونية (مصر)'], ['zatca', 'الضريبة الإلكترونية (السعودية)'], ['backup', 'النسخ الاحتياطي'], ['audit', 'سجل العمليات']] as const).map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)} className={tab === key ? 'btn-primary' : 'btn-soft'}>{label}</button>
         ))}
       </div>
 
       {error && <div className="mb-3 rounded-xl bg-rose-50 text-rose-700 text-sm px-4 py-3 border border-rose-200">{error}</div>}
-
-      {tab === 'branches' && (
-        <div className="grid lg:grid-cols-3 gap-4">
-          <div className="card lg:col-span-2">
-            <div className="card-title"><span>الفروع ({branches.length})</span></div>
-            <div className="table-wrap">
-              <table className="table">
-                <thead><tr><th>الكود</th><th>الاسم</th><th>المدينة</th><th>التليفون</th><th>الحالة</th></tr></thead>
-                <tbody>
-                  {branches.map((branch) => (
-                    <tr key={branch.branchId}>
-                      <td className="font-mono text-xs">{branch.code}</td>
-                      <td className="font-semibold">{branch.name}</td>
-                      <td>{branch.city ?? '—'}</td>
-                      <td dir="ltr" className="text-right">{branch.phone ?? '—'}</td>
-                      <td>
-                        <span className={`badge ${branch.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
-                          {branch.isActive ? 'نشط' : 'موقوف'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <form className="card p-5 space-y-3 h-fit" onSubmit={addBranch}>
-            <div className="font-bold">فرع جديد</div>
-            <div><label className="label">الكود</label><input name="code" className="input" required dir="ltr" /></div>
-            <div><label className="label">الاسم</label><input name="name" className="input" required /></div>
-            <div><label className="label">المدينة</label><input name="city" className="input" /></div>
-            <div><label className="label">التليفون</label><input name="phone" className="input" dir="ltr" /></div>
-            <button className="btn-primary w-full">إضافة</button>
-          </form>
-        </div>
-      )}
 
       {tab === 'users' && (
         <div className="grid lg:grid-cols-3 gap-4">
@@ -1011,12 +951,17 @@ export default function AdminPage() {
             </div>
           ))}
 
-          {Object.keys(settings).filter((k) => !KNOWN_SETTING_KEYS.has(k)).length > 0 && (
+          <div className="card p-4 border-sky-200 bg-sky-50 text-sky-900 text-xs leading-6">
+            <b>بيانات الشركة (الاسم/العنوان/التليفون/الرقم الضريبي/تذييل الفاتورة)</b> انتقلت إلى «البيانات الأساسية ← بيانات الشركة».
+            تعديلها من هناك ينعكس فورًا على طباعة الإيصال والفاتورة.
+          </div>
+
+          {Object.keys(settings).filter((k) => !KNOWN_SETTING_KEYS.has(k) && !MOVED_SETTING_KEYS.has(k)).length > 0 && (
             <div className="card p-5">
               <div className="font-bold text-amber-800">مفاتيح أخرى (غير معروفة)</div>
               <div className="text-xs text-amber-700 mt-1 mb-3">هذه القيم تُحفظ كما هي — غير موثقة أو موروثة من إصدار قديم.</div>
               <div className="space-y-3">
-                {Object.keys(settings).filter((k) => !KNOWN_SETTING_KEYS.has(k)).map((key) => (
+                {Object.keys(settings).filter((k) => !KNOWN_SETTING_KEYS.has(k) && !MOVED_SETTING_KEYS.has(k)).map((key) => (
                   <div key={key}>
                     <label className="label font-mono">{key}</label>
                     <input className="input" value={settings[key] ?? ''} onChange={(e) => setSettings({ ...settings, [key]: e.target.value })} />

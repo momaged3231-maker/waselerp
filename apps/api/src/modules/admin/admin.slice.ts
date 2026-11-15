@@ -18,22 +18,32 @@ export class AdminService {
   }
 
   async createBranch(body: any) {
-    const row = await this.db.one<any>(
-      `INSERT INTO branches (code, name, name_en, address, city, phone, tax_number, is_active, notes)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING branch_id`,
-      [body.code, body.name, body.nameEn ?? null, body.address ?? null, body.city ?? null, body.phone ?? null,
-        body.taxNumber ?? null, body.isActive ?? true, body.notes ?? null],
-    );
-    return { branchId: Number(row.branch_id) };
+    try {
+      const row = await this.db.one<any>(
+        `INSERT INTO branches (code, name, name_en, address, city, phone, tax_number, is_active, notes)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING branch_id`,
+        [body.code, body.name, body.nameEn ?? null, body.address ?? null, body.city ?? null, body.phone ?? null,
+          body.taxNumber ?? null, body.isActive ?? true, body.notes ?? null],
+      );
+      return { branchId: Number(row.branch_id) };
+    } catch (error: any) {
+      if (error?.code === '23505') throw new BadRequestException('الكود مستخدم من قبل لفرع آخر — اختر كودًا مختلفًا');
+      throw error;
+    }
   }
 
   async updateBranch(id: number, body: any) {
-    await this.db.query(
-      `UPDATE branches SET code=$2, name=$3, name_en=$4, address=$5, city=$6, phone=$7, tax_number=$8,
-              is_active=$9, notes=$10 WHERE branch_id=$1`,
-      [id, body.code, body.name, body.nameEn ?? null, body.address ?? null, body.city ?? null, body.phone ?? null,
-        body.taxNumber ?? null, body.isActive ?? true, body.notes ?? null],
-    );
+    try {
+      await this.db.query(
+        `UPDATE branches SET code=$2, name=$3, name_en=$4, address=$5, city=$6, phone=$7, tax_number=$8,
+                is_active=$9, notes=$10 WHERE branch_id=$1`,
+        [id, body.code, body.name, body.nameEn ?? null, body.address ?? null, body.city ?? null, body.phone ?? null,
+          body.taxNumber ?? null, body.isActive ?? true, body.notes ?? null],
+      );
+    } catch (error: any) {
+      if (error?.code === '23505') throw new BadRequestException('الكود مستخدم من قبل لفرع آخر — اختر كودًا مختلفًا');
+      throw error;
+    }
     return { branchId: id };
   }
 

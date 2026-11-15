@@ -6,7 +6,7 @@ import { useEffect, useState, type ComponentType } from 'react';
 import { useSession } from '@/lib/session';
 import { useOfflineQueue } from '@/lib/offline';
 import {
-  IconHome, IconCart, IconUtensils, IconWrench, IconReceipt, IconFileText, IconBox,
+  IconHome, IconCart, IconUtensils, IconWrench, IconReceipt, IconFileText,
   IconTag, IconWarehouse, IconClipboardCheck, IconPackage, IconArrowsSwitch, IconUsers,
   IconCalendar, IconWallet, IconBookOpen, IconChartBar, IconBriefcase,
   IconBarcode, IconDeviceMobile, IconBell, IconFolder, IconSettings, IconLogout,
@@ -18,6 +18,8 @@ type NavItem = {
   label: string;
   icon: ComponentType<{ className?: string }>;
   permission?: string;
+  /** Any-of permission list — visible if the user holds at least one. */
+  permissions?: string[];
 };
 
 type NavGroup = { key: string; label: string; items: NavItem[] };
@@ -47,7 +49,6 @@ const NAV_GROUPS: NavGroup[] = [
       { href: '/invoices', label: 'الفواتير', icon: IconReceipt, permission: 'sales.view' },
       { href: '/documents', label: 'العروض والأوامر', icon: IconFileText, permission: 'sales.view' },
       { href: '/pricing', label: 'قوائم الأسعار', icon: IconTag, permission: 'items.view' },
-      { href: '/parties', label: 'العملاء والموردين', icon: IconUsers, permission: 'parties.view' },
       { href: '/installments', label: 'التقسيط', icon: IconCalendar, permission: 'parties.ledger' },
     ],
   },
@@ -55,7 +56,6 @@ const NAV_GROUPS: NavGroup[] = [
     key: 'inventory',
     label: 'المخزون',
     items: [
-      { href: '/items', label: 'الأصناف', icon: IconBox, permission: 'items.view' },
       { href: '/inventory', label: 'حركة المخزون', icon: IconWarehouse, permission: 'stock.view' },
       { href: '/stock-count', label: 'سند الجرد', icon: IconClipboardCheck, permission: 'stock.view' },
       { href: '/stock-voucher', label: 'أذون المخازن', icon: IconPackage, permission: 'stock.view' },
@@ -80,7 +80,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: '/hr', label: 'شئون العاملين', icon: IconBriefcase, permission: 'hr.view' },
       { href: '/crm', label: 'إدارة العملاء CRM', icon: IconUsers, permission: 'crm.view' },
-      { href: '/definitions', label: 'البيانات الأساسية', icon: IconFolder, permission: 'items.view' },
+      { href: '/definitions', label: 'البيانات الأساسية', icon: IconFolder, permissions: ['items.view', 'parties.view'] },
       { href: '/admin', label: 'الإعدادات', icon: IconSettings, permission: 'users.manage' },
     ],
   },
@@ -131,7 +131,10 @@ export default function AppShell({ children, title }: { children: React.ReactNod
   const groups = NAV_GROUPS
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => !item.permission || can(item.permission)),
+      items: group.items.filter((item) => {
+        const required = item.permissions ?? (item.permission ? [item.permission] : []);
+        return required.length === 0 || required.some((token) => can(token));
+      }),
     }))
     .filter((group) => group.items.length > 0);
 

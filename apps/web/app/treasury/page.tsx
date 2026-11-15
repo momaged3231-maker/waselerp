@@ -3,14 +3,12 @@
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import { apiFetch, formatDate, formatMoney } from '@/lib/api';
-import { useSession } from '@/lib/session';
 
 const ACCOUNT_TYPE: Record<number, string> = {
   1: 'درج نقدي', 2: 'حساب بنكي', 3: 'بطاقة', 4: 'محفظة إلكترونية',
 };
 
 export default function TreasuryPage() {
-  const { can } = useSession();
   const [accounts, setAccounts] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -23,8 +21,6 @@ export default function TreasuryPage() {
   const [countedCash, setCountedCash] = useState(0);
   const [shiftNotes, setShiftNotes] = useState('');
   const [shiftError, setShiftError] = useState('');
-  const [showAccountForm, setShowAccountForm] = useState(false);
-  const [accountForm, setAccountForm] = useState({ name: '', type: 2, bankName: '', accountNo: '' });
 
   async function load() {
     const rows = await apiFetch<any[]>('/treasury/accounts');
@@ -92,20 +88,6 @@ export default function TreasuryPage() {
 
   const totalCash = accounts.reduce((sum, a) => sum + Number(a.balance), 0);
 
-  const canManage = can('cash.manage');
-
-  async function createAccount() {
-    setError('');
-    try {
-      await apiFetch('/treasury/accounts', { method: 'POST', body: accountForm });
-      setAccountForm({ name: '', type: 2, bankName: '', accountNo: '' });
-      setShowAccountForm(false);
-      await load();
-    } catch (err: any) {
-      setError(err?.message ?? 'تعذر الحفظ');
-    }
-  }
-
   return (
     <AppShell title="الخزينة">
       <div className="grid lg:grid-cols-3 gap-4">
@@ -130,48 +112,9 @@ export default function TreasuryPage() {
             </div>
           </div>
 
-          {canManage && (
-            <div className="card p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="font-bold">حساب خزينة جديد</div>
-                <div className="flex-1" />
-                <button className="btn-soft text-xs" onClick={() => setShowAccountForm((v) => !v)}>
-                  {showAccountForm ? 'إلغاء' : '+ حساب'}
-                </button>
-              </div>
-              {showAccountForm && (
-                <div className="grid sm:grid-cols-5 gap-3 items-end">
-                  <div>
-                    <label className="label">الاسم</label>
-                    <input className="input" value={accountForm.name}
-                      onChange={(e) => setAccountForm({ ...accountForm, name: e.target.value })} />
-                  </div>
-                  <div>
-                    <label className="label">النوع</label>
-                    <select className="input" value={accountForm.type}
-                      onChange={(e) => setAccountForm({ ...accountForm, type: Number(e.target.value) })}>
-                      {Object.entries(ACCOUNT_TYPE).map(([key, label]) => (
-                        <option key={key} value={Number(key)}>{label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="label">البنك</label>
-                    <input className="input" value={accountForm.bankName}
-                      onChange={(e) => setAccountForm({ ...accountForm, bankName: e.target.value })} />
-                  </div>
-                  <div>
-                    <label className="label">رقم الحساب</label>
-                    <input className="input" value={accountForm.accountNo}
-                      onChange={(e) => setAccountForm({ ...accountForm, accountNo: e.target.value })} dir="ltr" />
-                  </div>
-                  <button className="btn-primary" onClick={createAccount} disabled={!accountForm.name}>
-                    حفظ
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+          <div className="card p-4 border-sky-200 bg-sky-50 text-sky-900 text-xs leading-6">
+            <b>إدارة الحسابات والخزائن</b> (إضافة / تعديل / حذف الحسابات والربط المحاسبي) انتقلت إلى «البيانات الأساسية ← الحسابات البنكية والخزائن».
+          </div>
 
           <div className="card">
             <div className="card-title"><span>آخر الحركات</span></div>

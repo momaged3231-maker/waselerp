@@ -21,7 +21,6 @@ export default function AccountingAccountsPage() {
   const [tree, setTree] = useState<Account[]>([]);
   const [mappings, setMappings] = useState<any[]>([]);
   const [costCenters, setCostCenters] = useState<any[]>([]);
-  const [currencies, setCurrencies] = useState<any[]>([]);
   const [periods, setPeriods] = useState<any[]>([]);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
@@ -31,17 +30,15 @@ export default function AccountingAccountsPage() {
   const canClose = can('accounting.close');
 
   async function load() {
-    const [t, m, c, cur, p] = await Promise.all([
+    const [t, m, c, p] = await Promise.all([
       apiFetch<Account[]>('/accounting/accounts?includeInactive=true'),
       apiFetch<any[]>('/accounting/mappings'),
       apiFetch<any[]>('/accounting/cost-centers'),
-      apiFetch<any[]>('/accounting/currencies'),
       apiFetch<any[]>('/accounting/periods'),
     ]);
     setTree(t);
     setMappings(m);
     setCostCenters(c);
-    setCurrencies(cur);
     setPeriods(p);
   }
 
@@ -156,24 +153,6 @@ export default function AccountingAccountsPage() {
                     </tr>
                   ))}
                   {costCenters.length === 0 && <tr><td colSpan={3} className="text-center text-slate-400 py-6">لا توجد مراكز</td></tr>}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-title"><span>العملات</span></div>
-            <div className="table-wrap">
-              <table className="table">
-                <thead><tr><th>الكود</th><th>الاسم</th><th>السعر</th></tr></thead>
-                <tbody>
-                  {currencies.map((row) => (
-                    <tr key={row.currencyCode}>
-                      <td className="font-mono text-xs">{row.currencyCode}</td>
-                      <td>{row.name}</td>
-                      <td className="font-bold">{Number(row.rate).toFixed(4)}</td>
-                    </tr>
-                  ))}
                 </tbody>
               </table>
             </div>
