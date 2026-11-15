@@ -136,9 +136,11 @@ function buildReceiptBytes(receipt, width = 42) {
 function buildKitchenTicketBytes(order, width = 42) {
   const chunks = [cmd.init(), cmd.spacing(24)];
   const stamp = new Date().toLocaleString('ar-EG', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
+  const showPrices = order.showPrices === true;
 
   chunks.push(line('تذكرة مطبخ', { align: 'center', width, bold: true, double: true }));
   if (order.branch) chunks.push(line(order.branch, { align: 'center', width }));
+  if (order.kitchenGroup) chunks.push(line(`مجموعة: ${order.kitchenGroup}`, { align: 'center', width, bold: true }));
   const meta = [
     order.table ? `الطاولة ${order.table}` : null,
     order.orderId ? `#${order.orderId}` : null,
@@ -150,13 +152,24 @@ function buildKitchenTicketBytes(order, width = 42) {
 
   for (const item of order.lines ?? []) {
     const qty = Number(item.quantity ?? 1);
-    chunks.push(line(`${qty} x ${String(item.name ?? '').slice(0, width - 4)}`, { width, bold: true }));
+    const nameText = `${qty} x ${String(item.name ?? '').slice(0, showPrices ? width - 10 : width - 4)}`;
+    const price = showPrices && Number.isFinite(Number(item.price)) ? Number(item.price).toFixed(2) : null;
+    if (price) {
+      const pad = Math.max(1, width - nameText.length - price.length);
+      chunks.push(line(`${nameText}${' '.repeat(pad)}${price}`, { width, bold: true }));
+    } else {
+      chunks.push(line(nameText, { width, bold: true }));
+    }
     const mods = Array.isArray(item.modifiers) ? item.modifiers.filter(Boolean) : [];
     for (const modifier of mods) chunks.push(line(`   + ${modifier}`, { width }));
     if (item.note) chunks.push(line(`   ملاحظة: ${item.note}`, { width }));
   }
 
   chunks.push(line('-'.repeat(width), { width }));
+  if (showPrices && Number.isFinite(Number(order.total))) {
+    chunks.push(line(`الإجمالي: ${Number(order.total).toFixed(2)}`, { align: 'center', width, bold: true }));
+    chunks.push(line('-'.repeat(width), { width }));
+  }
   if (order.note) chunks.push(line(`ملاحظة عامة: ${order.note}`, { width }));
   chunks.push(cmd.feed(3), cmd.cut());
 

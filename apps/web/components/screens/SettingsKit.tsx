@@ -227,8 +227,54 @@ export const POS_SECTIONS: SettingSection[] = [
   },
 ];
 
+export const RESTAURANT_SECTIONS: SettingSection[] = [
+  {
+    id: 'restaurant-kitchen-ticket',
+    title: 'ورقة المطبخ',
+    desc: 'تذكرة المطبخ تُطبع عند «إرسال للمطبخ» — تُطبّق على فرع هذا الجهاز',
+    fields: [
+      { key: 'KitchenPrinterName', label: 'طابعة ورقة المطبخ', type: 'text', dir: 'ltr', placeholder: 'Microsoft Print to PDF', desc: 'الطابعة الافتراضية لورقة المطبخ. مثال على اسم طابعة Windows: "Microsoft Print to PDF" — يُترك فارغًا = طابعة الوكيل الافتراضية' },
+      { key: 'KitchenTicketCopies', label: 'عدد النسخ', type: 'number', dir: 'ltr', unit: 'نسخة', desc: '1–3 نسخ لكل تذكرة مطبخ' },
+      { key: 'KitchenTicketEnabled', label: 'طباعة ورقة مطبخ', type: 'boolean', desc: 'طباعة تذكرة بلا أسعار (أو بأسعار حسب الإعداد) عند إرسال الطلب للمطبخ من شاشة المطاعم' },
+      { key: 'KitchenTicketPerCategory', label: 'طباعة ورقة المطبخ طبقاً لمجموعة الصنف', type: 'boolean', desc: 'تذكرة مستقلة لكل مجموعة أصناف (المجموعة تُذكر في رأس التذكرة) على نفس طابعة المطبخ' },
+      { key: 'KitchenTicketShowPrice', label: 'طباعة سعر الصنف في ورق المطبخ', type: 'boolean', desc: 'يظهر سعر كل صنف بجانب كميته + إجمالي أسفل التذكرة (بدل تذكرة بلا أسعار)' },
+    ],
+  },
+  {
+    id: 'restaurant-display',
+    title: 'شاشة المطبخ',
+    desc: 'تحديث سجل أصناف المطبخ المنتظرة تلقائيًا',
+    fields: [
+      { key: 'KitchenDisplayAutoRefresh', label: 'تحديث شاشة المطبخ تلقائيًا', type: 'boolean', desc: 'إعادة تحميل قائمة أصناف المطبخ كل 5 ثوانٍ؛ عند التعطيل استخدم زر «تحديث» يدويًا' },
+    ],
+  },
+  {
+    id: 'restaurant-mode',
+    title: 'نظام العمل',
+    desc: 'النظام الافتراضي والملاحظات التشغيلية للمطعم',
+    fields: [
+      {
+        key: 'DefaultOrderType',
+        label: 'نظام العمل الافتراضي للمطعم',
+        type: 'select',
+        desc: 'نفس مفتاح نقطة البيع — تُفتح عليه قوائم الطلب افتراضيًا (يُشترك مع تبويب POS)',
+        options: [
+          { value: '4', label: 'صالة (طاولة)' },
+          { value: '2', label: 'توصيل' },
+          { value: '3', label: 'سفري' },
+          { value: '1', label: 'ماشر' },
+        ],
+      },
+      { key: 'RestaurantDefaultTableCount', label: 'عدد الموائد', type: 'number', dir: 'ltr', unit: 'مائدة', desc: 'العدد الابتدائي عند إنشاء قاعة جديدة (يمكن تغييره لكل قاعة) — الافتراضي 20' },
+      { key: 'RestaurantAutoPay', label: 'وضع السداد التلقائي', type: 'boolean', desc: 'عند «إغلاق وإصدار فاتورة» تُسجَّل الفاتورة نقدًا بالمبلغ كاملاً تلقائيًا — عطّله لاختيار طريقة الدفع والمبلغ يدويًا' },
+      { key: 'RestaurantHideHall', label: 'اخفاء نظام الصالة', type: 'boolean', desc: 'إخفاء «طاولة» من نقطة البيع + إخفاء تبويبات الطاولات في شاشة المطاعم + رفض أي فاتورة صالة على الخادم' },
+      { key: 'RestaurantHideDelivery', label: 'اخفاء نظام التوصيل', type: 'boolean', desc: 'إخفاء «توصيل» من نقطة البيع + رفض أي فاتورة توصيل على الخادم' },
+    ],
+  },
+];
+
 export const KNOWN_SETTING_KEYS = new Set(
-  [...GENERAL_SECTIONS, ...INVOICE_SECTIONS, ...PRINTER_SECTIONS, ...BARCODE_SECTIONS, ...EXTRAS_SECTIONS, ...POS_SECTIONS]
+  [...GENERAL_SECTIONS, ...INVOICE_SECTIONS, ...PRINTER_SECTIONS, ...BARCODE_SECTIONS, ...EXTRAS_SECTIONS, ...POS_SECTIONS, ...RESTAURANT_SECTIONS]
     .flatMap((section) => section.fields.map((field) => field.key)),
 );
 // Company identity keys are managed in Definitions → «بيانات الشركة» and must not be duplicated here.
@@ -465,4 +511,5 @@ export const ADVANCED_UNAVAILABLE: { title: string; reason: string }[] = [
   { title: 'مستخلصات المقاولات (Contractor)', reason: 'وحدة متخصصة (P8) — لا تُبنى إلا بطلب سوقي واضح' },
   { title: 'إظهار/إخفاء الوحدات بكود دعم (ExtraModule)', reason: 'مُستبدلة بأدوار RBAC وتقييد المخازن/الصناديق للمستخدمين (P7)' },
   { title: 'النسخ الاحتياطي من جهاز الكاشير', reason: 'يُنفذ على مستوى السيرفر/PostgreSQL (أدوات `tools/pg` والنسخ الاحتياطي الخارجي ضمن P7)' },
+  { title: 'التنبيه بميعاد التسليم قبل X دقيقة (مطاعم)', reason: 'لا يوجد حقل «موعد التسليم» في طلبات المطاعم/POS — يُضاف مع موديول التوصيل المطلوب من العميل' },
 ];

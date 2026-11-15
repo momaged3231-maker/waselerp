@@ -1115,10 +1115,10 @@ export default function PosPage() {
               <div className="flex gap-1.5 overflow-x-auto pb-1">
                 {([
                   { value: 1, label: 'ماشر' },
-                  { value: 2, label: 'توصيل' },
+                  ...(printContext?.restaurantHideDelivery ? [] : [{ value: 2, label: 'توصيل' }]),
                   { value: 3, label: 'سفري' },
-                  { value: 4, label: 'طاولة' },
-                ] as const).map((o) => (
+                  ...(printContext?.restaurantHideHall ? [] : [{ value: 4, label: 'طاولة' }]),
+                ] as { value: number; label: string }[]).map((o) => (
                   <button
                     key={o.value}
                     type="button"

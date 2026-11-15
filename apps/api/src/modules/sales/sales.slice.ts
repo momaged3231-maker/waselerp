@@ -101,7 +101,9 @@ export class SalesService {
         'InvoiceFooter', 'ShowTaxOnReceipt', 'TaxName',
         'ReceiptShowBranchName', 'ReceiptShowPartyName', 'ReceiptShowTotals',
         'ReceiptCopies', 'ReceiptPaperSize', 'KitchenTicketEnabled', 'KitchenTicketCopies', 'KitchenPrinterName',
-        'DefaultPaymentType', 'AutoPrintReceipt', 'DefaultOrderType']],
+        'DefaultPaymentType', 'AutoPrintReceipt', 'DefaultOrderType',
+        'KitchenTicketShowPrice', 'KitchenTicketPerCategory', 'KitchenDisplayAutoRefresh',
+        'RestaurantAutoPay', 'RestaurantDefaultTableCount', 'RestaurantHideHall', 'RestaurantHideDelivery']],
     );
     const map = new Map(rows.map((row) => [row.setting_key, row.setting_value]));
     const value = (key: string) => map.get(key) ?? '';
@@ -136,6 +138,13 @@ export class SalesService {
       kitchenTicketEnabled: bool('KitchenTicketEnabled', false),
       kitchenTicketCopies: int('KitchenTicketCopies', 1, 3, 1),
       kitchenPrinterName: value('KitchenPrinterName'),
+      kitchenTicketShowPrice: bool('KitchenTicketShowPrice', false),
+      kitchenTicketPerCategory: bool('KitchenTicketPerCategory', false),
+      kitchenDisplayAutoRefresh: bool('KitchenDisplayAutoRefresh', true),
+      restaurantAutoPay: bool('RestaurantAutoPay', false),
+      restaurantDefaultTableCount: int('RestaurantDefaultTableCount', 1, 99, 20),
+      restaurantHideHall: bool('RestaurantHideHall', false),
+      restaurantHideDelivery: bool('RestaurantHideDelivery', false),
       defaultPaymentType,
       autoPrintReceipt: bool('AutoPrintReceipt', true),
       defaultOrderType: [1, 2, 3, 4].includes(Number(value('DefaultOrderType')))
@@ -274,6 +283,20 @@ export class SalesService {
         const customerRequired = await getBooleanSetting(client, 'RequireCustomerOnSale', false);
         if (customerRequired) {
           throw new BadRequestException('تحديد العميل إلزامي عند تسجيل الفاتورة — اختر العميل أو عطّل «طلب تحديد العميل» من الإعدادات');
+        }
+      }
+
+      // Order types hidden by settings («مطعم» tab): hall mode and delivery can be disabled per site.
+      if (!isPurchase && Number(dto.orderType) === 4) {
+        const hideHall = await getBooleanSetting(client, 'RestaurantHideHall', false);
+        if (hideHall) {
+          throw new BadRequestException('نظام الصالة مُخفى من الإعدادات — فعّله من «الإعدادات ← مطاعم»');
+        }
+      }
+      if (!isPurchase && Number(dto.orderType) === 2) {
+        const hideDelivery = await getBooleanSetting(client, 'RestaurantHideDelivery', false);
+        if (hideDelivery) {
+          throw new BadRequestException('نظام التوصيل مُخفى من الإعدادات — فعّله من «الإعدادات ← مطاعم»');
         }
       }
 

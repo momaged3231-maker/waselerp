@@ -8,6 +8,7 @@ import {
   GENERAL_SECTIONS, INVOICE_SECTIONS, PRINTER_SECTIONS, BARCODE_SECTIONS, EXTRAS_SECTIONS, POS_SECTIONS,
 } from '@/components/screens/SettingsKit';
 import ServerSettingsScreen from '@/components/screens/ServerSettingsScreen';
+import RestaurantSettingsScreen from '@/components/screens/RestaurantSettingsScreen';
 import UsersSettingsScreen from '@/components/screens/UsersSettingsScreen';
 import RolesSettingsScreen from '@/components/screens/RolesSettingsScreen';
 import BranchServiceChargeCard from '@/components/screens/BranchServiceChargeCard';
@@ -24,6 +25,7 @@ type SettingTab =
   | 'barcode'
   | 'extras'
   | 'pos'
+  | 'restaurants'
   | 'users'
   | 'roles'
   | 'system'
@@ -41,6 +43,7 @@ const TABS: { key: SettingTab; label: string }[] = [
   { key: 'barcode', label: 'طباعة الباركود' },
   { key: 'extras', label: 'إعدادات إضافية' },
   { key: 'pos', label: 'POS' },
+  { key: 'restaurants', label: 'مطاعم' },
   { key: 'users', label: 'المستخدمون' },
   { key: 'roles', label: 'الأدوار والصلاحيات' },
   { key: 'system', label: 'إعدادات النظام' },
@@ -73,6 +76,8 @@ function SettingsInner() {
         return <SettingSections sections={EXTRAS_SECTIONS} />;
       case 'pos':
         return <SettingSections sections={POS_SECTIONS} />;
+      case 'restaurants':
+        return <RestaurantSettingsScreen />;
       case 'users':
         return <UsersSettingsScreen />;
       case 'roles':

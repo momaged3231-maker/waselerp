@@ -102,6 +102,13 @@ const SETTINGS: [string, string][] = [
   ['BarcodeShowName', 'true'],
   ['BarcodeShowCode', 'true'],
   ['BarcodeShowPrice', 'true'],
+  ['KitchenTicketPerCategory', 'false'],
+  ['KitchenTicketShowPrice', 'false'],
+  ['KitchenDisplayAutoRefresh', 'true'],
+  ['RestaurantDefaultTableCount', '20'],
+  ['RestaurantAutoPay', 'false'],
+  ['RestaurantHideHall', 'false'],
+  ['RestaurantHideDelivery', 'false'],
 ];
 
 function hashPassword(password: string) {

@@ -446,6 +446,7 @@ export class PosService {
               s.service_charge_per_guest AS "serviceChargePerGuest",
               s.service_charge_minimum AS "serviceChargeMinimum",
               s.service_charge_mode AS "serviceChargeMode",
+              s.service_charge_pct AS "serviceChargePct",
               s.service_charge_account_id AS "serviceChargeAccountId",
               a.code AS "serviceChargeAccountCode", a.name AS "serviceChargeAccountName",
               s.kitchen_columns AS "kitchenColumns", s.notes
@@ -459,6 +460,7 @@ export class PosService {
       branchId,
       serviceChargePerGuest: 0,
       serviceChargeMinimum: 0,
+      serviceChargePct: 0,
       serviceChargeAccountId: null,
       kitchenColumns: [],
     };
@@ -468,21 +470,25 @@ export class PosService {
     const columns = Array.isArray(dto.kitchenColumns)
       ? dto.kitchenColumns.map((column) => Number(column)).filter((column) => Number.isFinite(column))
       : [];
+    // service_charge_pct keeps its previous value when the caller does not send it (COALESCE)
+    const pct = dto.serviceChargePct === undefined || dto.serviceChargePct === null ? null : Number(dto.serviceChargePct);
     await this.db.query(
       `INSERT INTO restaurant_settings
          (branch_id, service_charge_per_guest, service_charge_minimum, service_charge_mode,
-          service_charge_account_id, kitchen_columns, notes)
-       VALUES ($1::int,$2::numeric,$3::numeric,$4::int,$5::int,$6::jsonb,$7)
+          service_charge_pct, service_charge_account_id, kitchen_columns, notes)
+       VALUES ($1::int,$2::numeric,$3::numeric,$4::int,COALESCE($5::numeric, 0),$6::int,$7::jsonb,$8)
        ON CONFLICT (branch_id) DO UPDATE SET
          service_charge_per_guest = EXCLUDED.service_charge_per_guest,
          service_charge_minimum = EXCLUDED.service_charge_minimum,
          service_charge_mode = EXCLUDED.service_charge_mode,
+         service_charge_pct = COALESCE($5::numeric, restaurant_settings.service_charge_pct),
          service_charge_account_id = EXCLUDED.service_charge_account_id,
          kitchen_columns = EXCLUDED.kitchen_columns,
          notes = EXCLUDED.notes,
          updated_at = now()`,
       [branchId, Number(dto.serviceChargePerGuest ?? 0), Number(dto.serviceChargeMinimum ?? 0),
         Number(dto.serviceChargeMode ?? 1),
+        pct,
         dto.serviceChargeAccountId ? Number(dto.serviceChargeAccountId) : null,
         JSON.stringify(columns), dto.notes ?? null],
     );
@@ -492,24 +498,30 @@ export class PosService {
   /**
    * The service charge of a table order.
    *
-   * Two methods, exactly as the manual describes:
+   * Three methods, exactly as the manual describes:
    *  - amount per guest: charge = rate × guests
    *  - minimum per guest: the minimum is rate × guests; when the order total
    *    is below it, the difference is charged on top.
+   *  - percentage of the bill: charge = orderTotal × pct%
    */
   private async serviceChargeFor(branchId: number, guestCount: number, orderTotal: number) {
     const settings = await this.db.query<any>(
-      `SELECT service_charge_per_guest, service_charge_minimum, service_charge_mode
+      `SELECT service_charge_per_guest, service_charge_minimum, service_charge_mode, service_charge_pct
          FROM restaurant_settings WHERE branch_id = $1::int`,
       [branchId],
     );
     if (!settings.length) return 0;
     const row = settings[0];
+    const mode = Number(row.service_charge_mode ?? 1);
+    if (mode === 3) {
+      const pct = Number(row.service_charge_pct ?? 0);
+      if (pct <= 0) return 0;
+      return round2(orderTotal * pct / 100);
+    }
     const rate = Number(row.service_charge_per_guest ?? 0);
     if (rate <= 0) return 0;
     const guests = Math.max(1, guestCount);
     const minimum = Number(row.service_charge_minimum ?? 0);
-    const mode = Number(row.service_charge_mode ?? 1);
 
     if (mode === 2) {
       // Minimum per guest: the customer always pays at least rate × guests.
@@ -745,6 +757,7 @@ export class PosService {
       branchId,
       warehouseId,
       partyId: order.header.partyId ?? undefined,
+      repId: dto.repId ? Number(dto.repId) : undefined,
       paymentType: Number(dto.paymentType ?? 1),
       paidAmount: Number(dto.paidAmount ?? 0),
       cashAccountId: dto.cashAccountId ?? undefined,
