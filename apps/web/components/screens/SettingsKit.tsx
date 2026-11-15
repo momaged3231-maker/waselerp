@@ -280,6 +280,22 @@ export const KNOWN_SETTING_KEYS = new Set(
 // Company identity keys are managed in Definitions → «بيانات الشركة» and must not be duplicated here.
 export const MOVED_SETTING_KEYS = new Set(['CompanyName', 'CompanyPhone', 'CompanyAddress', 'TaxNumber', 'InvoiceFooter']);
 
+// Arabic labels for every known key — reuses the field labels from the structured tabs.
+const ARABIC_SETTING_LABELS_INTERNAL: Record<string, string> = {};
+for (const sections of [GENERAL_SECTIONS, INVOICE_SECTIONS, PRINTER_SECTIONS, BARCODE_SECTIONS, EXTRAS_SECTIONS, POS_SECTIONS, RESTAURANT_SECTIONS]) {
+  for (const section of sections) {
+    for (const field of section.fields) ARABIC_SETTING_LABELS_INTERNAL[field.key] = field.label;
+  }
+}
+export const ARABIC_SETTING_LABELS: Record<string, string> = {
+  ...ARABIC_SETTING_LABELS_INTERNAL,
+  CompanyName: 'اسم الشركة',
+  CompanyPhone: 'هاتف الشركة',
+  CompanyAddress: 'عنوان الشركة',
+  TaxNumber: 'الرقم الضريبي للشركة',
+  InvoiceFooter: 'تذييل الفاتورة',
+};
+
 // ------------------------------------------------------------------ //
 //  Settings context — single source of truth for the app_settings map
 // ------------------------------------------------------------------ //
@@ -360,6 +376,39 @@ export function useRefreshKey() {
 //  Rendering helpers
 // ------------------------------------------------------------------ //
 
+/** Animated on/off toggle — slides left/right, emerald when on, slate when off. */
+export function SettingToggle({ checked, onToggle, label }: {
+  checked: boolean;
+  onToggle: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      title={label}
+      onClick={onToggle}
+      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 ${
+        checked ? 'bg-emerald-500' : 'bg-slate-300'
+      }`}
+    >
+      <span
+        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-200 ${
+          checked ? 'translate-x-[22px]' : 'translate-x-[2px]'
+        }`}
+      />
+    </button>
+  );
+}
+
+/** True for the four boolean spellings stored in app_settings. */
+export function isBooleanSettingValue(value: string | undefined): boolean {
+  const v = String(value ?? '').trim().toLowerCase();
+  return v === 'true' || v === 'false' || v === '1' || v === '0';
+}
+
 export function SettingFieldRow({ field, value, onChange }: {
   field: SettingField;
   value: string | undefined;
@@ -368,18 +417,13 @@ export function SettingFieldRow({ field, value, onChange }: {
   if (field.type === 'boolean') {
     const checked = value === 'true' || value === '1';
     return (
-      <label className="flex items-start justify-between gap-4 rounded-2xl border border-slate-200 p-4 hover:border-slate-300 transition cursor-pointer">
+      <div className="flex items-start justify-between gap-4 rounded-2xl border border-slate-200 p-4 hover:border-slate-300 transition">
         <span className="min-w-0">
           <span className="block text-sm font-bold text-slate-700">{field.label}</span>
           {field.desc && <span className="block text-xs text-slate-500 mt-1 leading-5">{field.desc}</span>}
         </span>
-        <input
-          type="checkbox"
-          className="w-5 h-5 accent-brand-600 shrink-0 mt-0.5"
-          checked={checked}
-          onChange={() => onChange(checked ? 'false' : 'true')}
-        />
-      </label>
+        <SettingToggle checked={checked} onToggle={() => onChange(checked ? 'false' : 'true')} label={field.label} />
+      </div>
     );
   }
 
@@ -443,14 +487,19 @@ export function SettingSections({ sections }: { sections: SettingSection[] }) {
   );
 }
 
-/** Raw view of every app_settings key — «إعدادات النظام» tab. */
+/** Raw view of every app_settings key — «إعدادات النظام» tab. Booleans render as animated toggles; labels are Arabic. */
 export function AllSettingsRaw() {
   const { map, setValue, saveAll } = useSettings();
   const [query, setQuery] = useState('');
-  const [showMoved, setShowMoved] = useState(false);
   const keys = Object.keys(map).sort((a, b) => a.localeCompare(b));
   const term = query.trim().toLowerCase();
-  const visible = keys.filter((key) => !term || key.toLowerCase().includes(term) || String(map[key] ?? '').toLowerCase().includes(term));
+  const visible = keys.filter((key) => {
+    if (!term) return true;
+    const label = (ARABIC_SETTING_LABELS[key] ?? '').toLowerCase();
+    return key.toLowerCase().includes(term)
+      || label.includes(term)
+      || String(map[key] ?? '').toLowerCase().includes(term);
+  });
   const unknown = keys.filter((key) => !KNOWN_SETTING_KEYS.has(key) && !MOVED_SETTING_KEYS.has(key));
 
   return (
@@ -458,38 +507,55 @@ export function AllSettingsRaw() {
       <div className="card p-4 flex flex-wrap items-center gap-3">
         <div className="min-w-0">
           <div className="font-extrabold text-slate-800">إعدادات النظام — كل المفاتيح</div>
-          <div className="text-[11px] text-slate-500 mt-0.5">كل ما في جدول الإعدادات كما هو، بما فيها المفاتيح غير الموثقة. «مفاتيح أخرى» غير المعروفة: {unknown.length}.</div>
+          <div className="text-[11px] text-slate-500 mt-0.5">كل ما في جدول الإعدادات كما هو — المفاتيح موثقة بتسميات عربية والقيم المنطقية تُعرض كمفتاح تبديل. «مفاتيح غير موثقة»: {unknown.length}.</div>
         </div>
         <div className="flex-1" />
-        <input className="input w-56 py-1.5" placeholder="بحث عن مفتاح أو قيمة…" value={query} onChange={(e) => setQuery(e.target.value)} dir="ltr" />
+        <input className="input w-56 py-1.5" placeholder="بحث عن مفتاح أو قيمة…" value={query} onChange={(e) => setQuery(e.target.value)} />
       </div>
 
-      <div className="card p-5">
-        <div className="grid sm:grid-cols-2 gap-4">
-          {visible.map((key) => {
-            const moved = MOVED_SETTING_KEYS.has(key);
-            return (
-              <div key={key}>
-                <label className="label font-mono flex items-center gap-2" dir="ltr">
-                  {key}
-                  {KNOWN_SETTING_KEYS.has(key) && <span className="badge bg-emerald-50 text-emerald-700 !text-[9px]">موثق</span>}
-                  {moved && <span className="badge bg-sky-50 text-sky-700 !text-[9px]">البيانات الأساسية</span>}
-                </label>
+      <div className="grid sm:grid-cols-2 gap-3">
+        {visible.map((key) => {
+          const moved = MOVED_SETTING_KEYS.has(key);
+          const known = KNOWN_SETTING_KEYS.has(key);
+          const label = ARABIC_SETTING_LABELS[key];
+          const rawValue = map[key] ?? '';
+          const isBool = isBooleanSettingValue(rawValue);
+          const checked = String(rawValue).trim().toLowerCase() === 'true' || String(rawValue).trim() === '1';
+          return (
+            <div key={key} className={`rounded-2xl border border-slate-200 p-4 ${moved ? 'bg-slate-50/60' : 'hover:border-slate-300'} transition`}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-sm font-bold text-slate-800 leading-6">
+                    {label ?? <span dir="ltr" className="font-mono text-xs">{key}</span>}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                    {label && <span className="font-mono text-[10px] text-slate-400" dir="ltr">{key}</span>}
+                    {known && <span className="badge bg-emerald-50 text-emerald-700 !text-[9px]">موثق</span>}
+                    {moved && <span className="badge bg-sky-50 text-sky-700 !text-[9px]">البيانات الأساسية</span>}
+                    {!known && !moved && <span className="badge bg-slate-100 text-slate-500 !text-[9px]">غير موثق</span>}
+                  </div>
+                </div>
+                {isBool && !moved && (
+                  <SettingToggle checked={checked} onToggle={() => setValue(key, checked ? 'false' : 'true')} label={label ?? key} />
+                )}
+              </div>
+              {!isBool && (
                 <input
-                  className={`input ${moved ? 'bg-slate-50 text-slate-400' : ''}`}
+                  className={`input mt-3 ${moved ? 'bg-slate-50 text-slate-400' : ''}`}
                   dir="auto"
-                  value={map[key] ?? ''}
+                  value={rawValue}
                   readOnly={moved}
                   onChange={(e) => setValue(key, e.target.value)}
                 />
-              </div>
-            );
-          })}
-          {visible.length === 0 && <div className="text-sm text-slate-400 col-span-2 py-6 text-center">لا توجد مفاتيح مطابقة للبحث</div>}
-        </div>
-        <div className="flex justify-end mt-4 border-t border-slate-100 pt-4">
-          <button className="btn-primary" onClick={saveAll}>حفظ كل المفاتيح</button>
-        </div>
+              )}
+            </div>
+          );
+        })}
+        {visible.length === 0 && <div className="text-sm text-slate-400 col-span-2 py-8 text-center">لا توجد مفاتيح مطابقة للبحث</div>}
+      </div>
+
+      <div className="card p-4 flex justify-end">
+        <button className="btn-primary" onClick={saveAll}>حفظ كل المفاتيح</button>
       </div>
 
       {unknown.length > 0 && (
