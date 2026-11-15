@@ -43,6 +43,7 @@ analysis/strings/
 
 # ---- embedded postgres (PGlite) local data ----
 tools/pg/pglite/data/
+tools/pg/pglite-month2/
 tools/pg/pglite/*.log
 
 # ---- Vercel metadata ----

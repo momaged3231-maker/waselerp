@@ -3,6 +3,7 @@ import {
 } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
 import { postJournal, resolveMapping } from '../../common/posting';
+import { asIsoDate } from '../../common/dates';
 import { AuthUser, CurrentBranch, CurrentUser, RequireAnyPermission, RequirePermissions } from '../../common/security';
 
 export interface InstallmentPlanInput {
@@ -169,6 +170,7 @@ export class InstallmentsService {
           await postJournal(client, {
             branchId,
             journalType: 4,
+            journalDate: asIsoDate(body.paidDate) ?? undefined,
             description: `سداد قسط - ${schedule.plan_no}`,
             sourceType: 'installment',
             sourceId: scheduleId,

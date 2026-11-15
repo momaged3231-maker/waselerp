@@ -2001,6 +2001,58 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
       `before net ${Number(tbBeforeInv?.debit ?? 0) - Number(tbBeforeInv?.credit ?? 0)} after net ${Number(tbAfterInv?.debit ?? 0) - Number(tbAfterInv?.credit ?? 0)}`,
     );
 
+    // Phase 4 fix — inventory document journals must be dated to the document date, not "today".
+    const isoDay = (value) => {
+      if (!value) return '';
+      const d = new Date(String(value));
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    };
+    const transferJournalOut = await call('GET', `/accounting/journals/${transferApprove.journalId}`);
+    check('transfer approve journal is dated to the transfer date',
+      isoDay(transferJournalOut?.header?.journalDate) === isoDay(daysAgoIso(5)),
+      `journal ${isoDay(transferJournalOut?.header?.journalDate)} vs transfer ${isoDay(daysAgoIso(5))}`);
+    const transferJournalIn = await call('GET', `/accounting/journals/${transferReceive.journalId}`);
+    check('transfer receive journal is dated to the transfer date',
+      isoDay(transferJournalIn?.header?.journalDate) === isoDay(daysAgoIso(5)),
+      `journal ${isoDay(transferJournalIn?.header?.journalDate)} vs transfer ${isoDay(daysAgoIso(5))}`);
+
+    const voucherDate = daysAgoIso(6);
+    const damageVoucher = await call('POST', '/stock-vouchers', {
+      warehouseId, voucherType: 3, voucherDate, notes: 'regression date check',
+    });
+    await call('POST', `/stock-vouchers/${damageVoucher.stockVoucherId}/lines`, {
+      itemId: itemA.itemId, unitId: 1, quantity: 1, unitCost: 5, notes: 'regression',
+    });
+    const damageApproved = await call('POST', `/stock-vouchers/${damageVoucher.stockVoucherId}/approve`, {});
+    if (damageApproved.journalId) {
+      const damageJournal = await call('GET', `/accounting/journals/${damageApproved.journalId}`);
+      check('damage voucher journal is dated to the voucher date',
+        isoDay(damageJournal?.header?.journalDate) === isoDay(voucherDate),
+        `journal ${isoDay(damageJournal?.header?.journalDate)} vs voucher ${isoDay(voucherDate)}`);
+    } else {
+      check('damage voucher journal is dated to the voucher date', false, 'no journal returned');
+    }
+
+    const countDate = daysAgoIso(7);
+    const dateCount = await call('POST', '/stock-counts', {
+      warehouseId: regWh.warehouseId, employeeId: employee.employeeId, countDate, notes: 'regression date check',
+    });
+    const countBalance = Number((await call('GET', `/inventory/balances?warehouseId=${regWh.warehouseId}`))
+      .find((row) => row.itemId === itemA.itemId)?.onHandQty ?? 0);
+    await call('POST', `/stock-counts/${dateCount.stockCountId}/lines`, {
+      itemId: itemA.itemId, unitId: 1, countedQty: Math.max(0, countBalance - 1),
+    });
+    const dateCountApproved = await call('POST', `/stock-counts/${dateCount.stockCountId}/approve`, {});
+    if (dateCountApproved.journalId) {
+      const dateCountJournal = await call('GET', `/accounting/journals/${dateCountApproved.journalId}`);
+      check('count approve journal is dated to the count date',
+        isoDay(dateCountJournal?.header?.journalDate) === isoDay(countDate),
+        `journal ${isoDay(dateCountJournal?.header?.journalDate)} vs count ${isoDay(countDate)}`);
+    } else {
+      check('count approve journal is dated to the count date', false, 'no journal returned');
+    }
+
     const pastDate = daysAgoIso(10);
     const dateTest = await call('POST', '/sales/invoices', {
       invoiceType: 1, branchId, warehouseId, paymentType: 1, paidAmount: 15,

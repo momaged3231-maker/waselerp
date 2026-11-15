@@ -7,6 +7,7 @@ import { DatabaseService } from '../../common/database/database.service';
 import { assertDeletionAllowed } from '../../common/delete-guard';
 import { applyMovement, getWarehouseCost, toBaseUnits } from '../../common/stock';
 import { postJournal, resolveMapping } from '../../common/posting';
+import { asIsoDate } from '../../common/dates';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
 
 /** Money is rounded to two decimals; quantities to six. */
@@ -334,6 +335,7 @@ export class StockTransferService {
         journalId = await postJournal(client, {
           branchId: Number(transfer.branch_id),
           journalType: 8,
+          journalDate: asIsoDate(transfer.transfer_date),
           description: `أذن صادر للتحويل ${transfer.transfer_no}`,
           sourceType: 'stock_transfer',
           sourceId: id,
@@ -444,6 +446,7 @@ export class StockTransferService {
         journalId = await postJournal(client, {
           branchId: Number(transfer.branch_id),
           journalType: 8,
+          journalDate: asIsoDate(transfer.transfer_date),
           description: `أذن وارد للتحويل ${transfer.transfer_no}`,
           sourceType: 'stock_transfer',
           sourceId: id,

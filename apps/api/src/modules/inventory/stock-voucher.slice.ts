@@ -7,6 +7,7 @@ import { DatabaseService } from '../../common/database/database.service';
 import { assertDeletionAllowed } from '../../common/delete-guard';
 import { applyMovement, getWarehouseCost, toBaseUnits } from '../../common/stock';
 import { postJournal, resolveMapping } from '../../common/posting';
+import { asIsoDate } from '../../common/dates';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
 
 /** Money is rounded to two decimals; quantities to six. */
@@ -379,6 +380,7 @@ export class StockVoucherService {
         journalId = await postJournal(client, {
           branchId: Number(voucher.branch_id),
           journalType: 8,
+          journalDate: asIsoDate(voucher.voucher_date),
           description: `أذن مخزن ${voucher.voucher_no} (${TYPE_LABEL[voucherType]})`,
           sourceType: 'stock_voucher',
           sourceId: id,
