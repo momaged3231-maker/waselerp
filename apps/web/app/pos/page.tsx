@@ -26,6 +26,7 @@ export default function PosPage() {
   const [search, setSearch] = useState('');
   const [results, setResults] = useState<any[]>([]);
   const [categoryFilter, setCategoryFilter] = useState<number>(0);
+  const [cartOpen, setCartOpen] = useState(false);
   const [cart, setCart] = useState<Line[]>([]);
   const [warehouses, setWarehouses] = useState<any[]>([]);
   const [warehouseId, setWarehouseId] = useState<number | null>(null);
@@ -1458,11 +1459,16 @@ export default function PosPage() {
             <div className="text-base font-extrabold text-brand-800 tabular-nums leading-5">{formatMoney(totals.total)}</div>
           </div>
           <button
-            className="btn-soft flex-1 text-xs !px-2"
-            onClick={() => document.getElementById('pos-cart')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-            aria-label="الانتقال إلى السلة"
+            className="btn-soft flex-1 text-xs !px-2 relative"
+            onClick={() => setCartOpen(true)}
+            aria-label={`عرض السلة (${itemCount} قطعة)`}
           >
             السلة
+            {itemCount > 0 && (
+              <span className="absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full bg-brand-700 text-white text-[10px] font-extrabold flex items-center justify-center">
+                {itemCount > 99 ? '99+' : itemCount}
+              </span>
+            )}
           </button>
           <button
             className="btn-success flex-1 text-sm !px-2"
@@ -1474,6 +1480,94 @@ export default function PosPage() {
           </button>
         </div>
       </div>
+
+      {/* Cart drawer — mobile/tablet: tapping «السلة» opens the full cart sheet with counts, prices and totals */}
+      {cartOpen && (
+        <div
+          className="fixed inset-0 z-40 lg:hidden flex flex-col justify-end bg-navy-950/50 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-label="السلة الحالية"
+          onClick={() => setCartOpen(false)}
+        >
+          <div
+            className="bg-white rounded-t-3xl shadow-pop max-h-[88dvh] flex flex-col pb-[max(0.5rem,env(safe-area-inset-bottom))]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-slate-100">
+              <div className="flex items-center gap-2 min-w-0">
+                <h2 className="font-extrabold text-slate-800">السلة الحالية</h2>
+                <span className="badge bg-brand-50 text-brand-700">{itemCount} قطعة</span>
+              </div>
+              <button
+                className="w-10 h-10 inline-flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100"
+                onClick={() => setCartOpen(false)}
+                aria-label="إغلاق السلة"
+              >
+                <IconX className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-4 pt-3 space-y-2">
+              {cart.map((line) => (
+                <div key={line.itemId} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-2.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="font-bold text-sm flex items-center gap-2">
+                        <span className="truncate">{line.name}</span>
+                        {line.isGift && <span className="badge bg-emerald-100 text-emerald-700 shrink-0">هدية</span>}
+                      </div>
+                      <div className="text-[11px] text-slate-500">{line.code} · {line.unitName}</div>
+                    </div>
+                    <div className="text-left shrink-0">
+                      <div className="font-num font-extrabold text-sm tabular-nums">
+                        {line.isGift ? 'مجاني' : formatMoney(line.quantity * line.unitPrice * (1 - line.discountPct / 100))}
+                      </div>
+                      {line.discountPct > 0 && <div className="text-[10px] text-amber-700 font-bold">خصم {line.discountPct}%</div>}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 mt-2">
+                    <div className="flex items-center gap-1">
+                      <button type="button" className="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold" onClick={() => changeQuantity(line.itemId, -1)} aria-label="خصم">−</button>
+                      <span className="w-10 text-center font-num font-extrabold tabular-nums">{line.quantity}</span>
+                      <button type="button" className="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold" onClick={() => changeQuantity(line.itemId, 1)} aria-label="زيادة">+</button>
+                    </div>
+                    <div className="text-[11px] text-slate-500">{formatMoney(line.unitPrice)} / {line.unitName}</div>
+                    <button
+                      type="button"
+                      className="text-rose-500 text-xs font-bold px-2 h-9 rounded-xl hover:bg-rose-50"
+                      onClick={() => setCart((c) => c.filter((l) => l.itemId !== line.itemId))}
+                    >
+                      حذف
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {cart.length === 0 && (
+                <div className="text-center text-sm text-slate-400 py-10">السلة فاضية — اضف أصناف من القائمة فوق</div>
+              )}
+            </div>
+
+            {cart.length > 0 && (
+              <div className="px-4 pt-3 border-t border-slate-100 space-y-1.5 text-sm">
+                <div className="flex justify-between"><span className="text-slate-500">الإجمالي قبل الخصم</span><span className="tabular-nums">{formatMoney(totals.subtotal)}</span></div>
+                <div className="flex justify-between"><span className="text-slate-500">الضريبة</span><span className="tabular-nums">{formatMoney(totals.tax)}</span></div>
+                <div className="flex justify-between items-baseline pt-1.5 border-t border-dashed border-slate-200">
+                  <span className="font-extrabold text-slate-700">المطلوب</span>
+                  <span className="font-num font-extrabold text-xl text-brand-800 tabular-nums">{formatMoney(totals.total)}</span>
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-2 px-4 py-3">
+              <button className="btn-soft flex-1" onClick={() => setCartOpen(false)}>أكمل التسوق</button>
+              <button className="btn-success flex-1" disabled={busy || !cart.length} onClick={() => { setCartOpen(false); openPayment(); }}>
+                إتمام البيع
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
     </AppShell>
   );
