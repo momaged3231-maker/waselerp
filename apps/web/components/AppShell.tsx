@@ -105,6 +105,22 @@ export default function AppShell({ children, title }: { children: React.ReactNod
   const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  // Desktop: hide/show the sidebar (persisted per device) — POS gets the full screen
+  const [collapsed, setCollapsed] = useState<boolean>(() =>
+    typeof window !== 'undefined' && window.localStorage.getItem('wasel-sidebar-collapsed') === '1',
+  );
+
+  function toggleSidebar() {
+    setCollapsed((value) => {
+      const next = !value;
+      try {
+        window.localStorage.setItem('wasel-sidebar-collapsed', next ? '1' : '0');
+      } catch {
+        /* storage unavailable */
+      }
+      return next;
+    });
+  }
 
   useEffect(() => {
     if (!loading && !session) router.replace('/login/');
@@ -158,8 +174,9 @@ export default function AppShell({ children, title }: { children: React.ReactNod
 
       {/* Sidebar */}
       <aside
+        aria-hidden={collapsed}
         className={`fixed inset-y-0 right-0 z-40 w-[272px] bg-navy-900 text-slate-300 flex flex-col transition-transform duration-200 ease-out
-                    lg:static lg:translate-x-0 ${open ? 'translate-x-0 shadow-lift' : 'translate-x-full'}`}
+                    lg:static lg:translate-x-0 ${collapsed ? 'lg:hidden' : 'flex'} ${open ? 'translate-x-0 shadow-lift' : 'translate-x-full'}`}
       >
         {/* Brand */}
         <div className="px-5 pt-5 pb-4 border-b border-white/[0.06]">
@@ -264,9 +281,17 @@ export default function AppShell({ children, title }: { children: React.ReactNod
       <div className="flex-1 flex flex-col min-w-0">
         <header className="sticky top-0 z-20 h-14 bg-white/95 backdrop-blur border-b border-slate-200 px-4 flex items-center gap-3">
           <button
-            className="lg:hidden w-10 h-10 inline-flex items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-            onClick={() => setOpen(true)}
-            aria-label="فتح القائمة"
+            className="w-10 h-10 inline-flex items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            onClick={() => {
+              if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+                toggleSidebar();
+              } else {
+                setOpen(true);
+              }
+            }}
+            aria-label={collapsed ? 'إظهار القائمة الجانبية' : 'طي القائمة الجانبية'}
+            aria-pressed={collapsed}
+            title={collapsed ? 'إظهار القائمة الجانبية' : 'طي القائمة الجانبية'}
           >
             <IconMenu className="w-5 h-5" />
           </button>

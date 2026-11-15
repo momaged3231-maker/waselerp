@@ -682,6 +682,7 @@ export default function PosPage() {
 
   return (
     <AppShell title="نقطة البيع">
+      <div className="pb-24 lg:pb-0">
       {printProfiles.length > 0 && (
         <div className="card p-2 mb-3 flex flex-wrap items-center gap-2 text-sm">
           <span className="text-slate-500">ملف الطباعة لهذا الجهاز:</span>
@@ -897,7 +898,7 @@ export default function PosPage() {
         </div>
 
         {/* ---------------- Cart ---------------- */}
-        <div className="card p-3 lg:order-1 flex flex-col min-h-0 max-h-[70dvh] lg:max-h-none lg:h-full">
+        <div id="pos-cart" className="card p-3 lg:order-1 flex flex-col min-h-0 max-h-[70dvh] lg:max-h-none lg:h-full scroll-mt-20">
           <div className="flex items-center justify-between mb-2 px-1">
             <h2 className="font-extrabold text-slate-700 flex items-center gap-2">
               <IconCart className="w-5 h-5 text-brand-600" />
@@ -1448,6 +1449,32 @@ export default function PosPage() {
           </div>
         </div>
       )}
+
+      {/* Sticky checkout summary — always visible on phones/tablets so the cashier never loses sight of the cart */}
+      <div className="fixed bottom-0 inset-x-0 z-30 lg:hidden bg-white/95 backdrop-blur border-t border-slate-200 px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] no-print">
+        <div className="flex items-center gap-2">
+          <div className="min-w-0 shrink-0">
+            <div className="text-[10px] text-slate-500 leading-4">{itemCount} قطعة</div>
+            <div className="text-base font-extrabold text-brand-800 tabular-nums leading-5">{formatMoney(totals.total)}</div>
+          </div>
+          <button
+            className="btn-soft flex-1 text-xs !px-2"
+            onClick={() => document.getElementById('pos-cart')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+            aria-label="الانتقال إلى السلة"
+          >
+            السلة
+          </button>
+          <button
+            className="btn-success flex-1 text-sm !px-2"
+            onClick={openPayment}
+            disabled={busy || !cart.length}
+            aria-label="إتمام البيع"
+          >
+            إتمام البيع
+          </button>
+        </div>
+      </div>
+      </div>
     </AppShell>
   );
 }
