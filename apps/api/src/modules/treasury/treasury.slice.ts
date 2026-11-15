@@ -46,6 +46,83 @@ export class TreasuryService {
     );
   }
 
+  /** Bank statement with a running balance for one account. */
+  async accountStatement(id: number, params: { branchId: number; from?: string; to?: string }) {
+    const account = await this.db.one<any>(
+      `SELECT cash_account_id AS "accountId", name, type, bank_name AS "bankName", account_no AS "accountNo",
+              currency_code AS "currency", is_active AS "isActive", opening_balance AS "openingBalance",
+              gl_account_id AS "glAccountId"
+         FROM cash_accounts WHERE cash_account_id = $1::int AND ($2::int = 0 OR branch_id = $2::int)`,
+      [id, params.branchId],
+    );
+    if (!account) throw new BadRequestException('الحساب غير موجود');
+    const from = params.from ?? '2000-01-01';
+    const to = params.to ?? '2099-12-31';
+    const openingRow = await this.db.one<any>(
+      `SELECT COALESCE(SUM(CASE WHEN t.direction = 1 THEN t.amount ELSE -t.amount END), 0) AS net
+         FROM cash_transactions t
+        WHERE t.cash_account_id = $1::int AND t.transaction_date < $2::date`,
+      [id, from],
+    );
+    const rows = await this.db.query<any>(
+      `SELECT t.cash_transaction_id AS "transactionId", t.transaction_date AS "transactionDate",
+              t.direction, t.amount, t.description, t.party_id AS "partyId", p.name AS "partyName",
+              t.invoice_id AS "invoiceId", cat.name AS "categoryName"
+         FROM cash_transactions t
+         LEFT JOIN parties p ON p.party_id = t.party_id
+         LEFT JOIN cash_categories cat ON cat.cash_category_id = t.category_id
+        WHERE t.cash_account_id = $1::int
+          AND t.transaction_date >= $2::date AND t.transaction_date <= $3::date
+        ORDER BY t.transaction_date, t.cash_transaction_id`,
+      [id, from, to],
+    );
+    let balance = Number(account.openingBalance ?? 0) + Number(openingRow?.net ?? 0);
+    const items = rows.map((row: any) => {
+      balance = Math.round((balance + (Number(row.direction) === 1 ? Number(row.amount) : -Number(row.amount))) * 100) / 100;
+      return { ...row, balance };
+    });
+    const totalsIn = rows.filter((row: any) => Number(row.direction) === 1).reduce((sum: number, row: any) => sum + Number(row.amount), 0);
+    const totalsOut = rows.filter((row: any) => Number(row.direction) === 2).reduce((sum: number, row: any) => sum + Number(row.amount), 0);
+    const openingBalance = Math.round((Number(account.openingBalance ?? 0) + Number(openingRow?.net ?? 0)) * 100) / 100;
+    return { account, opening: openingBalance, items, totals: { in: totalsIn, out: totalsOut, balance } };
+  }
+
+  /** Per-bank-account summary — Tools → «تقرير الحسابات البنكية». */
+  async bankSummary(branchId: number, params: { from?: string; to?: string }) {
+    const from = params.from ?? '2000-01-01';
+    const to = params.to ?? '2099-12-31';
+    const rows = await this.db.query<any>(
+      `SELECT c.cash_account_id AS "accountId", c.name, c.bank_name AS "bankName", c.account_no AS "accountNo",
+              c.currency_code AS "currency", c.is_active AS "isActive", c.opening_balance AS "openingBalance",
+              c.gl_account_id AS "glAccountId",
+              gl.code AS "glAccountCode", gl.name AS "glAccountName",
+              COALESCE(SUM(t.amount) FILTER (WHERE t.direction = 1 AND t.transaction_date < $2::date), 0) -
+                COALESCE(SUM(t.amount) FILTER (WHERE t.direction = 2 AND t.transaction_date < $2::date), 0) AS "netBefore",
+              COALESCE(SUM(t.amount) FILTER (WHERE t.direction = 1 AND t.transaction_date >= $2::date AND t.transaction_date <= $3::date), 0) AS "totalIn",
+              COALESCE(SUM(t.amount) FILTER (WHERE t.direction = 2 AND t.transaction_date >= $2::date AND t.transaction_date <= $3::date), 0) AS "totalOut"
+         FROM cash_accounts c
+         LEFT JOIN gl_accounts gl ON gl.account_id = c.gl_account_id
+         LEFT JOIN cash_transactions t ON t.cash_account_id = c.cash_account_id
+        WHERE c.branch_id = $1::int AND c.type = 2
+        GROUP BY c.cash_account_id, c.name, c.bank_name, c.account_no, c.currency_code, c.is_active, c.opening_balance,
+                 c.gl_account_id, gl.code, gl.name
+        ORDER BY c.name`,
+      [branchId, from, to],
+    );
+    const items = rows.map((row: any) => {
+      const opening = Number(row.openingBalance) + Number(row.netBefore);
+      const totalIn = Number(row.totalIn);
+      const totalOut = Number(row.totalOut);
+      return { ...row, opening, closing: Math.round((opening + totalIn - totalOut) * 100) / 100 };
+    });
+    const totals = items.reduce((acc: any, row: any) => ({
+      totalIn: Math.round((acc.totalIn + Number(row.totalIn)) * 100) / 100,
+      totalOut: Math.round((acc.totalOut + Number(row.totalOut)) * 100) / 100,
+      closing: Math.round((acc.closing + Number(row.closing)) * 100) / 100,
+    }), { totalIn: 0, totalOut: 0, closing: 0 });
+    return { items, totals };
+  }
+
   /** Creates a cash account (drawer, bank, card settlement, wallet…). */
   async createAccount(dto: any, user: AuthUser, branchId: number) {
     const name = String(dto.name ?? '').trim();
@@ -506,6 +583,23 @@ export class TreasuryController {
   @Get('categories')
   categories() {
     return this.service.categories();
+  }
+
+  @RequirePermissions('cash.view')
+  @Get('accounts/:id/statement')
+  accountStatement(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentBranch() branchId: number,
+    @Query('from') from: string,
+    @Query('to') to: string,
+  ) {
+    return this.service.accountStatement(id, { branchId, from, to });
+  }
+
+  @RequirePermissions('cash.view')
+  @Get('bank-summary')
+  bankSummary(@CurrentBranch() branchId: number, @Query('from') from: string, @Query('to') to: string) {
+    return this.service.bankSummary(branchId, { from, to });
   }
 
   @RequirePermissions('cash.view')

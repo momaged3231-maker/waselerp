@@ -121,6 +121,7 @@ const CHART: {
   { code: '1104', name: 'المخزون', nameEn: 'Inventory', type: 1, mapping: 'INVENTORY', mappingLabel: 'المخزون', parent: '11' },
   { code: '1105', name: 'ضريبة القيمة المضافة (مدخلات)', nameEn: 'VAT Input', type: 1, mapping: 'VAT_INPUT', mappingLabel: 'ضريبة القيمة المضافة (مدخلات)', parent: '11' },
   { code: '1106', name: 'مصروفات مدفوعة مقدماً', nameEn: 'Prepaid Expenses', type: 1, parent: '11' },
+  { code: '1107', name: 'أوراق قبض', nameEn: 'Notes Receivable', type: 1, mapping: 'NOTES_RECEIVABLE', mappingLabel: 'أوراق قبض', parent: '11' },
   { code: '12', name: 'الأصول الثابتة', nameEn: 'Fixed Assets', type: 1, group: true, parent: '1' },
   { code: '1201', name: 'أثاث وتجهيزات', nameEn: 'Furniture & Fixtures', type: 1, parent: '12' },
   { code: '1202', name: 'مجمع إهلاك الأصول الثابتة', nameEn: 'Accumulated Depreciation', type: 1, normal: 2, parent: '12' },
@@ -131,6 +132,7 @@ const CHART: {
   { code: '2102', name: 'ضريبة القيمة المضافة (مخرجات)', nameEn: 'VAT Output', type: 2, mapping: 'VAT_OUTPUT', mappingLabel: 'ضريبة القيمة المضافة (مخرجات)', parent: '21' },
   { code: '2103', name: 'مصروفات مستحقة', nameEn: 'Accrued Expenses', type: 2, parent: '21' },
   { code: '2104', name: 'قروض قصيرة الأجل', nameEn: 'Short Term Loans', type: 2, parent: '21' },
+  { code: '2105', name: 'أوراق دفع', nameEn: 'Notes Payable', type: 2, mapping: 'NOTES_PAYABLE', mappingLabel: 'أوراق دفع', parent: '21' },
 
   { code: '3', name: 'حقوق الملكية', nameEn: 'Equity', type: 3, group: true },
   { code: '3101', name: 'رأس المال', nameEn: 'Capital', type: 3, parent: '3' },

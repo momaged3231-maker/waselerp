@@ -4,7 +4,7 @@ import {
 } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
 import { PoolClient } from 'pg';
-import { postJournal, resolveMapping, voidJournal, JournalLineInput } from '../../common/posting';
+import { postJournal, requireMapping, resolveMapping, voidJournal, JournalLineInput } from '../../common/posting';
 import {
   AuthUser, CurrentBranch, CurrentUser, RequirePermissions,
 } from '../../common/security';
@@ -696,29 +696,120 @@ export class AccountingService {
     if (!dto.checkNo) throw new BadRequestException('رقم الشيك مطلوب');
     const direction = Number(dto.direction ?? 1);
     if (![1, 2].includes(direction)) throw new BadRequestException('اتجاه الشيك غير صحيح');
-    const row = await this.db.one<{ check_id: number }>(
-      `INSERT INTO checks
-         (branch_id, direction, check_no, bank_name, amount, due_date, party_id,
-          cash_account_id, status, notes, created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,1,$9,$10) RETURNING check_id`,
-      [branchId, direction, String(dto.checkNo).trim(), dto.bankName ?? null, amount,
-        dto.dueDate ?? null, dto.partyId ? Number(dto.partyId) : null,
-        dto.cashAccountId ? Number(dto.cashAccountId) : null, dto.notes ?? null, user.userId],
-    );
-    return { checkId: Number(row.check_id) };
+
+    return this.db.transaction(async (client) => {
+      const row = await client.query<{ check_id: number }>(
+        `INSERT INTO checks
+           (branch_id, direction, check_no, bank_name, amount, due_date, party_id,
+            cash_account_id, status, notes, created_by)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,1,$9,$10) RETURNING check_id`,
+        [branchId, direction, String(dto.checkNo).trim(), dto.bankName ?? null, amount,
+         dto.dueDate ?? null, dto.partyId ? Number(dto.partyId) : null,
+         dto.cashAccountId ? Number(dto.cashAccountId) : null, dto.notes ?? null, user.userId],
+      );
+      const checkId = Number(row.rows[0].check_id);
+      const partyId = dto.partyId ? Number(dto.partyId) : null;
+      // Party ledger: a check is a payment-like settlement both ways.
+      if (partyId) {
+        await client.query(
+          `INSERT INTO ledger_entries (branch_id, party_id, direction, entry_type, amount, reference_no, notes, created_by)
+           VALUES ($1::int,$2::int,2,2,$3::numeric,$4::text,$5::text,$6::int)`,
+          [branchId, partyId, amount, String(dto.checkNo).trim(),
+            direction === 1 ? 'شيك قبض' : 'شيك صرف', user.userId],
+        );
+      }
+      // Journal: recognize the note as an asset (or liability).
+      const notesRec = await requireMapping(client, 'NOTES_RECEIVABLE', 'أوراق قبض');
+      const notesPay = await requireMapping(client, 'NOTES_PAYABLE', 'أوراق دفع');
+      const ar = await requireMapping(client, 'AR', 'ذمم العملاء');
+      const ap = await requireMapping(client, 'AP', 'ذمم الموردين');
+      if (direction === 1) {
+        await postJournal(client, {
+          branchId, journalType: 5, description: `شيك قبض ${dto.checkNo}`,
+          sourceType: 'check', sourceId: checkId, userId: user.userId, autoBalance: false,
+          lines: [
+            { accountId: notesRec.accountId, debit: amount, description: 'شيك قبض' },
+            { accountId: ar.accountId, credit: amount, partyId, description: 'شيك قبض' },
+          ],
+        });
+      } else {
+        await postJournal(client, {
+          branchId, journalType: 5, description: `شيك صرف ${dto.checkNo}`,
+          sourceType: 'check', sourceId: checkId, userId: user.userId, autoBalance: false,
+          lines: [
+            { accountId: ap.accountId, debit: amount, partyId, description: 'شيك صرف' },
+            { accountId: notesPay.accountId, credit: amount, description: 'شيك صرف' },
+          ],
+        });
+      }
+      return { checkId };
+    });
   }
 
-  async updateCheckStatus(id: number, dto: any, user: AuthUser) {
+  async updateCheckStatus(id: number, dto: any, user: AuthUser, branchId: number) {
     const status = Number(dto.status);
     if (![1, 2, 3, 4].includes(status)) throw new BadRequestException('حالة الشيك غير صحيحة');
-    await this.db.query(
-      `UPDATE checks SET status = $2, notes = COALESCE($3, notes) WHERE check_id = $1::bigint`,
-      [id, status, dto.notes ?? null],
-    );
-    return { checkId: id, status };
+
+    return this.db.transaction(async (client) => {
+      const row = await client.query<any>(
+        'SELECT * FROM checks WHERE check_id = $1::bigint AND branch_id = $2::int FOR UPDATE',
+        [id, branchId],
+      );
+      if (!row.rows.length) throw new BadRequestException('الشيك غير موجود');
+      const check = row.rows[0];
+      if (Number(check.status) !== 1) {
+        throw new BadRequestException('لا يمكن تعديل شيك خرج من حالة «تحت التحصيل»');
+      }
+
+      if (status === 1) {
+        await client.query('UPDATE checks SET status=1, notes = COALESCE($2::text, notes) WHERE check_id = $1::bigint', [id, dto.notes ?? null]);
+        return { checkId: id, status: 1 };
+      }
+      if (status === 2) {
+        // delegate to the shared collection logic
+        return this.collectCheck(id, user, branchId);
+      }
+      // bounce / cancel: reverse the issuance (money-wise and party-wise)
+      const direction = Number(check.direction ?? 1);
+      const amount = Number(check.amount);
+      const partyId = check.party_id ? Number(check.party_id) : null;
+      const notesRec = await requireMapping(client, 'NOTES_RECEIVABLE', 'أوراق قبض');
+      const notesPay = await requireMapping(client, 'NOTES_PAYABLE', 'أوراق دفع');
+      const ar = await requireMapping(client, 'AR', 'ذمم العملاء');
+      const ap = await requireMapping(client, 'AP', 'ذمم الموردين');
+      if (direction === 1) {
+        await postJournal(client, {
+          branchId, journalType: 5, description: `عكس شيك قبض ${check.check_no} (${status === 3 ? 'مرتد' : 'ملغي'})`,
+          sourceType: 'check_reversal', sourceId: id, userId: user.userId, autoBalance: false,
+          lines: [
+            { accountId: ar.accountId, debit: amount, partyId, description: 'عكس شيك قبض' },
+            { accountId: notesRec.accountId, credit: amount, description: 'عكس شيك قبض' },
+          ],
+        });
+      } else {
+        await postJournal(client, {
+          branchId, journalType: 5, description: `عكس شيك صرف ${check.check_no} (${status === 3 ? 'مرتد' : 'ملغي'})`,
+          sourceType: 'check_reversal', sourceId: id, userId: user.userId, autoBalance: false,
+          lines: [
+            { accountId: notesPay.accountId, debit: amount, description: 'عكس شيك صرف' },
+            { accountId: ap.accountId, credit: amount, partyId, description: 'عكس شيك صرف' },
+          ],
+        });
+      }
+      if (partyId) {
+        await client.query(
+          `INSERT INTO ledger_entries (branch_id, party_id, direction, entry_type, amount, reference_no, notes, created_by)
+           VALUES ($1::int,$2::int,1,2,$3::numeric,$4::text,$5::text,$6::int)`,
+          [branchId, partyId, amount, check.check_no, status === 3 ? 'شيك مرتد' : 'شيك ملغي', user.userId],
+        );
+      }
+      await client.query('UPDATE checks SET status = $2, notes = COALESCE($3::text, notes) WHERE check_id = $1::bigint',
+        [id, status, dto.notes ?? null]);
+      return { checkId: id, status };
+    });
   }
 
-  /** Marks a received check as collected: moves the money into the drawer. */
+  /** Marks a check as collected: moves the money between the drawer/bank and the note. */
   async collectCheck(id: number, user: AuthUser, branchId: number) {
     return this.db.transaction(async (client) => {
       const row = await client.query<any>(
@@ -728,28 +819,53 @@ export class AccountingService {
       if (!row.rows.length) throw new BadRequestException('الشيك غير موجود');
       const check = row.rows[0];
       if (Number(check.status) !== 1) throw new BadRequestException('الشيك ليس تحت التحصيل');
-      const cashAccountId = Number(check.cash_account_id);
-      if (!cashAccountId) throw new BadRequestException('حدد حساب الخزينة للتحصيل');
+      const branchOfCheck = Number(check.branch_id ?? branchId);
+      if (branchOfCheck !== Number(branchId)) throw new BadRequestException('الشيك يتبع فرعًا آخر');
 
-      const account = await client.query<any>(
-        'SELECT gl_account_id FROM cash_accounts WHERE cash_account_id = $1::int',
-        [cashAccountId],
-      );
-      const glAccountId = account.rows[0]?.gl_account_id ?? (await resolveMapping(client, 'CASH'))?.accountId;
+      // Resolve the cash/bank account with a sensible fallback (drawer first).
+      let cashAccountId = Number(check.cash_account_id ?? 0) || null;
+      if (!cashAccountId) {
+        const fallback = await client.query<any>(
+          `SELECT cash_account_id FROM cash_accounts WHERE branch_id = $1::int AND is_active = true ORDER BY type, cash_account_id LIMIT 1`,
+          [branchId],
+        );
+        cashAccountId = Number(fallback.rows[0]?.cash_account_id ?? 0) || null;
+      }
+
+      const account = cashAccountId
+        ? await client.query<any>('SELECT gl_account_id FROM cash_accounts WHERE cash_account_id = $1::int', [cashAccountId])
+        : null;
+      const glAccountId = account?.rows[0]?.gl_account_id ?? (await resolveMapping(client, 'CASH'))?.accountId;
       if (!glAccountId) throw new BadRequestException('حساب الخزينة غير مرتبط بحساب محاسبي');
 
-      const ar = await resolveMapping(client, 'AR');
+      const direction = Number(check.direction ?? 1);
       const amount = Number(check.amount);
-      if (ar) {
+      const notesRec = await requireMapping(client, 'NOTES_RECEIVABLE', 'أوراق قبض');
+      const notesPay = await requireMapping(client, 'NOTES_PAYABLE', 'أوراق دفع');
+      const partyId = check.party_id ? Number(check.party_id) : null;
+      if (direction === 1) {
         await postJournal(client, {
           branchId,
           journalType: 5,
           description: `تحصيل شيك ${check.check_no}`,
-          sourceType: 'check',
+          sourceType: 'check_collect',
           sourceId: id,
           lines: [
             { accountId: glAccountId, debit: amount, description: 'تحصيل شيك' },
-            { accountId: ar.accountId, credit: amount, partyId: check.party_id, description: 'تحصيل شيك' },
+            { accountId: notesRec.accountId, credit: amount, partyId, description: 'تحصيل شيك' },
+          ],
+          userId: user.userId,
+        });
+      } else {
+        await postJournal(client, {
+          branchId,
+          journalType: 5,
+          description: `صرف شيك ${check.check_no}`,
+          sourceType: 'check_collect',
+          sourceId: id,
+          lines: [
+            { accountId: notesPay.accountId, debit: amount, partyId, description: 'صرف شيك' },
+            { accountId: glAccountId, credit: amount, description: 'صرف شيك' },
           ],
           userId: user.userId,
         });
@@ -757,10 +873,11 @@ export class AccountingService {
       await client.query(
         `INSERT INTO cash_transactions
            (branch_id, cash_account_id, direction, amount, transaction_date, description, party_id, created_by)
-         VALUES ($1,$2,1,$3, CURRENT_DATE, $4,$5,$6)`,
-        [branchId, cashAccountId, amount, `تحصيل شيك ${check.check_no}`, check.party_id, user.userId],
+         VALUES ($1,$2,$3,$4, CURRENT_DATE, $5,$6,$7)`,
+        [branchId, cashAccountId, direction === 1 ? 1 : 2, amount,
+         `${direction === 1 ? 'تحصيل' : 'صرف'} شيك ${check.check_no}`, partyId, user.userId],
       );
-      await client.query('UPDATE checks SET status = 2 WHERE check_id = $1::bigint', [id]);
+      await client.query('UPDATE checks SET status = 2, cash_account_id = $2::int WHERE check_id = $1::bigint', [id, cashAccountId]);
       return { checkId: id, status: 2 };
     });
   }
@@ -1570,8 +1687,8 @@ export class AccountingController {
 
   @RequirePermissions('accounting.manage')
   @Put('checks/:id')
-  updateCheck(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser) {
-    return this.service.updateCheckStatus(id, dto, user);
+  updateCheck(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
+    return this.service.updateCheckStatus(id, dto, user, branchId);
   }
 
   @RequirePermissions('accounting.post')

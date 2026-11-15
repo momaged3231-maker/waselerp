@@ -112,6 +112,19 @@ export default function AppShell({ children, title }: { children: React.ReactNod
     if (!loading && !session) router.replace('/login/');
   }, [loading, session, router]);
 
+  // Ctrl+R — quick navigation to «الأوراق المالية والبنوك» (Ezees reference binding).
+  // Note: this deliberately shadows the browser refresh binding (user-requested binding).
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if ((event.ctrlKey || event.metaKey) && (event.key === 'r' || event.key === 'R')) {
+        event.preventDefault();
+        router.push('/accounting/securities');
+      }
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [router]);
+
   useEffect(() => {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(() => {});
