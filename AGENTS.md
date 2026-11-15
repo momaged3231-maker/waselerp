@@ -32,6 +32,21 @@ cd apps/web && npm run build && cd ../.. && node tools/web-serve.js
 cd apps/print-agent && npm install && node server.js
 ```
 
+### نشر ديمو CompuMob على قاعدة مُدارة (اللايف) — القاعدة «قابلة للتصفير وإعادة البناء»
+
+```bash
+export DATABASE_URL='postgresql://...pooler.supabase.com:6543/postgres'  # بدون أي ?sslmode=
+# ① نسخة احتياطية أولًا: GET /admin/backup من الـ API الحي (JSON كامل 100+ جدول)
+# ② التصفير (يتطلب --yes صراحةً):   node tools/pg/wipe-db.js --yes
+# ③ المخطط + كل migrations:          node tools/pg/migrate-all.js postgres
+# ④ البذور:                          DATABASE_URL=$DATABASE_URL npx ts-node --transpile-only src/cli/seed.ts   (من apps/api)
+#                                    node tools/pg/seed-reference.js postgres
+# ⑤ الديمو: API مؤقت على القاعدة الحية ثم تشغيل السكربت ضدها:
+#    PORT=4001 DATABASE_URL=$DATABASE_URL node dist/main.js
+#    API_BASE=http://127.0.0.1:4001/api node tools/demo-compumob.js
+# ⑥ الإثبات: دخول admin + موظف (Demo@1234) عبر الـ API اللايف + أعداد الديمو (49 فاتورة/27 صنف/تذكرتا صيانة)
+```
+
 بيانات الدخول: `admin` / `admin123` (غيّرها من شاشة الإعدادات).
 
 سكربتات مختصرة في جذر المشروع: `npm run db:migrate` · `db:seed` · `db:reset` · `db:demo` · `api:build` · `api:start` · `web:build` · `web:start` · `agent:start` · `test` · `test:print`.

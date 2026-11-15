@@ -2,13 +2,20 @@
 import { Client } from 'pg';
 import { randomBytes, scryptSync } from 'node:crypto';
 
-const CONFIG = {
-  host: process.env.PGHOST ?? 'localhost',
-  port: Number(process.env.PGPORT ?? 5432),
-  user: process.env.PGUSER ?? 'postgres',
-  password: process.env.PGPASSWORD ?? 'postgres',
-  database: process.env.PGDATABASE ?? 'wasel',
-};
+// DATABASE_URL (managed DBs: Supabase pooler/Neon/Render) takes priority.
+// TLS is forced for managed hosts — never put sslmode in the URL itself,
+// newer pg treats `sslmode=require` as verify-full (see AGENTS.md §7).
+const DATABASE_URL = process.env.DATABASE_URL;
+const MANAGED_DB = /sslmode=require|pooler\.|supabase\.|neon\.tech|render\.com/i.test(DATABASE_URL ?? '');
+const CONFIG = DATABASE_URL
+  ? { connectionString: DATABASE_URL, ssl: MANAGED_DB ? { rejectUnauthorized: false } : undefined }
+  : {
+      host: process.env.PGHOST ?? 'localhost',
+      port: Number(process.env.PGPORT ?? 5432),
+      user: process.env.PGUSER ?? 'postgres',
+      password: process.env.PGPASSWORD ?? 'postgres',
+      database: process.env.PGDATABASE ?? 'wasel',
+    };
 
 const PERMISSIONS: [string, string, string][] = [
   ['dashboard.view', 'الرئيسية', 'عرض لوحة المعلومات'],
