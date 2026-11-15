@@ -3,6 +3,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
+import { assertDeletionAllowed } from '../../common/delete-guard';
 import { resolvePrice } from '../../common/pricing';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
 
@@ -98,6 +99,7 @@ export class PricingService {
   }
 
   async deleteList(id: number) {
+    await assertDeletionAllowed(this.db, 'priceLists');
     const used = await this.db.one<{ c: number }>(
       'SELECT count(*)::int AS c FROM parties WHERE price_list_id = $1::int',
       [id],
@@ -224,6 +226,7 @@ export class PricingService {
   }
 
   async deleteCoupon(id: number) {
+    await assertDeletionAllowed(this.db, 'coupons');
     await this.db.query('DELETE FROM coupons WHERE coupon_id = $1::int', [id]);
     return { couponId: id, deleted: true };
   }
@@ -280,6 +283,7 @@ export class PricingService {
   }
 
   async deleteGiftOffer(id: number) {
+    await assertDeletionAllowed(this.db, 'giftOffers');
     await this.db.query('DELETE FROM gift_offers WHERE gift_offer_id = $1::int', [id]);
     return { giftOfferId: id, deleted: true };
   }

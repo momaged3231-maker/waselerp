@@ -3,6 +3,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
+import { assertDeletionAllowed } from '../../common/delete-guard';
 import { PoolClient } from 'pg';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
 import { SalesService } from './sales.slice';
@@ -62,6 +63,7 @@ export class PosService {
   }
 
   async releaseHeld(id: number) {
+    await assertDeletionAllowed(this.db, 'pos');
     const row = await this.db.one<any>(
       'SELECT held_id, held_no FROM held_invoices WHERE held_id = $1::bigint',
       [id],
@@ -113,6 +115,7 @@ export class PosService {
   }
 
   async deleteTable(id: number) {
+    await assertDeletionAllowed(this.db, 'pos');
     const open = await this.db.one<{ c: number }>(
       'SELECT count(*)::int AS c FROM table_orders WHERE table_id = $1::int AND status <> 4',
       [id],
@@ -150,6 +153,7 @@ export class PosService {
   }
 
   async deleteModifier(id: number) {
+    await assertDeletionAllowed(this.db, 'pos');
     await this.db.query('DELETE FROM item_modifiers WHERE modifier_id = $1::int', [id]);
     return { modifierId: id, deleted: true };
   }
@@ -382,6 +386,7 @@ export class PosService {
   }
 
   async deleteHall(id: number) {
+    await assertDeletionAllowed(this.db, 'pos');
     const hall = await this.db.one<any>(
       'SELECT hall_id, name, branch_id FROM restaurant_halls WHERE hall_id = $1::int',
       [id],
@@ -433,6 +438,7 @@ export class PosService {
   }
 
   async deleteNoteTemplate(id: number) {
+    await assertDeletionAllowed(this.db, 'pos');
     await this.db.query('DELETE FROM note_templates WHERE note_id = $1::int', [id]);
     return { noteId: id, deleted: true };
   }

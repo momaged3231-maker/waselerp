@@ -1,5 +1,6 @@
 import { BadRequestException, Body, Controller, Delete, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
+import { assertDeletionAllowed, countReferencingRows } from '../../common/delete-guard';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
 
 const STAGES: Record<number, string> = { 1: 'جديد', 2: 'تم التواصل', 3: 'مؤهل', 4: 'عرض سعر', 5: 'مكسوب', 6: 'خاسر' };
@@ -30,6 +31,16 @@ export class CrmService {
         WHERE source_id = $1::int RETURNING source_id AS "sourceId", name, is_active AS "isActive"`,
       [id, dto.name?.trim() || null, dto.isActive],
     );
+  }
+  async deleteSource(id: number) {
+    await assertDeletionAllowed(this.db, 'crmSources');
+    const refs = await countReferencingRows(this.db, 'crm_sources', 'source_id', id);
+    if (refs.length) {
+      const detail = refs.map((r) => `${r.table} (${r.count})`).join('، ');
+      throw new BadRequestException(`لا يمكن حذف المصدر — مستخدم في: ${detail}`);
+    }
+    await this.db.query('DELETE FROM crm_sources WHERE source_id = $1::int', [id]);
+    return { deleted: true };
   }
 
   // --- Leads ---
@@ -123,6 +134,7 @@ export class CrmService {
   }
 
   async deleteLead(id: number, branchId: number) {
+    await assertDeletionAllowed(this.db, 'crmLeads');
     await this.db.query('DELETE FROM crm_leads WHERE lead_id=$1::int AND branch_id=$2::int', [id, branchId]);
     return { ok: true };
   }
@@ -174,6 +186,7 @@ export class CrmService {
     );
   }
   async deleteActivity(activityId: number) {
+    await assertDeletionAllowed(this.db, 'crmActivities');
     await this.db.query('DELETE FROM crm_activities WHERE activity_id=$1::int', [activityId]);
     return { ok: true };
   }
@@ -250,6 +263,7 @@ export class CrmController {
   @RequirePermissions('crm.view') @Get('sources') sources() { return this.svc.listSources(); }
   @RequirePermissions('crm.manage') @Post('sources') createSource(@Body() body: any) { return this.svc.createSource(body); }
   @RequirePermissions('crm.manage') @Put('sources/:id') updateSource(@Param('id', ParseIntPipe) id: number, @Body() body: any) { return this.svc.updateSource(id, body); }
+  @RequirePermissions('crm.manage') @Delete('sources/:id') deleteSource(@Param('id', ParseIntPipe) id: number) { return this.svc.deleteSource(id); }
 
   @RequirePermissions('crm.view') @Get('leads') leads(
     @CurrentBranch() b: number,

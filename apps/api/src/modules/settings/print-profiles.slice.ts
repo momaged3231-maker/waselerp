@@ -3,6 +3,7 @@ import {
 } from '@nestjs/common';
 import { PoolClient } from 'pg';
 import { DatabaseService } from '../../common/database/database.service';
+import { assertDeletionAllowed } from '../../common/delete-guard';
 import { AuthUser, CurrentBranch, CurrentUser, RequireAnyPermission, RequirePermissions } from '../../common/security';
 
 const PAPER_SIZES = ['thermal80', 'thermal58', 'a5', 'a4'];
@@ -190,6 +191,7 @@ export class PrintProfilesService {
   }
 
   async remove(id: number, user: AuthUser, branchId: number) {
+    await assertDeletionAllowed(this.db, 'printProfiles');
     const existing = await this.get(id, branchId);
     await this.db.transaction(async (client) => {
       await client.query('DELETE FROM print_profiles WHERE profile_id = $1::int AND branch_id = $2::int', [id, branchId]);

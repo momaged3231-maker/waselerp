@@ -3,6 +3,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
+import { assertDeletionAllowed } from '../../common/delete-guard';
 import { getBooleanSetting } from '../../common/settings';
 import { postCashJournal, postJournal, resolveMapping } from '../../common/posting';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
@@ -192,6 +193,7 @@ export class TreasuryService {
   }
 
   async deleteAccount(id: number) {
+    await assertDeletionAllowed(this.db, 'bankAccounts');
     const used = await this.db.one<{ c: number }>(
       'SELECT count(*)::int AS c FROM cash_transactions WHERE cash_account_id = $1::int',
       [id],

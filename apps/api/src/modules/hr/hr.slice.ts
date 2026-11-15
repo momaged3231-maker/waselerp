@@ -4,6 +4,7 @@ import {
 } from '@nestjs/common';
 import { PoolClient } from 'pg';
 import { DatabaseService } from '../../common/database/database.service';
+import { assertDeletionAllowed } from '../../common/delete-guard';
 import { cashAccountGlId, postJournal, requireMapping } from '../../common/posting';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
 
@@ -100,6 +101,7 @@ export class HrService {
     return { departmentId: id };
   }
   async removeDepartment(id: number) {
+    await assertDeletionAllowed(this.db, 'hrDepartments');
     const used = await this.db.one<any>(`SELECT count(*)::int AS n FROM employees WHERE department_id = $1`, [id]);
     if (Number(used?.n ?? 0) > 0) throw new BadRequestException('لا يمكن حذف إدارة بها موظفون');
     await this.db.query(`DELETE FROM departments WHERE department_id = $1`, [id]);
@@ -216,6 +218,7 @@ export class HrService {
     return { componentId: id };
   }
   async removeComponent(id: number) {
+    await assertDeletionAllowed(this.db, 'hrComponents');
     await this.db.query(`DELETE FROM salary_components WHERE component_id = $1`, [id]);
     return { componentId: id, deleted: true };
   }
@@ -453,6 +456,7 @@ export class HrService {
     });
   }
   async cancelAdvance(id: number) {
+    await assertDeletionAllowed(this.db, 'hrAdvances');
     const row = await this.db.one<any>(
       `SELECT advance_id, deducted_amount, gl_journal_id FROM employee_advances WHERE advance_id = $1`, [id],
     );
@@ -1051,6 +1055,7 @@ export class HrService {
   }
 
   async removeTier(id: number) {
+    await assertDeletionAllowed(this.db, 'hrLatencyTiers');
     await this.db.query('DELETE FROM latency_deduction_tiers WHERE tier_id = $1::int', [id]);
     return { tierId: id, deleted: true };
   }
@@ -1121,6 +1126,7 @@ export class HrService {
   }
 
   async removePermission(id: number) {
+    await assertDeletionAllowed(this.db, 'hrEarlyPermissions');
     const row = await this.db.one<any>(
       'SELECT status FROM early_permissions WHERE permission_id = $1::int',
       [id],

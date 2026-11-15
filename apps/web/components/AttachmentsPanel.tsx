@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/api';
+import DeleteButton from '@/components/DeleteButton';
 import { IconFolder, IconBox } from '@/components/icons';
 
 function formatSize(bytes: number): string {
@@ -112,7 +113,6 @@ export default function AttachmentsPanel({
   }
 
   async function remove(row: any) {
-    if (!window.confirm(`حذف المرفق «${row.fileName}»؟`)) return;
     setError('');
     try {
       await apiFetch(`/attachments/${row.attachmentId}`, { method: 'DELETE' });
@@ -159,7 +159,7 @@ export default function AttachmentsPanel({
                 </div>
               </div>
               <button className="text-[11px] font-semibold text-brand-700 hover:underline" onClick={() => download(row)}>تنزيل</button>
-              <button className="text-[11px] font-semibold text-rose-600 hover:underline" onClick={() => remove(row)}>حذف</button>
+              <DeleteButton screenKey="attachments" className="text-[11px] font-semibold text-rose-600 hover:underline" confirmText={`حذف المرفق «${row.fileName}»؟`} onDelete={() => remove(row)} />
             </li>
           ))}
         </ul>

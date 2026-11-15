@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import { apiFetch, formatDate } from '@/lib/api';
 import { useSession } from '@/lib/session';
+import DeleteButton from '@/components/DeleteButton';
 
 interface Reminder {
   reminderId: number;
@@ -125,7 +126,7 @@ export default function RemindersPage() {
                 <td className="p-2">{r.isDone ? '✅ منجز' : '⏳ معلق'}</td>
                 <td className="p-2 flex gap-1">
                   <button className="text-blue-600 text-xs" onClick={() => toggleDone(r)}>{r.isDone ? 'إلغاء' : 'تم'}</button>
-                  {canManage && <button className="text-red-600 text-xs" onClick={() => remove(r)}>حذف</button>}
+                  {canManage && <DeleteButton screenKey="reminders" className="text-red-600 text-xs" confirmText={`حذف التذكير «${r.title}»؟`} onDelete={() => remove(r)} />}
                 </td>
               </tr>
             ))}

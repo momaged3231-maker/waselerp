@@ -5,6 +5,7 @@ import AppShell from '@/components/AppShell';
 import AttachmentsPanel from '@/components/AttachmentsPanel';
 import { apiFetch, formatDate, formatMoney } from '@/lib/api';
 import { useSession } from '@/lib/session';
+import DeleteButton from '@/components/DeleteButton';
 
 const STAGES = [
   { id: 0, label: 'الكل' },
@@ -88,7 +89,6 @@ export default function CrmPage() {
   }
 
   async function deleteLead(id: number) {
-    if (!confirm('حذف العميل المحتمل وكل أنشطته؟')) return;
     try { await apiFetch(`/crm/leads/${id}`, { method: 'DELETE' }); setSelected(null); await refresh(); } catch (e: any) { setError(e.message); }
   }
 
@@ -124,6 +124,14 @@ export default function CrmPage() {
   async function createSource() {
     if (!sourceName.trim()) return;
     try { await apiFetch('/crm/sources', { method: 'POST', body: JSON.stringify({ name: sourceName.trim() }) }); setSourceName(''); await loadSources(); } catch (e: any) { setError(e.message); }
+  }
+
+  async function removeSource(id: number) {
+    try { await apiFetch(`/crm/sources/${id}`, { method: 'DELETE' }); await loadSources(); } catch (e: any) { setError(e.message); }
+  }
+
+  async function removeActivity(id: number) {
+    try { await apiFetch(`/crm/activities/${id}`, { method: 'DELETE' }); if (selected) await openLead(selected.leadId); await loadSummary(); } catch (e: any) { setError(e.message); }
   }
 
   return (
@@ -228,7 +236,7 @@ export default function CrmPage() {
                     )}
                     {canManage && <div className="flex gap-2 pt-1">
                       {!selected.partyId && <button className="btn-soft text-xs" onClick={()=>convertLead(selected.leadId)}>تحويل إلى عميل</button>}
-                      <button className="text-red-600 text-xs" onClick={()=>deleteLead(selected.leadId)}>حذف</button>
+                      <DeleteButton screenKey="crmLeads" className="text-red-600 text-xs" confirmText="حذف العميل المحتمل وكل أنشطته؟" onDelete={()=>deleteLead(selected.leadId)} />
                     </div>}
                   </div>
 
@@ -250,7 +258,7 @@ export default function CrmPage() {
                       {(selected.activities||[]).map((a:any)=>(
                         <div key={a.activityId} className={`text-sm border rounded p-2 ${a.isDone?'opacity-60':''}`}>
                           <div className="flex justify-between"><span className="font-medium">{ACT_TYPES[a.activityType]||'نشاط'}: {a.subject}</span>
-                            {canManage && <button className="text-xs text-blue-700" onClick={()=>toggleActivity(a.activityId,!a.isDone)}>{a.isDone?'إلغاء':'تم'}</button>}
+                            {canManage && <div className="flex items-center gap-2"><button className="text-xs text-blue-700" onClick={()=>toggleActivity(a.activityId,!a.isDone)}>{a.isDone?'إلغاء':'تم'}</button><DeleteButton screenKey="crmActivities" confirmText="حذف هذا النشاط؟" onDelete={() => removeActivity(a.activityId)} /></div>}
                           </div>
                           {a.dueAt && <div className="text-xs text-slate-500">موعد: {formatDate(a.dueAt)}</div>}
                           {a.notes && <div className="text-xs mt-1">{a.notes}</div>}
@@ -322,7 +330,7 @@ export default function CrmPage() {
               </div>
             )}
             <ul className="space-y-1">
-              {sources.map((s:any)=>(<li key={s.sourceId} className="border rounded px-3 py-2 flex justify-between"><span>{s.name}</span><span className="text-xs text-slate-500">{s.isActive ? 'نشط' : 'غير نشط'}</span></li>))}
+              {sources.map((s:any)=>(<li key={s.sourceId} className="border rounded px-3 py-2 flex justify-between items-center"><span>{s.name}</span><span className="flex items-center gap-2"><span className="text-xs text-slate-500">{s.isActive ? 'نشط' : 'غير نشط'}</span>{canManage && <DeleteButton screenKey="crmSources" confirmText={`حذف المصدر «${s.name}»؟`} onDelete={() => removeSource(s.sourceId)} />}</span></li>))}
             </ul>
           </div>
         )}

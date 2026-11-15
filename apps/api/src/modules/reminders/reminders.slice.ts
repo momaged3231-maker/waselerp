@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Query, Delete } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
+import { assertDeletionAllowed } from '../../common/delete-guard';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
 
 @Injectable()
@@ -59,6 +60,7 @@ export class RemindersService {
   }
 
   async remove(id: number) {
+    await assertDeletionAllowed(this.db, 'reminders');
     await this.db.query(`DELETE FROM reminders WHERE reminder_id = $1`, [id]);
     return { reminderId: id, deleted: true };
   }

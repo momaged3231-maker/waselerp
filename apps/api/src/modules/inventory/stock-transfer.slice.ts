@@ -4,6 +4,7 @@ import {
 } from '@nestjs/common';
 import { PoolClient } from 'pg';
 import { DatabaseService } from '../../common/database/database.service';
+import { assertDeletionAllowed } from '../../common/delete-guard';
 import { applyMovement, getWarehouseCost, toBaseUnits } from '../../common/stock';
 import { postJournal, resolveMapping } from '../../common/posting';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
@@ -245,6 +246,7 @@ export class StockTransferService {
 
   /** Removes a line from a draft transfer. */
   async removeLine(id: number, lineId: number) {
+    await assertDeletionAllowed(this.db, 'stockTransfers');
     await this.draftHeader(id);
     await this.db.query(
       'DELETE FROM stock_transfer_lines WHERE stock_transfer_line_id = $1::bigint AND stock_transfer_id = $2::bigint',
@@ -472,6 +474,7 @@ export class StockTransferService {
 
   /** Deletes a draft transfer. Transferred ones cannot be deleted. */
   async remove(id: number) {
+    await assertDeletionAllowed(this.db, 'stockTransfers');
     const header = await this.draftHeader(id);
     await this.db.query('DELETE FROM stock_transfers WHERE stock_transfer_id = $1::bigint', [id]);
     return { stockTransferId: id, deleted: true };

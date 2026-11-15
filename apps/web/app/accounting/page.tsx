@@ -5,6 +5,7 @@ import AppShell from '@/components/AppShell';
 import AccountingNav from '@/components/AccountingNav';
 import { apiFetch, formatMoney } from '@/lib/api';
 import { useSession } from '@/lib/session';
+import DeleteButton from '@/components/DeleteButton';
 
 type Account = {
   accountId: number; code: string; name: string; accountType: number;
@@ -68,6 +69,18 @@ export default function AccountingAccountsPage() {
     }
   }
 
+  async function removeAccount(node: Account) {
+    setError('');
+    setMessage('');
+    try {
+      const result = await apiFetch<{ deleted?: boolean; deactivated?: boolean }>(`/accounting/accounts/${node.accountId}`, { method: 'DELETE' });
+      setMessage(result?.deactivated ? 'كان عليه حركة — تم تعطيل الحساب بدل الحذف' : 'تم حذف الحساب');
+      await load();
+    } catch (e: any) {
+      setError(e.message);
+    }
+  }
+
   function renderNode(node: Account, depth = 0): React.ReactNode {
     const hasChildren = node.children?.length > 0;
     const open = expanded[node.accountId] ?? depth < 2;
@@ -90,6 +103,14 @@ export default function AccountingAccountsPage() {
           <span className="text-xs text-slate-400 w-20 text-left">
             {node.entryCount > 0 ? `${node.entryCount} حركة` : '—'}
           </span>
+          {canManage && (
+            <DeleteButton
+              screenKey="accountingAccounts"
+              className="text-rose-600 text-[11px] font-semibold mr-1"
+              confirmText={`حذف الحساب «${node.code} — ${node.name}» نهائيًا؟`}
+              onDelete={() => removeAccount(node)}
+            />
+          )}
         </div>
         {hasChildren && open && node.children.map((child) => renderNode(child, depth + 1))}
       </div>

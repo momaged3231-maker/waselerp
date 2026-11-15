@@ -3,6 +3,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
+import { assertDeletionAllowed } from '../../common/delete-guard';
 import { getSetting } from '../../common/settings';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
 
@@ -167,6 +168,7 @@ export class AttachmentsService {
   }
 
   async remove(id: number, user: AuthUser, branchId: number) {
+    await assertDeletionAllowed(this.db, 'attachments');
     await this.db.transaction(async (client) => {
       const row = await client.query<any>(
         `SELECT entity_type, entity_id, file_name FROM attachments

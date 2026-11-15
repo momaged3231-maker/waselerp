@@ -5,6 +5,7 @@ import AppShell from '@/components/AppShell';
 import { agentHealth, printKitchenTicket } from '@/lib/print';
 import { apiFetch, formatDate, formatMoney } from '@/lib/api';
 import { useSession } from '@/lib/session';
+import DeleteButton from '@/components/DeleteButton';
 
 type Tab = 'tables' | 'orders' | 'kitchen' | 'setup';
 
@@ -124,6 +125,24 @@ export default function RestaurantPage() {
       await apiFetch('/pos/modifiers', { method: 'POST', body: modifierForm });
       setModifierForm({ itemId: 0, name: '', price: 0, maxQuantity: 1 });
       await load();
+    } catch (e: any) { setError(e.message); }
+  }
+
+  async function removeHall(hallId: number) {
+    setError(''); setMessage('');
+    try {
+      await apiFetch(`/pos/halls/${hallId}`, { method: 'DELETE' });
+      await load();
+      setMessage('تم حذف القاعة');
+    } catch (e: any) { setError(e.message); }
+  }
+
+  async function removeModifier(modifierId: number) {
+    setError(''); setMessage('');
+    try {
+      await apiFetch(`/pos/modifiers/${modifierId}`, { method: 'DELETE' });
+      await load();
+      setMessage('تم حذف الإضافة');
     } catch (e: any) { setError(e.message); }
   }
 
@@ -401,7 +420,7 @@ export default function RestaurantPage() {
                       </td>
                       <td>
                         {canManage && (
-                          <button className="text-rose-500 text-xs" onClick={() => removeTable(row.tableId)}>حذف</button>
+                          <DeleteButton screenKey="pos" className="text-rose-500 text-xs" confirmText="حذف هذه المائدة؟" onDelete={() => removeTable(row.tableId)} />
                         )}
                       </td>
                     </tr>
@@ -590,7 +609,7 @@ export default function RestaurantPage() {
 
               <div className="table-wrap">
                 <table className="table">
-                  <thead><tr><th>القاعة</th><th>الكود</th><th>الموائد</th><th>مسموح لهم</th></tr></thead>
+                  <thead><tr><th>القاعة</th><th>الكود</th><th>الموائد</th><th>مسموح لهم</th><th></th></tr></thead>
                   <tbody>
                     {halls.map((hall) => (
                       <tr key={hall.hallId}>
@@ -598,10 +617,11 @@ export default function RestaurantPage() {
                         <td className="font-mono text-xs">{hall.code}</td>
                         <td className="text-xs">{hall.activeTables}</td>
                         <td className="text-xs">{hall.canWork ? 'كل المستخدمين' : 'محدود'}</td>
+                        <td><DeleteButton screenKey="pos" confirmText={`حذف القاعة «${hall.name}» مع كل موائدها؟`} onDelete={() => removeHall(hall.hallId)} /></td>
                       </tr>
                     ))}
                     {halls.length === 0 && (
-                      <tr><td colSpan={4} className="text-center text-slate-400 py-6">لا توجد قاعات</td></tr>
+                      <tr><td colSpan={5} className="text-center text-slate-400 py-6">لا توجد قاعات</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -685,7 +705,7 @@ export default function RestaurantPage() {
                 </button>
                 <div className="table-wrap">
                   <table className="table">
-                    <thead><tr><th>الصنف</th><th>الإضافة</th><th>السعر</th><th>أقصى كمية</th></tr></thead>
+                    <thead><tr><th>الصنف</th><th>الإضافة</th><th>السعر</th><th>أقصى كمية</th><th></th></tr></thead>
                     <tbody>
                       {modifiers.map((row) => (
                         <tr key={row.modifierId}>
@@ -693,10 +713,11 @@ export default function RestaurantPage() {
                           <td className="text-xs">{row.name}</td>
                           <td className="text-xs">{formatMoney(row.price)}</td>
                           <td className="text-xs">{Number(row.maxQuantity) || '—'}</td>
+                          <td><DeleteButton screenKey="pos" confirmText={`حذف الإضافة «${row.name}»؟`} onDelete={() => removeModifier(row.modifierId)} /></td>
                         </tr>
                       ))}
                       {modifiers.length === 0 && (
-                        <tr><td colSpan={4} className="text-center text-slate-400 py-6">لا توجد إضافات</td></tr>
+                        <tr><td colSpan={5} className="text-center text-slate-400 py-6">لا توجد إضافات</td></tr>
                       )}
                     </tbody>
                   </table>
@@ -729,7 +750,7 @@ export default function RestaurantPage() {
 
               <div className="table-wrap">
                 <table className="table">
-                  <thead><tr><th>القاعة</th><th>الكود</th><th>الموائد</th><th>مسموح لهم</th></tr></thead>
+                  <thead><tr><th>القاعة</th><th>الكود</th><th>الموائد</th><th>مسموح لهم</th><th></th></tr></thead>
                   <tbody>
                     {halls.map((hall) => (
                       <tr key={hall.hallId}>
@@ -737,10 +758,11 @@ export default function RestaurantPage() {
                         <td className="font-mono text-xs">{hall.code}</td>
                         <td className="text-xs">{hall.activeTables}</td>
                         <td className="text-xs">{hall.canWork ? 'كل المستخدمين' : 'محدود'}</td>
+                        <td><DeleteButton screenKey="pos" confirmText={`حذف القاعة «${hall.name}» مع كل موائدها؟`} onDelete={() => removeHall(hall.hallId)} /></td>
                       </tr>
                     ))}
                     {halls.length === 0 && (
-                      <tr><td colSpan={4} className="text-center text-slate-400 py-6">لا توجد قاعات</td></tr>
+                      <tr><td colSpan={5} className="text-center text-slate-400 py-6">لا توجد قاعات</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -824,7 +846,7 @@ export default function RestaurantPage() {
                 </button>
                 <div className="table-wrap">
                   <table className="table">
-                    <thead><tr><th>الصنف</th><th>الإضافة</th><th>السعر</th><th>أقصى كمية</th></tr></thead>
+                    <thead><tr><th>الصنف</th><th>الإضافة</th><th>السعر</th><th>أقصى كمية</th><th></th></tr></thead>
                     <tbody>
                       {modifiers.map((row) => (
                         <tr key={row.modifierId}>
@@ -832,10 +854,11 @@ export default function RestaurantPage() {
                           <td className="text-xs">{row.name}</td>
                           <td className="text-xs">{formatMoney(row.price)}</td>
                           <td className="text-xs">{Number(row.maxQuantity) || '—'}</td>
+                          <td><DeleteButton screenKey="pos" confirmText={`حذف الإضافة «${row.name}»؟`} onDelete={() => removeModifier(row.modifierId)} /></td>
                         </tr>
                       ))}
                       {modifiers.length === 0 && (
-                        <tr><td colSpan={4} className="text-center text-slate-400 py-6">لا توجد إضافات</td></tr>
+                        <tr><td colSpan={5} className="text-center text-slate-400 py-6">لا توجد إضافات</td></tr>
                       )}
                     </tbody>
                   </table>

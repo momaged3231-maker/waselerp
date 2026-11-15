@@ -6,6 +6,7 @@ import AttachmentsPanel from '@/components/AttachmentsPanel';
 import { apiFetch, formatDate, formatMoney } from '@/lib/api';
 import { downloadCsv } from '@/lib/export';
 import { useSession } from '@/lib/session';
+import DeleteButton from '@/components/DeleteButton';
 
 type Tab = 'employees' | 'departments' | 'components' | 'attendance' | 'permissions' | 'tiers' | 'leaves' | 'advances' | 'hrReports' | 'cards' | 'payroll';
 
@@ -203,7 +204,6 @@ export default function HrPage() {
   }
 
   async function deletePermission(id: number) {
-    if (!window.confirm('حذف هذا الإذن؟')) return;
     try {
       await apiFetch(`/hr/early-permissions/${id}`, { method: 'DELETE' });
       flash('تم حذف الإذن');
@@ -241,7 +241,6 @@ export default function HrPage() {
   }
 
   async function deleteTier(id: number) {
-    if (!window.confirm('حذف هذه الشريحة؟')) return;
     try {
       await apiFetch(`/hr/latency-tiers/${id}`, { method: 'DELETE' });
       flash('تم حذف الشريحة');
@@ -461,7 +460,6 @@ export default function HrPage() {
     }
   }
   async function removeDepartment(row: any) {
-    if (!window.confirm(`حذف إدارة ${row.name}؟`)) return;
     try {
       await apiFetch(`/hr/departments/${row.departmentId}`, { method: 'DELETE' });
       await loadDepartments();
@@ -497,7 +495,6 @@ export default function HrPage() {
     }
   }
   async function removeComponent(row: any) {
-    if (!window.confirm(`حذف المكوّن ${row.name}؟`)) return;
     try {
       await apiFetch(`/hr/components/${row.componentId}`, { method: 'DELETE' });
       await loadComponents();
@@ -810,7 +807,7 @@ export default function HrPage() {
                       <td className="font-semibold">{row.name}</td>
                       <td>{row.employeeCount ?? 0}</td>
                       <td>{row.isActive ? 'نشطة' : 'موقوفة'}</td>
-                      {manage && <td><button className="text-rose-600 text-xs font-semibold" onClick={() => removeDepartment(row)}>حذف</button></td>}
+                      {manage && <td><DeleteButton screenKey="hrDepartments" className="text-rose-600 text-xs font-semibold" confirmText={`حذف إدارة ${row.name}؟`} onDelete={() => removeDepartment(row)} /></td>}
                     </tr>
                   ))}
                   {departments.length === 0 && <tr><td colSpan={4} className="text-center text-slate-400 py-8">لا توجد إدارات</td></tr>}
@@ -850,7 +847,7 @@ export default function HrPage() {
                       {manage && (
                         <td className="whitespace-nowrap">
                           <button className="text-brand-600 text-xs font-semibold" onClick={() => setComponentForm({ ...row })}>تعديل</button>
-                          <button className="text-rose-600 text-xs font-semibold mr-3" onClick={() => removeComponent(row)}>حذف</button>
+                          <DeleteButton screenKey="hrComponents" className="text-rose-600 text-xs font-semibold mr-3" confirmText={`حذف المكوّن ${row.name}؟`} onDelete={() => removeComponent(row)} />
                         </td>
                       )}
                     </tr>
@@ -1182,7 +1179,7 @@ export default function HrPage() {
                             <>
                               <button className="text-emerald-700 text-xs font-semibold" onClick={() => setPermissionStatus(row.permissionId, 2)}>اعتماد</button>
                               <button className="text-rose-600 text-xs font-semibold mr-2" onClick={() => setPermissionStatus(row.permissionId, 3)}>رفض</button>
-                              <button className="text-rose-600 text-xs mr-2" onClick={() => deletePermission(row.permissionId)}>حذف</button>
+                              <DeleteButton screenKey="hrEarlyPermissions" className="text-rose-600 text-xs mr-2" confirmText="حذف هذا الإذن؟" onDelete={() => deletePermission(row.permissionId)} />
                             </>
                           )}
                         </td>
@@ -1243,7 +1240,7 @@ export default function HrPage() {
                       {manage && (
                         <td className="whitespace-nowrap">
                           <button className="text-brand-600 text-xs" onClick={() => setTierForm({ tierId: row.tierId, fromMinutes: row.fromMinutes, toMinutes: row.toMinutes ?? '', percent: Number(row.percent), sortOrder: row.sortOrder })}>تعديل</button>
-                          <button className="text-rose-600 text-xs mr-2" onClick={() => deleteTier(row.tierId)}>حذف</button>
+                          <DeleteButton screenKey="hrLatencyTiers" className="text-rose-600 text-xs mr-2" confirmText="حذف هذه الشريحة؟" onDelete={() => deleteTier(row.tierId)} />
                         </td>
                       )}
                     </tr>

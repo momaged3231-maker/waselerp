@@ -1,5 +1,6 @@
-import { Controller, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Body } from '@nestjs/common';
+import { BadRequestException, Controller, Delete, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Body } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
+import { assertDeletionAllowed, countReferencingRows } from '../../common/delete-guard';
 import { RequirePermissions, CurrentBranch, CurrentUser, AuthUser } from '../../common/security';
 
 // --------------------------------------------------------------------- //
@@ -87,6 +88,28 @@ export class CatalogLookupService {
     return { unitId: Number(row.unit_id) };
   }
 
+  async deleteCategory(id: number) {
+    await assertDeletionAllowed(this.db, 'categories');
+    const refs = await countReferencingRows(this.db, 'categories', 'category_id', id);
+    if (refs.length) {
+      const detail = refs.map((r) => `${r.table} (${r.count})`).join('، ');
+      throw new BadRequestException(`لا يمكن حذف الفئة — مستخدم فيها: ${detail}. انقل الأصناف أولًا أو عطل الفئة`);
+    }
+    await this.db.query('DELETE FROM categories WHERE category_id = $1::int', [id]);
+    return { deleted: true };
+  }
+
+  async deleteUnit(id: number) {
+    await assertDeletionAllowed(this.db, 'units');
+    const refs = await countReferencingRows(this.db, 'units', 'unit_id', id);
+    if (refs.length) {
+      const detail = refs.map((r) => `${r.table} (${r.count})`).join('، ');
+      throw new BadRequestException(`لا يمكن حذف الوحدة — مستخدمة في: ${detail}`);
+    }
+    await this.db.query('DELETE FROM units WHERE unit_id = $1::int', [id]);
+    return { deleted: true };
+  }
+
   async createWarehouse(body: any) {
     const row = await this.db.one<any>(
       `INSERT INTO warehouses (branch_id, code, name, name_en, address, phone, manager_name, is_default, is_active, notes)
@@ -150,6 +173,18 @@ export class CatalogController {
   @Post('warehouses')
   createWarehouse(@Body() body: any) {
     return this.service.createWarehouse(body);
+  }
+
+  @RequirePermissions('categories.manage')
+  @Delete('categories/:id')
+  deleteCategory(@Param('id', ParseIntPipe) id: number) {
+    return this.service.deleteCategory(id);
+  }
+
+  @RequirePermissions('units.manage')
+  @Delete('units/:id')
+  deleteUnit(@Param('id', ParseIntPipe) id: number) {
+    return this.service.deleteUnit(id);
   }
 }
 

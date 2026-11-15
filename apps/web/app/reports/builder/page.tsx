@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import { apiFetch, formatDate, formatMoney } from '@/lib/api';
 import { downloadBase64File } from '@/lib/export';
+import DeleteButton from '@/components/DeleteButton';
 
 type Dataset = { key: string; title: string; supportsDate: boolean; columns: { id: string; label: string; type: string }[] };
 type Definition = { definitionId: number; name: string; dataset: string; config: { columns?: string[]; groupBy?: string } };
@@ -87,7 +88,6 @@ export default function ReportBuilderPage() {
   }
 
   async function removeDefinition(id: number) {
-    if (!confirm('حذف تعريف التقرير؟')) return;
     try {
       await apiFetch(`/reports/builder/definitions/${id}`, { method: 'DELETE' });
       await loadDefs();
@@ -173,7 +173,7 @@ export default function ReportBuilderPage() {
                 <div key={d.definitionId} className="border rounded px-3 py-2 flex items-center gap-2">
                   <button className="text-blue-700 font-medium" onClick={() => applyDefinition(d)}>{d.name}</button>
                   <span className="text-xs text-slate-500">({d.dataset})</span>
-                  <button className="text-red-600 text-xs" onClick={() => removeDefinition(d.definitionId)}>حذف</button>
+                  <DeleteButton screenKey="reportDefinitions" className="text-red-600 text-xs" confirmText="حذف تعريف التقرير؟" onDelete={() => removeDefinition(d.definitionId)} />
                 </div>
               ))}
             </div>

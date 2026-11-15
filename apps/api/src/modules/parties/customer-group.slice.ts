@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Query, Delete } from '@nestjs/common';
+import { Body, Controller, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Query, Delete, BadRequestException } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
+import { assertDeletionAllowed, countReferencingRows } from '../../common/delete-guard';
 import { AuthUser, CurrentBranch, RequirePermissions } from '../../common/security';
 
 @Injectable()
@@ -30,6 +31,17 @@ export class CustomerGroupsService {
       [id, dto.name ?? null, dto.nameEn ?? null, dto.notes ?? null, dto.isActive ?? null],
     );
     return { groupId: id };
+  }
+
+  async remove(id: number) {
+    await assertDeletionAllowed(this.db, 'customerGroups');
+    const refs = await countReferencingRows(this.db, 'customer_groups', 'customer_group_id', id);
+    if (refs.length) {
+      const detail = refs.map((r) => `${r.table} (${r.count})`).join('، ');
+      throw new BadRequestException(`لا يمكن حذف المجموعة — مستخدمة في: ${detail}. عطّلها بدل الحذف`);
+    }
+    await this.db.query('DELETE FROM customer_groups WHERE customer_group_id = $1::int', [id]);
+    return { deleted: true };
   }
 }
 
@@ -66,6 +78,17 @@ export class CustomerClassificationsService {
     );
     return { classificationId: id };
   }
+
+  async remove(id: number) {
+    await assertDeletionAllowed(this.db, 'customerClassifications');
+    const refs = await countReferencingRows(this.db, 'customer_classifications', 'classification_id', id);
+    if (refs.length) {
+      const detail = refs.map((r) => `${r.table} (${r.count})`).join('، ');
+      throw new BadRequestException(`لا يمكن حذف الفئة — مستخدمة في: ${detail}. عطّلها بدل الحذف`);
+    }
+    await this.db.query('DELETE FROM customer_classifications WHERE classification_id = $1::int', [id]);
+    return { deleted: true };
+  }
 }
 
 @Controller('customer-groups')
@@ -77,6 +100,8 @@ export class CustomerGroupsController {
   @Post() create(@Body() dto: any) { return this.service.create(dto); }
   @RequirePermissions('parties.manage')
   @Put(':id') update(@Param('id', ParseIntPipe) id: number, @Body() dto: any) { return this.service.update(id, dto); }
+  @RequirePermissions('parties.manage')
+  @Delete(':id') remove(@Param('id', ParseIntPipe) id: number) { return this.service.remove(id); }
 }
 
 @Controller('customer-classifications')
@@ -88,6 +113,8 @@ export class CustomerClassificationsController {
   @Post() create(@Body() dto: any) { return this.service.create(dto); }
   @RequirePermissions('parties.manage')
   @Put(':id') update(@Param('id', ParseIntPipe) id: number, @Body() dto: any) { return this.service.update(id, dto); }
+  @RequirePermissions('parties.manage')
+  @Delete(':id') remove(@Param('id', ParseIntPipe) id: number) { return this.service.remove(id); }
 }
 
 @Module({

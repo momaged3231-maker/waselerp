@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api';
+import DeleteButton from '@/components/DeleteButton';
 
 const PAPER_SIZE_LABEL: Record<string, string> = {
   thermal80: 'حراري 80مم',
@@ -74,7 +75,6 @@ export default function PrintProfilesScreen() {
   }
 
   async function removePrintProfile(id: number) {
-    if (!window.confirm('حذف ملف الطباعة؟')) return;
     setError('');
     try {
       await apiFetch(`/settings/print-profiles/${id}`, { method: 'DELETE' });
@@ -215,7 +215,7 @@ export default function PrintProfilesScreen() {
                       <td>{p.isDefault ? '⭐' : ''}</td>
                       <td className="flex gap-1">
                         <button className="btn-soft text-xs" onClick={() => openPrintEditor(p)}>تعديل</button>
-                        <button className="btn-soft text-xs text-rose-600" onClick={() => removePrintProfile(p.profileId)}>حذف</button>
+                        <DeleteButton screenKey="printProfiles" className="btn-soft text-xs text-rose-600" confirmText="حذف ملف الطباعة؟" onDelete={() => removePrintProfile(p.profileId)} />
                       </td>
                     </tr>
                   ))}

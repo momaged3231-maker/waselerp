@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { apiFetch, formatMoney } from '@/lib/api';
 import { useSession } from '@/lib/session';
+import DeleteButton from '@/components/DeleteButton';
 
 const LIST_TYPES: Record<number, string> = {
   1: 'نقدي', 2: 'جملة', 3: 'نصف جملة',
@@ -223,10 +224,11 @@ export default function PricingScreen() {
                       <td className="text-xs">{row.priority}</td>
                       <td>
                         {canManage && (
-                          <button className="text-rose-500 text-xs"
-                            onClick={(e) => { e.stopPropagation(); removeList(Number(row.priceListId)); }}>
-                            حذف
-                          </button>
+                          <span onClick={(e) => e.stopPropagation()}>
+                            <DeleteButton screenKey="priceLists" className="text-rose-500 text-xs hover:underline"
+                              confirmText={`حذف قائمة «${row.name}» وكل أسعارها؟`}
+                              onDelete={() => removeList(Number(row.priceListId))} />
+                          </span>
                         )}
                       </td>
                     </tr>
@@ -336,7 +338,7 @@ export default function PricingScreen() {
                       </td>
                       <td>
                         {canManage && (
-                          <button className="text-rose-500 text-xs" onClick={() => removeCoupon(row.couponId)}>حذف</button>
+                          <DeleteButton screenKey="coupons" className="text-rose-500 text-xs hover:underline" confirmText="حذف هذا الكوبون نهائيًا؟" onDelete={() => removeCoupon(row.couponId)} />
                         )}
                       </td>
                     </tr>
@@ -414,7 +416,7 @@ export default function PricingScreen() {
                       <td className="text-xs">{Number(row.giftQuantity)}</td>
                       <td>
                         {canManage && (
-                          <button className="text-rose-500 text-xs" onClick={() => removeOffer(row.giftOfferId)}>حذف</button>
+                          <DeleteButton screenKey="giftOffers" className="text-rose-500 text-xs hover:underline" confirmText="حذف هذا العرض نهائيًا؟" onDelete={() => removeOffer(row.giftOfferId)} />
                         )}
                       </td>
                     </tr>

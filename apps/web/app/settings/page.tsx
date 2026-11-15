@@ -9,6 +9,7 @@ import {
 } from '@/components/screens/SettingsKit';
 import ServerSettingsScreen from '@/components/screens/ServerSettingsScreen';
 import RestaurantSettingsScreen from '@/components/screens/RestaurantSettingsScreen';
+import DeleteSettingsScreen from '@/components/screens/DeleteSettingsScreen';
 import UsersSettingsScreen from '@/components/screens/UsersSettingsScreen';
 import RolesSettingsScreen from '@/components/screens/RolesSettingsScreen';
 import BranchServiceChargeCard from '@/components/screens/BranchServiceChargeCard';
@@ -29,6 +30,7 @@ type SettingTab =
   | 'users'
   | 'roles'
   | 'system'
+  | 'delete'
   | 'advanced'
   | 'print-profiles'
   | 'eta'
@@ -47,6 +49,7 @@ const TABS: { key: SettingTab; label: string }[] = [
   { key: 'users', label: 'المستخدمون' },
   { key: 'roles', label: 'الأدوار والصلاحيات' },
   { key: 'system', label: 'إعدادات النظام' },
+  { key: 'delete', label: 'الحذف' },
   { key: 'advanced', label: 'الإعدادات المتقدمة' },
   { key: 'print-profiles', label: 'ملفات الطباعة (المحطات)' },
   { key: 'eta', label: 'الفاتورة الإلكترونية (مصر)' },
@@ -84,6 +87,8 @@ function SettingsInner() {
         return <RolesSettingsScreen />;
       case 'system':
         return <AllSettingsRaw />;
+      case 'delete':
+        return <DeleteSettingsScreen />;
       case 'advanced':
         return (
           <div className="space-y-4 max-w-5xl">

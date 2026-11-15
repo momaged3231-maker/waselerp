@@ -4,6 +4,7 @@ import {
 } from '@nestjs/common';
 import { PoolClient } from 'pg';
 import { DatabaseService } from '../../common/database/database.service';
+import { assertDeletionAllowed } from '../../common/delete-guard';
 import { applyMovement, getWarehouseCost, toBaseUnits } from '../../common/stock';
 import { postJournal, resolveMapping } from '../../common/posting';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
@@ -487,6 +488,7 @@ export class StockCountService {
 
   /** Deletes a draft document. An approved one can never be deleted. */
   async remove(id: number) {
+    await assertDeletionAllowed(this.db, 'stockCounts');
     const header = await this.draftHeader(id);
     await this.db.query('DELETE FROM stock_counts WHERE stock_count_id = $1::bigint', [id]);
     return { stockCountId: id, deleted: true, warehouseId: header.warehouse_id };

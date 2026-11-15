@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import AttachmentsPanel from '@/components/AttachmentsPanel';
 import { apiFetch, formatMoney } from '@/lib/api';
 import { useSession } from '@/lib/session';
+import DeleteButton from '@/components/DeleteButton';
 
 const empty = { partyId: undefined as any, code: '', name: '', partyType: 1, phone: '', mobile: '', address: '', taxNumber: '', creditLimit: 0, discountPct: 0, isActive: true, priceListId: null as any, customerGroupId: null as any, classificationId: null as any, salesRepId: null as any };
 
@@ -51,6 +52,17 @@ export default function PartiesScreen({ fixedType }: { fixedType?: number }) {
     }
   }
 
+  async function remove(row: any) {
+    setError('');
+    try {
+      await apiFetch(`/parties/${row.partyId}`, { method: 'DELETE' });
+      setForm({ ...empty, partyType: fixedType ?? 1 });
+      load();
+    } catch (err: any) {
+      setError(err?.message ?? 'تعذر الحذف');
+    }
+  }
+
   return (
     <div className="grid lg:grid-cols-3 gap-4">
       <div className="card lg:col-span-2">
@@ -92,6 +104,7 @@ export default function PartiesScreen({ fixedType }: { fixedType?: number }) {
                   {can('parties.manage') && (
                     <td>
                       <button className="text-brand-600 text-xs font-semibold" onClick={() => setForm({ ...empty, ...row, partyType: row.partyType ?? fixedType ?? 1, code: row.code ?? '', phone: row.phone ?? '', mobile: row.mobile ?? '', address: row.address ?? '', taxNumber: row.taxNumber ?? '' })}>تعديل</button>
+                      <DeleteButton screenKey="parties" className="text-rose-600 text-xs font-semibold mr-2" confirmText={`حذف «${row.name}» نهائيًا؟`} onDelete={() => remove(row)} />
                     </td>
                   )}
                 </tr>

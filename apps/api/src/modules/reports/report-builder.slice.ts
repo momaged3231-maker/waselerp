@@ -1,5 +1,6 @@
 import { BadRequestException, Body, Controller, Delete, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
+import { assertDeletionAllowed } from '../../common/delete-guard';
 import { buildXlsx, type XlsxSheet } from '../../common/xlsx';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
 
@@ -275,6 +276,7 @@ export class ReportBuilderService {
   }
 
   async removeDefinition(id: number) {
+    await assertDeletionAllowed(this.db, 'reportDefinitions');
     await this.db.query('DELETE FROM report_definitions WHERE definition_id = $1::int', [id]);
     return { ok: true };
   }

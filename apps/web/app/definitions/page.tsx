@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import { apiFetch } from '@/lib/api';
+import DeleteButton from '@/components/DeleteButton';
 import Link from 'next/link';
 import ItemsScreen from '@/components/screens/ItemsScreen';
 import PartiesScreen from '@/components/screens/PartiesScreen';
@@ -49,19 +50,28 @@ function MissingCard({ title, reason, alt }: { title: string; reason: string; al
   );
 }
 
-function DataTable({ columns, rows, empty }: { columns: [string, string][]; rows: any[]; empty?: string }) {
+function DataTable({ columns, rows, empty, rowAction }: { columns: [string, string][]; rows: any[]; empty?: string; rowAction?: { screenKey: string; confirmText: (row: any) => string; onDelete: (row: any) => void } }) {
   return (
     <div className="table-wrap">
       <table className="table">
-        <thead><tr>{columns.map(([k, label]) => <th key={k}>{label}</th>)}</tr></thead>
+        <thead><tr>{columns.map(([k, label]) => <th key={k}>{label}</th>)}{rowAction && <th>إجراءات</th>}</tr></thead>
         <tbody>
           {rows.map((row, i) => (
             <tr key={row.id ?? row._tmp ?? i}>
               {columns.map(([k]) => <td key={k}>{row[k] ?? '—'}</td>)}
+              {rowAction && (
+                <td>
+                  <DeleteButton
+                    screenKey={rowAction.screenKey}
+                    confirmText={rowAction.confirmText(row)}
+                    onDelete={() => rowAction.onDelete(row)}
+                  />
+                </td>
+              )}
             </tr>
           ))}
           {rows.length === 0 && (
-            <tr><td colSpan={columns.length} className="text-center text-slate-400 py-6">{empty ?? 'لا توجد بيانات'}</td></tr>
+            <tr><td colSpan={columns.length + (rowAction ? 1 : 0)} className="text-center text-slate-400 py-6">{empty ?? 'لا توجد بيانات'}</td></tr>
           )}
         </tbody>
       </table>
@@ -128,6 +138,19 @@ export default function DefinitionsPage() {
     }
   }
 
+  async function remove(path: string, label: string) {
+    setError('');
+    setMessage('');
+    try {
+      await apiFetch(path, { method: 'DELETE' });
+      setMessage(`تم حذف «${label}»`);
+      setForm({});
+      await load();
+    } catch (e: any) {
+      setError(e?.message ?? 'تعذر الحذف');
+    }
+  }
+
   const renderContent = () => {
     if (error) return <div className="card p-4 border-rose-200 bg-rose-50 text-rose-700 text-sm">{error}</div>;
     if (message) return <div className="card p-4 border-emerald-200 bg-emerald-50 text-emerald-700 text-sm">{message}</div>;
@@ -173,7 +196,8 @@ export default function DefinitionsPage() {
             <div className="card lg:col-span-2">
               <div className="card-title"><span>الوحدات ({units.length})</span></div>
               <DataTable columns={[['code', 'الكود'], ['name', 'الاسم'], ['factor', 'المعامل']]}
-                rows={units} empty="لا توجد وحدات" />
+                rows={units} empty="لا توجد وحدات"
+                rowAction={{ screenKey: 'units', confirmText: (r) => `حذف الوحدة «${r.name}» نهائيًا؟`, onDelete: (r) => remove(`/catalog/units/${r.unitId}`, r.name) }} />
             </div>
             <div className="card p-5 space-y-3 h-fit">
               <div className="font-bold">وحدة جديدة</div>
@@ -191,7 +215,8 @@ export default function DefinitionsPage() {
             <div className="card lg:col-span-2">
               <div className="card-title"><span>فئات الأصناف ({categories.length})</span></div>
               <DataTable columns={[['code', 'الكود'], ['name', 'الاسم'], ['isActive', 'نشط']]}
-                rows={categories} empty="لا توجد فئات" />
+                rows={categories} empty="لا توجد فئات"
+                rowAction={{ screenKey: 'categories', confirmText: (r) => `حذف الفئة «${r.name}» نهائيًا؟`, onDelete: (r) => remove(`/catalog/categories/${r.categoryId}`, r.name) }} />
             </div>
             <div className="card p-5 space-y-3 h-fit">
               <div className="font-bold">{form.id ? 'تعديل الفئة' : 'فئة جديدة'}</div>
@@ -207,7 +232,7 @@ export default function DefinitionsPage() {
                   <button key={c.categoryId} className="btn-soft text-[11px] py-0.5" onClick={() => setForm({ id: c.categoryId, code: c.code, name: c.name, isActive: c.isActive })}>{c.name}</button>
                 ))}
               </div>
-              <div className="text-[11px] text-slate-400">لا يوجد حذف من الواجهة (حذف الفئات غير مسموح بالباك إند حفاظًا على سلامة الأصناف).</div>
+              <div className="text-[11px] text-slate-400">الحذف مباشر من الجدول (زر «حذف») وكمان من الإعدادات تقدر توقفه لكل شاشة — والباك-إند بيرفض الحذف لو كانت الفئة مستخدمة في أصناف أو قيود.</div>
             </div>
           </div>
         );
@@ -218,7 +243,8 @@ export default function DefinitionsPage() {
             <div className="card lg:col-span-2">
               <div className="card-title"><span>فئات مخصصة للعملاء ({classifications.length})</span></div>
               <DataTable columns={[['name', 'الاسم'], ['discountPct', 'خصم %'], ['creditLimit', 'حد ائتمان'], ['graceDays', 'فترة سماح']]}
-                rows={classifications} empty="لا توجد فئات" />
+                rows={classifications} empty="لا توجد فئات"
+                rowAction={{ screenKey: 'customerClassifications', confirmText: (r) => `حذف «${r.name}» نهائيًا؟`, onDelete: (r) => remove(`/customer-classifications/${r.id ?? r.classificationId}`, r.name) }} />
             </div>
             <div className="card p-5 space-y-3 h-fit">
               <div className="font-bold">{form.id ? 'تعديل الفئة' : 'فئة جديدة'}</div>

@@ -5,6 +5,7 @@ import AppShell from '@/components/AppShell';
 import AccountingNav from '@/components/AccountingNav';
 import { apiFetch, formatDate, formatMoney } from '@/lib/api';
 import { useSession } from '@/lib/session';
+import DeleteButton from '@/components/DeleteButton';
 
 type Line = {
   accountId: number; debit: number; credit: number; description?: string;
@@ -215,7 +216,7 @@ export default function JournalsPage() {
                       </td>
                       <td>
                         {canManage && (
-                          <button className="text-rose-500 text-xs" onClick={() => removeRecurring(row.recurringId)}>حذف</button>
+                          <DeleteButton screenKey="accountingRecurring" className="text-rose-500 text-xs" confirmText="حذف هذا القيد المتكرر؟" onDelete={() => removeRecurring(row.recurringId)} />
                         )}
                       </td>
                     </tr>

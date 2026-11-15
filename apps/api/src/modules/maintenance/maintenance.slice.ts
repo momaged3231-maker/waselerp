@@ -3,6 +3,7 @@ import {
   Param, ParseIntPipe, Post, Put, Query,
 } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
+import { assertDeletionAllowed } from '../../common/delete-guard';
 import { applyMovement, getWarehouseCost } from '../../common/stock';
 import {
   assertPeriodOpen, cashAccountGlId, postJournal, requireMapping, voidJournal,
@@ -81,6 +82,7 @@ export class MaintenanceService {
   }
 
   async deleteProduct(id: number) {
+    await assertDeletionAllowed(this.db, 'maintenanceProducts');
     const used = await this.db.one<{ count: string }>(
       'SELECT COUNT(*) AS count FROM maintenance_tickets WHERE product_id = $1', [id],
     );
@@ -125,6 +127,7 @@ export class MaintenanceService {
   }
 
   async deleteModel(id: number) {
+    await assertDeletionAllowed(this.db, 'maintenanceProducts');
     const used = await this.db.one<{ count: string }>(
       'SELECT COUNT(*) AS count FROM maintenance_tickets WHERE model_id = $1', [id],
     );
@@ -167,6 +170,7 @@ export class MaintenanceService {
   }
 
   async deleteFaultCategory(id: number) {
+    await assertDeletionAllowed(this.db, 'maintenanceProducts');
     await this.db.query('DELETE FROM fault_categories WHERE fault_category_id = $1', [id]);
     return { deleted: true };
   }
@@ -209,6 +213,7 @@ export class MaintenanceService {
   }
 
   async deleteFaultSubcategory(id: number) {
+    await assertDeletionAllowed(this.db, 'maintenanceProducts');
     await this.db.query('DELETE FROM fault_subcategories WHERE fault_subcategory_id = $1', [id]);
     return { deleted: true };
   }
@@ -507,6 +512,7 @@ export class MaintenanceService {
   }
 
   async deleteTicket(id: number, user: AuthUser, branchId: number) {
+    await assertDeletionAllowed(this.db, 'maintenanceTickets');
     return this.db.transaction(async (client) => {
       const current = await client.query(
         'SELECT branch_id, delivery_status, advance_journal_id, payment_journal_id FROM maintenance_tickets WHERE ticket_id = $1::bigint',

@@ -30,6 +30,7 @@ import { MaintenanceModule } from './modules/maintenance/maintenance.slice';
 import { CrmModule } from './modules/crm/crm.slice';
 import { ChecksModule } from './modules/checks/checks.slice';
 import { PrintProfilesModule } from './modules/settings/print-profiles.slice';
+import { DeleteTogglesModule } from './modules/settings/delete-toggles.slice';
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import { PrintProfilesModule } from './modules/settings/print-profiles.slice';
     CrmModule,
     ChecksModule,
     PrintProfilesModule,
+    DeleteTogglesModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

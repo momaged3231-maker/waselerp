@@ -4,6 +4,7 @@ import {
 } from '@nestjs/common';
 import { PoolClient } from 'pg';
 import { DatabaseService } from '../../common/database/database.service';
+import { assertDeletionAllowed } from '../../common/delete-guard';
 import { applyMovement, getWarehouseCost, toBaseUnits } from '../../common/stock';
 import { postJournal, resolveMapping } from '../../common/posting';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
@@ -285,6 +286,7 @@ export class StockVoucherService {
 
   /** Removes a line from a draft voucher. */
   async removeLine(id: number, lineId: number) {
+    await assertDeletionAllowed(this.db, 'stockVouchers');
     await this.draftHeader(id);
     await this.db.query(
       'DELETE FROM stock_voucher_lines WHERE stock_voucher_line_id = $1::bigint AND stock_voucher_id = $2::bigint',
@@ -406,6 +408,7 @@ export class StockVoucherService {
 
   /** Deletes a draft voucher. An approved one can never be deleted. */
   async remove(id: number) {
+    await assertDeletionAllowed(this.db, 'stockVouchers');
     const header = await this.draftHeader(id);
     await this.db.query('DELETE FROM stock_vouchers WHERE stock_voucher_id = $1::bigint', [id]);
     return { stockVoucherId: id, deleted: true, warehouseId: header.warehouse_id };

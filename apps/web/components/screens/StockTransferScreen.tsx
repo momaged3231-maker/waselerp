@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { apiFetch, formatDate, formatMoney } from '@/lib/api';
 import { useSession } from '@/lib/session';
+import DeleteButton from '@/components/DeleteButton';
 
 const STATUS: Record<number, string> = {
   1: 'مسودة', 2: 'أذن صادر تم إنشاؤه', 3: 'أذن وارد تم إنشاؤه', 4: 'مكتمل', 5: 'ملغي',
@@ -131,7 +132,7 @@ export default function StockTransferScreen() {
   }
 
   async function remove() {
-    if (!selected || !confirm('تأكيد حذف التحويل؟')) return;
+    if (!selected) return;
     setError('');
     try {
       await apiFetch(`/stock-transfers/${selected.header.stockTransferId}`, { method: 'DELETE' });
@@ -326,7 +327,7 @@ export default function StockTransferScreen() {
                     </button>
                   )}
                   {Number(selected.header.status) === 1 && (
-                    <button className="btn-soft" onClick={remove}>حذف التحويل</button>
+                    <DeleteButton screenKey="stockTransfers" className="btn-soft" confirmText="حذف هذا التحويل؟" label="حذف التحويل" onDelete={remove} />
                   )}
                   {Number(selected.header.status) === 4 && (
                     <span className="text-xs text-slate-500">

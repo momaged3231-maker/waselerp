@@ -3,6 +3,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
+import { assertDeletionAllowed } from '../../common/delete-guard';
 import { resolvePrices } from '../../common/pricing';
 import { CurrentBranch, CurrentUser, AuthUser, RequirePermissions } from '../../common/security';
 import { LiveEventsService } from '../events/live-events.service';
@@ -214,6 +215,7 @@ export class ItemsService {
   }
 
   async remove(id: number) {
+    await assertDeletionAllowed(this.db, 'items');
     await this.db.query('UPDATE items SET is_active = false, version = version + 1 WHERE item_id = $1', [id]);
     return { itemId: id };
   }

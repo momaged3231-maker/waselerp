@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { apiFetch, formatDate, formatMoney } from '@/lib/api';
 import { useSession } from '@/lib/session';
+import DeleteButton from '@/components/DeleteButton';
 
 const TYPE: Record<number, string> = { 1: 'وارد', 2: 'صادر', 3: 'تالف', 4: 'افتتاحي' };
 const STATUS: Record<number, string> = { 1: 'مسودة', 2: 'معتمد', 3: 'ملغى' };
@@ -105,7 +106,7 @@ export default function StockVoucherScreen() {
   }
 
   async function remove() {
-    if (!selected || !confirm('تأكيد حذف الأذن؟')) return;
+    if (!selected) return;
     setError('');
     try {
       await apiFetch(`/stock-vouchers/${selected.header.stockVoucherId}`, { method: 'DELETE' });
@@ -287,7 +288,7 @@ export default function StockVoucherScreen() {
                   {Number(selected.header.status) === 1 && (
                     <>
                       <button className="btn-primary" onClick={approve}>اعتماد وتطبيق على المخزون</button>
-                      <button className="btn-soft" onClick={remove}>حذف الأذن</button>
+                      <DeleteButton screenKey="stockVouchers" className="btn-soft" confirmText="حذف هذا الأذن؟" label="حذف الأذن" onDelete={remove} />
                     </>
                   )}
                   {Number(selected.header.status) === 2 && (

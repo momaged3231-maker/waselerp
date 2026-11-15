@@ -3,6 +3,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
+import { assertDeletionAllowed } from '../../common/delete-guard';
 import { PoolClient } from 'pg';
 import { postJournal, requireMapping, resolveMapping, voidJournal, JournalLineInput } from '../../common/posting';
 import {
@@ -132,6 +133,7 @@ export class AccountingService {
   }
 
   async deleteAccount(id: number) {
+    await assertDeletionAllowed(this.db, 'accountingAccounts');
     const used = await this.db.one<{ c: number }>(
       'SELECT count(*)::int AS c FROM gl_entries WHERE account_id = $1::int',
       [id],
@@ -1143,6 +1145,7 @@ export class AccountingService {
   }
 
   async deleteRecurring(id: number) {
+    await assertDeletionAllowed(this.db, 'accountingRecurring');
     await this.db.query('DELETE FROM recurring_journals WHERE recurring_id = $1::int', [id]);
     return { recurringId: id, deleted: true };
   }

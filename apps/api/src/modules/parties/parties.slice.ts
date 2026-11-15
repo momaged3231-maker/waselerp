@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Query, BadRequestException } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Query, BadRequestException } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
+import { assertDeletionAllowed, countReferencingRows } from '../../common/delete-guard';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
 import { postJournal, requireMapping } from '../../common/posting';
 import { parseImportFile, buildTemplateXlsx, applyHeaderAliases, PARTY_IMPORT_ALIASES } from '../../common/spreadsheet';
@@ -389,6 +390,23 @@ export class PartiesService {
       return { saved: saved.length, skippedExisting, date, arTotal, apTotal, journalId };
     });
   }
+
+  /** Hard delete a party — refused while any FK anywhere points at it. */
+  async deleteParty(id: number, user: AuthUser, branchId: number) {
+    await assertDeletionAllowed(this.db, 'parties');
+    const refs = await countReferencingRows(this.db, 'parties', 'party_id', id);
+    if (refs.length) {
+      const detail = refs.map((r) => `${r.table} (${r.count})`).join('، ');
+      throw new BadRequestException(`لا يمكن حذف هذا الطرف — عليه حركات: ${detail}. عطّله بدل الحذف`);
+    }
+    await this.db.query('DELETE FROM parties WHERE party_id = $1::int', [id]);
+    await this.db.query(
+      `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
+       VALUES ($1::int, $2::int, 'party.delete', 'party', $3::int, $4::text)`,
+      [user.userId, branchId, id, `حذف طرف #${id}`],
+    );
+    return { deleted: true };
+  }
 }
 
 @Controller('parties')
@@ -453,6 +471,12 @@ export class PartiesController {
   @Put(':id')
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: PartyDto) {
     return this.service.update(id, dto);
+  }
+
+  @RequirePermissions('parties.manage')
+  @Delete(':id')
+  remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
+    return this.service.deleteParty(id, user, branchId);
   }
 }
 

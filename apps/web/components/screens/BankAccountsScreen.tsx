@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { apiFetch, formatMoney } from '@/lib/api';
 import { useSession } from '@/lib/session';
+import DeleteButton from '@/components/DeleteButton';
 
 const TYPES: Record<number, string> = { 1: 'درج نقدي', 2: 'حساب بنكي', 3: 'بطاقة', 4: 'محفظة إلكترونية' };
 
@@ -69,7 +70,6 @@ export default function BankAccountsScreen() {
   }
 
   async function remove(row: any) {
-    if (!window.confirm(`حذف «${row.name}»؟ لا يمكن الحذف إذا كانت عليه حركات.`)) return;
     setError('');
     try {
       await apiFetch(`/treasury/accounts/${row.cashAccountId}`, { method: 'DELETE' });
@@ -105,7 +105,7 @@ export default function BankAccountsScreen() {
                         currencyCode: row.currencyCode ?? 'EGP', openingBalance: '', isActive: row.isActive !== false,
                         notes: row.notes ?? '', glAccountId: row.glAccountId ? String(row.glAccountId) : '',
                       })}>تعديل</button>
-                      <button className="text-rose-600 text-xs font-semibold mr-2" onClick={() => remove(row)}>حذف</button>
+                      <DeleteButton screenKey="bankAccounts" className="text-rose-600 text-xs font-semibold mr-2" confirmText={`حذف «${row.name}»؟ لا يمكن الحذف إذا كانت عليه حركات.`} onDelete={() => remove(row)} />
                     </td>
                   )}
                 </tr>

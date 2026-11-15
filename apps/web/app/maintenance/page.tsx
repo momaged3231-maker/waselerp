@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import AppShell from '@/components/AppShell';
+import DeleteButton from '@/components/DeleteButton';
 import AttachmentsPanel from '@/components/AttachmentsPanel';
 import { apiFetch, formatMoney } from '@/lib/api';
 import { useSession } from '@/lib/session';
@@ -277,7 +278,6 @@ export default function MaintenancePage() {
   }
 
   async function removeTicket(ticket: Ticket) {
-    if (!window.confirm(`حذف الإذن ${ticket.ticketNo}؟`)) return;
     try {
       await apiFetch(`/maintenance/tickets/${ticket.ticketId}`, { method: 'DELETE' });
       setMessage('تم حذف الإذن');
@@ -533,7 +533,7 @@ export default function MaintenancePage() {
                             <button className="btn-soft text-[11px] py-1" onClick={() => openInspect(t)}>فحص</button>
                             <button className="btn-soft text-[11px] py-1" onClick={() => openDeliver(t)}>تسليم</button>
                             <button className="btn-soft text-[11px] py-1" onClick={() => startEdit(t)}>تعديل</button>
-                            <button className="text-rose-500 text-[11px] py-1" onClick={() => removeTicket(t)}>حذف</button>
+                            <DeleteButton screenKey="maintenanceTickets" className="text-rose-500 text-[11px] py-1" confirmText="حذف هذا التذكر؟" onDelete={() => removeTicket(t)} />
                           </div>
                         )}
                       </td>
@@ -779,7 +779,7 @@ export default function MaintenancePage() {
               {products.map((p) => (
                 <div key={p.productId} className="flex items-center justify-between gap-2 text-sm rounded-xl border border-slate-200 px-3 py-1.5">
                   <span>{p.name} <span className="text-xs text-slate-400">({p.modelCount ?? 0} موديل)</span></span>
-                  <button className="text-rose-500 text-xs" onClick={async () => { try { await apiFetch(`/maintenance/products/${p.productId}`, { method: 'DELETE' }); await loadReference(); } catch (err: any) { setError(err?.message); } }}>حذف</button>
+                  <DeleteButton screenKey="maintenanceProducts" className="text-rose-500 text-xs" confirmText={`حذف المنتج «${p.name}»؟`} onDelete={async () => { try { await apiFetch(`/maintenance/products/${p.productId}`, { method: 'DELETE' }); await loadReference(); } catch (err: any) { setError(err?.message); } } } />
                 </div>
               ))}
             </div>
@@ -802,7 +802,7 @@ export default function MaintenancePage() {
               {models.slice(0, 60).map((m) => (
                 <div key={m.modelId} className="flex items-center justify-between gap-2 text-sm rounded-xl border border-slate-200 px-3 py-1.5">
                   <span>{products.find((p) => p.productId === m.productId)?.name} — {m.name}</span>
-                  <button className="text-rose-500 text-xs" onClick={async () => { try { await apiFetch(`/maintenance/models/${m.modelId}`, { method: 'DELETE' }); await loadReference(); } catch (err: any) { setError(err?.message); } }}>حذف</button>
+                  <DeleteButton screenKey="maintenanceProducts" className="text-rose-500 text-xs" confirmText={`حذف الموديل «${m.name}»؟`} onDelete={async () => { try { await apiFetch(`/maintenance/models/${m.modelId}`, { method: 'DELETE' }); await loadReference(); } catch (err: any) { setError(err?.message); } } } />
                 </div>
               ))}
             </div>
@@ -821,7 +821,7 @@ export default function MaintenancePage() {
               {faultCategories.map((c) => (
                 <div key={c.categoryId} className="flex items-center justify-between gap-2 text-sm rounded-xl border border-slate-200 px-3 py-1.5">
                   <span>{c.name} <span className="text-xs text-slate-400">({c.subcategoryCount ?? 0})</span></span>
-                  <button className="text-rose-500 text-xs" onClick={async () => { try { await apiFetch(`/maintenance/fault-categories/${c.categoryId}`, { method: 'DELETE' }); await loadReference(); } catch (err: any) { setError(err?.message); } }}>حذف</button>
+                  <DeleteButton screenKey="maintenanceProducts" className="text-rose-500 text-xs" confirmText={`حذف الفئة «${c.name}»؟`} onDelete={async () => { try { await apiFetch(`/maintenance/fault-categories/${c.categoryId}`, { method: 'DELETE' }); await loadReference(); } catch (err: any) { setError(err?.message); } } } />
                 </div>
               ))}
             </div>
@@ -844,7 +844,7 @@ export default function MaintenancePage() {
               {faultSubcategories.slice(0, 80).map((s) => (
                 <div key={s.subcategoryId} className="flex items-center justify-between gap-2 text-sm rounded-xl border border-slate-200 px-3 py-1.5">
                   <span>{faultCategories.find((c) => c.categoryId === s.categoryId)?.name} — {s.name}</span>
-                  <button className="text-rose-500 text-xs" onClick={async () => { try { await apiFetch(`/maintenance/fault-subcategories/${s.subcategoryId}`, { method: 'DELETE' }); await loadReference(); } catch (err: any) { setError(err?.message); } }}>حذف</button>
+                  <DeleteButton screenKey="maintenanceProducts" className="text-rose-500 text-xs" confirmText={`حذف الفرع «${s.name}»؟`} onDelete={async () => { try { await apiFetch(`/maintenance/fault-subcategories/${s.subcategoryId}`, { method: 'DELETE' }); await loadReference(); } catch (err: any) { setError(err?.message); } } } />
                 </div>
               ))}
             </div>

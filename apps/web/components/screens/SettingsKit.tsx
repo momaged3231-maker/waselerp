@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useCallback, useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '@/lib/api';
+import { invalidateDeleteTogglesCache } from '@/lib/delete-toggles';
 
 /**
  * Settings kit — shared context + declarative field rendering for the «الإعدادات» hub.
@@ -294,6 +295,7 @@ export const ARABIC_SETTING_LABELS: Record<string, string> = {
   CompanyAddress: 'عنوان الشركة',
   TaxNumber: 'الرقم الضريبي للشركة',
   InvoiceFooter: 'تذييل الفاتورة',
+  DeleteEnabled: 'تفعيل الحذف على النظام كله (تبويب «الحذف»)',
 };
 
 // ------------------------------------------------------------------ //
@@ -346,6 +348,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       const fresh = await apiFetch<Record<string, string>>('/admin/settings', { method: 'PUT', body: map });
       setMap(fresh ?? map);
       setSavedAt(Date.now());
+      invalidateDeleteTogglesCache();
     } catch (e: any) {
       setError(e?.message ?? 'تعذر حفظ الإعدادات');
     }
