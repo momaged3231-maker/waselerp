@@ -20,6 +20,7 @@ export default function PrintAgentPanel() {
   const [testMsg, setTestMsg] = useState('');
   const [cloudAgents, setCloudAgents] = useState<any[]>([]);
   const [cloudMsg, setCloudMsg] = useState('');
+  const [deviceKey, setDeviceKey] = useState('local');
 
   async function refresh() {
     setError('');
@@ -232,65 +233,71 @@ export default function PrintAgentPanel() {
       </div>
 
       <div className="mt-4">
-        <label className="label">طابعات Windows المكتشفة</label>
-        <div className="text-[11px] text-slate-500 mb-2">يتم كشفها تلقائيًا من جهاز Windows (USB/شبكة/مشاركة). اضغط «اختبار طباعة» للتأكد من عمل الطابعة.</div>
-        <div className="space-y-2">
-          {printers.length === 0 && (
-            <div className="text-xs text-slate-400">لا توجد طابعات مكتشفة (أو الوكيل غير متصل)</div>
-          )}
-          {printers.map((p: any, index: number) => (
-            <div key={`win-${p.name}-${index}`} className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm">
-              <span className="min-w-0 flex-1">
-                <b>{p.name}</b>
-                {p.driver && <span className="text-slate-400 text-xs"> — {p.driver}</span>}
-                {p.port && <span className="text-slate-400 text-xs"> ({p.port})</span>}
-              </span>
-              <button
-                type="button"
-                className="btn-soft text-xs"
-                disabled={!online || testingKey === `win-${index}`}
-                onClick={() => runTest({ type: 'windows', name: p.name }, `win-${index}`)}
-              >
-                {testingKey === `win-${index}` ? 'جارٍ…' : 'اختبار طباعة'}
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="mt-4">
-        <label className="label">وكلاء الطباعة (cross-location / cloud)</label>
-        <div className="text-[11px] text-slate-500 mb-2">وكلاء مُسجّلون في السيرفر (من أجهزة كاشير أخرى). اطبع على طابعة في موقع آخر عبر السحابة (queue).</div>
-        <div className="space-y-2">
-          {cloudAgents.length === 0 && (
-            <div className="text-xs text-slate-400">لا يوجد وكلاء مُسجّلون (أو غير متصل بالسيرفر)</div>
-          )}
+        <label className="label">اختر الجهاز / الوكيل ثم الطابعة</label>
+        <div className="text-[11px] text-slate-500 mb-2">اختر الجهاز أولاً (هذا الجهاز أو وكيل سحابي من جهاز كاشير آخر)، ثم اختر الطابعة واختبرها.</div>
+        <select
+          className="input"
+          value={deviceKey}
+          onChange={(e) => setDeviceKey(e.target.value)}
+        >
+          <option value="local">هذا الجهاز (طابعات Windows المكتشفة · {printers.length})</option>
           {cloudAgents.map((a: any) => (
-            <div key={a.agentId} className="rounded-xl border border-slate-200 px-3 py-2 text-sm">
-              <div className="flex items-center justify-between gap-2">
-                <span>
-                  <b>{a.machineName}</b>
-                  <span className={`ml-2 badge ${a.isOnline ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
-                    {a.isOnline ? 'متصل' : 'غير متصل'}
+            <option key={a.agentId} value={`cloud-${a.agentId}`}>
+              {a.machineName} — {a.isOnline ? 'متصل' : 'غير متصل'} · {(a.printers ?? []).length} طابعة
+            </option>
+          ))}
+        </select>
+        <div className="space-y-2 mt-2">
+          {deviceKey === 'local' ? (
+            <>
+              {printers.length === 0 && (
+                <div className="text-xs text-slate-400">لا توجد طابعات مكتشفة (أو الوكيل غير متصل)</div>
+              )}
+              {printers.map((p: any, index: number) => (
+                <div key={`win-${p.name}-${index}`} className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                  <span className="min-w-0 flex-1">
+                    <b>{p.name}</b>
+                    {p.driver && <span className="text-slate-400 text-xs"> — {p.driver}</span>}
+                    {p.port && <span className="text-slate-400 text-xs"> ({p.port})</span>}
                   </span>
-                  <span className="text-slate-400 text-xs ml-2">({(a.printers ?? []).length} طابعة)</span>
-                </span>
-              </div>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {(a.printers ?? []).map((p: any, idx: number) => (
                   <button
-                    key={`${a.agentId}-${p.name}-${idx}`}
                     type="button"
                     className="btn-soft text-xs"
-                    disabled={testingKey === `cloud-${a.agentId}-${idx}`}
-                    onClick={() => runCloudTest(a.agentId, p.name, `cloud-${a.agentId}-${idx}`)}
+                    disabled={!online || testingKey === `win-${index}`}
+                    onClick={() => runTest({ type: 'windows', name: p.name }, `win-${index}`)}
                   >
-                    {testingKey === `cloud-${a.agentId}-${idx}` ? 'جارٍ…' : `اختبار: ${p.name}`}
+                    {testingKey === `win-${index}` ? 'جارٍ…' : 'اختبار طباعة'}
                   </button>
-                ))}
-              </div>
-            </div>
-          ))}
+                </div>
+              ))}
+            </>
+          ) : (
+            (() => {
+              const agentId = Number(deviceKey.replace('cloud-', ''));
+              const agent = cloudAgents.find((a: any) => a.agentId === agentId);
+              const list = agent?.printers ?? [];
+              if (list.length === 0) {
+                return <div className="text-xs text-slate-400">لا توجد طابعات على هذا الوكيل (أو غير متصل)</div>;
+              }
+              return list.map((p: any, idx: number) => (
+                <div key={`${agentId}-${p.name}-${idx}`} className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                  <span className="min-w-0 flex-1">
+                    <b>{p.name}</b>
+                    {p.driver && <span className="text-slate-400 text-xs"> — {p.driver}</span>}
+                    {p.port && <span className="text-slate-400 text-xs"> ({p.port})</span>}
+                  </span>
+                  <button
+                    type="button"
+                    className="btn-soft text-xs"
+                    disabled={testingKey === `cloud-${agentId}-${idx}`}
+                    onClick={() => runCloudTest(agentId, p.name, `cloud-${agentId}-${idx}`)}
+                  >
+                    {testingKey === `cloud-${agentId}-${idx}` ? 'جارٍ…' : 'اختبار طباعة'}
+                  </button>
+                </div>
+              ));
+            })()
+          )}
         </div>
       </div>
 
