@@ -11,6 +11,7 @@
  "db:seed:ref": "node tools/pg/seed-reference.js wasel",
     "db:reset": "node tools/pg/run-sql.js wasel db/reset-dev-data.sql",
     "db:demo": "node tools/demo-data.js",
+    "db:demo:compumob": "node tools/demo-compumob.js",
     "db:query": "node tools/pg/q.js",
     "api:build": "cd apps/api && npx nest build",
     "api:start": "cd apps/api && node dist/main.js",

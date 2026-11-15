@@ -14,14 +14,18 @@ export class DatabaseService implements OnModuleDestroy {
   private readonly pool: Pool;
 
   constructor(config: ConfigService) {
-    const connectionString = config.get<string>('DATABASE_URL') ??
-      'postgres://postgres:postgres@localhost:5432/wasel';
+    // node-postgres (newer releases) treats `sslmode=require` in the URL as
+    // verify-full, which fails against Supabase's chain even when an explicit
+    // ssl object is passed. We control TLS explicitly below, so strip the
+    // parameter out of the URL first.
+    const connectionString = (config.get<string>('DATABASE_URL') ??
+      'postgres://postgres:postgres@localhost:5432/wasel').replace(/[?&]sslmode=[^&]*/g, '');
     // Managed Postgres providers (Supabase pooler, Neon, Render, ...) require
     // TLS. node-postgres only honours `sslmode=require` written inside the URL
     // itself, so a managed host without it would fail with a silent handshake
     // error on every query. Detect those hosts and force TLS explicitly.
     const managedHost =
-      /sslmode=require/i.test(connectionString) ||
+      /sslmode=require/i.test(config.get<string>('DATABASE_URL') ?? '') ||
       /pooler\.|supabase\.|neon\.tech|render\.com/i.test(connectionString);
     this.pool = new Pool({
       connectionString,

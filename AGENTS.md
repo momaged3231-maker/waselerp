@@ -20,6 +20,7 @@ node tools/pg/seed-reference.js wasel   # بذور التعريفات: بنوك/
 
 # 2) بيانات تجريبية (اختياري)
 node tools/demo-data.js
+node tools/demo-compumob.js   # ديمو CompuMob: فرعان (كمبيوتر/كاميرات/أمن/طباعة + موبايل)، 6 موظفين، خزائن وبنوك، 49 فاتورة/30 يوم
 
 # 3) الـ API  (http://localhost:4000/api)
 cd apps/api && npm run build && node dist/main.js

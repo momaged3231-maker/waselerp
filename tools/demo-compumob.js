@@ -1,31 +1,30 @@
 /*
- * CompuMob — كومبوموب للتجارة — demo dataset (all numbers whole integers).
+ * CompuMob demo dataset — matches the shop the owner described:
  *
- * Business: كمبيوتر، لابتوب، ماك بوك، صيانة، موبايلات، إكسسوارات، شبكات،
- * أنظمة أمنية (كاميرات)، ورق طباعة وطباعة، تغليف هدايا.
+ *   Branch 1 (المعادي): كمبيوتر + كاميرات مراقبة + أنظمة أمنية + صيانة
+ *                       + طباعة أوراق وتغليف
+ *   Branch 2 (المقطم):  موبايل + إكسسوارات + صيانة موبايل
+ *   6 employees (users + HR employees) spread over the two branches
+ *   2 bank accounts + Vodafone Cash wallet + a cash drawer per branch
+ *   Purchases + ~5 weeks of sales, maintenance products/models/tickets,
+ *   a quotation, a sales order and bank deposits.
  *
- * Two branches, both owned by علاء:
- *   فرع المعادي  — كمبيوتر وإكسسوار (MAIN)
- *   فرع المقطم   — موبايل وإكسسوار  (CP2)
+ *   node tools/demo-compumob.js               # API on localhost:4000
+ *   API_BASE=https://host/api node tools/demo-compumob.js
  *
- * Staff (6) + علاء (owner/admin):
- *   أحمد صابر (صيانة) · محمود القاضي (فني كاميرات) · عمر حاتم (فني كاميرات)
- *   سارة النمر (كاشيرة فرع المعادي) · منة أشرف (كاشير فرع المقطم) · ياسمين شفيق (كاشيرة فرع المقطم)
- *
- * Run on a FRESH database:
- *   node tools/pg/run-sql.js wasel db/reset-dev-data.sql
- *   node tools/demo-compumob.js
+ * Run on a fresh database: schema + migrate-all + seed + seed-reference first.
+ * Re-runnable: it aborts politely when the demo already exists.
  */
-const path = require('path');
 const BASE = process.env.API_BASE ?? 'http://localhost:4000/api';
 
 let token = null;
-let activeBranch = null;
+let branchId = null;
 
-async function call(method, path, body, branchHeader) {
+async function call(method, path, body, branchOverride) {
   const headers = { 'Content-Type': 'application/json' };
   if (token) headers.Authorization = `Bearer ${token}`;
-  headers['x-branch-id'] = String(branchHeader ?? activeBranch ?? 1);
+  const active = branchOverride ?? branchId;
+  if (active) headers['x-branch-id'] = String(active);
   const response = await fetch(`${BASE}${path}`, {
     method,
     headers,
@@ -33,541 +32,541 @@ async function call(method, path, body, branchHeader) {
   });
   const text = await response.text();
   const data = text ? JSON.parse(text) : null;
-  if (!response.ok) throw new Error(`${method} ${path} (branch ${branchHeader ?? activeBranch}) -> ${response.status} ${JSON.stringify(data)}`);
+  if (!response.ok) throw new Error(`${method} ${path} -> ${response.status} ${JSON.stringify(data)}`);
   return data;
 }
 
+/** Deterministic pseudo random so every run produces the same dataset. */
+let seed = 20261116;
+function random() {
+  seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+  return seed / 0x7fffffff;
+}
+const pick = (list) => list[Math.floor(random() * list.length)];
+const between = (min, max) => Math.floor(random() * (max - min + 1)) + min;
 const daysAgo = (days) => {
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  return d.toISOString().slice(0, 10);
+  const date = new Date();
+  date.setDate(date.getDate() - days);
+  return date.toISOString().slice(0, 10);
 };
 
-/** Fixture SQL — same pattern as tools/pg/run-sql.js. Runs before the API work. */
-async function sql(statements) {
-  const { Client } = require(path.resolve(process.cwd(), 'apps/api/node_modules/pg'));
-  const client = new Client({ connectionString: 'postgres://postgres:postgres@127.0.0.1:5432/wasel' });
-  await client.connect();
-  try {
-    for (const s of statements) await client.query(s);
-  } finally {
-    await client.end();
-  }
-}
-
 async function main() {
-  // ---- fixture SQL: امسح الـ seed القديم نظافة تامة ----
-  // The reset script keeps branches/users/settings/categories — wipe the leftovers we are replacing.
-  await sql([
-    'DELETE FROM categories',
-    "UPDATE branches SET name = 'فرع المعادي — كمبيوتر وإكسسوار' WHERE branch_id = 1",
-    "UPDATE users SET full_name = 'علاء مالك (المالك)' WHERE user_id = 1",
-    "UPDATE cash_accounts SET name = 'خزينة فرع المعادي' WHERE cash_account_id = 1",
-    // idempotent re-run: wipe the partial branch-2 fixtures created by crashed passes
-    "DELETE FROM warehouses WHERE code = 'WH-CP2'",
-    "DELETE FROM cash_accounts WHERE name IN ('خزينة فرع المقطم', 'بنك القاهرة — فرع المقطم')",
-    "UPDATE app_settings SET setting_value = 'false' WHERE setting_key = 'RequireRepOnSale'",
-  ]);
-
   const login = await call('POST', '/auth/login', { userName: 'admin', password: 'admin123' });
   token = login.accessToken;
-  activeBranch = login.activeBranchId ?? 1;
+  branchId = login.activeBranchId;
 
-  // ---- company identity ----
-  await call('PUT', '/admin/settings', {
-    CompanyName: 'CompuMob — كومبوموب للتجارة',
-    CompanyPhone: '01012345678',
-    CompanyAddress: 'المعادي، شارع 9، القاهرة',
-    TaxNumber: '345-678-901',
-    InvoiceFooter: 'شكراً لتعاملكم معنا — CompuMob',
+  const probe = await call('GET', '/items?search=CMB-&pageSize=1');
+  if ((probe.items ?? probe).length) {
+    console.log('[demo] بيانات CompuMob موجودة بالفعل — للتصفير وإعادة البناء:');
+    console.log('[demo]   node tools/pg/migrate-all.js wasel && node tools/pg/seed-reference.js wasel && npm run db:seed');
+    return;
+  }
+
+  // ---------------- branches ----------------
+  const branchList = await call('GET', '/catalog/branches');
+  async function ensureBranch(code, name, extra) {
+    const found = branchList.find((b) => b.code === code);
+    if (found) {
+      await call('PUT', `/admin/branches/${found.branchId}`, { code, name, ...extra, isActive: true });
+      return found.branchId;
+    }
+    const created = await call('POST', '/admin/branches', { code, name, ...extra });
+    return created.branchId;
+  }
+  const branchMain = await ensureBranch('MAIN', 'CompuMob — فرع المعادي (كمبيوتر وكاميرات وأنظمة أمنية)', {
+    address: 'المعادي، شارع 9، القاهرة', phone: '0223807000', city: 'القاهرة',
+  });
+  const branchMobile = await ensureBranch('CP2', 'CompuMob — فرع المقطم (موبايل وإكسسوارات)', {
+    address: 'المقطم، شارع 9، القاهرة', phone: '0225089000', city: 'القاهرة',
   });
 
-  // ---- branch 2 (exists after a previous run; create otherwise) ----
-  const branchList = await call('GET', '/admin/branches');
-  let branch2 = (branchList ?? []).find((b) => b.code === 'CP2');
-  if (!branch2) {
-    branch2 = await call('POST', '/admin/branches', {
-      code: 'CP2', name: 'فرع المقطم — موبايل وإكسسوار', isActive: true,
+  // ---------------- warehouses ----------------
+  // The maintenance inspection consumes parts from the branch's DEFAULT
+  // warehouse, so the demo stocks the default shelves — not new ones.
+  const warehouses = await call('GET', '/catalog/warehouses');
+  async function defaultWarehouse(branch, code, name) {
+    const existing = warehouses.find((w) => Number(w.branchId) === Number(branch));
+    if (existing) return existing.warehouseId;
+    const created = await call('POST', '/catalog/warehouses', {
+      branchId: branch, code, name, isDefault: true,
     });
+    warehouses.push({ ...created, branchId: branch, isDefault: true });
+    return created.warehouseId;
   }
-  const branch2Id = Number(branch2.branchId);
+  const whMain = await defaultWarehouse(branchMain, 'WH-MAIN', 'مخزن المعادي الرئيسي');
+  const whMobile = await defaultWarehouse(branchMobile, 'WH-CP2', 'مخزن المقطم');
 
-  // ---- warehouse for branch 2 ----
-  const warehousesAll = await call('GET', '/catalog/warehouses', null, 1);
-  let warehouse2Id = null;
-  for (const wh of warehousesAll ?? []) {
-    if (Number(wh.branchId) === branch2Id) warehouse2Id = wh.warehouseId;
+  // ---------------- treasury accounts ----------------
+  const accounts = await call('GET', '/treasury/accounts');
+  /** Reuses an existing cash account with the same name (demo must be re-runnable). */
+  async function ensureAccount(branch, body) {
+    const existing = accounts.find((a) => a.name === body.name);
+    if (existing) return existing;
+    const created = await call('POST', '/treasury/accounts', body, branch);
+    accounts.push(created);
+    return created;
   }
-  if (!warehouse2Id) {
-    const wh2 = await call('POST', '/catalog/warehouses', {
-      branchId: branch2Id, code: 'WH-CP2', name: 'مخزن المقطم', isDefault: true, isActive: true,
-    }, branch2Id);
-    warehouse2Id = wh2.warehouseId;
-  }
+  const drawerMain = await ensureAccount(branchMain, {
+    name: 'خزينة فرع المعادي', type: 1, openingBalance: 12000,
+  });
+  const bankNbe = await ensureAccount(branchMain, {
+    name: 'حساب البنك الأهلي — المعادي', type: 2,
+    bankName: 'البنك الأهلي المصري', accountNo: 'EG380190000000000012345678', openingBalance: 150000,
+  });
+  const bankCib = await ensureAccount(branchMain, {
+    name: 'حساب البنك التجاري الدولي CIB', type: 2,
+    bankName: 'البنك التجاري الدولي', accountNo: 'EG120001000000000222333444', openingBalance: 95000,
+  });
+  const cardAccount = await ensureAccount(branchMain, {
+    name: 'حساب تسوية البطاقات', type: 3,
+    bankName: 'البنك التجاري الدولي', accountNo: 'CARD-SETTLE-01', openingBalance: 0,
+  });
+  const wallet = await ensureAccount(branchMain, {
+    name: 'محفظة فودافون كاش V.Cash', type: 4, openingBalance: 8000,
+  });
+  const drawerMobile = await ensureAccount(branchMobile, {
+    name: 'خزينة فرع المقطم', type: 1, openingBalance: 25000,
+  });
+  const bankCairo = await ensureAccount(branchMobile, {
+    name: 'حساب بنك القاهرة — المقطم', type: 2,
+    bankName: 'بنك القاهرة', accountNo: 'EG010000000000002200000001', openingBalance: 80000,
+  });
 
-  // ---- cash accounts for branch 2 (created against branch 2 context) ----
-  const accountsAfterReset = await call('GET', '/treasury/accounts', null, 1);
-  const byBranch = (type) => (accountsAfterReset ?? []).find((a) => a.type === type && Number(a.branchId) === branch2Id);
-  let branch2Cash = byBranch(1);
-  let branch2Bank = byBranch(2);
-  if (!branch2Cash) {
-    branch2Cash = await call('POST', '/treasury/accounts', {
-      name: 'خزينة فرع المقطم', type: 1, openingBalance: 25000,
-    }, branch2Id);
-  }
-  if (!branch2Bank) {
-    branch2Bank = await call('POST', '/treasury/accounts', {
-      name: 'بنك القاهرة — فرع المقطم', type: 2,
-      bankName: 'بنك القاهرة', accountNo: 'EG010000000000002200000001', openingBalance: 80000,
-    }, branch2Id);
-  }
+  // ---------------- employees + users (6) ----------------
+  const roles = await call('GET', '/admin/roles');
+  const roleId = (needle) => {
+    const role = roles.find((r) => String(r.name ?? r.code ?? '').includes(needle));
+    return role ? role.roleId : undefined;
+  };
 
-  // ---- staff: 6 users (IDs are stable on fresh DB: 2..7) ----
-  const staff = [
-    ['ahmdsbr', 'أحمد صابر — فني صيانة', 5, 1],
-    ['mhmudqd', 'محمود القاضي — فني كاميرات أول', 5, 1],
-    ['umrmhtm', 'عمر حاتم — فني كاميرات ثانٍ', 5, branch2Id],
-    ['sarnam', 'سارة النمر — كاشيرة', 3, 1],
-    ['mnshrf', 'منة أشرف — كاشير فرع', 3, branch2Id],
-    ['yasmshq', 'ياسمين شفيق — كاشيرة فرع', 3, branch2Id],
-  ];
-  const existingUsers = await call('GET', '/admin/users');
-  const userByName = new Map((existingUsers ?? []).map((u) => [u.userName, u]));
-  const staffUserIds = {};
-  for (const [userName, fullName, roleId] of staff) {
-    if (userByName.has(userName)) { staffUserIds[userName] = userByName.get(userName).userId; continue; }
-    try {
-      const created = await call('POST', '/admin/users', { userName, fullName, password: 'admin123', roleIds: [roleId] }, 1);
-      staffUserIds[userName] = created.userId;
-    } catch (e) {
-      console.log('[compumob] تعذر إنشاء المستخدم', userName, e.message);
+  async function ensureUser(userName, fullName, opts) {
+    const users = await call('GET', '/admin/users');
+    const found = users.find((u) => u.userName === userName);
+    if (found) return found;
+    const roleIds = [];
+    for (const needle of opts.roleNeedle ?? []) {
+      const rid = roleId(needle);
+      if (rid) roleIds.push(rid);
     }
+    const created = await call('POST', '/admin/users', {
+      userName, fullName, password: 'Demo@1234', isActive: true,
+      email: `${userName}@compumob.eg`, phone: opts.phone ?? null,
+      defaultBranchId: opts.defaultBranchId, isCashier: !!opts.isCashier,
+      isSalesRep: !!opts.isSalesRep, maxDiscountPct: opts.maxDiscountPct ?? 10, roleIds,
+    });
+    return { userId: created.userId, userName, fullName };
   }
 
-  // ---- categories (fresh after fixture wipe) ----
-  const categoryNames = [
-    'أجهزة كمبيوتر وشاشات', 'أجهزة ماك بوك', 'إكسسوارات كمبيوتر', 'بطاريات', 'أجهزة تخزين وذاكرة',
-    'أجهزة شبكات', 'أنظمة أمنية وكاميرات', 'موبايلات', 'إكسسوارات موبايل', 'طباعة وورق',
-    'منتجات تغليف', 'خدمات POS',
-  ];
-  const categoryIds = {};
-  for (const name of categoryNames) {
-    const created = await call('POST', '/catalog/categories', { name });
-    categoryIds[name] = created.categoryId;
+  async function ensureDepartment(branch, name) {
+    const list = await call('GET', '/hr/departments', undefined, branch);
+    const found = list.find((d) => d.name === name);
+    if (found) return found.departmentId;
+    const created = await call('POST', '/hr/departments', { name }, branch);
+    return created.departmentId;
   }
 
+  async function ensureEmployee(branch, userName, name, jobTitle, departmentId, phone, roleNeedle) {
+    const user = await ensureUser(userName, name, {
+      defaultBranchId: branch,
+      isCashier: jobTitle.includes('كاشير') || jobTitle.includes('مدير'),
+      // مهندسو الصيانة يحتاجون is_sales_rep — تحقق /maintenance/tickets/:id/inspect يرفض غير ذلك
+      isSalesRep: jobTitle.includes('مندوب') || jobTitle.includes('مهندس'),
+      phone, roleNeedle,
+    });
+    const list = await call('GET', '/hr/employees', undefined, branch);
+    const found = list.find((e) => e.name === name);
+    if (found) return { ...found, userId: user.userId };
+    const created = await call('POST', '/hr/employees', {
+      name, jobTitle, departmentId, phone, mobile: phone, nationalId: null,
+    }, branch);
+    return { ...created, userId: user.userId };
+  }
+
+  const depSales1 = await ensureDepartment(branchMain, 'المبيعات — المعادي');
+  const depService1 = await ensureDepartment(branchMain, 'الصيانة — المعادي');
+  const depSales2 = await ensureDepartment(branchMobile, 'المبيعات — المقطم');
+  const depService2 = await ensureDepartment(branchMobile, 'الصيانة — المقطم');
+
+  const staff = {
+    manager: await ensureEmployee(branchMain, 'ahmdsbr', 'أحمد صبري', 'مدير الفرع', depSales1, '01001234501', ['مدير', 'admin']),
+    cashier1: await ensureEmployee(branchMain, 'mhmudqd', 'محمود القاضي', 'كاشير', depSales1, '01001234502', ['كاشير', 'cashier']),
+    engineer1: await ensureEmployee(branchMain, 'sarnam', 'سارة نعم', 'مهندسة صيانة كمبيوتر', depService1, '01001234503', ['مهندس', 'engineer', 'فني']),
+    cashier2: await ensureEmployee(branchMobile, 'umrmhtm', 'عمر رمضان', 'كاشير ومندوب', depSales2, '01001234504', ['كاشير', 'cashier', 'مندوب', 'sales']),
+    cashier3: await ensureEmployee(branchMobile, 'mnshrf', 'منى شريف', 'كاشيرة', depSales2, '01001234505', ['كاشير', 'cashier']),
+    engineer2: await ensureEmployee(branchMobile, 'yasmshq', 'ياسمين شقيق', 'مهندسة صيانة موبايل', depService2, '01001234506', ['مهندس', 'engineer', 'فني']),
+  };
+
+  // ---------------- categories + units + items ----------------
   const units = await call('GET', '/catalog/units');
   const unit = (code) => units.find((u) => u.code === code)?.unitId ?? units[0].unitId;
   const PCS = unit('PCS');
+  const BOX = unit('BOX');
+  const PKT = unit('PKT');
+  const KG = unit('KG');
 
-  // ---- items: all whole numbers ----
+  async function ensureCategory(name, parentId) {
+    const list = await call('GET', '/catalog/categories');
+    const found = list.find((c) => c.name === name);
+    if (found) return found.categoryId;
+    const created = await call('POST', '/catalog/categories', { name, parentId: parentId ?? null });
+    return created.categoryId;
+  }
+
+  const catComputer = await ensureCategory('أجهزة كمبيوتر ولابتوب');
+  const catCctv = await ensureCategory('كاميرات مراقبة وتسجيل');
+  const catSecurity = await ensureCategory('أنظمة أمن وتحكم بالدخول');
+  const catPrinters = await ensureCategory('طابعات وحبر');
+  const catPaper = await ensureCategory('أوراق طباعة وتغليف');
+  const catMobiles = await ensureCategory('موبايلات');
+  const catAccessories = await ensureCategory('إكسسوارات موبايل');
+  const catSpare = await ensureCategory('قطع غيار صيانة');
+
+  /** code, name, categoryId, baseUnit, cost, sell, vat, [unit, factor, price] */
   const items = [
-    ['CPM-LT-E14', 'لابتوب لينوفو ثينك باد E14', 'أجهزة كمبيوتر وشاشات', 13000, 15500],
-    ['CPM-LT-E840', 'لابتوب إتش بي إليت بوك 840 G8', 'أجهزة كمبيوتر وشاشات', 17000, 19800],
-    ['CPM-LT-DELL5420', 'لابتوب Dell Latitude 5420', 'أجهزة كمبيوتر وشاشات', 15500, 18000],
-    ['CPM-LT-HP245', 'لابتوب إتش بي 245 G9', 'أجهزة كمبيوتر وشاشات', 11500, 14000],
-    ['CPM-PC-HP', 'كمبيوتر مكتبي HP (i5)', 'أجهزة كمبيوتر وشاشات', 14000, 16500],
-    ['CPM-MON-27', 'شاشة Dell 27 بوصة', 'أجهزة كمبيوتر وشاشات', 4200, 5100],
-
-    ['CPM-MB-PRO13', 'MacBook Pro 13', 'أجهزة ماك بوك', 42000, 49000],
-    ['CPM-MB-AIR13', 'MacBook Air 13', 'أجهزة ماك بوك', 37000, 43000],
-    ['CPM-MB-PRO16', 'MacBook Pro 16', 'أجهزة ماك بوك', 88000, 102000],
-
-    ['CPM-ACC-MOUSE', 'ماوس لاسلكي', 'إكسسوارات كمبيوتر', 80, 150],
-    ['CPM-ACC-KB', 'كيبورد لاسلكي', 'إكسسوارات كمبيوتر', 110, 200],
-    ['CPM-ACC-BAG', 'حقيبة لابتوب', 'إكسسوارات كمبيوتر', 130, 240],
-    ['CPM-ACC-SLEEVE', 'غلاف لابتوب 15.6', 'إكسسوارات كمبيوتر', 60, 120],
-    ['CPM-ACC-STAND', 'ستند لابتوب ألومنيوم', 'إكسسوارات كمبيوتر', 180, 320],
-
-    ['CPM-BAT-HP', 'بطارية لابتوب HP', 'بطاريات', 700, 1100],
-    ['CPM-BAT-DELL', 'بطارية لابتوب Dell', 'بطاريات', 780, 1200],
-    ['CPM-BAT-LN', 'بطارية لابتوب Lenovo', 'بطاريات', 650, 1000],
-    ['CPM-BAT-MB', 'بطارية ماك بوك', 'بطاريات', 850, 1350],
-
-    ['CPM-SSD-256', 'SSD 256GB', 'أجهزة تخزين وذاكرة', 1000, 1500],
-    ['CPM-SSD-512', 'SSD 512GB', 'أجهزة تخزين وذاكرة', 1600, 2400],
-    ['CPM-SSD-1TB', 'SSD 1TB', 'أجهزة تخزين وذاكرة', 2700, 3900],
-    ['CPM-RAM-8', 'رام DDR4 8GB', 'أجهزة تخزين وذاكرة', 600, 900],
-    ['CPM-RAM-16', 'رام DDR4 16GB', 'أجهزة تخزين وذاكرة', 1100, 1600],
-    ['CPM-USB-64', 'فلاشة USB 64GB', 'أجهزة تخزين وذاكرة', 180, 300],
-
-    ['CPM-NET-TPLINK', 'راوتر TP-Link', 'أجهزة شبكات', 900, 1350],
-    ['CPM-NET-HUAWEI', 'راوتر Huawei', 'أجهزة شبكات', 750, 1150],
-    ['CPM-NET-SW8', 'سويتش 8 منافذ', 'أجهزة شبكات', 520, 800],
-    ['CPM-NET-SW16', 'سويتش 16 منفذ', 'أجهزة شبكات', 1300, 1900],
-    ['CPM-NET-AP', 'أكسس بوينت', 'أجهزة شبكات', 750, 1150],
-    ['CPM-NET-CAT6', 'كابل شبكات Cat6 (305 متر)', 'أجهزة شبكات', 2800, 4200],
-
-    ['CPM-SEC-CAM1', 'كاميرا داخلية 2MP', 'أنظمة أمنية وكاميرات', 420, 750],
-    ['CPM-SEC-CAM2', 'كاميرا خارجية 2MP مقاومة', 'أنظمة أمنية وكاميرات', 580, 950],
-    ['CPM-SEC-CAM4', 'كاميرا 4MP', 'أنظمة أمنية وكاميرات', 750, 1200],
-    ['CPM-SEC-CAM8', 'كاميرا 8MP', 'أنظمة أمنية وكاميرات', 1400, 2300],
-    ['CPM-SEC-DVR', 'جهاز تسجيل DVR (4 قنوات)', 'أنظمة أمنية وكاميرات', 850, 1400],
-    ['CPM-SEC-NVR', 'جهاز تسجيل NVR (8 قنوات)', 'أنظمة أمنية وكاميرات', 2400, 3600],
-    ['CPM-SEC-HDD1', 'هارد مراقبة 1TB', 'أنظمة أمنية وكاميرات', 1500, 2200],
-    ['CPM-SEC-HDD2', 'هارد مراقبة 2TB', 'أنظمة أمنية وكاميرات', 2700, 3800],
-    ['CPM-SEC-PSU', 'مصدر كهرباء 12V', 'أنظمة أمنية وكاميرات', 180, 320],
-    ['CPM-SEC-CBL', 'كابل كاميرا (100 متر)', 'أنظمة أمنية وكاميرات', 650, 1100],
-
-    ['CPM-PH-IP15', 'آيفون 15', 'موبايلات', 35000, 42000],
-    ['CPM-PH-IP15PRO', 'آيفون 15 برو', 'موبايلات', 45000, 54000],
-    ['CPM-PH-S24', 'سامسونج S24', 'موبايلات', 28000, 33000],
-    ['CPM-PH-S24U', 'سامسونج S24 ألترا', 'موبايلات', 40000, 47000],
-    ['CPM-PH-A55', 'سامسونج A55', 'موبايلات', 13000, 15500],
-    ['CPM-PH-RMNT13', 'شاومي Redmi Note 13', 'موبايلات', 9500, 11500],
-
-    ['CPM-MAC-USBC', 'كابل USB-C سريع', 'إكسسوارات موبايل', 45, 80],
-    ['CPM-MAC-CHG20', 'شاحن سريع 20W', 'إكسسوارات موبايل', 150, 220],
-    ['CPM-MAC-MBCHG', 'شاحن ماك بوك 96W', 'إكسسوارات موبايل', 500, 750],
-    ['CPM-MAC-PB10', 'باور بانك 10000', 'إكسسوارات موبايل', 520, 750],
-    ['CPM-MAC-PB20', 'باور بانك 20000', 'إكسسوارات موبايل', 750, 1100],
-    ['CPM-MAC-CAR', 'حامل هاتف (للسيارة)', 'إكسسوارات موبايل', 70, 130],
-    ['CPM-MAC-HP', 'سماعة بلوتوث', 'إكسسوارات موبايل', 550, 950],
-    ['CPM-MAC-CSIP15', 'كفر آيفون 15', 'إكسسوارات موبايل', 100, 200],
-    ['CPM-MAC-CSS24', 'كفر سامسونج S24', 'إكسسوارات موبايل', 90, 180],
-    ['CPM-MAC-SGS24', 'واقي شاشة سامسونج', 'إكسسوارات موبايل', 30, 65],
-    ['CPM-MAC-SGIP', 'واقي شاشة آيفون', 'إكسسوارات موبايل', 35, 70],
-
-    ['CPM-PRT-PAPER', 'ورق A4 (علبة 5000 صفحة)', 'طباعة وورق', 550, 850],
-    ['CPM-PRT-REAM', 'ورق A4 (رزمة 500 صفحة)', 'طباعة وورق', 65, 100],
-    ['CPM-PRT-HP', 'حبر HP أسود', 'طباعة وورق', 350, 550],
-    ['CPM-PRT-HPC', 'حبر HP ملون', 'طباعة وورق', 480, 750],
-    ['CPM-PRT-T26A', 'تونر HP 26A', 'طباعة وورق', 650, 1150],
-    ['CPM-PRT-TBR', 'تونر Brother', 'طباعة وورق', 520, 950],
-    ['CPM-PRT-CPA4', 'ورق طباعة ملون A4 (علبة)', 'طباعة وورق', 620, 950],
-
-    ['CPM-WRP-TAPE', 'رول شريط سيلوي', 'منتجات تغليف', 25, 55],
-    ['CPM-WRP-WP', 'ورق تغليف ملون رول', 'منتجات تغليف', 100, 200],
-    ['CPM-WRP-BAGS', 'أكياس تغليف صغيرة', 'منتجات تغليف', 20, 45],
-    ['CPM-WRP-BAGM', 'أكياس تغليف متوسطة', 'منتجات تغليف', 30, 65],
-    ['CPM-WRP-BAGL', 'أكياس تغليف كبيرة', 'منتجات تغليف', 45, 90],
-    ['CPM-WRP-SH', 'شنط هدايا صغيرة', 'منتجات تغليف', 12, 28],
-    ['CPM-WRP-SHM', 'شنط هدايا متوسطة', 'منتجات تغليف', 20, 48],
-    ['CPM-WRP-SHL', 'شنط هدايا كبيرة', 'منتجات تغليف', 35, 70],
-    ['CPM-WRP-PACK', 'شريط كارتون', 'منتجات تغليف', 45, 80],
-    ['CPM-WRP-STK', 'ملصقات لاصقة', 'منتجات تغليف', 25, 60],
+    ['CMB-LAP-DELL-I7', 'لابتوب Dell Latitude i7', catComputer, PCS, 22000, 25500, 14, [[PCS, 1, 25500]]],
+    ['CMB-PC-GAMER-1', 'كمبيوتر تجميع جيمنج RTX', catComputer, PCS, 18000, 21500, 14, [[PCS, 1, 21500]]],
+    ['CMB-MON-24', 'شاشة 24 بوصة IPS', catComputer, PCS, 3500, 4200, 14, [[PCS, 1, 4200]]],
+    ['CMB-KB-LOG', 'كيبورد وماوس لاسلكي', catComputer, PKT, 480, 650, 14, [[PKT, 1, 650], [BOX, 10, 6200]]],
+    ['CMB-CAM-HIK-2MP', 'كاميرا مراقبة Hikvision 2MP', catCctv, PCS, 850, 1150, 14, [[PCS, 1, 1150], [BOX, 8, 8900]]],
+    ['CMB-DVR-8CH', 'مسجل DVR 8 قنوات', catCctv, PCS, 1900, 2450, 14, [[PCS, 1, 2450]]],
+    ['CMB-HDD-4TB', 'هارد تسجيل 4TB مراقبة', catCctv, PCS, 2600, 3200, 14, [[PCS, 1, 3200]]],
+    ['CMB-NVR-16', 'مسجل شبكي NVR 16 قناة', catCctv, PCS, 4300, 5300, 14, [[PCS, 1, 5300]]],
+    ['CMB-ACC-FACE', 'جهاز تحكم بالدخول بالوجه', catSecurity, PCS, 5800, 7200, 14, [[PCS, 1, 7200]]],
+    ['CMB-ALARM-KIT', 'كيت إنذار سرقة 6 أقطاب', catSecurity, PKT, 3400, 4300, 14, [[PKT, 1, 4300]]],
+    ['CMB-PRN-HP-LASER', 'طابعة HP LaserJet', catPrinters, PCS, 4200, 4950, 14, [[PCS, 1, 4950]]],
+    ['CMB-TONER-85A', 'تونر 85A أصلي', catPrinters, PCS, 450, 620, 14, [[PCS, 1, 620], [BOX, 6, 3550]]],
+    ['CMB-ROLL-80', 'رول كاشير 80مم', catPaper, PKT, 95, 135, 14, [[PKT, 1, 135], [BOX, 50, 6300]]],
+    ['CMB-KRAFT-ROLL', 'رول كرافت تغليف 60سم', catPaper, PCS, 210, 290, 14, [[PCS, 1, 290], [BOX, 6, 1650]]],
+    ['CMB-BAG-KRAFT', 'أكياس كرافت مقاس وسط', catPaper, BOX, 180, 260, 14, [[BOX, 1, 260]]],
+    ['CMB-STICK-A4', 'استيكر A4 للتغليف', catPaper, BOX, 145, 200, 14, [[BOX, 1, 200]]],
+    ['CMB-MOB-IP15', 'iPhone 15 128GB', catMobiles, PCS, 38000, 42500, 14, [[PCS, 1, 42500]]],
+    ['CMB-MOB-A55', 'Samsung Galaxy A55', catMobiles, PCS, 14500, 16800, 14, [[PCS, 1, 16800]]],
+    ['CMB-MOB-R13C', 'Xiaomi Redmi 13C', catMobiles, PCS, 6500, 7600, 14, [[PCS, 1, 7600]]],
+    ['CMB-ACC-CHG20', 'شاحن سريع 20W أصلي', catAccessories, PCS, 180, 260, 14, [[PCS, 1, 260], [BOX, 20, 4800]]],
+    ['CMB-ACC-CASE', 'جراب موبايل مقاوم', catAccessories, PCS, 45, 85, 14, [[PCS, 1, 85], [BOX, 30, 2300]]],
+    ['CMB-ACC-GLASS', 'شاشة حماية زجاج', catAccessories, PCS, 25, 50, 14, [[PCS, 1, 50], [BOX, 50, 2200]]],
+    ['CMB-ACC-PWB', 'باور بانك 10000mAh', catAccessories, PCS, 350, 480, 14, [[PCS, 1, 480], [BOX, 10, 4500]]],
+    ['CMB-ACC-BT', 'هيدفون بلوتوث', catAccessories, PCS, 420, 580, 14, [[PCS, 1, 580]]],
+    ['CMB-SPR-SCR-MB', 'شاشة موبايل بديلة (قطعة غيار)', catSpare, PCS, 800, 1200, 0, [[PCS, 1, 1200]]],
+    ['CMB-SPR-BAT-MB', 'بطارية موبايل أصلية', catSpare, PCS, 300, 450, 0, [[PCS, 1, 450]]],
+    ['CMB-SPR-SSD-512', 'SSD 512GB (قطعة غيار)', catSpare, PCS, 1250, 1650, 0, [[PCS, 1, 1650]]],
   ];
 
   const created = [];
-  for (const [code, name, category, cost, sell] of items) {
+  for (const [code, name, categoryId, baseUnitId, costPrice, sellPrice, vatPct, unitRows] of items) {
     const saved = await call('POST', '/items', {
-      code, name, categoryId: categoryIds[category], baseUnitId: PCS,
-      costPrice: cost, sellPrice: sell, vatPct: 0, reorderPoint: 3,
+      code, name, categoryId, baseUnitId,
+      costPrice, sellPrice, vatPct, reorderPoint: 5, minPrice: costPrice, isActive: true,
     });
-    created.push({ itemId: saved.itemId, code, name, category, cost, sell });
+    if (unitRows.length > 1) {
+      await call('POST', `/items/${saved.itemId}/units`, {
+        units: unitRows.map(([unitId, factor, price], index) => ({
+          unitId, factor, sellPrice: price, buyPrice: Math.round(costPrice * factor * 100) / 100,
+          isDefault: index === 0,
+        })),
+      });
+    }
+    created.push({ itemId: saved.itemId, code, name, baseUnitId, costPrice, sellPrice, vatPct, unitRows });
   }
-
-  // ---- POS service items (sold at the counter, no stock) ----
-  const services = [
-    ['CPM-SVC-PW', 'طباعة صفحة (أسود)', 'خدمات POS', 0, 2],
-    ['CPM-SVC-PC', 'طباعة صفحة (ملون)', 'خدمات POS', 0, 5],
-    ['CPM-SVC-COPY', 'تصوير صفحة', 'خدمات POS', 0, 1],
-    ['CPM-SVC-PHOTO', 'طباعة صورة 10×15', 'خدمات POS', 0, 15],
-    ['CPM-SVC-A4P', 'طباعة صورة A4', 'خدمات POS', 0, 25],
-    ['CPM-SVC-WRPS', 'تغليف هدية صغيرة', 'خدمات POS', 0, 20],
-    ['CPM-SVC-WRPM', 'تغليف هدية متوسطة', 'خدمات POS', 0, 30],
-    ['CPM-SVC-WRPL', 'تغليف هدية كبيرة', 'خدمات POS', 0, 50],
-  ];
-  for (const [code, name, category, cost, sell] of services) {
-    const saved = await call('POST', '/items', {
-      code, name, categoryId: categoryIds[category], baseUnitId: PCS,
-      costPrice: 0, sellPrice: sell, vatPct: 0, isService: true,
-    });
-    created.push({ itemId: saved.itemId, code, name, category, cost, sell });
-  }
-
   const byCode = (code) => created.find((item) => item.code === code);
 
-  // ---- branch 1 cash accounts: discover + rename originals ----
-  const accounts = await call('GET', '/treasury/accounts', null, 1);
-  const drawer1 = (accounts ?? []).find((a) => a.type === 1 && Number(a.branchId) === 1);
-  const cardAccount = (accounts ?? []).find((a) => a.type === 3 && Number(a.branchId) === 1);
-
-  // ---- parties ----
+  // ---------------- parties ----------------
   const customers = [
-    ['شركة النور للمقاولات', '01223456780', 'المعادي، شارع 21', 500000],
-    ['سمارت سيكيورتي هوم', '01098765432', 'مدينة نصر، شارع عباس', 800000],
-    ['محل التكنولوجيا الحديثة', '01123456789', 'المعادي، شارع 9', 300000],
-    ['شركة التقنية الحديثة', '01287654321', 'التجمع الخامس', 600000],
-    ['مركز الصيانة الذهبي', '01034567891', 'المعادي، شارع 9', 150000],
-    ['منزل أم أحمد', '01555555555', 'الجيزة، الهرم', 0],
-    ['محل عبد العزيز للموبايل', '01012345678', 'المعادي، شارع 50', 250000],
-    ['علي محمد — ماك بوك', '01176543210', 'الجيزة، الدقي', 0],
+    ['مكتب الأهرام للمحاسبة', '01211111101', 'المعادي، شارع 9', 200000, 1],
+    ['شركة النيل للأنظمة الأمنية', '01211111102', 'التجمع الخامس', 500000, 1],
+    ['صيدلية الشفاء', '01211111103', 'المقطم، دائري', 120000, 2],
+    ['مقهى Laptop Zone', '01211111104', 'المعادي، قصر العيني', 80000, 1],
+    ['مطعم كشري المصري', '01211111105', 'المقطم، شارع 9', 60000, 2],
+    ['مركز Classe الطبي', '01211111106', 'المعادي، شارع 161', 300000, 1],
+    ['متجر Horizon للإلكترونيات', '01211111107', 'مدينة نصر', 400000, 1],
+    ['عميل نقدي — د. هالة', '01000000000', 'المقطم', 30000, 2],
   ];
-  const customerIds = [];
-  for (const [name, phone, address, creditLimit] of customers) {
-    const createdParty = await call('POST', '/parties', {
+  const customerIds = { main: [], mobile: [] };
+  for (const [name, phone, address, creditLimit, branch] of customers) {
+    const party = await call('POST', '/parties', {
       name, partyType: 1, phone, address, creditLimit, isActive: true,
-    }, 1);
-    customerIds.push(createdParty.partyId);
-  }
-
-  const suppliers = [
-    ['شركة النصر للإلكترونيات', '01099887766', 'الجيزة، الهرم', 800000],
-    ['توزيعة مصر للموبايل', '01288776655', 'القاهرة، مدينة نصر', 500000],
-    ['شركة شبكة الجيزة للكاميرات', '01177665544', 'الجيزة، الهرم', 400000],
-    ['توزيعة المعادي للكمبيوتر', '01066554433', 'المعادي، شارع 9', 300000],
-  ];
-  const supplierIds = [];
-  for (const [name, phone, address, creditLimit] of suppliers) {
-    const createdParty = await call('POST', '/parties', {
-      name, partyType: 2, phone, address, creditLimit, isActive: true,
-    }, 1);
-    supplierIds.push(createdParty.partyId);
-  }
-
-  const warehousesBranch1 = (await call('GET', '/catalog/warehouses', null, 1)) ?? [];
-  const warehouse1 = warehousesBranch1.find((w) => Number(w.branchId) === 1)?.warehouseId;
-
-  // ---------- sales plans (branch 1 + branch 2), used to size purchases ----------
-  const salesPlan = [
-    [29, 0, [[0, 1, PCS], [5, 1, PCS], [9, 1, PCS], [33, 2, PCS], [34, 1, PCS]]],
-    [27, 3, [[11, 3, PCS], [9, 4, PCS], [13, 2, PCS]]],
-    [26, 1, [[31, 2, PCS], [35, 4, PCS], [37, 8, PCS], [38, 12, PCS], [30, 1, PCS], [32, 1, PCS]]],
-    [24, 5, [[1, 1, PCS], [0, 1, PCS], [44, 1, PCS], [24, 2, PCS], [10, 1, PCS]]],
-    [22, 2, [[18, 2, PCS], [22, 1, PCS], [21, 1, PCS], [27, 2, PCS]]],
-    [21, 6, [[41, 1, PCS], [45, 1, PCS]]],
-    [19, 1, [[30, 4, PCS], [35, 2, PCS], [38, 10, PCS], [36, 2, PCS], [39, 5, PCS]]],
-    [18, 7, [[2, 1, PCS], [3, 1, PCS]]],
-    [16, 0, [[37, 4, PCS], [34, 2, PCS]]],
-    [14, 3, [[27, 4, PCS], [9, 2, PCS], [13, 3, PCS], [25, 6, PCS], [26, 2, PCS]]],
-    [12, 6, [[40, 2, PCS], [41, 1, PCS], [43, 5, PCS]]],
-    [11, 1, [[33, 1, PCS], [32, 2, PCS], [37, 2, PCS], [34, 4, PCS], [35, 4, PCS], [39, 8, PCS]]],
-    [9, 2, [[5, 1, PCS], [18, 1, PCS], [22, 2, PCS], [24, 1, PCS]]],
-    [8, 5, [[62, 1, PCS], [67, 2, PCS], [70, 3, PCS], [72, 2, PCS]]],
-    [7, 4, [[56, 1, PCS], [59, 2, PCS], [57, 1, PCS], [55, 2, PCS]]],
-    [6, 7, [[0, 2, PCS], [4, 1, PCS]]],
-    [5, 3, [[52, 1, PCS], [51, 1, PCS]]],
-    [4, 1, [[35, 4, PCS], [36, 1, PCS], [34, 4, PCS], [37, 8, PCS]]],
-    [3, 2, [[9, 3, PCS], [27, 2, PCS], [24, 2, PCS], [10, 1, PCS]]],
-    [2, 6, [[40, 1, PCS], [41, 1, PCS], [46, 2, PCS]]],
-    [1, 0, [[33, 4, PCS], [38, 8, PCS], [37, 4, PCS]]],
-    [0, 5, [[76, 1, PCS], [77, 1, PCS]]],
-  ];
-
-  const cp2SalesPlan = [
-    [28, 6, [[42, 1, PCS], [48, 2, PCS]]],
-    [25, 6, [[46, 1, PCS], [50, 1, PCS], [47, 1, PCS], [49, 2, PCS]]],
-    [21, 7, [[44, 1, PCS], [45, 1, PCS]]],
-    [17, 7, [[41, 1, PCS], [50, 1, PCS]]],
-    [13, 6, [[42, 1, PCS], [48, 1, PCS], [49, 1, PCS], [47, 1, PCS], [45, 1, PCS]]],
-    [8, 7, [[46, 1, PCS], [42, 1, PCS]]],
-    [2, 6, [[41, 1, PCS], [48, 2, PCS]]],
-  ];
-
-  // ---------- compute stock needed (branch 1 from salesPlan, branch 2 from cp2SalesPlan) ----------
-  // branch 1 needs enough for its own sales; branch 2 buys its own stock separately
-  const b1Needed = new Map();
-  for (const [, , lines] of salesPlan) {
-    for (const [idx, qty] of lines) {
-      b1Needed.set(idx, (b1Needed.get(idx) ?? 0) + qty);
-    }
-  }
-  const b2Needed = new Map();
-  for (const [, , lines] of cp2SalesPlan) {
-    for (const [idx, qty] of lines) {
-      b2Needed.set(idx, (b2Needed.get(idx) ?? 0) + qty);
-    }
-  }
-
-  // ---------- base stock: touch every item so the demo looks full ----------
-  const baseStock = created.map((item) => ({
-    itemId: item.itemId, unitId: PCS,
-    quantity:
-      item.category === 'أجهزة ماك بوك' ? 1 :
-      item.category === 'موبايلات' ? 2 :
-      item.category === 'أجهزة كمبيوتر وشاشات' ? 3 :
-      item.category === 'أنظمة أمنية وكاميرات' ? 6 :
-      item.category === 'أجهزة شبكات' ? 8 : 6,
-    unitPrice: item.cost, discountPct: 0, taxPct: 0,
-  }));
-  const baseTotal = baseStock.reduce((s, l) => s + l.quantity * l.unitPrice, 0);
-  await call('POST', '/sales/invoices', {
-    invoiceType: 2, branchId: 1, warehouseId: warehouse1,
-    partyId: supplierIds[0], paymentType: 1, cashAccountId: drawer1?.cashAccountId ?? 1,
-    paidAmount: Math.floor(baseTotal * 0.8), invoiceDate: daysAgo(20), lines: baseStock, notes: 'تشكيل المخزون الافتتاحي',
-  }, 1);
-
-  // ---------- buy for branch 1 (4 batches over time) ----------
-  const b1Batches = [
-    { days: 25, supplierIndex: 0, share: 0.4 },
-    { days: 17, supplierIndex: 1, share: 0.25 },
-    { days: 10, supplierIndex: 2, share: 0.2 },
-    { days: 4, supplierIndex: 3, share: 0.15 },
-  ];
-  for (const batch of b1Batches) {
-    const slice = [...b1Needed.entries()].map(([idx, qty]) => ({
-      itemId: created[idx].itemId, unitId: PCS,
-      quantity: Math.ceil(qty * (1 + batch.share * 1.2)), // 20% buffer above needed
-      unitPrice: created[idx].cost, discountPct: 0, taxPct: 0,
-    })).filter((l) => l.quantity > 0);
-    const total = slice.reduce((s, l) => s + l.quantity * l.unitPrice, 0);
-    await call('POST', '/sales/invoices', {
-      invoiceType: 2, branchId: 1, warehouseId: warehouse1,
-      partyId: supplierIds[batch.supplierIndex],
-      paymentType: 1, cashAccountId: drawer1?.cashAccountId ?? 1,
-      paidAmount: Math.floor(total * 0.7), invoiceDate: daysAgo(batch.days), lines: slice, notes: 'توريد',
-    }, 1);
-  }
-
-  // ---------- buy for branch 2 ----------
-  if (warehouse2Id) {
-    const slice = [...b2Needed.entries()].map(([idx, qty]) => ({
-      itemId: created[idx].itemId, unitId: PCS,
-      quantity: Math.ceil(qty * 1.5), // generous buffer, small quantities
-      unitPrice: created[idx].cost, discountPct: 0, taxPct: 0,
-    })).filter((l) => l.quantity > 0);
-    const total = slice.reduce((s, l) => s + l.quantity * l.unitPrice, 0);
-    await call('POST', '/sales/invoices', {
-      invoiceType: 2, branchId: branch2Id, warehouseId: warehouse2Id,
-      partyId: supplierIds[1], paymentType: 1,
-      cashAccountId: branch2Cash.cashAccountId ?? branch2Cash,
-      paidAmount: Math.floor(total * 0.7), invoiceDate: daysAgo(15), lines: slice, notes: 'توريد فرع المقطم',
-    }, branch2Id);
-  }
-
-  // ---- sales last 30 days (branch 1) ----
-  const branch1Drawer = drawer1?.cashAccountId ?? null;
-  const cardAccountId = cardAccount?.cashAccountId ?? null;
-  const sales = [
-    [29, 0, [[0, 1, PCS], [5, 1, PCS], [9, 1, PCS], [33, 2, PCS], [34, 1, PCS]]],
-    [27, 3, [[11, 3, PCS], [9, 4, PCS], [13, 2, PCS]]],
-    [26, 1, [[31, 2, PCS], [35, 4, PCS], [37, 8, PCS], [38, 12, PCS], [30, 1, PCS], [32, 1, PCS]]],
-    [24, 5, [[1, 1, PCS], [0, 1, PCS], [44, 1, PCS], [24, 2, PCS], [10, 1, PCS]]],
-    [22, 2, [[18, 2, PCS], [22, 1, PCS], [21, 1, PCS], [27, 2, PCS]]],
-    [21, 6, [[41, 1, PCS], [45, 1, PCS]]],
-    [19, 1, [[30, 4, PCS], [35, 2, PCS], [38, 10, PCS], [36, 2, PCS], [39, 5, PCS]]],
-    [18, 7, [[2, 1, PCS], [3, 1, PCS]]],
-    [16, 0, [[37, 4, PCS], [34, 2, PCS]]],
-    [14, 3, [[27, 4, PCS], [9, 2, PCS], [13, 3, PCS], [25, 6, PCS], [26, 2, PCS]]],
-    [12, 6, [[40, 2, PCS], [41, 1, PCS], [43, 5, PCS]]],
-    [11, 1, [[33, 1, PCS], [32, 2, PCS], [37, 2, PCS], [34, 4, PCS], [35, 4, PCS], [39, 8, PCS]]],
-    [9, 2, [[5, 1, PCS], [18, 1, PCS], [22, 2, PCS], [24, 1, PCS]]],
-    [8, 5, [[62, 1, PCS], [67, 2, PCS], [70, 3, PCS], [72, 2, PCS]]],
-    [7, 4, [[56, 1, PCS], [59, 2, PCS], [57, 1, PCS], [55, 2, PCS]]],
-    [6, 7, [[0, 2, PCS], [4, 1, PCS]]],
-    [5, 3, [[52, 1, PCS], [51, 1, PCS]]],
-    [4, 1, [[35, 4, PCS], [36, 1, PCS], [34, 4, PCS], [37, 8, PCS]]],
-    [3, 2, [[9, 3, PCS], [27, 2, PCS], [24, 2, PCS], [10, 1, PCS]]],
-    [2, 6, [[40, 1, PCS], [41, 1, PCS], [46, 2, PCS]]],
-    [1, 0, [[33, 4, PCS], [38, 8, PCS], [37, 4, PCS]]],
-    [0, 5, [[76, 1, PCS], [77, 1, PCS]]],
-  ];
-
-  for (const [day, customerIndex, lines] of sales) {
-    const resolved = lines.map(([idx, qty, unit]) => {
-      const item = created[idx];
-      return { itemId: item.itemId, unitId: unit, quantity: qty, unitPrice: item.sell, discountPct: 0, taxPct: 0 };
+      taxNumber: name.includes('شركة') || name.includes('مركز') ? '345-678-901' : null,
     });
-    const total = resolved.reduce((s, l) => s + l.quantity * l.unitPrice, 0);
-    const cashPart = Math.floor(total * 0.6);
-    const cardPart = total - cashPart;
-    await call('POST', '/sales/invoices', {
-      invoiceType: 1, branchId: 1, warehouseId: warehouse1,
-      partyId: customerIds[customerIndex],
-      paymentType: 3,
-      cashAccountId: drawer1?.cashAccountId ?? 1,
-      paidAmount: cashPart,
-      payments: [
-        { method: 1, amount: cashPart, cashAccountId: branch1Drawer },
-        { method: 2, amount: cardPart, cashAccountId: cardAccountId },
-      ],
-      invoiceDate: daysAgo(day), lines: resolved, notes: '',
-    }, 1);
+    (branch === 1 ? customerIds.main : customerIds.mobile).push(party.partyId);
   }
-
-  // ---- branch 2 sales ----
-  if (warehouse2Id) {
-    const cp2Sales = [
-      [28, 6, [[42, 1, PCS], [48, 2, PCS]]],
-      [25, 6, [[46, 1, PCS], [50, 1, PCS], [47, 1, PCS], [49, 2, PCS]]],
-      [21, 7, [[44, 1, PCS], [45, 1, PCS]]],
-      [17, 7, [[41, 1, PCS], [50, 1, PCS]]],
-      [13, 6, [[42, 1, PCS], [48, 1, PCS], [49, 1, PCS], [47, 1, PCS], [45, 1, PCS]]],
-      [8, 7, [[46, 1, PCS], [42, 1, PCS]]],
-      [2, 6, [[41, 1, PCS], [48, 2, PCS]]],
-    ];
-    for (const [day, customerIndex, lines] of cp2Sales) {
-      const resolved = lines.map(([idx, qty, unit]) => {
-        const item = created[idx];
-        return { itemId: item.itemId, unitId: unit, quantity: qty, unitPrice: item.sell, discountPct: 0, taxPct: 0 };
-      });
-      const total = resolved.reduce((s, l) => s + l.quantity * l.unitPrice, 0);
-      await call('POST', '/sales/invoices', {
-        invoiceType: 1, branchId: branch2Id, warehouseId: warehouse2Id,
-        partyId: customerIds[customerIndex],
-        paymentType: 1, cashAccountId: branch2Cash.cashAccountId ?? branch2Cash,
-        paidAmount: total, invoiceDate: daysAgo(day), lines: resolved, notes: '',
-      }, branch2Id);
-    }
-  }
-
-  // ---- a daily cash deposit into the bank ----
-  const cashCategories = await call('GET', '/treasury/categories', null, 1);
-  const depositCategory = (cashCategories ?? []).find((c) => c.direction === 1);
-  for (const day of [23, 15, 7, 1]) {
-    if (!depositCategory) continue;
-    await call('POST', '/treasury/transactions', {
-      cashAccountId: (accounts ?? []).find((a) => a.type === 2 && Number(a.branchId) === 1)?.cashAccountId,
-      direction: 1, categoryId: depositCategory.categoryId,
-      amount: 5000, description: 'إيداع يومية الكاشير', transactionDate: daysAgo(day),
-    }, 1);
-  }
-
-  // ---- maintenance tickets ----
-  const maintProducts = await call('GET', '/maintenance/products', null, 1);
-  const product = (maintProducts ?? [])[0];
-  const maintModels = await call('GET', `/maintenance/models?productId=${product?.productId ?? 1}`, null, 1);
-  const model = (maintModels ?? [])[0];
-
-  const tickets = [
-    ['عميل محل 9 — صيانة لابتوب Lenovo', '01012345678', product?.productId ?? 1, model?.modelId ?? 1, 'شاشة سوداء بعد فتح الجهاز — السبب لوحة الأم', 2500, 1200],
-    ['أحمد سمير — ماك بوك برو', '01122334455', product?.productId ?? 1, model?.modelId ?? 1, 'صيانة MacBook Pro 13 — إستبدال بطارية', 1800, 800],
-    ['محل التكنولوجيا الحديثة — تركيب 6 كاميرات', '01123456789', product?.productId ?? 1, model?.modelId ?? 1, 'تركيب وتشغيل 4 كاميرات خارجية + DVR + هارد 1TB', 6000, 2500],
+  const suppliers = [
+    ['الموزع المعتمد — Dell/HP مصر', '01222222201', 'القاهرة، عبد العزيز', 400000, 1],
+    ['مورد كاميرات الأمان العالمي', '01222222202', 'القاهرة، وسط البلد', 350000, 1],
+    ['مصنع الورق والتغليف النيل', '01222222203', 'الإسكندرية', 250000, 1],
+    ['موزع موبايلات الدلتا', '01222222204', 'القاهرة، العتبة', 500000, 2],
   ];
-  for (const [customerName, phone, productId, modelId, notes, maxCharge, advance] of tickets) {
-    try {
-      await call('POST', '/maintenance/tickets', {
-        customerName, phone,
-        productId, modelId,
-        accessories: {}, productCondition: 'يعمل',
-        customerNotes: notes, maxCharge, estimatedCost: maxCharge,
-        paidAmount: advance, cashAccountId: branch1Drawer ?? 1,
-      }, 1);
-    } catch (e) {
-      console.log('[compumob] تعذر إنشاء تذكرة صيانة:', e.message);
+  const supplierIds = { main: [], mobile: [] };
+  for (const [name, phone, address, creditLimit, branch] of suppliers) {
+    const party = await call('POST', '/parties', {
+      name, partyType: 2, phone, address, creditLimit, isActive: true,
+    });
+    (branch === 1 ? supplierIds.main : supplierIds.mobile).push(party.partyId);
+  }
+
+  // ---------------- price lists ----------------
+  const wholesale = await call('POST', '/pricing/lists', {
+    name: 'أسعار الجملة — الشركات والمكاتب', code: 'CMB-WHOLESALE', listType: 2, priority: 30, discountPct: 8,
+  });
+  await call('POST', `/pricing/lists/${wholesale.priceListId}/lines`, {
+    lines: created.slice(0, 15).map((item) => ({
+      itemId: item.itemId, unitId: item.baseUnitId,
+      price: Math.round(item.sellPrice * 0.92 * 100) / 100,
+    })),
+  });
+
+  // ---------------- purchases (planned after the sales plan below, so the
+  // stock always covers the whole month — no mid-demo stock-outs) -------------
+  async function purchase(branch, warehouseId, supplierId, bank, days, codes, needMap) {
+    const lines = codes
+      .map((code) => {
+        const item = byCode(code);
+        return { item, need: needMap.get(item.itemId) ?? 0 };
+      })
+      .filter((row) => row.need > 0)
+      .map((row) => ({
+        itemId: row.item.itemId, unitId: row.item.baseUnitId,
+        // every code list is disjoint, so each purchase must cover its share in full
+        quantity: Math.ceil(row.need) + 6,
+        unitPrice: row.item.costPrice, discountPct: 0, taxPct: row.item.vatPct,
+      }));
+    if (!lines.length) return;
+    const total = lines.reduce((sum, line) => sum + line.quantity * line.unitPrice, 0);
+    await call('POST', '/sales/invoices', {
+      invoiceType: 2, branchId: branch, warehouseId, partyId: supplierId,
+      paymentType: 3, cashAccountId: bank, paidAmount: Math.round(total * 0.5 * 100) / 100,
+      invoiceDate: daysAgo(days), lines, notes: 'توريد بضاعة — CompuMob',
+    }, branch);
+  }
+
+  // Branch split matches the categories: main = computer/cctv/security/printers/paper
+  // (indexes 0-15), mobile branch = phones/accessories/spares (indexes 16-26).
+  const mainCodes = items.slice(0, 16).map((row) => row[0]);
+  const mobileCodes = items.slice(16).map((row) => row[0]);
+
+  function makeSaleLines(branchCodes, lineCount) {
+    const lines = [];
+    for (let l = 0; l < lineCount; l += 1) {
+      const item = byCode(pick(branchCodes));
+      const useBigUnit = random() > 0.8 && item.unitRows.length > 1;
+      const [unitId, , price] = useBigUnit ? item.unitRows[1] : item.unitRows[0];
+      const factor = useBigUnit ? item.unitRows[1][1] : 1;
+      lines.push({
+        itemId: item.itemId, unitId, factor,
+        quantity: factor > 6 ? between(1, 2) : price > 15000 ? between(1, 2) : between(1, 6),
+        unitPrice: price,
+        discountPct: random() > 0.85 ? 5 : 0,
+        taxPct: item.vatPct,
+      });
+    }
+    return lines;
+  }
+
+  function settle(total, drawer, card) {
+    const roll = random();
+    const payments = [];
+    let paidAmount = 0;
+    if (roll < 0.5) {
+      payments.push({ method: 1, amount: Math.round(total * 100) / 100, cashAccountId: drawer.cashAccountId });
+      paidAmount = total;
+    } else if (roll < 0.7) {
+      const cashPart = Math.round(total * 0.5 * 100) / 100;
+      payments.push({ method: 1, amount: cashPart, cashAccountId: drawer.cashAccountId });
+      paidAmount = cashPart;
+    } else if (card && roll < 0.85) {
+      const cashPart = Math.round(total * 0.4 * 100) / 100;
+      payments.push({ method: 1, amount: cashPart, cashAccountId: drawer.cashAccountId });
+      payments.push({ method: 2, amount: Math.round((total - cashPart) * 100) / 100, cashAccountId: card.cashAccountId });
+      paidAmount = total;
+    }
+    return { payments, paidAmount };
+  }
+
+  // ---------------- plan the month of sales first ----------------
+  const salesPlan = [];
+  for (let day = 29; day >= 0; day -= 1) {
+    for (const branch of [branchMain, branchMobile]) {
+      if (random() < 0.25) continue;
+      const isMain = branch === branchMain;
+      const branchCodes = isMain ? mainCodes : mobileCodes;
+      const drawer = isMain ? drawerMain : drawerMobile;
+      const card = isMain ? cardAccount : null;
+      const party = pick(isMain ? customerIds.main : customerIds.mobile);
+      const warehouseId = isMain ? whMain : whMobile;
+      const lines = makeSaleLines(branchCodes, between(1, 5));
+      const gross = lines.reduce((sum, line) => sum + line.quantity * line.unitPrice * (1 - line.discountPct / 100), 0);
+      const tax = lines.reduce((sum, line) => sum + line.quantity * line.unitPrice * (1 - line.discountPct / 100) * (line.taxPct / 100), 0);
+      const total = gross + tax;
+      const { payments, paidAmount } = settle(total, drawer, card);
+      salesPlan.push({ branch, isMain, party, warehouseId, drawer, card, lines, total, payments, paidAmount, day });
     }
   }
 
-  // ---- HR: departments + employees ----
-  try {
-    const deptMaint = await call('POST', '/hr/departments', { name: 'الصيانة والدعم الفني', branchId: 1 }, 1);
-    const deptSales = await call('POST', '/hr/departments', { name: 'المبيعات', branchId: 1 }, 1);
-    const deptSec = await call('POST', '/hr/departments', { name: 'الأنظمة الأمنية والشبكات', branchId: 1 }, 1);
+  // ---------------- purchases that cover exactly what the plan needs ----------------
+  // Per-branch needs: stock lives in each branch's own warehouse, so every
+  // branch must be stocked for exactly what ITS sales plan (plus maintenance
+  // inspections) consumes.
+  const neededMain = new Map();
+  const neededMobile = new Map();
+  for (const sale of salesPlan) {
+    const map = sale.isMain ? neededMain : neededMobile;
+    for (const line of sale.lines) {
+      map.set(line.itemId, (map.get(line.itemId) ?? 0) + line.quantity * line.factor);
+    }
+  }
+  // maintenance inspections consume spare parts on top of the sales plan
+  const addNeed = (map, code, qty) => {
+    const item = byCode(code);
+    map.set(item.itemId, (map.get(item.itemId) ?? 0) + qty);
+  };
+  addNeed(neededMain, 'CMB-SPR-SSD-512', 1);   // laptop repair at المعادي
+  addNeed(neededMobile, 'CMB-SPR-SCR-MB', 1);  // phone repair at المقطم
+  addNeed(neededMobile, 'CMB-SPR-BAT-MB', 1);
+  // the confirmed sales order reserves stock on top of the sales plan
+  for (const orderCode of ['CMB-LAP-DELL-I7', 'CMB-MON-24', 'CMB-PRN-HP-LASER']) {
+    addNeed(neededMain, orderCode, 3);
+  }
+  await purchase(branchMain, whMain, supplierIds.main[0], bankNbe.cashAccountId, 28,
+    ['CMB-LAP-DELL-I7', 'CMB-PC-GAMER-1', 'CMB-MON-24', 'CMB-KB-LOG', 'CMB-PRN-HP-LASER', 'CMB-TONER-85A', 'CMB-SPR-SSD-512'], neededMain);
+  await purchase(branchMain, whMain, supplierIds.main[1], bankCib.cashAccountId, 24,
+    ['CMB-CAM-HIK-2MP', 'CMB-DVR-8CH', 'CMB-HDD-4TB', 'CMB-NVR-16', 'CMB-ACC-FACE', 'CMB-ALARM-KIT'], neededMain);
+  await purchase(branchMain, whMain, supplierIds.main[2], bankNbe.cashAccountId, 20,
+    ['CMB-ROLL-80', 'CMB-KRAFT-ROLL', 'CMB-BAG-KRAFT', 'CMB-STICK-A4'], neededMain);
+  await purchase(branchMobile, whMobile, supplierIds.mobile[0], bankCairo.cashAccountId, 26,
+    ['CMB-MOB-IP15', 'CMB-MOB-A55', 'CMB-MOB-R13C'], neededMobile);
+  await purchase(branchMobile, whMobile, supplierIds.mobile[0], bankCairo.cashAccountId, 18,
+    ['CMB-ACC-CHG20', 'CMB-ACC-CASE', 'CMB-ACC-GLASS', 'CMB-ACC-PWB', 'CMB-ACC-BT', 'CMB-SPR-SCR-MB', 'CMB-SPR-BAT-MB', 'CMB-SPR-SSD-512'], neededMobile);
 
-    const mkEmp = async (name, phone, deptId, salary, userName) => {
-      try {
-        await call('POST', '/hr/employees', {
-          name, phone, nationalId: '0000000000', hireDate: daysAgo(200),
-          departmentId: deptId, jobTitle: 'فني', basicSalary: salary, allowances: 500,
-          userId: staffUserIds[userName] ?? null,
-        }, 1);
-      } catch (e) {
-        console.log('[compumob] تعذر إنشاء موظف', name, e.message);
-      }
-    };
-    await mkEmp('أحمد صابر', '01012345671', deptMaint?.departmentId, 9000, 'ahmdsbr');
-    await mkEmp('محمود القاضي', '01012345672', deptSec?.departmentId, 8000, 'mhmudqd');
-    await mkEmp('سارة النمر', '01012345673', deptSales?.departmentId, 7000, 'sarnam');
-  } catch (e) {
-    console.log('[compumob] HR غير متاح:', e.message);
+  // ---------------- execute the sales plan ----------------
+  const cashCategories = await call('GET', '/treasury/categories');
+  const depositCategory = cashCategories.find((c) => c.direction === 1);
+
+  let salesCount = 0;
+  for (const sale of salesPlan) {
+    await call('POST', '/sales/invoices', {
+      invoiceType: 1, branchId: sale.branch, warehouseId: sale.warehouseId, partyId: sale.party,
+      paymentType: sale.paidAmount >= sale.total - 0.01 ? 1 : sale.paidAmount > 0 ? 3 : 2,
+      cashAccountId: sale.drawer.cashAccountId,
+      paidAmount: Math.round(sale.paidAmount * 100) / 100,
+      payments: sale.payments.length ? sale.payments : undefined,
+      invoiceDate: daysAgo(sale.day),
+      lines: sale.lines, notes: '',
+    }, sale.branch);
+    salesCount += 1;
   }
 
-  console.log('[compumob] تم إنشاء بيانات الديمو بالكامل — علاء + 6 موظفين');
-  console.log('[compumob] عدد المخزون وسلطة المنتجات: جهاز واحد لكل مخزن، \'كل الأرقام أعداد صحيحة بدون كسور\'');
+  // ---------------- bank deposits + wallet receipts ----------------
+  for (let day = 29; day >= 0; day -= 1) {
+    if (random() > 0.6 && depositCategory) {
+      await call('POST', '/treasury/transactions', {
+        cashAccountId: bankNbe.cashAccountId, direction: 1,
+        categoryId: depositCategory.categoryId, amount: between(3000, 12000),
+        description: 'إيداع نقدية — فرع المعادي', transactionDate: daysAgo(day),
+      });
+    }
+    if (random() > 0.7 && depositCategory) {
+      await call('POST', '/treasury/transactions', {
+        cashAccountId: bankCairo.cashAccountId, direction: 1,
+        categoryId: depositCategory.categoryId, amount: between(2000, 9000),
+        description: 'إيداع نقدية — فرع المقطم', transactionDate: daysAgo(day),
+      });
+    }
+  }
+
+  // ---------------- receipt voucher settling a credit invoice ----------------
+  const creditSales = await call('GET', '/sales/invoices?type=1&pageSize=200', undefined, branchMain);
+  const openInvoice = (creditSales.items ?? [])
+    .filter((row) => row.partyId && Number(row.paidAmount) < Number(row.totalAmount))
+    .sort((a, b) => Number(a.totalAmount) - Number(b.totalAmount))[0];
+  if (openInvoice) {
+    const remaining = Number(openInvoice.remaining ?? 0);
+    const amount = Math.round(remaining * 0.5 * 100) / 100;
+    if (amount > 0) {
+      await call('POST', '/accounting/vouchers', {
+        voucherType: 1, partyId: openInvoice.partyId,
+        cashAccountId: bankNbe.cashAccountId, amount, paymentMethod: 3,
+        description: 'تحصيل دفعة من عميل — تحويل بنكي',
+        allocations: [{ invoiceId: openInvoice.invoiceId, amount }],
+      }, branchMain);
+    }
+  }
+
+  // ---------------- maintenance: products, models, tickets ----------------
+  const prodLaptop = await call('POST', '/maintenance/products', { name: 'لابتوب' });
+  const prodMobile = await call('POST', '/maintenance/products', { name: 'موبايل' });
+  const prodPrinter = await call('POST', '/maintenance/products', { name: 'طابعة' });
+  const modelDell = await call('POST', '/maintenance/models', { productId: prodLaptop.productId, name: 'Dell Latitude 5520' });
+  await call('POST', '/maintenance/models', { productId: prodPrinter.productId, name: 'HP LaserJet M1136' });
+  const modelIPhone = await call('POST', '/maintenance/models', { productId: prodMobile.productId, name: 'iPhone 13' });
+
+  const ticketMain = await call('POST', '/maintenance/tickets', {
+    customerName: 'مكتب الأهرام للمحاسبة', phone: '01211111101',
+    productId: prodLaptop.productId, modelId: modelDell.modelId,
+    productCondition: 'لا يعمل بالشاحن', customerNotes: 'البطارية لا تشحن',
+    estimatedCost: 1200, paidAmount: 400, cashAccountId: drawerMain.cashAccountId,
+  }, branchMain);
+  await call('POST', `/maintenance/tickets/${ticketMain.ticketId}/inspect`, {
+    engineerId: staff.engineer1.userId, inspectionStatus: 3,
+    checkReport: 'تالف البطارية — استبدال', actualCost: 900,
+    parts: [{ itemId: byCode('CMB-SPR-SSD-512').itemId, quantity: 1 }],
+  }, branchMain);
+
+  const ticketMobile = await call('POST', '/maintenance/tickets', {
+    customerName: 'عميل نقدي — د. هالة', phone: '01000000000',
+    productId: prodMobile.productId, modelId: modelIPhone.modelId,
+    productCondition: 'الشاشة مكسورة', customerNotes: 'سقوط بالمياه',
+    estimatedCost: 2600, paidAmount: 500, cashAccountId: drawerMobile.cashAccountId,
+  }, branchMobile);
+  await call('POST', `/maintenance/tickets/${ticketMobile.ticketId}/inspect`, {
+    engineerId: staff.engineer2.userId, inspectionStatus: 3,
+    checkReport: 'استبدال شاشة وبطارية', actualCost: 2100,
+    parts: [
+      { itemId: byCode('CMB-SPR-SCR-MB').itemId, quantity: 1 },
+      { itemId: byCode('CMB-SPR-BAT-MB').itemId, quantity: 1 },
+    ],
+  }, branchMobile);
+
+  // ---------------- quotation + sales order ----------------
+  const quotation = await call('POST', '/quotations', {
+    partyId: customerIds.main[1],
+    validUntil: daysAgo(-14),
+    notes: 'عرض سعر شبكة كاميرات — فيلا التجمع',
+    lines: [byCode('CMB-CAM-HIK-2MP'), byCode('CMB-DVR-8CH'), byCode('CMB-HDD-4TB'), byCode('CMB-ACC-FACE')]
+      .map((item) => ({
+        itemId: item.itemId, unitId: item.baseUnitId,
+        quantity: between(2, 8), unitPrice: item.sellPrice, taxPct: item.vatPct,
+      })),
+  }, branchMain);
+
+  const order = await call('POST', '/orders', {
+    orderType: 1, partyId: customerIds.main[0], warehouseId: whMain,
+    expectedDate: daysAgo(-7), notes: 'توريد مكتب محاسبة',
+    lines: [byCode('CMB-LAP-DELL-I7'), byCode('CMB-MON-24'), byCode('CMB-PRN-HP-LASER')]
+      .map((item) => ({
+        itemId: item.itemId, unitId: item.baseUnitId,
+        quantity: between(1, 3), unitPrice: item.sellPrice, taxPct: item.vatPct,
+      })),
+  }, branchMain);
+  await call('POST', `/orders/${order.orderId}/status`, { status: 2 }, branchMain);
+
+  // ---------------- company identity ----------------
+  await call('PUT', '/admin/settings', {
+    CompanyName: 'CompuMob — كمبيوتر وكاميرات وأنظمة أمنية',
+    CompanyPhone: '0223807000',
+    CompanyAddress: 'المعادي، شارع 9، القاهرة',
+    InvoiceFooter: 'شكراً لتعاملكم مع CompuMob — ضمان الصيانة 30 يوم',
+  });
+
+  console.log('[demo] تم إنشاء ديمو CompuMob:');
+  console.log(`   - فرعان: MAIN (كمبيوتر/كاميرات/أمن/طباعة وتغليف) + CP2 (موبايل)`);
+  console.log(`   - 6 موظفين/مستخدمين — كلمة سر المستخدمين: Demo@1234`);
+  console.log(`   - خزائن: درجان نقديان + بنك أهلي + CIB + بنك القاهرة + بطاقات + V.Cash`);
+  console.log(`   - ${created.length} صنف · ${customers.length} عميل · ${suppliers.length} مورد`);
+  console.log(`   - ${salesCount} فاتورة بيع خلال 30 يوم على الفرعين`);
+  console.log(`   - تذكرتا صيانة + عرض سعر + أمر بيع + إيداعات بنكية`);
+  console.log(`   - الدخول: admin / admin123`);
 }
 
-main().catch((err) => {
-  console.error('FATAL', err);
+main().catch((error) => {
+  console.error('[demo] فشل:', error.message);
   process.exit(1);
 });
