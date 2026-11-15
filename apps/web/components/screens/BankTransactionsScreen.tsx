@@ -130,7 +130,7 @@ export default function BankTransactionsScreen() {
 
           <div className="card">
             <div className="card-title"><span>الحركات ({(statement.items ?? []).length})</span></div>
-            <div className="table-wrap max-h-[30rem] overflow-y-auto">
+            <div className="table-wrap">
               <table className="table">
                 <thead><tr><th>التاريخ</th><th>البيان</th><th>الطرف</th><th>وارد</th><th>صادر</th><th>الرصيد</th></tr></thead>
                 <tbody>

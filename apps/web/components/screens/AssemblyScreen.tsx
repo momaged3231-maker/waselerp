@@ -119,7 +119,7 @@ export default function AssemblyScreen() {
     <div className="grid lg:grid-cols-3 gap-4">
       <div className="card">
         <div className="card-title"><span>الأصناف المجمعة ({grouped.length})</span></div>
-        <div className="table-wrap max-h-96 overflow-y-auto">
+        <div className="table-wrap">
           <table className="table">
             <thead><tr><th>الكود</th><th>الصنف</th><th>مكونات</th><th>تكلفة المكونات</th></tr></thead>
             <tbody>

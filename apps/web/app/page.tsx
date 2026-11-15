@@ -88,7 +88,7 @@ export default function DashboardPage() {
 
           <div className="card">
             <div className="card-title"><span>أصناف تحت حد الطلب</span></div>
-            <div className="p-3 space-y-2 max-h-72 overflow-y-auto">
+            <div className="p-3 space-y-2">
               {lowStock.length === 0 && <div className="text-sm text-slate-400 p-3">كل الأصناف فوق الحد</div>}
               {lowStock.map((row) => (
                 <div key={`${row.itemId}-${row.warehouseId}`} className="flex items-center justify-between gap-2 rounded-xl px-3 py-2 bg-slate-50">

@@ -151,7 +151,7 @@ export default function StockReportScreen() {
             {(itemId || itemSearch) && <button className="btn-soft py-1.5" onClick={() => { setItemId(''); setItemSearch(''); loadMovements('', warehouseId); }}>مسح الصنف</button>}
           </div>
         </div>
-        <div className="table-wrap max-h-96 overflow-y-auto">
+        <div className="table-wrap">
           <table className="table">
             <thead><tr><th>التاريخ</th><th>الصنف</th><th>الحركة</th><th>الكمية</th><th>التكلفة</th><th>المرجع</th><th>المخزن</th></tr></thead>
             <tbody>

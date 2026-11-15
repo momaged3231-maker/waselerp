@@ -87,7 +87,7 @@ export default function OpeningBalancesScreen() {
           <span>الأطراف ({rows.length})</span>
           <span className="text-xs font-normal text-slate-500">المدين {formatMoney(totalDr)} · الدائن {formatMoney(totalCr)}</span>
         </div>
-        <div className="table-wrap max-h-[34rem] overflow-y-auto">
+        <div className="table-wrap">
           <table className="table">
             <thead><tr><th>الكود</th><th>الاسم</th><th>النوع</th><th>الرصيد الحالي</th><th>رصيد مسجل</th><th>رصيد البداية</th></tr></thead>
             <tbody>

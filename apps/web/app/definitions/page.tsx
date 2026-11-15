@@ -51,7 +51,7 @@ function MissingCard({ title, reason, alt }: { title: string; reason: string; al
 
 function DataTable({ columns, rows, empty }: { columns: [string, string][]; rows: any[]; empty?: string }) {
   return (
-    <div className="table-wrap max-h-96 overflow-y-auto">
+    <div className="table-wrap">
       <table className="table">
         <thead><tr>{columns.map(([k, label]) => <th key={k}>{label}</th>)}</tr></thead>
         <tbody>

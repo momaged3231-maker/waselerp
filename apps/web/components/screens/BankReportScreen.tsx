@@ -59,7 +59,7 @@ export default function BankReportScreen() {
 
       <div className="card">
         <div className="card-title"><span>الحسابات البنكية ({rows.length})</span></div>
-        <div className="table-wrap max-h-[34rem] overflow-y-auto">
+        <div className="table-wrap">
           <table className="table">
             <thead><tr><th>الحساب</th><th>البنك</th><th>رقم الحساب</th><th>الحساب المحاسبي</th><th>العملة</th><th>الافتتاحي</th><th>الوارد</th><th>الصادر</th><th>الإغلاق</th></tr></thead>
             <tbody>

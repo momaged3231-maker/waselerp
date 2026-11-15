@@ -225,7 +225,7 @@ export default function VouchersPage() {
                   <div className="text-xs font-bold text-slate-600 mb-1">
                     تخصيص السند على فواتير العميل (اختياري)
                   </div>
-                  <div className="space-y-1 max-h-40 overflow-y-auto">
+                  <div className="space-y-1">
                     {openInvoices.map((invoice) => (
                       <div key={invoice.invoiceId} className="flex items-center gap-2 text-xs">
                         <span className="font-mono text-slate-500">{invoice.invoiceNo}</span>

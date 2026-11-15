@@ -1295,7 +1295,7 @@ export default function HrPage() {
           {reportKind === 'attendance' && (
             <div className="card">
               <div className="card-title"><span>تقرير الحضور والانصراف ({reportRows.length})</span></div>
-              <div className="table-wrap max-h-[34rem] overflow-y-auto">
+              <div className="table-wrap">
                 <table className="table">
                   <thead><tr><th>الكود</th><th>الاسم</th><th>التاريخ</th><th>حضور</th><th>انصراف</th><th>تأخير (د)</th><th>قيمة التأخير</th><th>انصراف مبكر (د)</th><th>قيمة الانصراف</th><th>الساعات</th><th>الحالة</th></tr></thead>
                   <tbody>
@@ -1324,7 +1324,7 @@ export default function HrPage() {
           {reportKind === 'early' && (
             <div className="card">
               <div className="card-title"><span>تقرير أذونات الانصراف المبكر ({reportRows.length}{reportSummary ? ` · إجمالي ${reportSummary.minutes} دقيقة` : ''})</span></div>
-              <div className="table-wrap max-h-[34rem] overflow-y-auto">
+              <div className="table-wrap">
                 <table className="table">
                   <thead><tr><th>الموظف</th><th>التاريخ</th><th>من</th><th>إلى</th><th>المدة (دقيقة)</th><th>السبب</th><th>يخصم</th></tr></thead>
                   <tbody>
@@ -1352,7 +1352,7 @@ export default function HrPage() {
                 <span>تقرير العمل الإضافي — تقديري × 1.5 للساعة</span>
                 {reportSummary && <span className="text-xs font-normal text-slate-500">{reportSummary.overtimeMinutes} دقيقة · {Number(reportSummary.hours).toFixed(2)} ساعة · {formatMoney(reportSummary.overtimeValue)}</span>}
               </div>
-              <div className="table-wrap max-h-[34rem] overflow-y-auto">
+              <div className="table-wrap">
                 <table className="table">
                   <thead><tr><th>الموظف</th><th>إضافية (دقيقة)</th><th>الساعات</th><th>أيام العمل الإضافي</th><th>أجر الساعة</th><th>القيمة التقديرية</th></tr></thead>
                   <tbody>
@@ -1379,7 +1379,7 @@ export default function HrPage() {
                 <span>تقرير الإجازات والغياب</span>
                 {reportSummary && <span className="text-xs font-normal text-slate-500">إجمالي أيام الغياب {reportSummary.absentDays} · إجمالي أيام الإجازات {Number(reportSummary.totalLeaveDays).toFixed(1)}</span>}
               </div>
-              <div className="table-wrap max-h-[34rem] overflow-y-auto">
+              <div className="table-wrap">
                 <table className="table">
                   <thead><tr><th>الموظف</th><th>سنوية</th><th>مرضية</th><th>بدون راتب</th><th>إجمالي الإجازات</th><th>أيام الغياب</th><th>طلبات الإجازات</th></tr></thead>
                   <tbody>

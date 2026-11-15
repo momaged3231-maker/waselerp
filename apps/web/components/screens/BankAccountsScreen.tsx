@@ -84,7 +84,7 @@ export default function BankAccountsScreen() {
     <div className="grid lg:grid-cols-3 gap-4">
       <div className="card lg:col-span-2">
         <div className="card-title"><span>الحسابات والخزائن ({rows.length})</span></div>
-        <div className="table-wrap max-h-[32rem] overflow-y-auto">
+        <div className="table-wrap">
           <table className="table">
             <thead><tr><th>الاسم</th><th>النوع</th><th>البنك/الرقم</th><th>العملة</th><th>الرصيد الحالي</th><th>الحساب المحاسبي</th><th>الحالة</th>{canManage && <th></th>}</tr></thead>
             <tbody>

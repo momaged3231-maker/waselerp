@@ -622,7 +622,7 @@ export default function MaintenancePage() {
                 </div>
               )}
             </div>
-            <div className="space-y-2 max-h-64 overflow-y-auto">
+            <div className="space-y-2">
               {inspectForm.parts.map((p: any, i: number) => (
                 <div key={p.itemId} className="flex items-center gap-2 rounded-xl border border-slate-200 p-2">
                   <div className="min-w-0 flex-1">
@@ -775,7 +775,7 @@ export default function MaintenancePage() {
                 try { await apiFetch('/maintenance/products', { method: 'POST', body: { name: newProduct.trim() } }); setNewProduct(''); await loadReference(); } catch (err: any) { setError(err?.message ?? 'تعذر الحفظ'); }
               }}>إضافة</button>
             </div>
-            <div className="space-y-1 max-h-40 overflow-y-auto">
+            <div className="space-y-1">
               {products.map((p) => (
                 <div key={p.productId} className="flex items-center justify-between gap-2 text-sm rounded-xl border border-slate-200 px-3 py-1.5">
                   <span>{p.name} <span className="text-xs text-slate-400">({p.modelCount ?? 0} موديل)</span></span>
@@ -798,7 +798,7 @@ export default function MaintenancePage() {
                 try { await apiFetch('/maintenance/models', { method: 'POST', body: { productId: Number(newModel.productId), name: newModel.name.trim() } }); setNewModel({ ...newModel, name: '' }); await loadReference(); } catch (err: any) { setError(err?.message ?? 'تعذر الحفظ'); }
               }}>إضافة</button>
             </div>
-            <div className="space-y-1 max-h-40 overflow-y-auto">
+            <div className="space-y-1">
               {models.slice(0, 60).map((m) => (
                 <div key={m.modelId} className="flex items-center justify-between gap-2 text-sm rounded-xl border border-slate-200 px-3 py-1.5">
                   <span>{products.find((p) => p.productId === m.productId)?.name} — {m.name}</span>
@@ -817,7 +817,7 @@ export default function MaintenancePage() {
                 try { await apiFetch('/maintenance/fault-categories', { method: 'POST', body: { name: newCategory.trim() } }); setNewCategory(''); await loadReference(); } catch (err: any) { setError(err?.message ?? 'تعذر الحفظ'); }
               }}>إضافة</button>
             </div>
-            <div className="space-y-1 max-h-40 overflow-y-auto">
+            <div className="space-y-1">
               {faultCategories.map((c) => (
                 <div key={c.categoryId} className="flex items-center justify-between gap-2 text-sm rounded-xl border border-slate-200 px-3 py-1.5">
                   <span>{c.name} <span className="text-xs text-slate-400">({c.subcategoryCount ?? 0})</span></span>
@@ -840,7 +840,7 @@ export default function MaintenancePage() {
                 try { await apiFetch('/maintenance/fault-subcategories', { method: 'POST', body: { faultCategoryId: Number(newSubcategory.categoryId), name: newSubcategory.name.trim() } }); setNewSubcategory({ ...newSubcategory, name: '' }); await loadReference(); } catch (err: any) { setError(err?.message ?? 'تعذر الحفظ'); }
               }}>إضافة</button>
             </div>
-            <div className="space-y-1 max-h-40 overflow-y-auto">
+            <div className="space-y-1">
               {faultSubcategories.slice(0, 80).map((s) => (
                 <div key={s.subcategoryId} className="flex items-center justify-between gap-2 text-sm rounded-xl border border-slate-200 px-3 py-1.5">
                   <span>{faultCategories.find((c) => c.categoryId === s.categoryId)?.name} — {s.name}</span>

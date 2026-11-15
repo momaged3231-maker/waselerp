@@ -433,7 +433,7 @@ export default function RestaurantPage() {
                   onChange={(e) => setNewOrder({ ...newOrder, guestCount: Number(e.target.value) })} />
               </div>
 
-              <div className="max-h-48 overflow-y-auto border border-slate-200 rounded-lg">
+              <div className="border border-slate-200 rounded-lg">
                 {items.map((item: any) => (
                   <button key={item.itemId}
                     className="w-full text-right px-3 py-1.5 text-xs hover:bg-slate-50 border-b border-slate-100"

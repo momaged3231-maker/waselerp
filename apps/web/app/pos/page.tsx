@@ -870,8 +870,8 @@ export default function PosPage() {
             ))}
           </div>
 
-          <div className="flex-1 min-h-0 overflow-y-auto">
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2">
+          <div className="min-h-0">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2">
               {(categoryFilter ? results.filter((i: any) => i.categoryId === categoryFilter) : results).map((item) => (
                 <button
                   key={item.itemId}
@@ -1291,7 +1291,7 @@ export default function PosPage() {
                   <div className="text-[11px] text-slate-600">
                     {returnInvoice.header.invoiceNo} · {returnInvoice.header.partyName ?? 'عميل نقدي'}
                   </div>
-                  <div className="space-y-1 max-h-40 overflow-y-auto">
+                  <div className="space-y-1">
                     {returnLines.map((line, index) => (
                       <div key={line.itemId} className="flex items-center gap-2 text-[11px]">
                         <span className="flex-1 truncate">{line.name}</span>

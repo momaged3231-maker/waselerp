@@ -90,7 +90,7 @@ export default function SecuritiesReportScreen() {
 
       <div className="card">
         <div className="card-title"><span>الأوراق ({rows.length})</span></div>
-        <div className="table-wrap max-h-[30rem] overflow-y-auto">
+        <div className="table-wrap">
           <table className="table">
             <thead><tr><th>#</th><th>الرقم</th><th>الاتجاه</th><th>الطرف</th><th>البنك</th><th>القيمة</th><th>الاستحقاق</th><th>الحالة</th></tr></thead>
             <tbody>
