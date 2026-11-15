@@ -123,4 +123,11 @@ body {
     box-shadow: none;
     border: 1px solid #e2e8f0;
   }
+  .labels-print-only {
+    display: block !important;
+  }
+}
+
+.labels-print-only {
+  display: none;
 }

@@ -97,6 +97,11 @@ const SETTINGS: [string, string][] = [
   ['ItemCodeAuto', 'false'],
   ['RequireRepOnSale', 'false'],
   ['BlockBelowCostSale', 'false'],
+  ['BarcodeLabelFormat', 'medium'],
+  ['BarcodeLabelCopies', '1'],
+  ['BarcodeShowName', 'true'],
+  ['BarcodeShowCode', 'true'],
+  ['BarcodeShowPrice', 'true'],
 ];
 
 function hashPassword(password: string) {

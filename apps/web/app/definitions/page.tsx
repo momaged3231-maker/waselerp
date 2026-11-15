@@ -253,7 +253,7 @@ export default function DefinitionsPage() {
             <div className="card p-5 space-y-3 h-fit">
               <div className="font-bold">إضافة مندوب</div>
               <div className="text-sm text-slate-500">المندوب = مستخدم بدور «مندوب مبيعات» وحالة نشطة. أضف المستخدم أولاً من شاشة الإعدادات مع تفعيل «مندوب» ✅، ثم سيظهر هنا تلقائيًا.</div>
-              <Link href="/admin" className="btn-primary w-full">فتح شاشة الإعدادات لإضافة مندوب</Link>
+              <Link href="/settings" className="btn-primary w-full">فتح شاشة الإعدادات لإضافة مندوب</Link>
             </div>
           </div>
         );

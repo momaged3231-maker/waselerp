@@ -77,7 +77,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: '/crm', label: 'إدارة العملاء CRM', icon: IconUsers, permission: 'crm.view' },
       { href: '/tools', label: 'الأدوات', icon: IconWrench, permission: 'items.view' },
       { href: '/definitions', label: 'البيانات الأساسية', icon: IconFolder, permissions: ['items.view', 'parties.view'] },
-      { href: '/admin', label: 'الإعدادات', icon: IconSettings, permission: 'users.manage' },
+      { href: '/settings', label: 'الإعدادات', icon: IconSettings, permission: 'users.manage' },
     ],
   },
 ];

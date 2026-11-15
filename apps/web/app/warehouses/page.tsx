@@ -85,7 +85,7 @@ export default function WarehousesPage() {
 
   return (
     <AppShell title="المخازن">
-      <div className="flex gap-2 mb-4 flex-wrap">
+      <div className="flex gap-2 mb-4 flex-wrap no-print">
         {TABS.map((tab) => (
           <button
             key={tab.key}

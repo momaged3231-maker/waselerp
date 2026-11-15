@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { apiFetch } from '@/lib/api';
+import { useEffect, useMemo, useState } from 'react';
+import { apiFetch, formatMoney } from '@/lib/api';
 import { useSession } from '@/lib/session';
 
 interface Item {
@@ -25,6 +25,13 @@ function Barcode({ code }: { code: string }) {
   );
 }
 
+const FORMAT_WIDTH: Record<'small' | 'medium' | 'large', string> = {
+  small: 'w-36',
+  medium: 'w-52',
+  large: 'w-72',
+};
+
+/** Labels — settings-driven (BarcodeLabelFormat/Copies/ShowName/ShowCode/ShowPrice from «الإعدادات ← طباعة الباركود»). */
 export default function LabelsScreen() {
   const { can } = useSession();
   const [items, setItems] = useState<Item[]>([]);
@@ -33,6 +40,10 @@ export default function LabelsScreen() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [labelFormat, setLabelFormat] = useState<'small' | 'medium' | 'large'>('medium');
+  const [copies, setCopies] = useState(1);
+  const [showName, setShowName] = useState(true);
+  const [showCode, setShowCode] = useState(true);
+  const [showPrice, setShowPrice] = useState(true);
 
   const canManage = can('stock.view');
 
@@ -45,6 +56,20 @@ export default function LabelsScreen() {
   }
 
   useEffect(() => { load().catch(() => {}); }, [search]);
+
+  // Consume the barcode settings (seeded defaults: medium / 1 copy / show all)
+  useEffect(() => {
+    apiFetch<Record<string, string>>('/admin/settings').then((settings) => {
+      const format = ['small', 'medium', 'large'].includes(settings?.BarcodeLabelFormat) ? (settings.BarcodeLabelFormat as any) : 'medium';
+      setLabelFormat(format);
+      setCopies(Math.min(10, Math.max(1, Number(settings?.BarcodeLabelCopies ?? 1) || 1)));
+      setShowName(settings?.BarcodeShowName !== 'false');
+      setShowCode(settings?.BarcodeShowCode !== 'false');
+      setShowPrice(settings?.BarcodeShowPrice !== 'false');
+    }).catch(() => {});
+  }, []);
+
+  const selectedItems = useMemo(() => items.filter((i) => selected.has(i.itemId)), [items, selected]);
 
   function toggleItem(id: number) {
     const s = new Set(selected);
@@ -59,19 +84,18 @@ export default function LabelsScreen() {
 
   function printLabels() {
     if (selected.size === 0) { setError('اختر أصنافًا على الأقل'); return; }
-    const selItems = items.filter((i) => selected.has(i.itemId));
-    setMessage(`جاري طباعة ${selItems.length} ملصق...`);
+    setMessage(`جاري طباعة ${selectedItems.length * copies} ملصق...`);
     window.print();
   }
 
   return (
     <>
-      <div className="p-4 space-y-4">
+      <div className="p-4 space-y-4 no-print">
         <h1 className="text-xl font-bold">طباعة ملصقات الأصناف</h1>
         {error && <div className="text-red-600 text-sm">{error}</div>}
         {message && <div className="text-green-600 text-sm">{message}</div>}
 
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-2 items-center flex-wrap">
           <input
             className="border rounded px-3 py-2 w-64"
             placeholder="بحث عن صنف..."
@@ -90,6 +114,7 @@ export default function LabelsScreen() {
               <option value="large">كبير</option>
             </select>
           </label>
+          <span className="text-xs text-slate-500">عدد النسخ لكل ملصق: {copies} (من «الإعدادات ← طباعة الباركود»)</span>
           <button className="bg-blue-600 text-white px-4 py-2 rounded" onClick={toggleAll} disabled={!canManage}>
             تحديد الكل ({selected.size}/{items.length})
           </button>
@@ -127,6 +152,24 @@ export default function LabelsScreen() {
           ))}
         </div>
         {items.length === 0 && <div className="text-gray-500 text-sm">لا توجد أصناف</div>}
+      </div>
+
+      {/* Print-only sheet: one block per selected item × configured copies */}
+      <div className="labels-print-only">
+        <div className="flex flex-wrap gap-2 p-2">
+          {selectedItems.flatMap((item) =>
+            Array.from({ length: copies }, (_, index) => (
+              <div key={`${item.itemId}-${index}`} className={`border border-black rounded p-2 text-center ${FORMAT_WIDTH[labelFormat]} break-inside-avoid`}>
+                {showName && <div className="text-[11px] font-bold leading-tight truncate">{item.name}</div>}
+                <div className="my-1 h-10 flex items-stretch justify-center gap-0.5">
+                  <Barcode code={item.code} />
+                </div>
+                {showCode && <div className="text-[10px] font-mono tracking-widest">{item.code}</div>}
+                {showPrice && item.sellPrice != null && <div className="text-xs font-extrabold mt-0.5">{Number(item.sellPrice).toLocaleString()} ج.م</div>}
+              </div>
+            )),
+          )}
+        </div>
       </div>
     </>
   );
