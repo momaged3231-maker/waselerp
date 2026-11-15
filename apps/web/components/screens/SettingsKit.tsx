@@ -62,6 +62,38 @@ export const GENERAL_SECTIONS: SettingSection[] = [
       },
     ],
   },
+  {
+    id: 'time',
+    title: 'الوقت والتوقيت',
+    desc: 'ساعة النظام ومزامنة الوقت مع السيرفر',
+    fields: [
+      {
+        key: 'DisplayTimezone',
+        label: 'توقيت الساعة (الدولة/المنطقة)',
+        type: 'select',
+        desc: 'المنطقة الزمنية المعروضة في الأوقات (الافتتاحية/الإغلاقية) للفترة — قيمة افتراضية «مصر»',
+        options: [
+          { value: 'Africa/Cairo', label: 'مصر — القاهرة' },
+          { value: 'Africa/Casablanca', label: 'المغرب — الرباط' },
+          { value: 'Europe/London', label: 'بريطانيا — لندن' },
+          { value: 'Europe/Berlin', label: 'ألمانيا — برلين' },
+          { value: 'Asia/Dubai', label: 'الإمارات — دبي' },
+          { value: 'Asia/Beirut', label: 'لبنان — بيروت' },
+          { value: 'Asia/Amman', label: 'الأردن — عمّان' },
+          { value: 'Asia/Qatar', label: 'قطر — الدار' },
+          { value: 'Asia/Kuwait', label: 'الكويت — الكويت' },
+          { value: 'Asia/Riyadh', label: 'السعودية — الرياض' },
+          { value: 'UTC', label: 'UTC — توقيت عالمي' },
+        ],
+      },
+      {
+        key: 'TimeFromServer',
+        label: 'مزامنة الوقت مع السيرفر',
+        type: 'boolean',
+        desc: 'عند التفعيل تعرض الأوقات من ساعة السيرفر بدل توقيت الجهاز',
+      },
+    ],
+  },
 ];
 
 export const INVOICE_SECTIONS: SettingSection[] = [

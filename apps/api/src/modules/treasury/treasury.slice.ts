@@ -342,42 +342,50 @@ export class TreasuryService {
   // ------------------------------------------------------------------ //
   //  Cashier shifts
   // ------------------------------------------------------------------ //
-  async currentShift(cashierId: number) {
+  // A cashier shift now belongs to a BRANCH (one open shift per branch) — the
+  // branch's open shift is the single source of truth for the drawer.
+  async currentShift(user: AuthUser, branchId: number) {
     const shift = await this.db.one<any>(
       `SELECT s.shift_id AS "shiftId", s.branch_id AS "branchId", s.cash_account_id AS "cashAccountId",
-              c.name AS "cashAccountName", s.shift_no AS "shiftNo", s.opened_at AS "openedAt",
+              s.cashier_id AS "cashierId", c.name AS "cashAccountName", s.shift_no AS "shiftNo", s.opened_at AS "openedAt",
               s.opening_balance AS "openingBalance", s.status,
               COALESCE((SELECT SUM(CASE WHEN t.direction = 1 THEN t.amount ELSE 0 END)
                           FROM cash_transactions t WHERE t.shift_id = s.shift_id), 0) AS "cashIn",
               COALESCE((SELECT SUM(CASE WHEN t.direction = 2 THEN t.amount ELSE 0 END)
                           FROM cash_transactions t WHERE t.shift_id = s.shift_id), 0) AS "cashOut"
          FROM shifts s JOIN cash_accounts c ON c.cash_account_id = s.cash_account_id
-        WHERE s.cashier_id = $1 AND s.status = 1 ORDER BY s.opened_at DESC LIMIT 1`,
-      [cashierId],
+        WHERE s.branch_id = $1 AND s.status = 1 ORDER BY s.opened_at DESC LIMIT 1`,
+      [branchId],
     );
     if (!shift) return null;
     const expected = Number(shift.openingBalance) + Number(shift.cashIn) - Number(shift.cashOut);
-    return { ...shift, expectedCash: expected };
+    const cashier = await this.db.one<{ full_name: string }>(
+      'SELECT full_name FROM users WHERE user_id = $1',
+      [Number(shift.cashierId)],
+    );
+    return { ...shift, expectedCash: expected, cashierName: cashier?.full_name ?? null };
   }
 
-  async openShift(body: { cashAccountId: number; openingBalance?: number }, user: AuthUser, branchId: number) {
+  async openShift(body: { openingBalance?: number }, user: AuthUser, branchId: number) {
     return this.db.transaction(async (client) => {
-      const account = await client.query<{ branch_id: number }>(
-        'SELECT branch_id FROM cash_accounts WHERE cash_account_id = $1 AND is_active = true',
-        [body.cashAccountId],
+      // One drawer per branch (cash accounts of type «نقدي» the user may use).
+      const drawer = await client.query<{ cashAccountId: number }>(
+        `SELECT c.cash_account_id AS "cashAccountId" FROM cash_accounts c
+          WHERE c.branch_id = $1 AND c.type = 1 AND c.is_active = true
+            AND (NOT EXISTS (SELECT 1 FROM user_cash_accounts u WHERE u.user_id = $2::int)
+                 OR c.cash_account_id IN (SELECT cash_account_id FROM user_cash_accounts u WHERE u.user_id = $2::int))
+          ORDER BY c.cash_account_id LIMIT 1`,
+        [branchId, user.userId],
       );
-      if (!account.rows.length) throw new BadRequestException('حساب الخزينة غير موجود');
-      if (Number(account.rows[0].branch_id) !== Number(branchId)) {
-        throw new BadRequestException('حساب الخزينة لا يتبع الفرع الحالي');
-      }
+      if (!drawer.rows.length) throw new BadRequestException('لا يوجد درج نقدي مسموح بهذا المستخدم في هذا الفرع');
 
+      const accountId = Number(drawer.rows[0].cashAccountId);
       const existing = await client.query(
-        `SELECT shift_id FROM shifts
-          WHERE status = 1 AND (cashier_id = $1 OR cash_account_id = $2) FOR UPDATE`,
-        [user.userId, body.cashAccountId],
+        `SELECT shift_id FROM shifts WHERE branch_id = $1 AND status = 1 FOR UPDATE`,
+        [branchId],
       );
       if (existing.rows.length) {
-        throw new BadRequestException('يوجد وردية مفتوحة بالفعل لهذا المستخدم أو هذا الحساب');
+        throw new BadRequestException('يوجد فترة عمل مفتوحة بالفعل في هذا الفرع — أغلق الفترة الحالية قبل فتح فترة جديدة');
       }
 
       const serial = await this.db.nextNumber(client, `shift:${branchId}`);
@@ -385,7 +393,7 @@ export class TreasuryService {
         `INSERT INTO shifts (branch_id, cash_account_id, cashier_id, shift_no, opening_balance, status)
          VALUES ($1,$2,$3,$4,$5,1) RETURNING shift_id AS "shiftId", shift_no AS "shiftNo",
                                                          opening_balance AS "openingBalance"`,
-        [branchId, body.cashAccountId, user.userId, serial, Number(body.openingBalance ?? 0)],
+        [branchId, accountId, user.userId, serial, Number(body.openingBalance ?? 0)],
       );
       return result.rows[0];
     });
@@ -396,11 +404,11 @@ export class TreasuryService {
       const shiftResult = await client.query<any>(
         `SELECT s.*, c.name AS cash_account_name
            FROM shifts s JOIN cash_accounts c ON c.cash_account_id = s.cash_account_id
-          WHERE s.cashier_id = $1 AND s.status = 1
+          WHERE s.branch_id = $1 AND s.status = 1
           ORDER BY s.opened_at DESC LIMIT 1 FOR UPDATE`,
-        [user.userId],
+        [branchId],
       );
-      if (!shiftResult.rows.length) throw new BadRequestException('لا يوجد وردية مفتوحة');
+      if (!shiftResult.rows.length) throw new BadRequestException('لا يوجد فترة عمل مفتوحة في هذا الفرع');
       const shift = shiftResult.rows[0];
 
       // All cash movements tied to this shift, plus legacy rows that predate the shift link.
@@ -641,8 +649,8 @@ export class TreasuryController {
 
   @RequirePermissions('cash.view')
   @Get('shifts/current')
-  currentShift(@CurrentUser() user: AuthUser) {
-    return this.service.currentShift(user.userId);
+  currentShift(@CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
+    return this.service.currentShift(user, branchId);
   }
 
   @RequirePermissions('cash.view')
@@ -659,7 +667,7 @@ export class TreasuryController {
 
   @RequirePermissions('cash.manage')
   @Post('shifts/open')
-  openShift(@Body() body: { cashAccountId: number; openingBalance?: number }, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
+  openShift(@Body() body: { openingBalance?: number }, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
     return this.service.openShift(body, user, branchId);
   }
 

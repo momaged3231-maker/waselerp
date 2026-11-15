@@ -89,6 +89,8 @@ const SETTINGS: [string, string][] = [
   ['InvoiceFooter', 'شكراً لتعاملكم معنا'],
   ['AllowNegativeStock', 'false'],
   ['RequireCashierShift', 'false'],
+  ['DisplayTimezone', 'Africa/Cairo'],
+  ['TimeFromServer', 'false'],
   ['EnableGLPosting', 'true'],
   ['ShowTaxOnReceipt', 'true'],
   ['TaxName', 'ضريبة القيمة المضافة'],

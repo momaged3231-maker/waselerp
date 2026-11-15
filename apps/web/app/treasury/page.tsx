@@ -16,7 +16,6 @@ export default function TreasuryPage() {
   const [error, setError] = useState('');
   const [currentShift, setCurrentShift] = useState<any>(null);
   const [shifts, setShifts] = useState<any[]>([]);
-  const [shiftAccountId, setShiftAccountId] = useState(0);
   const [openingBalance, setOpeningBalance] = useState(0);
   const [countedCash, setCountedCash] = useState(0);
   const [shiftNotes, setShiftNotes] = useState('');
@@ -25,7 +24,6 @@ export default function TreasuryPage() {
   async function load() {
     const rows = await apiFetch<any[]>('/treasury/accounts');
     setAccounts(rows);
-    setShiftAccountId((value) => value || rows[0]?.cashAccountId || 0);
     setForm((current) => (current.cashAccountId ? current : { ...current, cashAccountId: rows[0]?.cashAccountId || 0 }));
     setTransactions(await apiFetch<any[]>('/treasury/transactions?limit=100'));
     setCurrentShift(await apiFetch<any>('/treasury/shifts/current').catch(() => null));
@@ -48,7 +46,6 @@ export default function TreasuryPage() {
       await apiFetch('/treasury/shifts/open', {
         method: 'POST',
         body: {
-          cashAccountId: shiftAccountId || accounts[0]?.cashAccountId,
           openingBalance: Number(openingBalance),
         },
       });
@@ -207,18 +204,11 @@ export default function TreasuryPage() {
             ) : (
               <>
                 <div>
-                  <label className="label">حساب الخزينة</label>
-                  <select className="input" value={shiftAccountId}
-                    onChange={(e) => setShiftAccountId(Number(e.target.value))}>
-                    {accounts.map((a) => <option key={a.cashAccountId} value={a.cashAccountId}>{a.name} — {a.branchName ?? `فرع ${a.branchId}`}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="label">رصيد بداية الوردية</label>
+                  <label className="label">رصيد بداية الفترة</label>
                   <input className="input" type="number" step="0.01" value={openingBalance}
                     onChange={(e) => setOpeningBalance(Number(e.target.value))} />
                 </div>
-                <button className="btn-primary w-full">فتح وردية</button>
+                <button className="btn-primary w-full">فتح الفترة</button>
               </>
             )}
             {shiftError && <div className="text-sm text-rose-600">{shiftError}</div>}

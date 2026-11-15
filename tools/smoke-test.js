@@ -90,6 +90,10 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
   });
   check('items created', !!itemA.itemId && !!itemB.itemId);
 
+  // 4. open the branch shift — RequireCashierShift blocks invoice posting without it
+  const openedForFlow = await raw('POST', '/treasury/shifts/open', { openingBalance: 0 }, token);
+  check('branch shift opened for the invoice flow', openedForFlow.status === 201, String(openedForFlow.status));
+
   // 4. purchase to create stock
   const warehouses = await call('GET', '/catalog/warehouses');
   const warehouseId = warehouses[0].warehouseId;
@@ -418,6 +422,12 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
   const policy = await raw('GET', '/treasury/shifts/policy', null, cashier.accessToken);
   check('shift policy exposed', policy.data?.requireShift === true, JSON.stringify(policy.data));
 
+  // close the branch shift opened for the invoice flow, then prove the gate
+  const openForGate = await raw('GET', '/treasury/shifts/current', null, token);
+  check('branch shift open before the no-shift sale', openForGate.status === 200, JSON.stringify(openForGate.data));
+  const closeForGate = await raw('POST', '/treasury/shifts/close', { countedCash: Number(openForGate.data?.expectedCash ?? 0) }, token);
+  check('branch shift closed before the no-shift sale', closeForGate.status === 201, String(closeForGate.status));
+
   const noShiftSale = await raw('POST', '/sales/invoices', {
     invoiceType: 1, branchId, warehouseId, paymentType: 1, paidAmount: 9,
     cashAccountId: accounts[0].cashAccountId,
@@ -426,9 +436,12 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
   check('sale without an open shift rejected', noShiftSale.status === 400, String(noShiftSale.status));
 
   const opened = await raw('POST', '/treasury/shifts/open', {
-    cashAccountId: accounts[0].cashAccountId, openingBalance: 100,
+    openingBalance: 100,
   }, cashier.accessToken);
   check('shift opened', opened.status === 201, String(opened.status));
+
+  const reopenShift = await raw('POST', '/treasury/shifts/open', { openingBalance: 50 }, cashier.accessToken);
+  check('second open shift for the branch rejected', reopenShift.status === 400, String(reopenShift.status));
 
   const shiftSale = await raw('POST', '/sales/invoices', {
     invoiceType: 1, branchId, warehouseId, paymentType: 1, paidAmount: 45, cashAccountId,
@@ -450,6 +463,10 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     .find((row) => String(row.description ?? '').includes('عجز'));
   check('shortage posted to cash', !!shortageRow, String(shortageRow?.amount));
   await call('PUT', '/admin/settings', { RequireCashierShift: String(!!shiftPolicyBefore) });
+
+  // reopen a branch shift for the remaining invoice postings of this run
+  const reopenedShift = await raw('POST', '/treasury/shifts/open', { openingBalance: 0 }, token);
+  check('branch shift reopened for the remaining checks', reopenedShift.status === 201, String(reopenedShift.status));
 
   // 28. purchases endpoints
   const purchases = await call('GET', '/purchases/invoices?pageSize=10');

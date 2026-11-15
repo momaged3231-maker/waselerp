@@ -237,11 +237,9 @@ export default function PosPage() {
     setShiftError('');
     setShiftBusy(true);
     try {
-      const accountId = shiftAccountId ?? cashAccounts[0]?.cashAccountId;
-      if (!accountId) { setShiftError('لا يوجد حساب خزينة في هذا الفرع'); return; }
       await apiFetch('/treasury/shifts/open', {
         method: 'POST',
-        body: { cashAccountId: accountId, openingBalance: Number(shiftOpening) },
+        body: { openingBalance: Number(shiftOpening) },
       });
       setShiftOpening(0);
       await loadAccounts();
@@ -531,7 +529,7 @@ export default function PosPage() {
     if (!cart.length) { setMessage('السلة فارغة'); return; }
     if (!warehouseId) { setMessage('اختر المخزن'); return; }
     if (requireShift && session?.user.isCashier && !currentShift) {
-      setMessage('يجب فتح وردية قبل تسجيل البيع');
+      setMessage('يجب فتح فترة عمل قبل تسجيل البيع');
       return;
     }
     setBusy(true);
@@ -717,28 +715,21 @@ export default function PosPage() {
               <IconCash className="w-6 h-6" />
             </div>
             <div>
-              <div className="font-extrabold text-amber-900">لا توجد وردية مفتوحة</div>
-              <div className="text-sm text-amber-800">يجب فتح وردية على الخزينة قبل بدء البيع.</div>
+              <div className="font-extrabold text-amber-900">لا توجد فترة عمل مفتوحة</div>
+              <div className="text-sm text-amber-800">الفترة تُفتح على درج الفرع تلقائيًا — أغلق الفترة الحالية من «فترات العمل» أولًا.</div>
             </div>
           </div>
-          <div className="grid sm:grid-cols-3 gap-3 sm:items-end">
+          <div className="grid sm:grid-cols-2 gap-3 sm:items-end">
             <div>
-              <label className="label">حساب الخزينة</label>
-              <select className="input" value={shiftAccountId ?? ''}
-                onChange={(e) => setShiftAccountId(Number(e.target.value))}>
-                {cashAccounts.map((a) => (
-                  <option key={a.cashAccountId} value={a.cashAccountId}>{a.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="label">رصيد بداية الوردية</label>
+              <label className="label">رصيد بداية الفترة</label>
               <input className="input" type="number" step="0.01" value={shiftOpening}
                 onChange={(e) => setShiftOpening(Number(e.target.value))} />
             </div>
-            <button className="btn-primary" onClick={openShift} disabled={shiftBusy}>
-              {shiftBusy ? 'جارٍ الفتح…' : 'فتح وردية'}
-            </button>
+            <div className="flex items-end">
+              <button className="btn-primary w-full" onClick={openShift} disabled={shiftBusy}>
+                {shiftBusy ? 'جارٍ الفتح…' : 'فتح الفترة'}
+              </button>
+            </div>
           </div>
           {shiftError && <div className="text-sm text-rose-600">{shiftError}</div>}
         </div>
@@ -749,7 +740,7 @@ export default function PosPage() {
           <div className="flex items-center gap-2">
             <span className="badge bg-emerald-100 text-emerald-700 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              وردية #{currentShift.shiftNo}
+              فترة #{currentShift.shiftNo}
             </span>
             <span className="text-slate-500">{currentShift.cashAccountName}</span>
           </div>

@@ -4,23 +4,23 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import { useSession } from '@/lib/session';
-import { apiFetch, formatMoney, formatDate } from '@/lib/api';
+import { apiFetch, formatMoney } from '@/lib/api';
+import { formatDateTime, useTimeDisplay } from '@/lib/time';
 
 /**
- * «فترات العمل» — مركز إدارة ورديات الكاشير تحت التشغيل.
+ * «فترات العمل» — مركز إدارة فترات التشغيل للفرع تحت التشغيل.
  * نقطة البيع ترفض البيع بدون فترة مفتوحة عندما يكون مفتاح RequireCashierShift
  * مفعّلًا — هذه الشاشة هي المكان المركزي لفتح/إغلاق الفترات ومراقبتها.
  */
 export default function ShiftsPage() {
   const { session } = useSession();
+  const time = useTimeDisplay();
 
-  const [accounts, setAccounts] = useState<any[]>([]);
   const [currentShift, setCurrentShift] = useState<any>(null);
   const [requireShift, setRequireShift] = useState<boolean | null>(null);
   const [history, setHistory] = useState<any[]>([]);
 
   // open form
-  const [openAccountId, setOpenAccountId] = useState<number | null>(null);
   const [openingBalance, setOpeningBalance] = useState<number>(0);
   // close form
   const [countedCash, setCountedCash] = useState<number>(0);
@@ -31,39 +31,29 @@ export default function ShiftsPage() {
   const [done, setDone] = useState('');
 
   async function load() {
-    const [accRows, shift, policy, shifts] = await Promise.all([
-      apiFetch<any[]>('/treasury/accounts').catch(() => []),
+    const [shift, policy, shifts] = await Promise.all([
       apiFetch<any>('/treasury/shifts/current').catch(() => null),
       apiFetch<any>('/treasury/shifts/policy').catch(() => null),
       apiFetch<any[]>('/treasury/shifts?limit=20').catch(() => []),
     ]);
-    setAccounts(accRows ?? []);
     setCurrentShift(shift);
     setRequireShift(policy ? !!policy.requireShift : null);
     setHistory(shifts ?? []);
     if (shift) setCountedCash(Number(shift.expectedCash ?? 0));
-    return accRows ?? [];
   }
 
   useEffect(() => {
     if (!session) return;
-    load().then((rows) => {
-      const branch = Number(session.activeBranchId);
-      const drawer = rows.find((r) => Number(r.branchId) === branch && Number(r.type) === 1)
-        ?? rows.find((r) => Number(r.branchId) === branch)
-        ?? rows[0];
-      setOpenAccountId((v) => v ?? drawer?.cashAccountId ?? null);
-    });
+    load();
   }, [session?.activeBranchId]);
-
-  const branchDrawers = accounts.filter((a) => Number(a.branchId) === Number(session?.activeBranchId));
 
   async function openShift() {
     setBusy(true); setError(''); setDone('');
     try {
+      // Branch-based shift: the drawer is resolved by the server (branch + user restrictions).
       await apiFetch('/treasury/shifts/open', {
         method: 'POST',
-        body: { cashAccountId: openAccountId ?? branchDrawers[0]?.cashAccountId, openingBalance: Number(openingBalance) },
+        body: { openingBalance: Number(openingBalance) },
       });
       setOpeningBalance(0);
       setDone('تم فتح فترة العمل — تقدر تبدأ البيع من نقطة البيع.');
@@ -119,7 +109,7 @@ export default function ShiftsPage() {
         <div className="card p-4">
           <div className="text-xs text-slate-500 font-semibold">فترات مفتوحة في الفرع</div>
           <div className="text-xl font-extrabold text-slate-800 mt-1 font-num">{openCount}</div>
-          <div className="text-[11px] text-slate-400 mt-1">لكل الكاشيرين (للعرض فقط — الإغلاق لفترتك أنت)</div>
+          <div className="text-[11px] text-slate-400 mt-1">فرع واحد — فترة واحدة لكل فرع (الإغلاق يُغلق الفترة المفتوحة للفرع)</div>
         </div>
         <div className="card p-4">
           <div className="text-xs text-slate-500 font-semibold">حركة الفترة الحالية</div>
@@ -128,7 +118,8 @@ export default function ShiftsPage() {
             {' · '}
             <span className="text-rose-600">خارج {formatMoney(currentShift?.cashOut ?? 0)}</span>
           </div>
-          <div className="text-[11px] text-slate-400 mt-1">افتتحت بـ {formatMoney(currentShift?.openingBalance ?? 0)} · {currentShift ? formatDate(currentShift.openedAt) : ''}</div>
+          <div className="text-[11px] text-slate-400 mt-1">افتتحت بـ {formatMoney(currentShift?.openingBalance ?? 0)} · {formatDateTime(currentShift?.openedAt, time.timeZone)}</div>
+          <div className="text-[11px] text-slate-400 mt-1">{currentShift?.cashierName ? `بدأت بواسطة ${currentShift.cashierName}` : ''}</div>
         </div>
       </div>
 
@@ -149,8 +140,8 @@ export default function ShiftsPage() {
                     <td className="font-semibold font-num">#{row.shiftNo}</td>
                     <td>{row.cashAccountName}</td>
                     <td>{row.cashierName}</td>
-                    <td>{formatDate(row.openedAt)}</td>
-                    <td>{row.closedAt ? formatDate(row.closedAt) : '—'}</td>
+                    <td>{formatDateTime(row.openedAt, time.timeZone)}</td>
+                    <td>{row.closedAt ? formatDateTime(row.closedAt, time.timeZone) : '—'}</td>
                     <td>{formatMoney(row.expectedCash)}</td>
                     <td>{row.countedCash === null ? '—' : formatMoney(row.countedCash)}</td>
                     <td className={`font-bold font-num ${Number(row.difference) < 0 ? 'text-rose-600' : Number(row.difference) > 0 ? 'text-emerald-700' : 'text-slate-500'}`}>
@@ -180,7 +171,10 @@ export default function ShiftsPage() {
                 <div className="font-semibold text-emerald-800">
                   فترة #{currentShift.shiftNo} · {currentShift.cashAccountName}
                 </div>
-                <div className="text-emerald-700">افتتحت: {formatDate(currentShift.openedAt)} بـ {formatMoney(currentShift.openingBalance)}</div>
+                <div className="text-emerald-700">
+                  اتفتحت الساعة {formatDateTime(currentShift.openedAt, time.timeZone)} — بدأت بواسطة {currentShift.cashierName}
+                </div>
+                <div className="text-emerald-700">افتتحت بـ {formatMoney(currentShift.openingBalance)}</div>
                 <div className="font-extrabold text-emerald-900 font-num">المتوقع في الدرج: {formatMoney(currentShift.expectedCash)}</div>
               </div>
               <div>
@@ -207,24 +201,14 @@ export default function ShiftsPage() {
             >
               <div className="font-bold">بدء فترة عمل</div>
               <div className="text-xs text-slate-500">
-                الفترة ترتبط بدرج نقدي في الفرع الحالي وباسمك — كل مبيعاتك النقدية تُحتسب عليها حتى الإغلاق.
-              </div>
-              <div>
-                <label className="label">الدرج النقدي</label>
-                <select className="input" value={openAccountId ?? ''}
-                  onChange={(e) => setOpenAccountId(Number(e.target.value))}>
-                  {branchDrawers.map((a) => (
-                    <option key={a.cashAccountId} value={a.cashAccountId}>{a.name}</option>
-                  ))}
-                  {branchDrawers.length === 0 && <option value="">لا توجد أدراج نقدية في هذا الفرع</option>}
-                </select>
+                الفترة تُفتح على درج الفرع الحالي (نقدي) تلقائيًا — كل مبيعات فرع هذا الفرع تُحتسب عليها حتى الإغلاق.
               </div>
               <div>
                 <label className="label">رصيد بداية الفترة (الفلوس الموجودة في الدرج)</label>
                 <input className="input font-num" type="number" step="0.01" value={openingBalance}
                   onChange={(e) => setOpeningBalance(Number(e.target.value))} />
               </div>
-              <button className="btn-primary w-full" disabled={busy || !openAccountId}>
+              <button className="btn-primary w-full" disabled={busy}>
                 {busy ? 'جارٍ الفتح…' : 'بدء الفترة'}
               </button>
               <div className="text-[11px] text-slate-400">

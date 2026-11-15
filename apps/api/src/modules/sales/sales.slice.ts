@@ -345,11 +345,13 @@ export class SalesService {
       }
 
       // ---- cashier shift -------------------------------------------------
+      // The shift belongs to the branch (one open shift per branch) — the POS
+      // of any cashier of that branch sells while the branch shift is open.
       const requireShift = await getBooleanSetting(client, 'RequireCashierShift', false);
       const shiftResult = await client.query<{ shift_id: number; cash_account_id: number }>(
         `SELECT shift_id, cash_account_id FROM shifts
-          WHERE cashier_id = $1 AND status = 1 ORDER BY opened_at DESC LIMIT 1`,
-        [user.userId],
+          WHERE branch_id = $1 AND status = 1 ORDER BY opened_at DESC LIMIT 1`,
+        [effectiveBranch],
       );
       const openShift = shiftResult.rows[0] ?? null;
       if (requireShift && user.isCashier && !openShift) {
@@ -358,7 +360,7 @@ export class SalesService {
       const shiftId = openShift ? Number(openShift.shift_id) : null;
       const shiftAccountId = openShift ? Number(openShift.cash_account_id) : null;
       if (openShift && dto.cashAccountId && Number(dto.cashAccountId) !== shiftAccountId) {
-        throw new BadRequestException('حساب الخزينة لا يطابق وردية الكاشير المفتوحة');
+        throw new BadRequestException('حساب الخزينة لا يطابق وردية الفترة المفتوحة');
       }
       const cashAccountId = dto.cashAccountId ?? shiftAccountId ?? null;
       if (cashAccountId) {

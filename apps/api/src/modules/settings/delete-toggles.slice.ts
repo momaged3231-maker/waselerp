@@ -3,9 +3,9 @@ import { DatabaseService } from '../../common/database/database.service';
 import { DELETE_SCREENS, isTruthySetting } from '../../common/delete-guard';
 
 /**
- * Lightweight read-only endpoint for the UI to know which screens may show
- * their delete button. Any authenticated user can read it — it exposes only
- * on/off flags (no data, no secrets). Writes stay on /admin/settings.
+ * Lightweight read-only endpoints for the UI (any authenticated user can read —
+ * they expose flags / clock info only, no data, no secrets). Writes stay on
+ * /admin/settings (PUT with the app_settings map).
  */
 @Controller('settings')
 export class DeleteTogglesController {
@@ -25,6 +25,28 @@ export class DeleteTogglesController {
     return {
       deleteEnabled: isTruthySetting(map.get('DeleteEnabled')),
       screens,
+    };
+  }
+
+  /**
+   * Clock / time-display info for the UI: the display timezone (IANA, '' = the
+   * device timezone) and whether times should be read from the server clock.
+   * Any authenticated user can read it (no data, no secrets).
+   */
+  @Get('time-display')
+  async timeDisplay() {
+    const rows = await this.db.query<{ setting_key: string; setting_value: string | null }>(
+      `SELECT setting_key, setting_value FROM app_settings
+        WHERE setting_key = 'DisplayTimezone' OR setting_key = 'TimeFromServer'`,
+    );
+    const map = new Map(rows.map((row) => [row.setting_key, String(row.setting_value ?? '')]));
+    const timeZone = String(map.get('DisplayTimezone') || 'Africa/Cairo');
+    const fromServer = map.get('TimeFromServer') === 'true' || map.get('TimeFromServer') === '1';
+    return {
+      timeZone,
+      fromServer,
+      serverTime: new Date().toISOString(),
+      serverEpochMs: Date.now(),
     };
   }
 }

@@ -8,6 +8,7 @@ import {
   GENERAL_SECTIONS, INVOICE_SECTIONS, PRINTER_SECTIONS, BARCODE_SECTIONS, EXTRAS_SECTIONS, POS_SECTIONS,
 } from '@/components/screens/SettingsKit';
 import ServerSettingsScreen from '@/components/screens/ServerSettingsScreen';
+import TimeSettingsScreen from '@/components/screens/TimeSettingsScreen';
 import RestaurantSettingsScreen from '@/components/screens/RestaurantSettingsScreen';
 import DeleteSettingsScreen from '@/components/screens/DeleteSettingsScreen';
 import UsersSettingsScreen from '@/components/screens/UsersSettingsScreen';
@@ -66,7 +67,12 @@ function SettingsInner() {
   const renderTab = () => {
     switch (tab) {
       case 'general':
-        return <SettingSections sections={GENERAL_SECTIONS} />;
+        return (
+          <div className="space-y-4 max-w-4xl">
+            <TimeSettingsScreen />
+            <SettingSections sections={GENERAL_SECTIONS} />
+          </div>
+        );
       case 'server':
         return <ServerSettingsScreen />;
       case 'invoice':
