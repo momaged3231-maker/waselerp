@@ -162,6 +162,7 @@ tools/              pg/ (تشغيل + فحص DB + pglite) · smoke-test.js · de
 - **بديل بلا صلاحيات إدارية: PGlite.** لو مفيش PostgreSQL مثبّت، شغّل `node tools/pg/pglite/server.js` — PostgreSQL مُصرّف لـ WASM بيتكلم بروتوكول PostgreSQL الحقيقي على المنفذ 5432، فيشتغل عليه `pg` والـ API زي ما هو. البيانات في `tools/pg/pglite/data`.
   - ملاحظة: `maxConnections` لازم أكبر من 1 (الـ API بيستخدم pool) — الإعداد في `tools/pg/pglite/server.js`.
   - ابدأ الـ API بـ `DB_POOL_MAX=6` على PGlite.
+- **قواعد مُدارة (Supabase/Neon/Render)**: `DATABASE_URL` **لا يجوز أن يحتوي `sslmode=require`** — إصدارات `pg` الحديثة تعاملها كـ `verify-full` وتفشل بسلسلة شهادة Supabase حتى لو مُرّر `ssl: {rejectUnauthorized:false}` صراحةً (هذا كان سبب الـ 500 الكامل على اللايف 2026-11-16 — الاتصال يتعلق حتى «Exceeded query duration limit»). `database.service.ts` ينظّف `sslmode` من الرابط ويفرض TLS تلقائيًا لأي مستضيف مُدار. للتشخيص: `node tools/pg/check-live-auth.js` يعيد تشغيل استعلامات الدخول حرفيًا ضد القاعدة المباشرة (pooler بدون sslmode). أدوات التهيئة: `node tools/pg/migrate-all.js wasel` + `DATABASE_URL=... node tools/pg/seed-reference.js` (تدعم القواعد المُدارة مباشرة).
 - البيانات في `apps/web` تُبنى static (`out/`) — بعد أي تعديل على الواجهة لازم `npm run web:build`.
 - `tools/web-serve.js` serves `out/` مع SPA fallback.
 
