@@ -1065,29 +1065,38 @@ export default function PosPage() {
           </div>
 
           {/* الإجمالي والمطلوب وطرق الدفع — أسفل الشمال */}
-          <div className="card p-3 shrink-0 max-h-[48dvh] md:max-h-[52%] overflow-y-auto">
-            {/* totals */}
-            <div className="mt-1 pt-3 border-t border-dashed border-slate-200 space-y-1.5 text-sm">
-            <div className="flex justify-between"><span className="text-slate-500">الإجمالي قبل الخصم</span><span>{formatMoney(totals.subtotal)}</span></div>
-            <div className="flex justify-between"><span className="text-slate-500">خصم الفاتورة</span><span>{formatMoney(totals.headerDiscount)}</span></div>
-            <div className="flex justify-between"><span className="text-slate-500">الضريبة</span><span>{formatMoney(totals.tax)}</span></div>
-            {totals.fee > 0 && (
-              <div className="flex justify-between"><span className="text-slate-500">رسوم التوصيل</span><span>{formatMoney(totals.fee)}</span></div>
-            )}
-            <div className="flex justify-between items-baseline pt-2 border-t border-dashed border-slate-200">
-              <span className="font-extrabold text-slate-700">المطلوب</span>
-              <span className="font-extrabold text-lg text-brand-700">{formatMoney(totals.total)}</span>
+          <div className="card p-2.5 shrink-0">
+            {/* compact totals: 3 (or 4 incl. delivery fee) stats + required amount */}
+            <div className={`grid gap-1 text-center border-b border-slate-100 pb-1.5 ${totals.fee > 0 ? 'grid-cols-4' : 'grid-cols-3'}`}>
+              <div className="min-w-0">
+                <div className="text-[9px] text-slate-400 leading-3">الإجمالي</div>
+                <div className="font-num text-[11px] font-bold tabular-nums leading-4">{formatMoney(totals.subtotal)}</div>
+              </div>
+              <div className="min-w-0">
+                <div className="text-[9px] text-slate-400 leading-3">الخصم</div>
+                <div className="font-num text-[11px] font-bold tabular-nums leading-4">{formatMoney(totals.headerDiscount)}</div>
+              </div>
+              <div className="min-w-0">
+                <div className="text-[9px] text-slate-400 leading-3">الضريبة</div>
+                <div className="font-num text-[11px] font-bold tabular-nums leading-4">{formatMoney(totals.tax)}</div>
+              </div>
+              {totals.fee > 0 && (
+                <div className="min-w-0">
+                  <div className="text-[9px] text-slate-400 leading-3">رسوم</div>
+                  <div className="font-num text-[11px] font-bold tabular-nums leading-4">{formatMoney(totals.fee)}</div>
+                </div>
+              )}
             </div>
-          </div>
+            <div className="flex items-baseline justify-between gap-2 py-1.5 border-b border-dashed border-slate-200">
+              <span className="font-extrabold text-slate-700 text-xs">المطلوب</span>
+              <span className="font-num font-extrabold text-lg text-brand-800 tabular-nums">{formatMoney(totals.total)}</span>
+            </div>
 
-          {/* payment */}
-          <div className="mt-3 pt-3 border-t border-dashed border-slate-200">
-            <div className="mb-2 flex items-center gap-2">
-              <input className="input" placeholder="كود الكوبون (اختياري)" value={couponCode}
-                onChange={(e) => setCouponCode(e.target.value)} dir="ltr" aria-label="كود الكوبون" />
-            </div>
-            <div className="text-xs font-extrabold text-slate-600 mb-2">طريقة الدفع</div>
-            <div className="grid grid-cols-3 gap-2" role="group" aria-label="طريقة الدفع">
+          {/* payment — coupon + method buttons in one compact row */}
+          <div className="mt-2 flex gap-1.5">
+            <input className="input h-9 w-24 text-xs px-2" placeholder="كوبون" value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value)} dir="ltr" aria-label="كود الكوبون" />
+            <div className="grid grid-cols-3 gap-1 flex-1" role="group" aria-label="طريقة الدفع">
               {([
                 { value: 1, label: 'نقدي' },
                 { value: 2, label: 'آجل' },
@@ -1098,9 +1107,9 @@ export default function PosPage() {
                   type="button"
                   onClick={() => setPaymentType(m.value)}
                   aria-pressed={paymentType === m.value}
-                  className={`py-2.5 rounded-xl text-sm font-bold transition ${
+                  className={`h-9 rounded-xl text-xs font-bold transition ${
                     paymentType === m.value
-                      ? 'bg-brand-600 text-white shadow-sm'
+                      ? 'bg-brand-700 text-white shadow-sm'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
@@ -1108,6 +1117,7 @@ export default function PosPage() {
                 </button>
               ))}
             </div>
+          </div>
 
             <div className="mt-2 grid grid-cols-2 gap-2">
               <select className="input" value={warehouseId ?? ''} onChange={(e) => setWarehouseId(Number(e.target.value))}>
@@ -1227,7 +1237,6 @@ export default function PosPage() {
                 )}
               </div>
             )}
-          </div>
 
           {selectedParty && (
             <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
@@ -1326,7 +1335,7 @@ export default function PosPage() {
             <div className="mt-2 rounded-xl bg-rose-50 text-rose-700 text-sm px-3 py-2 border border-rose-200">{error}</div>
           )}
 
-          <button className="btn-success w-full mt-3 py-3 text-base" onClick={openPayment} disabled={busy || !cart.length}>
+          <button className="btn-success w-full mt-2 py-2.5 text-sm" onClick={openPayment} disabled={busy || !cart.length}>
             {busy ? 'جارٍ الحفظ…' : `إتمام البيع — ${formatMoney(totals.total)}`}
           </button>
           {cart.length > 0 && (
