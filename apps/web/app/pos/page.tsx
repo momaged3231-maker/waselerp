@@ -899,7 +899,7 @@ export default function PosPage() {
         </div>
 
         {/* ---------------- Cart ---------------- */}
-        <div id="pos-cart" className="card p-3 md:order-1 flex flex-col min-h-0 max-h-[70dvh] md:max-h-none md:h-full scroll-mt-20">
+        <div id="pos-cart" className="card p-3 md:order-1 flex flex-col min-h-0 max-h-[70dvh] md:max-h-none md:h-full md:overflow-y-auto scroll-mt-20">
           <div className="flex items-center justify-between mb-2 px-1">
             <h2 className="font-extrabold text-slate-700 flex items-center gap-2">
               <IconCart className="w-5 h-5 text-brand-600" />
@@ -915,7 +915,7 @@ export default function PosPage() {
             </div>
           </div>
 
-          <div className="flex-1 min-h-0 max-h-[42dvh] md:max-h-none overflow-y-auto space-y-2 pr-1">
+          <div className="flex-1 min-h-[140px] md:max-h-none overflow-y-auto space-y-2 pr-1">
             {cart.map((line) => (
               <div key={line.itemId} className={`rounded-2xl border p-2.5 ${line.isGift ? 'border-emerald-300 bg-emerald-50/60' : 'border-slate-200 bg-slate-50/70'}`}>
                 <div className="flex items-start justify-between gap-2">
