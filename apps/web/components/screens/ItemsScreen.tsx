@@ -21,16 +21,23 @@ export default function ItemsScreen() {
   const [form, setForm] = useState<any>(empty);
   const [itemUnits, setItemUnits] = useState<any[]>([]);
   const [error, setError] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(100);
+  const [total, setTotal] = useState(0);
 
-  async function load(term = search) {
-    const data = await apiFetch<any>(`/items?search=${encodeURIComponent(term)}&pageSize=100`);
+  async function load(opts?: { term?: string; nextPage?: number }) {
+    const term = opts?.term ?? search;
+    const nextPage = opts?.nextPage ?? page;
+    const data = await apiFetch<any>(`/items?search=${encodeURIComponent(term)}&page=${nextPage}&pageSize=${pageSize}`);
     setItems(data.items ?? []);
+    setTotal(Number(data.total ?? (data.items ?? []).length));
+    setPage(Number(data.page ?? nextPage));
   }
 
   useEffect(() => {
     apiFetch('/catalog/categories').then(setCategories).catch(() => {});
     apiFetch('/catalog/units').then(setUnits).catch(() => {});
-    load('');
+    load({ term: '', nextPage: 1 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -58,7 +65,7 @@ export default function ItemsScreen() {
       }
       setForm(empty);
       setItemUnits([]);
-      load();
+      load({ nextPage: page });
     } catch (err: any) {
       setError(err?.message ?? 'تعذر الحفظ');
     }
@@ -85,14 +92,17 @@ export default function ItemsScreen() {
     <div className="grid lg:grid-cols-3 gap-4">
       <div className="card lg:col-span-2">
         <div className="card-title">
-          <span>قائمة الأصناف ({items.length})</span>
-          <input
-            className="input w-52 py-1.5"
-            placeholder="بحث"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && load()}
-          />
+          <span>قائمة الأصناف ({items.length} من {total})</span>
+          <div className="flex items-center gap-2">
+            <input
+              className="input w-52 py-1.5"
+              placeholder="بحث"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && load({ term: search, nextPage: 1 })}
+            />
+            <button type="button" className="btn-soft py-1.5" onClick={() => load({ term: search, nextPage: 1 })}>بحث</button>
+          </div>
         </div>
 
         <div className="table-wrap">
@@ -128,6 +138,13 @@ export default function ItemsScreen() {
               )}
             </tbody>
           </table>
+        </div>
+        <div className="flex items-center justify-between mt-3 text-sm">
+          <div className="text-slate-500">صفحة {page} من {Math.max(1, Math.ceil(total / pageSize))}</div>
+          <div className="flex items-center gap-2">
+            <button type="button" className="btn-soft" disabled={page <= 1} onClick={() => load({ nextPage: page - 1 })}>السابق</button>
+            <button type="button" className="btn-soft" disabled={page >= Math.ceil(total / pageSize)} onClick={() => load({ nextPage: page + 1 })}>التالي</button>
+          </div>
         </div>
       </div>
 

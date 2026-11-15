@@ -1,0 +1,54 @@
+{
+  "meta": {
+    "status": "PROPOSED_NOT_APPROVED",
+    "sourceExtract": "D:\\\\New folder (2)\\\\extracted-2026-11-15",
+    "notes": "مقترح مبني على تحليل extracted-2026-11-15. يجب اعتماده/تعديله محاسبيًا قبل ترحيل إنتاجي. أي قرار مختلف يُعدَّل هنا دون تغيير منطق الأداة قدر الإمكان."
+  },
+  "defaults": {
+    "baseCurrency": "EGP",
+    "baseUnitName": "Unite",
+    "migratePlaceholderPartyId1": false,
+    "openingStockSource": "items_evaluation",
+    "openingPartyBalanceSource": "supcust_accounts_opening",
+    "createHistoricalInvoices": false
+  },
+  "supCustTypeToPartyType": {
+    "0": 1,
+    "1": 2,
+    "2": 3,
+    "_comment": "0=عميل،1=مورد،2=عميل/مورد (افتراض شائع - يتطلب تأكيد)"
+  },
+  "invoiceTypes": {
+    "1": { "label": "مبيعات POS (مرجح)", "targetInvoiceType": 1, "affectsStock": "from_operations_not_header", "migrateHeader": "optional" },
+    "0": { "label": "مستند/تسوية/دفعة كبيرة (غير مؤكد)", "targetInvoiceType": null, "migrateHeader": "review" },
+    "2": { "label": "مرتجع/عكسي محتمل (غير مؤكد)", "targetInvoiceType": 3, "migrateHeader": "review" },
+    "3": { "label": "حالة نادرة", "targetInvoiceType": null, "migrateHeader": "review" }
+  },
+  "paymentTypes": {
+    "0": { "label": "نقدي (مرجح)", "target": 1 },
+    "1": { "label": "بطاقة/غير نقدي (غير مؤكد)", "target": 1 },
+    "2": { "label": "آجل/مختلط (غير مؤكد)", "target": 2 }
+  },
+  "stockOperationTypes": {
+    "0":  { "label": "منصرف/عكسي محتمل", "sign": -1, "directionHint": 0 },
+    "1":  { "label": "وارد (توريد/استلام)", "sign": 1, "directionHint": 1 },
+    "2":  { "label": "منصرف/تسوية", "sign": -1, "directionHint": 0 },
+    "3":  { "label": "وارد نادر", "sign": 1, "directionHint": 1 },
+    "4":  { "label": "منصرف تحويل", "sign": -1, "directionHint": 0 },
+    "5":  { "label": "وارد تحويل", "sign": 1, "directionHint": 1 },
+    "6":  { "label": "وارد نادر", "sign": 1, "directionHint": 1 },
+    "10": { "label": "منصرف بيع (مرجح)", "sign": -1, "directionHint": 0 },
+    "_comment": "خريطة افتراضية مبنية على OP_Type و OP_Direction والتوزيع. يجب اعتمادها محاسبيًا قبل احتساب الأرصدة."
+  },
+  "cashActionTypes": {
+    "0":  { "label": "رصيد افتتاحي", "kind": "opening" },
+    "2":  { "label": "تحصيل/بيع (الأغلب)", "kind": "income" },
+    "27": { "label": "وارد تحويل خزينة", "kind": "transfer_in" },
+    "28": { "label": "صادر تحويل خزينة", "kind": "transfer_out" },
+    "_comment": "Cash_actionTypes.csv بلا أسماء في الاستخراج؛ بقية الأكواد تُرحّل كتدفقات عامة مع الحفاظ على action_type والملاحظات."
+  },
+  "supCustAccountDescription": {
+    "0": "افتتاحي (صفوف 2026-01-01, Invoice_ID=0)",
+    "_comment": "أكواد Description الأخرى غير مفسرة في CSV وتحتاج تأكيد محاسبي."
+  }
+}

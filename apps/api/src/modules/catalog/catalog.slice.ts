@@ -1,10 +1,10 @@
-import { BadRequestException, Controller, Delete, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Body } from '@nestjs/common';
+import { BadRequestException, Controller, Delete, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Body, Query } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
 import { assertDeletionAllowed, countReferencingRows } from '../../common/delete-guard';
 import { RequirePermissions, CurrentBranch, CurrentUser, AuthUser } from '../../common/security';
 
 // --------------------------------------------------------------------- //
-// Branch / warehouse / unit / category lookups (read-mostly)
+// Branch / warehouse / unit / category / reference masters (banks, colors, sizes, governorates)
 // --------------------------------------------------------------------- //
 @Injectable()
 export class CatalogLookupService {
@@ -120,6 +120,187 @@ export class CatalogLookupService {
     );
     return { warehouseId: Number(row.warehouse_id) };
   }
+
+  // ---- banks ----
+  async banks() {
+    return this.db.query(
+      `SELECT b.bank_id AS "bankId", b.code, b.name, b.name_en AS "nameEn", b.is_active AS "isActive", b.notes,
+              b.created_at AS "createdAt",
+              (SELECT COUNT(*)::int FROM cash_accounts c WHERE c.bank_id = b.bank_id) AS "accountCount"
+         FROM banks b ORDER BY b.name`,
+    );
+  }
+
+  async createBank(body: any) {
+    const name = String(body.name ?? '').trim();
+    if (!name) throw new BadRequestException('اسم البنك مطلوب');
+    const row = await this.db.one<any>(
+      `INSERT INTO banks (code, name, name_en, is_active, notes)
+       VALUES ($1::text, $2::text, $3::text, $4::boolean, $5::text) RETURNING bank_id`,
+      [body.code?.trim() || null, name, body.nameEn?.trim() || null, body.isActive ?? true, body.notes?.trim() || null],
+    );
+    return { bankId: Number(row.bank_id) };
+  }
+
+  async updateBank(id: number, body: any) {
+    const name = String(body.name ?? '').trim();
+    if (!name) throw new BadRequestException('اسم البنك مطلوب');
+    await this.db.query(
+      `UPDATE banks SET code=$2::text, name=$3::text, name_en=$4::text, is_active=$5::boolean, notes=$6::text
+        WHERE bank_id=$1::int`,
+      [id, body.code?.trim() || null, name, body.nameEn?.trim() || null, body.isActive ?? true, body.notes?.trim() || null],
+    );
+    await this.db.query(
+      `UPDATE cash_accounts SET bank_name=$2::text WHERE bank_id=$1::int`,
+      [id, name],
+    );
+    return { bankId: id };
+  }
+
+  async deleteBank(id: number) {
+    const refs = await countReferencingRows(this.db, 'banks', 'bank_id', id);
+    if (refs.length) {
+      const detail = refs.map((r) => `${r.table} (${r.count})`).join('، ');
+      throw new BadRequestException(`لا يمكن حذف البنك — مستخدم في: ${detail}`);
+    }
+    await this.db.query('DELETE FROM banks WHERE bank_id = $1::int', [id]);
+    return { deleted: true };
+  }
+
+  // ---- colors ----
+  async colors() {
+    return this.db.query(
+      `SELECT color_id AS "colorId", code, name, name_en AS "nameEn", hex_value AS "hexValue",
+              is_active AS "isActive", notes
+         FROM colors ORDER BY name`,
+    );
+  }
+
+  async createColor(body: any) {
+    const name = String(body.name ?? '').trim();
+    if (!name) throw new BadRequestException('اسم اللون مطلوب');
+    const row = await this.db.one<any>(
+      `INSERT INTO colors (code, name, name_en, hex_value, is_active, notes)
+       VALUES ($1::text,$2::text,$3::text,$4::text,$5::boolean,$6::text) RETURNING color_id`,
+      [body.code?.trim() || null, name, body.nameEn?.trim() || null, body.hexValue?.trim() || body.hex_value?.trim() || null, body.isActive ?? true, body.notes?.trim() || null],
+    );
+    return { colorId: Number(row.color_id) };
+  }
+
+  async updateColor(id: number, body: any) {
+    const name = String(body.name ?? '').trim();
+    if (!name) throw new BadRequestException('اسم اللون مطلوب');
+    await this.db.query(
+      `UPDATE colors SET code=$2::text, name=$3::text, name_en=$4::text, hex_value=$5::text, is_active=$6::boolean, notes=$7::text
+        WHERE color_id=$1::int`,
+      [id, body.code?.trim() || null, name, body.nameEn?.trim() || null, body.hexValue?.trim() || body.hex_value?.trim() || null, body.isActive ?? true, body.notes?.trim() || null],
+    );
+    return { colorId: id };
+  }
+
+  async deleteColor(id: number) {
+    const refs = await countReferencingRows(this.db, 'colors', 'color_id', id);
+    if (refs.length) {
+      const detail = refs.map((r) => `${r.table} (${r.count})`).join('، ');
+      throw new BadRequestException(`لا يمكن حذف اللون — مستخدم في: ${detail}`);
+    }
+    await this.db.query('DELETE FROM colors WHERE color_id = $1::int', [id]);
+    return { deleted: true };
+  }
+
+  // ---- sizes ----
+  async sizes() {
+    return this.db.query(
+      `SELECT size_id AS "sizeId", code, name, name_en AS "nameEn", sort_order AS "sortOrder",
+              is_active AS "isActive", notes
+         FROM sizes ORDER BY sort_order, name`,
+    );
+  }
+
+  async createSize(body: any) {
+    const name = String(body.name ?? '').trim();
+    if (!name) throw new BadRequestException('اسم المقاس مطلوب');
+    const row = await this.db.one<any>(
+      `INSERT INTO sizes (code, name, name_en, sort_order, is_active, notes)
+       VALUES ($1::text,$2::text,$3::text,$4::int,$5::boolean,$6::text) RETURNING size_id`,
+      [body.code?.trim() || null, name, body.nameEn?.trim() || null, Number(body.sortOrder ?? body.sort_order ?? 0), body.isActive ?? true, body.notes?.trim() || null],
+    );
+    return { sizeId: Number(row.size_id) };
+  }
+
+  async updateSize(id: number, body: any) {
+    const name = String(body.name ?? '').trim();
+    if (!name) throw new BadRequestException('اسم المقاس مطلوب');
+    await this.db.query(
+      `UPDATE sizes SET code=$2::text, name=$3::text, name_en=$4::text, sort_order=$5::int, is_active=$6::boolean, notes=$7::text
+        WHERE size_id=$1::int`,
+      [id, body.code?.trim() || null, name, body.nameEn?.trim() || null, Number(body.sortOrder ?? body.sort_order ?? 0), body.isActive ?? true, body.notes?.trim() || null],
+    );
+    return { sizeId: id };
+  }
+
+  async deleteSize(id: number) {
+    const refs = await countReferencingRows(this.db, 'sizes', 'size_id', id);
+    if (refs.length) {
+      const detail = refs.map((r) => `${r.table} (${r.count})`).join('، ');
+      throw new BadRequestException(`لا يمكن حذف المقاس — مستخدم في: ${detail}`);
+    }
+    await this.db.query('DELETE FROM sizes WHERE size_id = $1::int', [id]);
+    return { deleted: true };
+  }
+
+  // ---- governorates ----
+  async governorates(countryId?: number) {
+    return this.db.query(
+      `SELECT g.governorate_id AS "governorateId", g.code, g.name, g.name_en AS "nameEn",
+              g.country_id AS "countryId", c.name AS "countryName", g.country_code AS "countryCode",
+              g.shipping_fees AS "shippingFees", g.is_active AS "isActive", g.notes
+         FROM governorates g
+         LEFT JOIN countries c ON c.country_id = g.country_id
+        WHERE ($1::int IS NULL OR g.country_id = $1::int)
+        ORDER BY g.name`,
+      [countryId ?? null],
+    );
+  }
+
+  async createGovernorate(body: any) {
+    const name = String(body.name ?? '').trim();
+    if (!name) throw new BadRequestException('اسم المحافظة مطلوب');
+    const countryId = body.countryId ?? body.country_id ?? null;
+    const row = await this.db.one<any>(
+      `INSERT INTO governorates (code, name, name_en, country_id, country_code, shipping_fees, is_active, notes)
+       VALUES ($1::text,$2::text,$3::text,$4::int,$5::text,$6::numeric,$7::boolean,$8::text) RETURNING governorate_id`,
+      [body.code?.trim() || null, name, body.nameEn?.trim() || null, countryId ? Number(countryId) : null,
+        body.countryCode?.trim() || body.country_code?.trim() || null, Number(body.shippingFees ?? body.shipping_fees ?? 0),
+        body.isActive ?? true, body.notes?.trim() || null],
+    );
+    return { governorateId: Number(row.governorate_id) };
+  }
+
+  async updateGovernorate(id: number, body: any) {
+    const name = String(body.name ?? '').trim();
+    if (!name) throw new BadRequestException('اسم المحافظة مطلوب');
+    const countryId = body.countryId ?? body.country_id ?? null;
+    await this.db.query(
+      `UPDATE governorates SET code=$2::text, name=$3::text, name_en=$4::text, country_id=$5::int, country_code=$6::text,
+              shipping_fees=$7::numeric, is_active=$8::boolean, notes=$9::text
+        WHERE governorate_id=$1::int`,
+      [id, body.code?.trim() || null, name, body.nameEn?.trim() || null, countryId ? Number(countryId) : null,
+        body.countryCode?.trim() || body.country_code?.trim() || null, Number(body.shippingFees ?? body.shipping_fees ?? 0),
+        body.isActive ?? true, body.notes?.trim() || null],
+    );
+    return { governorateId: id };
+  }
+
+  async deleteGovernorate(id: number) {
+    const refs = await countReferencingRows(this.db, 'governorates', 'governorate_id', id);
+    if (refs.length) {
+      const detail = refs.map((r) => `${r.table} (${r.count})`).join('، ');
+      throw new BadRequestException(`لا يمكن حذف المحافظة — مستخدمة في: ${detail}`);
+    }
+    await this.db.query('DELETE FROM governorates WHERE governorate_id = $1::int', [id]);
+    return { deleted: true };
+  }
 }
 
 @Controller('catalog')
@@ -127,9 +308,7 @@ export class CatalogController {
   constructor(private readonly service: CatalogLookupService) {}
 
   @Get('branches')
-  branches() {
-    return this.service.branches();
-  }
+  branches() { return this.service.branches(); }
 
   @Get('warehouses')
   warehouses(@CurrentBranch() branchId: number, @CurrentUser() user: AuthUser) {
@@ -137,55 +316,103 @@ export class CatalogController {
   }
 
   @Get('units')
-  units() {
-    return this.service.units();
-  }
+  units() { return this.service.units(); }
 
   @Get('categories')
-  categories() {
-    return this.service.categories();
-  }
+  categories() { return this.service.categories(); }
 
   @Get('categories/tree')
-  categoriesTree() {
-    return this.service.categoriesTree();
-  }
+  categoriesTree() { return this.service.categoriesTree(); }
 
   @RequirePermissions('categories.manage')
   @Post('categories')
-  createCategory(@Body() body: any) {
-    return this.service.createCategory(body);
-  }
+  createCategory(@Body() body: any) { return this.service.createCategory(body); }
 
   @RequirePermissions('categories.manage')
   @Put('categories/:id')
-  updateCategory(@Param('id', ParseIntPipe) id: number, @Body() body: any) {
-    return this.service.updateCategory(id, body);
-  }
+  updateCategory(@Param('id', ParseIntPipe) id: number, @Body() body: any) { return this.service.updateCategory(id, body); }
 
   @RequirePermissions('units.manage')
   @Post('units')
-  createUnit(@Body() body: any) {
-    return this.service.createUnit(body);
-  }
+  createUnit(@Body() body: any) { return this.service.createUnit(body); }
 
   @RequirePermissions('warehouses.manage')
   @Post('warehouses')
-  createWarehouse(@Body() body: any) {
-    return this.service.createWarehouse(body);
-  }
+  createWarehouse(@Body() body: any) { return this.service.createWarehouse(body); }
 
   @RequirePermissions('categories.manage')
   @Delete('categories/:id')
-  deleteCategory(@Param('id', ParseIntPipe) id: number) {
-    return this.service.deleteCategory(id);
-  }
+  deleteCategory(@Param('id', ParseIntPipe) id: number) { return this.service.deleteCategory(id); }
 
   @RequirePermissions('units.manage')
   @Delete('units/:id')
-  deleteUnit(@Param('id', ParseIntPipe) id: number) {
-    return this.service.deleteUnit(id);
+  deleteUnit(@Param('id', ParseIntPipe) id: number) { return this.service.deleteUnit(id); }
+
+  // banks
+  @Get('banks')
+  banks() { return this.service.banks(); }
+
+  @RequirePermissions('cash.manage')
+  @Post('banks')
+  createBank(@Body() body: any) { return this.service.createBank(body); }
+
+  @RequirePermissions('cash.manage')
+  @Put('banks/:id')
+  updateBank(@Param('id', ParseIntPipe) id: number, @Body() body: any) { return this.service.updateBank(id, body); }
+
+  @RequirePermissions('cash.manage')
+  @Delete('banks/:id')
+  deleteBank(@Param('id', ParseIntPipe) id: number) { return this.service.deleteBank(id); }
+
+  // colors
+  @Get('colors')
+  colors() { return this.service.colors(); }
+
+  @RequirePermissions('settings.manage')
+  @Post('colors')
+  createColor(@Body() body: any) { return this.service.createColor(body); }
+
+  @RequirePermissions('settings.manage')
+  @Put('colors/:id')
+  updateColor(@Param('id', ParseIntPipe) id: number, @Body() body: any) { return this.service.updateColor(id, body); }
+
+  @RequirePermissions('settings.manage')
+  @Delete('colors/:id')
+  deleteColor(@Param('id', ParseIntPipe) id: number) { return this.service.deleteColor(id); }
+
+  // sizes
+  @Get('sizes')
+  sizes() { return this.service.sizes(); }
+
+  @RequirePermissions('settings.manage')
+  @Post('sizes')
+  createSize(@Body() body: any) { return this.service.createSize(body); }
+
+  @RequirePermissions('settings.manage')
+  @Put('sizes/:id')
+  updateSize(@Param('id', ParseIntPipe) id: number, @Body() body: any) { return this.service.updateSize(id, body); }
+
+  @RequirePermissions('settings.manage')
+  @Delete('sizes/:id')
+  deleteSize(@Param('id', ParseIntPipe) id: number) { return this.service.deleteSize(id); }
+
+  // governorates
+  @Get('governorates')
+  governorates(@Query('countryId') countryId?: string) {
+    return this.service.governorates(countryId ? Number(countryId) : undefined);
   }
+
+  @RequirePermissions('settings.manage')
+  @Post('governorates')
+  createGovernorate(@Body() body: any) { return this.service.createGovernorate(body); }
+
+  @RequirePermissions('settings.manage')
+  @Put('governorates/:id')
+  updateGovernorate(@Param('id', ParseIntPipe) id: number, @Body() body: any) { return this.service.updateGovernorate(id, body); }
+
+  @RequirePermissions('settings.manage')
+  @Delete('governorates/:id')
+  deleteGovernorate(@Param('id', ParseIntPipe) id: number) { return this.service.deleteGovernorate(id); }
 }
 
 @Module({

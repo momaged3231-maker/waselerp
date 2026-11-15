@@ -1,0 +1,69 @@
+{
+  "source": "D:\\New folder (2)\\extracted-2026-11-15",
+  "dryRun": false,
+  "phases": [
+    "master",
+    "opening-parties",
+    "opening-cash"
+  ],
+  "startedAt": "2026-11-15T12:32:48.156Z",
+  "tables": {
+    "branches": {
+      "read": 3,
+      "inserted": 3,
+      "skipped": 0,
+      "errors": 0
+    },
+    "warehouses": {
+      "read": 3,
+      "inserted": 3,
+      "skipped": 0,
+      "errors": 0
+    },
+    "cash_accounts": {
+      "read": 3,
+      "inserted": 3,
+      "skipped": 0,
+      "errors": 0
+    },
+    "categories": {
+      "read": 150,
+      "inserted": 150,
+      "skipped": 0,
+      "errors": 0
+    },
+    "units": {
+      "read": 3,
+      "inserted": 3,
+      "skipped": 0,
+      "errors": 0
+    },
+    "parties": {
+      "read": 1002,
+      "inserted": 1001,
+      "skipped": 1,
+      "errors": 0
+    },
+    "items": {
+      "read": 3848,
+      "inserted": 3848,
+      "skipped": 0,
+      "errors": 0
+    },
+    "opening_parties": {
+      "read": 374,
+      "inserted": 58,
+      "skipped": 0,
+      "errors": 0
+    },
+    "opening_cash": {
+      "read": 2633,
+      "inserted": 3,
+      "skipped": 0,
+      "errors": 0
+    }
+  },
+  "warnings": [],
+  "errors": [],
+  "finishedAt": "2026-11-15T12:33:04.804Z"
+}

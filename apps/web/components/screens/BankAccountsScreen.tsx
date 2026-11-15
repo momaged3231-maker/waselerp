@@ -86,11 +86,12 @@ export default function BankAccountsScreen() {
         <div className="card-title"><span>الحسابات والخزائن ({rows.length})</span></div>
         <div className="table-wrap">
           <table className="table">
-            <thead><tr><th>الاسم</th><th>النوع</th><th>البنك/الرقم</th><th>العملة</th><th>الرصيد الحالي</th><th>الحساب المحاسبي</th><th>الحالة</th>{canManage && <th></th>}</tr></thead>
+            <thead><tr><th>الاسم</th><th>الفرع</th><th>النوع</th><th>البنك/الرقم</th><th>العملة</th><th>الرصيد الحالي</th><th>الحساب المحاسبي</th><th>الحالة</th>{canManage && <th></th>}</tr></thead>
             <tbody>
               {rows.map((row) => (
                 <tr key={row.cashAccountId}>
                   <td className="font-semibold">{row.name}{row.notes ? <div className="text-[10px] text-slate-400">{row.notes}</div> : null}</td>
+                  <td className="text-xs">{row.branchName ?? row.branchId ?? '—'}</td>
                   <td>{TYPES[row.type] ?? row.type}</td>
                   <td className="text-xs">{row.bankName ?? '—'}{row.accountNo ? <div dir="ltr" className="text-slate-400">{row.accountNo}</div> : null}</td>
                   <td dir="ltr" className="text-right">{row.currencyCode ?? 'EGP'}</td>
@@ -110,7 +111,7 @@ export default function BankAccountsScreen() {
                   )}
                 </tr>
               ))}
-              {rows.length === 0 && <tr><td colSpan={8} className="text-center text-slate-400 py-8">لا توجد حسابات — أضف حسابًا أولًا</td></tr>}
+              {rows.length === 0 && <tr><td colSpan={9} className="text-center text-slate-400 py-8">لا توجد حسابات — أضف حسابًا أولًا</td></tr>}
             </tbody>
           </table>
         </div>

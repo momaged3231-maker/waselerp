@@ -1,0 +1,71 @@
+{
+  "source": "D:\\New folder (2)\\extracted-2026-11-15",
+  "dryRun": false,
+  "phases": [
+    "company",
+    "employees",
+    "users",
+    "stock",
+    "invoices",
+    "cash",
+    "ledger"
+  ],
+  "startedAt": "2026-11-15T12:50:32.409Z",
+  "tables": {
+    "currencies": {
+      "read": 3,
+      "inserted": 3,
+      "skipped": 0,
+      "errors": 0
+    },
+    "company": {
+      "read": 1,
+      "inserted": 1,
+      "skipped": 0,
+      "errors": 0
+    },
+    "employees": {
+      "read": 16,
+      "inserted": 16,
+      "skipped": 0,
+      "errors": 0
+    },
+    "users": {
+      "read": 3,
+      "inserted": 3,
+      "skipped": 0,
+      "errors": 0
+    },
+    "stock_balance": {
+      "read": 1828,
+      "inserted": 1828,
+      "skipped": 0,
+      "errors": 0
+    },
+    "invoices": {
+      "read": 2401,
+      "inserted": 2401,
+      "skipped": 0,
+      "errors": 0
+    },
+    "cash_tx": {
+      "read": 2633,
+      "inserted": 2630,
+      "skipped": 0,
+      "errors": 0
+    },
+    "ledger": {
+      "read": 374,
+      "inserted": 316,
+      "skipped": 0,
+      "errors": 0
+    }
+  },
+  "warnings": [
+    "users: تم إنشاء/ربط 3 مستخدمين بكلمة مرور مؤقتة \"Ezees@123\" (هاشات Ezees غير متوافقة) — يجب تغييرها فورًا.",
+    "stock: تم احتساب أرصدة كمية من 4811 حركة (tb_ItemOperations) وتحديث item_warehouse_qty. لم تُنشأ قيود محاسبية تاريخية للحركات.",
+    "invoices: رُحّلت رؤوس الفواتير مع سطر إجمالي واحد لكل فاتورة (المصدر بلا سطور تفصيلية). لم يُعاد ترحيل أثر مخزني/قيود محاسبية تلقائية لهذه الفواتير لتجنب ازدواجية مع أرصدة المخزون المحتسبة من الحركات."
+  ],
+  "errors": [],
+  "finishedAt": "2026-11-15T12:50:50.999Z"
+}

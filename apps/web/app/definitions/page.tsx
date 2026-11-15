@@ -11,6 +11,10 @@ import BranchesScreen from '@/components/screens/BranchesScreen';
 import CurrenciesScreen from '@/components/screens/CurrenciesScreen';
 import BankAccountsScreen from '@/components/screens/BankAccountsScreen';
 import CompanyScreen from '@/components/screens/CompanyScreen';
+import BanksScreen from '@/components/screens/BanksScreen';
+import ColorsScreen from '@/components/screens/ColorsScreen';
+import SizesScreen from '@/components/screens/SizesScreen';
+import GovernoratesScreen from '@/components/screens/GovernoratesScreen';
 
 type DefinitionKey =
   | 'branches' | 'warehouses' | 'units' | 'colors' | 'sizes'
@@ -323,13 +327,13 @@ export default function DefinitionsPage() {
         );
 
       case 'colors':
-        return <MissingCard title="تعريف ألوان" reason="لا يوجد جدول أو نموذج بيانات للألوان في النظام — هي خاصة بمجالات الأقمشة/الموضة (مقاس ولون لكل قطعة). لا تتوفر في نطاق عمل هذا النظام (بيع التجزئة العام + مطعم + صيانة). أي صناعة ملابس تحتاج وحدة متخصصة تُبنى بطلب سوقي واضح." alt="أضيفها كخصائص متغيرة في بطاقة الصنف لو احتجت (حقل ملاحظات أو وحدات متعددة)." />;
+        return <ColorsScreen />;
       case 'sizes':
-        return <MissingCard title="تعريف مقاسات" reason="نفس سبب الألوان — جدول/نموذج منفصل للمقاسات غير منفذ. نظام «وحدات متعددة + معامل تحويل» يغطي وحدات القياس (كرتون/قطعة/كيلو)، بينما «المقاس» كسمة تجارية مختلفة غير مدعومة الآن." alt="استخدم حقل «اسم الصنف» لفرز مقاسات (مثال: «تيشيرت أحمر 38»)." />;
+        return <SizesScreen />;
       case 'governorates':
-        return <MissingCard title="المحافظات" reason="لا يوجد جدول محافظات في النظام. لدينا جدول المدن والدول ضمن وحدة الشحن والتسليم — المحافظات اختيارية ويمكن إضافتها كعمود/فقرة في نفس الجدول عند الحاجة." alt="التزم بـ «المدن» + «الدول» في وحدة الشحن — أو اطلب إضافة المحافظات كجدول مستقل." />;
+        return <GovernoratesScreen />;
       case 'banks':
-        return <MissingCard title="تعريف البنوك" reason="لا يوجد جدول مرجعي للبنوك في النظام. اسم البنك يُحفظ كنص حر مع الحساب البنكي («الحسابات البنكية والخزائن»)." alt="أدخل اسم البنك هنا كالحساب البنكي («البنك» نص حر) — أو اطلب إضافة جدول «البنوك» كمرجع." />;
+        return <BanksScreen />;
       default:
         return <MissingCard title="قسم غير مكتمل" reason="هذي القيمة غير معرّفة." />;
     }

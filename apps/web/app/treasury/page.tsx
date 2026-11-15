@@ -96,6 +96,7 @@ export default function TreasuryPage() {
             {accounts.map((account) => (
               <div key={account.cashAccountId} className="card p-4">
                 <div className="text-xs text-slate-500 font-semibold">{account.name}</div>
+                <div className="text-[11px] text-brand-700 font-semibold mt-0.5">الفرع: {account.branchName ?? account.branchId ?? '—'}</div>
                 <div className="text-xl font-extrabold text-slate-800 mt-1">{formatMoney(account.balance)}</div>
                 <div className="text-[11px] text-slate-400 mt-1">
                   {account.bankName ?? 'نقدية'} {account.accountNo ? `· ${account.accountNo}` : ''}
@@ -209,7 +210,7 @@ export default function TreasuryPage() {
                   <label className="label">حساب الخزينة</label>
                   <select className="input" value={shiftAccountId}
                     onChange={(e) => setShiftAccountId(Number(e.target.value))}>
-                    {accounts.map((a) => <option key={a.cashAccountId} value={a.cashAccountId}>{a.name}</option>)}
+                    {accounts.map((a) => <option key={a.cashAccountId} value={a.cashAccountId}>{a.name} — {a.branchName ?? `فرع ${a.branchId}`}</option>)}
                   </select>
                 </div>
                 <div>
@@ -228,7 +229,7 @@ export default function TreasuryPage() {
           <div>
             <label className="label">الحساب</label>
             <select className="input" value={form.cashAccountId} onChange={(e) => setForm({ ...form, cashAccountId: Number(e.target.value) })}>
-              {accounts.map((a) => <option key={a.cashAccountId} value={a.cashAccountId}>{a.name}</option>)}
+              {accounts.map((a) => <option key={a.cashAccountId} value={a.cashAccountId}>{a.name} — {a.branchName ?? `فرع ${a.branchId}`}</option>)}
             </select>
           </div>
           <div className="grid grid-cols-2 gap-3">
