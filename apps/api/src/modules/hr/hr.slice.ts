@@ -620,6 +620,41 @@ export class HrService {
         allowances = round2(allowances + Number(employee.allowances ?? 0));
         deductions = round2(deductions + Number(employee.deductions ?? 0));
 
+        // D11: late-arrival deduction from the «نسب الخصم على التأخير» tiers
+        // (max late minutes recorded in the period × day wage × tier percent).
+        const dayWage = round2(basic / 30);
+        const lateMax = await client.query<any>(
+          `SELECT COALESCE(max(late_minutes), 0)::int AS m FROM attendances
+            WHERE employee_id = $1::int AND work_date >= $2::date AND work_date < $3::date`,
+          [employeeId, period, next],
+        );
+        const lateMinutes = Number(lateMax.rows[0]?.m ?? 0);
+        const tiers = await client.query<any>(
+          'SELECT from_minutes, to_minutes, percent FROM latency_deduction_tiers ORDER BY sort_order, from_minutes',
+        );
+        const tier = tiers.rows.find((t: any) => lateMinutes >= Number(t.from_minutes)
+          && (t.to_minutes === null || t.to_minutes === undefined || lateMinutes <= Number(t.to_minutes)));
+        const lateDeduction = tier && lateMinutes > 0
+          ? round2(dayWage * Number(tier.percent) / 100) : 0;
+        if (lateDeduction > 0) {
+          deductions = round2(deductions + lateDeduction);
+          lines.push({ componentId: null, name: 'خصم تأخير', lineType: 2, amount: lateDeduction });
+        }
+
+        // D11: approved early-leave permissions flagged for payroll deduction.
+        const permRow = await client.query<any>(
+          `SELECT COALESCE(SUM(minutes), 0)::int AS minutes FROM early_permissions
+            WHERE employee_id = $1::int AND status = 2 AND deduct_from_salary = true
+              AND permission_date >= $2::date AND permission_date < $3::date`,
+          [employeeId, period, next],
+        );
+        const permMinutes = Number(permRow.rows[0]?.minutes ?? 0);
+        const earlyDeduction = permMinutes > 0 ? round2((dayWage / 8) * (permMinutes / 60)) : 0;
+        if (earlyDeduction > 0) {
+          deductions = round2(deductions + earlyDeduction);
+          lines.push({ componentId: null, name: 'إذن انصراف مبكر', lineType: 2, amount: earlyDeduction });
+        }
+
         const hourlyRate = basic / Math.max(1, 30 * 8);
         const overtimeMinutes = overtimeByEmployee.get(employeeId) ?? 0;
         const overtimeAmount = round2((overtimeMinutes / 60) * hourlyRate);
@@ -902,6 +937,326 @@ export class HrService {
       [params.branchId, params.from ?? null, params.to ?? null],
     );
   }
+
+  // ------------------------------------------------------------------ //
+  //  D11 — punch, latency tiers, early permissions, attendance reports
+  // ------------------------------------------------------------------ //
+
+  /** Quick punch: registers attendance/checkout for TODAY for the employee. */
+  async punch(dto: any, branchId: number) {
+    const employeeId = Number(dto?.employeeId ?? 0);
+    if (!employeeId) throw new BadRequestException('الموظف مطلوب');
+    const type = String(dto?.type ?? '');
+    if (!['in', 'out'].includes(type)) throw new BadRequestException('نوع التسجيل غير صحيح — in أو out');
+    const employee = await this.db.one<any>(
+      'SELECT employee_id, name FROM employees WHERE employee_id = $1::int AND is_active = true',
+      [employeeId],
+    );
+    if (!employee) throw new BadRequestException('الموظف غير موجود أو موقوف');
+
+    return this.db.transaction(async (client) => {
+      const existing = (await client.query<any>(
+        `SELECT attendance_id, check_in, check_out FROM attendances
+          WHERE employee_id = $1::int AND work_date = CURRENT_DATE FOR UPDATE`,
+        [employeeId],
+      )).rows[0];
+      let attendanceId = existing?.attendance_id ? Number(existing.attendance_id) : 0;
+      if (type === 'in') {
+        if (existing?.check_in) throw new BadRequestException('هذا الموظف سجّل حضوره اليوم بالفعل');
+        if (existing) {
+          await client.query(
+            `UPDATE attendances SET check_in = now(), status = 1 WHERE attendance_id = $1::bigint`,
+            [attendanceId],
+          );
+        } else {
+          const inserted = await client.query<any>(
+            `INSERT INTO attendances (employee_id, branch_id, work_date, status, check_in, overtime_minutes, late_minutes)
+             VALUES ($1::int,$2::int,CURRENT_DATE,1,now(),0,0)
+             RETURNING attendance_id`,
+            [employeeId, branchId],
+          );
+          attendanceId = Number(inserted.rows[0].attendance_id);
+        }
+      } else {
+        if (!existing || !existing.check_in) throw new BadRequestException('سجّل الحضور أولًا');
+        if (existing.check_out) throw new BadRequestException('هذا الموظف سجّل انصرافه اليوم بالفعل');
+        await client.query(
+          `UPDATE attendances SET check_out = now() WHERE attendance_id = $1::bigint`,
+          [attendanceId],
+        );
+      }
+      const row = (await client.query<any>(
+        `SELECT a.attendance_id AS "attendanceId", a.employee_id AS "employeeId", e.name AS "employeeName",
+                a.work_date AS "workDate", a.check_in AS "checkIn", a.check_out AS "checkOut",
+                a.status, a.overtime_minutes AS "overtimeMinutes", a.late_minutes AS "lateMinutes", a.notes
+           FROM attendances a JOIN employees e ON e.employee_id = a.employee_id
+          WHERE a.attendance_id = $1::bigint`,
+        [attendanceId],
+      )).rows[0];
+      return row;
+    });
+  }
+
+  // ---- latency deduction tiers (نسب الخصم على التأخير) ----
+  async listTiers() {
+    return this.db.query<any>(
+      `SELECT tier_id AS "tierId", from_minutes AS "fromMinutes", to_minutes AS "toMinutes",
+              percent, sort_order AS "sortOrder"
+         FROM latency_deduction_tiers ORDER BY sort_order, from_minutes`,
+    );
+  }
+
+  async createTier(dto: any) {
+    const from = Number(dto?.fromMinutes);
+    const to = dto?.toMinutes === null || dto?.toMinutes === '' || dto?.toMinutes === undefined ? null : Number(dto.toMinutes);
+    const percent = Number(dto?.percent);
+    if (!Number.isFinite(from) || from < 0) throw new BadRequestException('«من دقيقة» مطلوب ويجب أن يكون ≥ 0');
+    if (to !== null && (!Number.isFinite(to) || to < from)) throw new BadRequestException('«إلى دقيقة» يجب أن تكون أكبر من أو مساوية «من دقيقة»');
+    if (!Number.isFinite(percent) || percent < 0 || percent > 100) throw new BadRequestException('النسبة يجب أن تكون بين 0 و100');
+    const row = await this.db.one<any>(
+      `INSERT INTO latency_deduction_tiers (branch_id, from_minutes, to_minutes, percent, sort_order)
+       VALUES (0,$1::int,$2::int,$3::numeric,COALESCE($4::int,0))
+       RETURNING tier_id AS "tierId"`,
+      [from, to, percent, dto?.sortOrder ?? 0],
+    );
+    return row;
+  }
+
+  async updateTier(id: number, dto: any) {
+    const tier = await this.db.one<any>('SELECT tier_id FROM latency_deduction_tiers WHERE tier_id = $1::int', [id]);
+    if (!tier) throw new BadRequestException('الشريحة غير موجودة');
+    const fromProvided = dto?.fromMinutes !== undefined;
+    const toProvided = dto?.toMinutes !== undefined;
+    const percentProvided = dto?.percent !== undefined;
+    const sortProvided = dto?.sortOrder !== undefined;
+    const from = fromProvided ? Number(dto.fromMinutes) : null;
+    const to = toProvided ? (dto.toMinutes === null || dto.toMinutes === '' ? null : Number(dto.toMinutes)) : null;
+    const percent = percentProvided ? Number(dto.percent) : null;
+    const sortOrder = sortProvided ? Number(dto.sortOrder) : null;
+    if (fromProvided && (!Number.isFinite(from) || (from as number) < 0)) throw new BadRequestException('قيمة «من دقيقة» غير صحيحة');
+    if (toProvided && to !== null && (!Number.isFinite(to) || (fromProvided && to < (from as number)))) {
+      throw new BadRequestException('«إلى» يجب أن تكون أكبر من أو مساوية «من»');
+    }
+    if (percentProvided && (!Number.isFinite(percent) || (percent as number) < 0 || (percent as number) > 100)) throw new BadRequestException('النسبة يجب أن تكون بين 0 و100');
+    await this.db.query(
+      `UPDATE latency_deduction_tiers SET
+         from_minutes = CASE WHEN $2::boolean THEN $3::int ELSE from_minutes END,
+         to_minutes = CASE WHEN $4::boolean THEN $5::int ELSE to_minutes END,
+         percent = CASE WHEN $6::boolean THEN $7::numeric ELSE percent END,
+         sort_order = CASE WHEN $8::boolean THEN $9::int ELSE sort_order END
+       WHERE tier_id = $1::int`,
+      [id, fromProvided, from, toProvided, to, percentProvided, percent, sortProvided, sortOrder],
+    );
+    return { tierId: id };
+  }
+
+  async removeTier(id: number) {
+    await this.db.query('DELETE FROM latency_deduction_tiers WHERE tier_id = $1::int', [id]);
+    return { tierId: id, deleted: true };
+  }
+
+  // ---- early permissions (أذونات الانصراف المبكر) ----
+  private parseTimeToMinutes(value: string, label: string): number {
+    const match = /^(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(String(value ?? '').trim());
+    if (!match) throw new BadRequestException(`${label} غير صحيح — الصيغة HH:MM`);
+    const minutes = Number(match[1]) * 60 + Number(match[2]);
+    if (minutes < 0 || minutes >= 24 * 60) throw new BadRequestException(`${label} غير صحيح`);
+    return minutes;
+  }
+
+  async listPermissions(params: { branchId: number; employeeId?: number; from?: string; to?: string; status?: number }) {
+    return this.db.query<any>(
+      `SELECT p.permission_id AS "permissionId", p.employee_id AS "employeeId", e.name AS "employeeName",
+              p.permission_date AS "permissionDate", p.from_time AS "fromTime", p.to_time AS "toTime",
+              p.minutes, p.reason, p.deduct_from_salary AS "deductFromSalary", p.status, p.notes,
+              u.full_name AS "createdByName"
+         FROM early_permissions p
+         JOIN employees e ON e.employee_id = p.employee_id
+         LEFT JOIN users u ON u.user_id = p.created_by
+        WHERE e.branch_id = $1::int
+          AND ($2::int = 0 OR p.employee_id = $2::int)
+          AND ($3::date IS NULL OR p.permission_date >= $3::date)
+          AND ($4::date IS NULL OR p.permission_date <= $4::date)
+          AND ($5::int = 0 OR p.status = $5::int)
+        ORDER BY p.permission_date DESC, p.permission_id DESC`,
+      [params.branchId, params.employeeId ?? 0, params.from ?? null, params.to ?? null, params.status ?? 0],
+    );
+  }
+
+  async createPermission(dto: any, user: AuthUser, branchId: number) {
+    if (!dto?.employeeId || !dto?.permissionDate || !dto?.fromTime || !dto?.toTime) {
+      throw new BadRequestException('الموظف والتاريخ ووقت من وإلى مطلوبون');
+    }
+    const employeeId = Number(dto.employeeId);
+    const employee = await this.db.one<any>(
+      'SELECT name FROM employees WHERE employee_id = $1::int AND is_active = true',
+      [employeeId],
+    );
+    if (!employee) throw new BadRequestException('الموظف غير موجود أو موقوف');
+    const fromMin = this.parseTimeToMinutes(dto.fromTime, 'وقت من');
+    const toMin = this.parseTimeToMinutes(dto.toTime, 'وقت إلى');
+    if (toMin <= fromMin) throw new BadRequestException('وقت «إلى» يجب أن يكون بعد «من»');
+    const minutes = toMin - fromMin;
+    const row = await this.db.one<any>(
+      `INSERT INTO early_permissions (branch_id, employee_id, permission_date, from_time, to_time, minutes, reason, deduct_from_salary, status, notes, created_by)
+       VALUES ($1::int,$2::int,$3::date,$4::time,$5::time,$6::int,$7::text,$8::boolean,1,$9::text,$10::int)
+       ON CONFLICT (employee_id, permission_date) DO NOTHING
+       RETURNING permission_id AS "permissionId"`,
+      [branchId, employeeId, dto.permissionDate, dto.fromTime, dto.toTime, minutes,
+        String(dto.reason ?? '').trim() || null, !!dto.deductFromSalary, String(dto.notes ?? '').trim() || null, user.userId],
+    );
+    if (!row) throw new BadRequestException('للموظف إذن انصراف مسجل بالفعل في هذا اليوم');
+    return row;
+  }
+
+  async setPermissionStatus(id: number, status: number) {
+    if (![1, 2, 3].includes(Number(status))) throw new BadRequestException('حالة الإذن غير صحيحة');
+    const row = await this.db.one<any>(
+      `UPDATE early_permissions SET status = $2::smallint WHERE permission_id = $1::int
+       RETURNING permission_id AS "permissionId", status`,
+      [id, status],
+    );
+    if (!row) throw new BadRequestException('الإذن غير موجود');
+    return row;
+  }
+
+  async removePermission(id: number) {
+    const row = await this.db.one<any>(
+      'SELECT status FROM early_permissions WHERE permission_id = $1::int',
+      [id],
+    );
+    if (!row) throw new BadRequestException('الإذن غير موجود');
+    if (Number(row.status) !== 1) throw new BadRequestException('يُحذف فقط الإذن «قيد الانتظار» — المعتمد لا يُحذف');
+    await this.db.query('DELETE FROM early_permissions WHERE permission_id = $1::int', [id]);
+    return { permissionId: id, deleted: true };
+  }
+
+  // ---- reports (تقارير الحضور والانصراف / الانصراف المبكر / الإضافي / الإجازات) ----
+
+  /** تقرير الحضور والانصراف: سطر لكل موظف في كل يوم مع قيم التأخير والإذن المحسوبة. */
+  async attendanceDailyReport(params: { branchId: number; from?: string; to?: string; employeeId?: number }) {
+    const tiers = await this.listTiers();
+    const rows = await this.db.query<any>(
+      `SELECT e.employee_id AS "employeeId", e.code, e.name AS "employeeName",
+              a.work_date AS "workDate", a.check_in AS "checkIn", a.check_out AS "checkOut", a.status,
+              a.late_minutes AS "lateMinutes", a.overtime_minutes AS "overtimeMinutes",
+              e.basic_salary AS "basicSalary",
+              (SELECT COALESCE(SUM(p.minutes),0)::int FROM early_permissions p
+                WHERE p.employee_id = e.employee_id AND p.permission_date = a.work_date AND p.status = 2) AS "earlyMinutes",
+              (SELECT COALESCE(SUM(p.minutes),0)::int FROM early_permissions p
+                WHERE p.employee_id = e.employee_id AND p.permission_date = a.work_date AND p.status = 2 AND p.deduct_from_salary = true) AS "earlyDeductMinutes"
+         FROM attendances a JOIN employees e ON e.employee_id = a.employee_id
+        WHERE ($1::int = 0 OR a.branch_id = $1::int)
+          AND ($2::int = 0 OR a.employee_id = $2::int)
+          AND ($3::date IS NULL OR a.work_date >= $3::date)
+          AND ($4::date IS NULL OR a.work_date <= $4::date)
+        ORDER BY a.work_date DESC, e.name`,
+      [params.branchId, params.employeeId ?? 0, params.from ?? null, params.to ?? null],
+    );
+    return rows.map((row: any) => {
+      const basic = Number(row.basicSalary ?? 0);
+      const dayWage = round2(basic / 30);
+      const hourRate = round2(dayWage / 8);
+      const late = Number(row.lateMinutes ?? 0);
+      const tier = tiers.find((t: any) => late >= Number(t.fromMinutes)
+        && (t.toMinutes === null || late <= Number(t.toMinutes)));
+      const lateValue = tier && late > 0 ? round2(dayWage * Number(tier.percent) / 100) : 0;
+      const earlyValue = round2(hourRate * (Number(row.earlyDeductMinutes ?? 0) / 60));
+      const checkIn = row.checkIn ? new Date(row.checkIn).getTime() : null;
+      const checkOut = row.checkOut ? new Date(row.checkOut).getTime() : null;
+      const hoursWorked = checkIn && checkOut ? Math.round(((checkOut - checkIn) / 360000) / 10 * 10) / 100 : 0;
+      return {
+        ...row,
+        dayWage,
+        lateValue,
+        earlyValue,
+        hoursWorked,
+      };
+    });
+  }
+
+  /** تقرير العمل الإضافي: ساعات وأيام وتقدير قيمة العمل الإضافي (x1.5). */
+  async overtimeReport(params: { branchId: number; from?: string; to?: string; employeeId?: number }) {
+    const rows = await this.db.query<any>(
+      `SELECT e.employee_id AS "employeeId", e.name AS "employeeName", e.basic_salary AS "basicSalary",
+              COALESCE(SUM(a.overtime_minutes),0)::int AS "overtimeMinutes",
+              count(*) FILTER (WHERE a.overtime_minutes > 0)::int AS "overtimeDays"
+         FROM attendances a JOIN employees e ON e.employee_id = a.employee_id
+        WHERE ($1::int = 0 OR a.branch_id = $1::int)
+          AND ($2::int = 0 OR a.employee_id = $2::int)
+          AND ($3::date IS NULL OR a.work_date >= $3::date)
+          AND ($4::date IS NULL OR a.work_date <= $4::date)
+        GROUP BY e.employee_id, e.name, e.basic_salary
+        ORDER BY e.name`,
+      [params.branchId, params.employeeId ?? 0, params.from ?? null, params.to ?? null],
+    );
+    const items = rows.map((row: any) => {
+      const hours = Math.round((Number(row.overtimeMinutes) / 60) * 100) / 100;
+      const hourRate = round2((Number(row.basicSalary ?? 0) / 30) / 8);
+      return { ...row, hours, hourRate, overtimeValue: round2(hours * hourRate * 1.5) };
+    });
+    const totals = items.reduce((acc: any, row: any) => ({
+      overtimeMinutes: acc.overtimeMinutes + Number(row.overtimeMinutes),
+      hours: round2(acc.hours + row.hours),
+      overtimeValue: round2(acc.overtimeValue + row.overtimeValue),
+    }), { overtimeMinutes: 0, hours: 0, overtimeValue: 0 });
+    return { items, totals };
+  }
+
+  /** تقرير الإجازات والغياب: إجازات (معتمدة) مجمّعة حسب النوع + أيام الغياب. */
+  async leavesAbsenceReport(params: { branchId: number; from?: string; to?: string; employeeId?: number }) {
+    const leaveRows = await this.db.query<any>(
+      `SELECT e.employee_id AS "employeeId", e.name AS "employeeName", l.leave_type AS "leaveType",
+              COALESCE(SUM(l.days),0)::numeric AS days, count(*)::int AS requests
+         FROM leave_requests l JOIN employees e ON e.employee_id = l.employee_id
+        WHERE ($1::int = 0 OR e.branch_id = $1::int)
+          AND ($2::int = 0 OR l.employee_id = $2::int)
+          AND l.status = 2
+          AND ($3::date IS NULL OR l.end_date >= $3::date)
+          AND ($4::date IS NULL OR l.start_date <= $4::date)
+        GROUP BY e.employee_id, e.name, l.leave_type`,
+      [params.branchId, params.employeeId ?? 0, params.from ?? null, params.to ?? null],
+    );
+    const absenceRows = await this.db.query<any>(
+      `SELECT e.employee_id AS "employeeId", e.name AS "employeeName", count(*)::int AS "absentDays"
+         FROM attendances a JOIN employees e ON e.employee_id = a.employee_id
+        WHERE ($1::int = 0 OR a.branch_id = $1::int)
+          AND ($2::int = 0 OR a.employee_id = $2::int)
+          AND a.status = 2
+          AND ($3::date IS NULL OR a.work_date >= $3::date)
+          AND ($4::date IS NULL OR a.work_date <= $4::date)
+        GROUP BY e.employee_id, e.name`,
+      [params.branchId, params.employeeId ?? 0, params.from ?? null, params.to ?? null],
+    );
+    const byEmployee = new Map<number, any>();
+    const bucket = (employeeId: number, name: string) => {
+      if (!byEmployee.has(employeeId)) {
+        byEmployee.set(employeeId, {
+          employeeId, employeeName: name, annualDays: 0, sickDays: 0, unpaidDays: 0,
+          leaveRequests: 0, absentDays: 0, totalLeaveDays: 0,
+        });
+      }
+      return byEmployee.get(employeeId)!;
+    };
+    for (const row of leaveRows) {
+      const entry = bucket(Number(row.employeeId), row.employeeName);
+      const days = Number(row.days);
+      if (Number(row.leaveType) === 1) entry.annualDays = round2(entry.annualDays + days);
+      else if (Number(row.leaveType) === 2) entry.sickDays = round2(entry.sickDays + days);
+      else if (Number(row.leaveType) === 3) entry.unpaidDays = round2(entry.unpaidDays + days);
+      entry.leaveRequests += Number(row.requests);
+      entry.totalLeaveDays = round2(entry.totalLeaveDays + days);
+    }
+    for (const row of absenceRows) {
+      bucket(Number(row.employeeId), row.employeeName).absentDays = Number(row.absentDays);
+    }
+    const items = [...byEmployee.values()].sort((a, b) => a.employeeName.localeCompare(b.employeeName, 'ar'));
+    const totals = items.reduce((acc: any, row: any) => ({
+      absentDays: acc.absentDays + row.absentDays,
+      totalLeaveDays: round2(acc.totalLeaveDays + row.totalLeaveDays),
+    }), { absentDays: 0, totalLeaveDays: 0 });
+    return { items, totals };
+  }
 }
 
 @Controller('hr')
@@ -947,6 +1302,43 @@ export class HrController {
   @Post('attendance') upsertAttendance(@Body() dto: any, @CurrentBranch() branchId: number) { return this.service.upsertAttendance(dto, branchId); }
   @RequirePermissions('hr.manage')
   @Post('attendance/import') importAttendance(@Body() dto: any, @CurrentBranch() branchId: number) { return this.service.importAttendance(dto, branchId); }
+
+  // D11 — punch / tiers / early permissions / reports
+  @RequirePermissions('hr.manage')
+  @Post('attendance/punch') punch(@Body() dto: any, @CurrentBranch() branchId: number) { return this.service.punch(dto, branchId); }
+
+  @RequirePermissions('hr.view')
+  @Get('latency-tiers') listTiers() { return this.service.listTiers(); }
+  @RequirePermissions('hr.manage')
+  @Post('latency-tiers') createTier(@Body() dto: any) { return this.service.createTier(dto); }
+  @RequirePermissions('hr.manage')
+  @Put('latency-tiers/:id') updateTier(@Param('id', ParseIntPipe) id: number, @Body() dto: any) { return this.service.updateTier(id, dto); }
+  @RequirePermissions('hr.manage')
+  @Delete('latency-tiers/:id') removeTier(@Param('id', ParseIntPipe) id: number) { return this.service.removeTier(id); }
+
+  @RequirePermissions('hr.view')
+  @Get('early-permissions') listPermissions(@CurrentBranch() branchId: number, @Query('employeeId') employeeId: string, @Query('from') from: string, @Query('to') to: string, @Query('status') status: string) {
+    return this.service.listPermissions({ branchId, employeeId: employeeId ? Number(employeeId) : undefined, from, to, status: status ? Number(status) : undefined });
+  }
+  @RequirePermissions('hr.manage')
+  @Post('early-permissions') createPermission(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) { return this.service.createPermission(dto, user, branchId); }
+  @RequirePermissions('hr.manage')
+  @Put('early-permissions/:id/status') setPermissionStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: any) { return this.service.setPermissionStatus(id, Number(dto?.status)); }
+  @RequirePermissions('hr.manage')
+  @Delete('early-permissions/:id') removePermission(@Param('id', ParseIntPipe) id: number) { return this.service.removePermission(id); }
+
+  @RequirePermissions('hr.view')
+  @Get('reports/attendance') attendanceReport(@CurrentBranch() branchId: number, @Query('from') from: string, @Query('to') to: string, @Query('employeeId') employeeId: string) {
+    return this.service.attendanceDailyReport({ branchId, from, to, employeeId: employeeId ? Number(employeeId) : undefined });
+  }
+  @RequirePermissions('hr.view')
+  @Get('reports/overtime') overtimeReport(@CurrentBranch() branchId: number, @Query('from') from: string, @Query('to') to: string, @Query('employeeId') employeeId: string) {
+    return this.service.overtimeReport({ branchId, from, to, employeeId: employeeId ? Number(employeeId) : undefined });
+  }
+  @RequirePermissions('hr.view')
+  @Get('reports/leaves-absence') leavesAbsenceReport(@CurrentBranch() branchId: number, @Query('from') from: string, @Query('to') to: string, @Query('employeeId') employeeId: string) {
+    return this.service.leavesAbsenceReport({ branchId, from, to, employeeId: employeeId ? Number(employeeId) : undefined });
+  }
 
   @RequirePermissions('hr.view')
   @Get('leaves') listLeaves(@CurrentBranch() branchId: number, @Query('employeeId') employeeId: string, @Query('status') status: string) {

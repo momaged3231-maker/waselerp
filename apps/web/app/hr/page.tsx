@@ -4,17 +4,22 @@ import { useEffect, useRef, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import AttachmentsPanel from '@/components/AttachmentsPanel';
 import { apiFetch, formatDate, formatMoney } from '@/lib/api';
+import { downloadCsv } from '@/lib/export';
 import { useSession } from '@/lib/session';
 
-type Tab = 'employees' | 'departments' | 'components' | 'attendance' | 'leaves' | 'advances' | 'payroll';
+type Tab = 'employees' | 'departments' | 'components' | 'attendance' | 'permissions' | 'tiers' | 'leaves' | 'advances' | 'hrReports' | 'cards' | 'payroll';
 
 const TABS: [Tab, string][] = [
   ['employees', 'الموظفون'],
   ['departments', 'الإدارات'],
   ['components', 'مكونات المرتب'],
   ['attendance', 'الحضور والانصراف'],
+  ['permissions', 'أذونات الانصراف المبكر'],
+  ['tiers', 'نسب الخصومات'],
   ['leaves', 'الإجازات'],
   ['advances', 'السلف'],
+  ['hrReports', 'تقارير الحضور'],
+  ['cards', 'كروت الموظفين'],
   ['payroll', 'المرتبات'],
 ];
 
@@ -66,6 +71,19 @@ export default function HrPage() {
   const [advanceForm, setAdvanceForm] = useState<any>(emptyAdvance);
   const [leaveForm, setLeaveForm] = useState<any>(emptyLeave);
   const [attendanceForm, setAttendanceForm] = useState({ employeeId: '', workDate: new Date().toISOString().slice(0, 10), status: 1 });
+  const [permissionForm, setPermissionForm] = useState({ employeeId: '', permissionDate: new Date().toISOString().slice(0, 10), fromTime: '14:00', toTime: '16:00', reason: '', deductFromSalary: false });
+  const [tierForm, setTierForm] = useState<any>({ tierId: 0, fromMinutes: 1, toMinutes: 15, percent: 25, sortOrder: 1 });
+  const [permissions, setPermissions] = useState<any[]>([]);
+  const [tiers, setTiers] = useState<any[]>([]);
+  const [reportKind, setReportKind] = useState<'attendance' | 'early' | 'overtime' | 'leaves'>('attendance');
+  const [reportRows, setReportRows] = useState<any[]>([]);
+  const [reportSummary, setReportSummary] = useState<any>(null);
+  const [reportFrom, setReportFrom] = useState(() => `${new Date().toISOString().slice(0, 7)}-01`);
+  const [reportTo, setReportTo] = useState(() => new Date().toISOString().slice(0, 10));
+  const [reportEmployeeId, setReportEmployeeId] = useState('');
+  const [cardEmployeeId, setCardEmployeeId] = useState('');
+  const [cardMonth, setCardMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [cardRows, setCardRows] = useState<any[]>([]);
 
   const [cashAccountId, setCashAccountId] = useState<number | ''>('');
   const [selectedSalaries, setSelectedSalaries] = useState<number[]>([]);
@@ -129,6 +147,195 @@ export default function HrPage() {
     setSelectedSalaries([]);
   }
 
+  async function punchNow(type: 'in' | 'out') {
+    if (!attendanceForm.employeeId) { fail({ message: 'اختر الموظف أولًا' }); return; }
+    setBusy(true);
+    try {
+      await apiFetch('/hr/attendance/punch', {
+        method: 'POST',
+        body: { employeeId: Number(attendanceForm.employeeId), type },
+      });
+      flash(type === 'in' ? 'تم تسجيل الحضور الآن' : 'تم تسجيل الانصراف الآن');
+      await loadAttendance();
+    } catch (err: any) {
+      fail(err);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function loadPermissions() {
+    const query = new URLSearchParams();
+    query.set('from', reportFrom);
+    query.set('to', reportTo);
+    setPermissions((await apiFetch<any[]>(`/hr/early-permissions?${query.toString()}`)) ?? []);
+  }
+
+  async function createPermission(event: React.FormEvent) {
+    event.preventDefault();
+    setBusy(true);
+    try {
+      await apiFetch('/hr/early-permissions', {
+        method: 'POST',
+        body: {
+          ...permissionForm,
+          employeeId: Number(permissionForm.employeeId),
+        },
+      });
+      flash('تم تسجيل إذن الانصراف المبكر');
+      setPermissionForm({ ...permissionForm, reason: '', fromTime: '14:00', toTime: '16:00', deductFromSalary: false });
+      await loadPermissions();
+    } catch (err) {
+      fail(err);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function setPermissionStatus(id: number, status: number) {
+    try {
+      await apiFetch(`/hr/early-permissions/${id}/status`, { method: 'PUT', body: { status } });
+      flash(status === 2 ? 'تم اعتماد الإذن' : 'تم رفض الإذن');
+      await loadPermissions();
+    } catch (err) {
+      fail(err);
+    }
+  }
+
+  async function deletePermission(id: number) {
+    if (!window.confirm('حذف هذا الإذن؟')) return;
+    try {
+      await apiFetch(`/hr/early-permissions/${id}`, { method: 'DELETE' });
+      flash('تم حذف الإذن');
+      await loadPermissions();
+    } catch (err) {
+      fail(err);
+    }
+  }
+
+  async function loadTiers() {
+    setTiers((await apiFetch<any[]>('/hr/latency-tiers')) ?? []);
+  }
+
+  async function saveTier(event: React.FormEvent) {
+    event.preventDefault();
+    try {
+      const body = {
+        fromMinutes: Number(tierForm.fromMinutes) || 0,
+        toMinutes: tierForm.toMinutes === '' || tierForm.toMinutes === null || Number.isNaN(Number(tierForm.toMinutes)) ? null : Number(tierForm.toMinutes),
+        percent: Number(tierForm.percent) || 0,
+        sortOrder: Number(tierForm.sortOrder) || 0,
+      };
+      if (tierForm.tierId) {
+        await apiFetch(`/hr/latency-tiers/${tierForm.tierId}`, { method: 'PUT', body });
+        flash('تم حفظ الشريحة');
+      } else {
+        await apiFetch('/hr/latency-tiers', { method: 'POST', body });
+        flash('تم إضافة الشريحة');
+      }
+      setTierForm({ tierId: 0, fromMinutes: 1, toMinutes: 15, percent: 25, sortOrder: 1 });
+      await loadTiers();
+    } catch (err) {
+      fail(err);
+    }
+  }
+
+  async function deleteTier(id: number) {
+    if (!window.confirm('حذف هذه الشريحة؟')) return;
+    try {
+      await apiFetch(`/hr/latency-tiers/${id}`, { method: 'DELETE' });
+      flash('تم حذف الشريحة');
+      await loadTiers();
+    } catch (err) {
+      fail(err);
+    }
+  }
+
+  async function loadReport() {
+    setError('');
+    const query = new URLSearchParams({ from: reportFrom, to: reportTo });
+    if (reportEmployeeId) query.set('employeeId', reportEmployeeId);
+    try {
+      if (reportKind === 'attendance') {
+        setReportRows((await apiFetch<any[]>(`/hr/reports/attendance?${query.toString()}`)) ?? []);
+        setReportSummary(null);
+      } else if (reportKind === 'early') {
+        const rows = await apiFetch<any[]>(`/hr/early-permissions?${query.toString()}&status=2`);
+        setReportRows(rows ?? []);
+        setReportSummary({ count: (rows ?? []).length, minutes: (rows ?? []).reduce((sum: number, row: any) => sum + Number(row.minutes ?? 0), 0) });
+      } else if (reportKind === 'overtime') {
+        const data = await apiFetch<any>(`/hr/reports/overtime?${query.toString()}`);
+        setReportRows(data?.items ?? []);
+        setReportSummary(data?.totals ?? null);
+      } else {
+        const data = await apiFetch<any>(`/hr/reports/leaves-absence?${query.toString()}`);
+        setReportRows(data?.items ?? []);
+        setReportSummary(data?.totals ?? null);
+      }
+    } catch (err: any) {
+      fail(err);
+    }
+  }
+
+  async function loadCardData() {
+    if (!cardEmployeeId || !cardMonth) return;
+    const [year, monthNum] = cardMonth.split('-').map(Number);
+    const last = new Date(Date.UTC(year, monthNum, 0)).getUTCDate();
+    const from = `${cardMonth}-01`;
+    const to = `${cardMonth}-${String(last).padStart(2, '0')}`;
+    try {
+      const rows = await apiFetch<any[]>(`/hr/attendance?from=${from}&to=${to}&employeeId=${cardEmployeeId}`);
+      setCardRows(rows ?? []);
+    } catch (err: any) {
+      fail(err);
+    }
+  }
+
+  const cardRowsByDate = new Map<string, any>(cardRows.map((row: any) => [String(row.workDate).slice(0, 10), row]));
+  const cardEmployee = employees.find((row: any) => Number(row.employeeId) === Number(cardEmployeeId));
+  const cardDays = cardMonth ? Array.from({ length: Number(new Date(Date.UTC(Number(cardMonth.slice(0, 4)), Number(cardMonth.slice(5, 7)), 0)).getUTCDate()) }, (_, i) => i + 1) : [];
+
+  function printCard() {
+    window.print();
+  }
+
+  async function exportReportCsv() {
+    const filename = `wasel-hr-${reportKind}-${reportFrom}-${reportTo}`;
+    const shaped = reportRows.map((row: any) => {
+      if (reportKind === 'attendance') {
+        return {
+          'الكود': row.code ?? '', 'الاسم': row.employeeName, 'التاريخ': String(row.workDate).slice(0, 10),
+          'حضور': row.checkIn ? String(row.checkIn).slice(11, 16) : '', 'انصراف': row.checkOut ? String(row.checkOut).slice(11, 16) : '',
+          'تأخير (دقيقة)': Number(row.lateMinutes ?? 0), 'قيمة التأخير': Number(row.lateValue ?? 0),
+          'انصراف مبكر (دقيقة)': Number(row.earlyMinutes ?? 0), 'قيمة الانصراف المبكر': Number(row.earlyValue ?? 0),
+          'ساعات العمل': Number(row.hoursWorked ?? 0), 'الحالة': Number(row.status) === 1 ? 'حاضر' : Number(row.status) === 2 ? 'غائب' : Number(row.status) === 3 ? 'إجازة' : 'عطلة',
+        };
+      }
+      if (reportKind === 'early') {
+        return {
+          'الموظف': row.employeeName, 'التاريخ': String(row.permissionDate).slice(0, 10),
+          'من': String(row.fromTime ?? '').slice(0, 5), 'إلى': String(row.toTime ?? '').slice(0, 5),
+          'المدة (دقيقة)': Number(row.minutes ?? 0), 'السبب': row.reason ?? '',
+          'يخصم من الراتب': row.deductFromSalary ? 'نعم' : 'لا',
+        };
+      }
+      if (reportKind === 'overtime') {
+        return {
+          'الموظف': row.employeeName, 'الإضافي (دقيقة)': Number(row.overtimeMinutes ?? 0),
+          'الساعات': Number(row.hours ?? 0), 'أيام العمل الإضافي': Number(row.overtimeDays ?? 0),
+          'القيمة التقديرية': Number(row.overtimeValue ?? 0),
+        };
+      }
+      return {
+        'الموظف': row.employeeName, 'إجازات سنوية': Number(row.annualDays ?? 0),
+        'إجازات مرضية': Number(row.sickDays ?? 0), 'بدون راتب': Number(row.unpaidDays ?? 0),
+        'إجمالي أيام الإجازات': Number(row.totalLeaveDays ?? 0), 'أيام الغياب': Number(row.absentDays ?? 0),
+        'طلبات الإجازات': Number(row.leaveRequests ?? 0),
+      };
+    });
+    downloadCsv(filename, shaped);
+  }
+
   useEffect(() => {
     loadReference();
   }, []);
@@ -138,12 +345,16 @@ export default function HrPage() {
     (async () => {
       try {
         if (tab === 'employees') await loadEmployees();
-        if (['attendance', 'leaves', 'advances'].includes(tab) && !employees.length) await loadEmployees('');
+        if (['attendance', 'leaves', 'advances', 'permissions', 'hrReports', 'cards'].includes(tab) && !employees.length) await loadEmployees('');
         if (tab === 'departments') await loadDepartments();
         if (tab === 'components') await loadComponents();
         if (tab === 'attendance') await loadAttendance();
         if (tab === 'leaves') await loadLeaves();
         if (tab === 'advances') await loadAdvances();
+        if (tab === 'permissions') await loadPermissions();
+        if (tab === 'tiers') await loadTiers();
+        if (tab === 'hrReports') await loadReport();
+        if (tab === 'cards') await loadCardData();
         if (tab === 'payroll') {
           if (!employees.length) await loadEmployees('');
           await loadSalaries();
@@ -717,6 +928,12 @@ export default function HrPage() {
                   </select>
                 </div>
                 <button className="btn-primary">تسجيل</button>
+                {manage && (
+                  <>
+                    <button type="button" className="btn-soft text-xs" disabled={busy} onClick={() => punchNow('in')}>حضور الآن</button>
+                    <button type="button" className="btn-soft text-xs" disabled={busy} onClick={() => punchNow('out')}>انصراف الآن</button>
+                  </>
+                )}
               </form>
               <div className="flex-1" />
               <label className={`btn-soft text-xs ${busy ? 'opacity-60 pointer-events-none' : 'cursor-pointer'}`}>
@@ -925,6 +1142,348 @@ export default function HrPage() {
               <p className="text-[11px] text-slate-400">بعد الحفظ اضغط «صرف» لإنشاء قيد: مدين سلف الموظفين / دائن الخزينة.</p>
             </form>
           )}
+        </div>
+      )}
+
+      {/* -------------------------------------------------------------- early permissions (D11) */}
+      {tab === 'permissions' && (
+        <div className="grid lg:grid-cols-3 gap-4">
+          <div className="card lg:col-span-2">
+            <div className="card-title"><span>أذونات الانصراف المبكر — {reportFrom} إلى {reportTo} ({permissions.length})</span></div>
+            <div className="p-4 grid sm:grid-cols-4 gap-2 border-b border-slate-100">
+              <input className="input" type="date" value={reportFrom} onChange={(e) => setReportFrom(e.target.value)} />
+              <input className="input" type="date" value={reportTo} onChange={(e) => setReportTo(e.target.value)} />
+              <button className="btn-soft text-xs" onClick={loadPermissions}>عرض</button>
+              <button className="btn-soft text-xs" onClick={() => downloadCsv(`permissions-${reportFrom}-${reportTo}`, permissions.map((row: any) => ({
+                'الموظف': row.employeeName, 'التاريخ': String(row.permissionDate).slice(0, 10),
+                'من': String(row.fromTime ?? '').slice(0, 5), 'إلى': String(row.toTime ?? '').slice(0, 5),
+                'المدة (دقيقة)': Number(row.minutes ?? 0), 'السبب': row.reason ?? '',
+                'يخصم من الراتب': row.deductFromSalary ? 'نعم' : 'لا',
+                'الحالة': Number(row.status) === 2 ? 'معتمد' : Number(row.status) === 3 ? 'مرفوض' : 'قيد الانتظار',
+              })))}>تصدير CSV</button>
+            </div>
+            <div className="table-wrap">
+              <table className="table">
+                <thead><tr><th>الموظف</th><th>التاريخ</th><th>من</th><th>إلى</th><th>الدقائق</th><th>السبب</th><th>الخصم</th><th>الحالة</th>{manage && <th />}</tr></thead>
+                <tbody>
+                  {permissions.map((row: any) => (
+                    <tr key={row.permissionId}>
+                      <td className="font-semibold">{row.employeeName}</td>
+                      <td>{formatDate(row.permissionDate)}</td>
+                      <td dir="ltr" className="text-right">{String(row.fromTime ?? '').slice(0, 5)}</td>
+                      <td dir="ltr" className="text-right">{String(row.toTime ?? '').slice(0, 5)}</td>
+                      <td>{row.minutes}</td>
+                      <td className="text-xs text-slate-500">{row.reason ?? '—'}</td>
+                      <td>{row.deductFromSalary ? 'يخصم ✓' : 'بدون خصم'}</td>
+                      <td><span className={`badge ${Number(row.status) === 2 ? 'bg-emerald-50 text-emerald-700' : Number(row.status) === 3 ? 'bg-rose-50 text-rose-700' : 'bg-amber-50 text-amber-700'}`}>{Number(row.status) === 2 ? 'معتمد' : Number(row.status) === 3 ? 'مرفوض' : 'قيد الانتظار'}</span></td>
+                      {manage && (
+                        <td className="whitespace-nowrap">
+                          {Number(row.status) === 1 && (
+                            <>
+                              <button className="text-emerald-700 text-xs font-semibold" onClick={() => setPermissionStatus(row.permissionId, 2)}>اعتماد</button>
+                              <button className="text-rose-600 text-xs font-semibold mr-2" onClick={() => setPermissionStatus(row.permissionId, 3)}>رفض</button>
+                              <button className="text-rose-600 text-xs mr-2" onClick={() => deletePermission(row.permissionId)}>حذف</button>
+                            </>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                  {permissions.length === 0 && <tr><td colSpan={9} className="text-center text-slate-400 py-8">لا توجد أذونات في الفترة</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          {manage && (
+            <form className="card p-5 space-y-3 h-fit" onSubmit={createPermission}>
+              <div className="font-bold">إذن انصراف جديد</div>
+              <div>
+                <label className="label">الموظف</label>
+                <select className="input" value={permissionForm.employeeId} onChange={(e) => setPermissionForm({ ...permissionForm, employeeId: e.target.value })} required>
+                  <option value="">— اختر —</option>
+                  {employees.map((row) => <option key={row.employeeId} value={row.employeeId}>{row.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="label">التاريخ</label>
+                <input className="input" type="date" value={permissionForm.permissionDate} onChange={(e) => setPermissionForm({ ...permissionForm, permissionDate: e.target.value })} required />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div><label className="label">من</label><input className="input" type="time" value={permissionForm.fromTime} onChange={(e) => setPermissionForm({ ...permissionForm, fromTime: e.target.value })} required /></div>
+                <div><label className="label">إلى</label><input className="input" type="time" value={permissionForm.toTime} onChange={(e) => setPermissionForm({ ...permissionForm, toTime: e.target.value })} required /></div>
+              </div>
+              <div>
+                <label className="label">السبب</label>
+                <input className="input" placeholder="موعد طبيب / ظرف طارئ…" value={permissionForm.reason} onChange={(e) => setPermissionForm({ ...permissionForm, reason: e.target.value })} />
+              </div>
+              <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" className="w-4 h-4 accent-brand-600" checked={permissionForm.deductFromSalary} onChange={(e) => setPermissionForm({ ...permissionForm, deductFromSalary: e.target.checked })} />يخصم من الراتب (بمعدل أجر الساعة)</label>
+              <p className="text-[11px] text-slate-400">بعد الاعتماد والاحتفاظ بالإذن، يُخصم من راتب الشهر القادم تلقائيًا بسطر «إذن انصراف مبكر» في قسيمة المرتب.</p>
+              <button type="submit" className="btn-primary w-full" disabled={busy}>تسجيل الإذن</button>
+            </form>
+          )}
+        </div>
+      )}
+
+      {/* -------------------------------------------------------------- latency deduction tiers (D11) */}
+      {tab === 'tiers' && (
+        <div className="grid lg:grid-cols-3 gap-4">
+          <div className="card lg:col-span-2">
+            <div className="card-title"><span>شرائح خصم التأخير ({tiers.length})</span></div>
+            <div className="text-xs text-slate-500 px-5 pt-3 leading-6">الخصم يُحسب على <b>أجر اليوم</b> (الراتب الأساسي ÷ 30) ويظهر بسطر «خصم تأخير» في قسيمة المرتب. تُطبق على <b>أعلى تأخير</b> مسجّل في الشهر. الأثر فوري على مسير المرتبات القادمة.</div>
+            <div className="table-wrap">
+              <table className="table">
+                <thead><tr><th>من (دقيقة)</th><th>إلى (دقيقة)</th><th>نسبة من أجر اليوم %</th><th>الترتيب</th>{manage && <th />}</tr></thead>
+                <tbody>
+                  {tiers.map((row: any) => (
+                    <tr key={row.tierId}>
+                      <td dir="ltr" className="text-right">{row.fromMinutes}</td>
+                      <td dir="ltr" className="text-right">{row.toMinutes === null || row.toMinutes === undefined ? '∞' : row.toMinutes}</td>
+                      <td className="font-bold text-rose-600">{row.percent}%</td>
+                      <td>{row.sortOrder}</td>
+                      {manage && (
+                        <td className="whitespace-nowrap">
+                          <button className="text-brand-600 text-xs" onClick={() => setTierForm({ tierId: row.tierId, fromMinutes: row.fromMinutes, toMinutes: row.toMinutes ?? '', percent: Number(row.percent), sortOrder: row.sortOrder })}>تعديل</button>
+                          <button className="text-rose-600 text-xs mr-2" onClick={() => deleteTier(row.tierId)}>حذف</button>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                  {tiers.length === 0 && <tr><td colSpan={5} className="text-center text-slate-400 py-8">لا توجد شرائح — أضف الأولى</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          {manage && (
+            <form className="card p-5 space-y-3 h-fit" onSubmit={saveTier}>
+              <div className="font-bold">{tierForm.tierId ? 'تعديل الشريحة' : 'شريحة جديدة'}</div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="label">من (دقيقة)</label><input className="input" type="number" min={0} dir="ltr" value={tierForm.fromMinutes} onChange={(e) => setTierForm({ ...tierForm, fromMinutes: Number(e.target.value) })} required /></div>
+                <div><label className="label">إلى (دقيقة — فارغ = ∞)</label><input className="input" type="number" min={0} dir="ltr" value={tierForm.toMinutes as any} onChange={(e) => setTierForm({ ...tierForm, toMinutes: e.target.value === '' ? ('' as any) : Number(e.target.value) })} /></div>
+                <div><label className="label">نسبة من أجر اليوم %</label><input className="input" type="number" step="0.01" min={0} max={100} dir="ltr" value={tierForm.percent} onChange={(e) => setTierForm({ ...tierForm, percent: Number(e.target.value) })} required /></div>
+                <div><label className="label">الترتيب</label><input className="input" type="number" min={0} dir="ltr" value={tierForm.sortOrder} onChange={(e) => setTierForm({ ...tierForm, sortOrder: Number(e.target.value) })} /></div>
+              </div>
+              <button type="submit" className="btn-primary w-full">{tierForm.tierId ? 'حفظ التعديل' : 'إضافة'}</button>
+              {tierForm.tierId ? <button type="button" className="btn-soft w-full" onClick={() => setTierForm({ tierId: 0, fromMinutes: 1, toMinutes: 15, percent: 25, sortOrder: 1 })}>إلغاء التعديل</button> : null}
+            </form>
+          )}
+        </div>
+      )}
+
+      {/* -------------------------------------------------------------- attendance reports (D11) */}
+      {tab === 'hrReports' && (
+        <div className="space-y-4">
+          <div className="card p-4 flex flex-wrap items-end gap-2">
+            <div className="flex gap-2">
+              {([['attendance', 'الحضور والانصراف'], ['early', 'الانصراف المبكر'], ['overtime', 'العمل الإضافي'], ['leaves', 'الإجازات والغياب']] as [typeof reportKind, string][]).map(([k, label]) => (
+                <button key={k} className={reportKind === k ? 'btn-primary' : 'btn-soft'} onClick={() => setReportKind(k)}>{label}</button>
+              ))}
+            </div>
+            <div className="flex-1" />
+            <div><label className="label">من</label><input className="input" type="date" value={reportFrom} onChange={(e) => setReportFrom(e.target.value)} /></div>
+            <div><label className="label">إلى</label><input className="input" type="date" value={reportTo} onChange={(e) => setReportTo(e.target.value)} /></div>
+            <div>
+              <label className="label">الموظف</label>
+              <select className="input w-44" value={reportEmployeeId} onChange={(e) => setReportEmployeeId(e.target.value)}>
+                <option value="">الكل</option>
+                {employees.map((row) => <option key={row.employeeId} value={row.employeeId}>{row.name}</option>)}
+              </select>
+            </div>
+            <button className="btn-primary" onClick={loadReport}>عرض</button>
+            <button className="btn-soft" onClick={exportReportCsv} disabled={reportRows.length === 0}>تصدير CSV</button>
+          </div>
+
+          {reportKind === 'attendance' && (
+            <div className="card">
+              <div className="card-title"><span>تقرير الحضور والانصراف ({reportRows.length})</span></div>
+              <div className="table-wrap max-h-[34rem] overflow-y-auto">
+                <table className="table">
+                  <thead><tr><th>الكود</th><th>الاسم</th><th>التاريخ</th><th>حضور</th><th>انصراف</th><th>تأخير (د)</th><th>قيمة التأخير</th><th>انصراف مبكر (د)</th><th>قيمة الانصراف</th><th>الساعات</th><th>الحالة</th></tr></thead>
+                  <tbody>
+                    {reportRows.map((row: any, i: number) => (
+                      <tr key={i}>
+                        <td className="font-mono text-xs">{row.code ?? '—'}</td>
+                        <td className="font-semibold">{row.employeeName}</td>
+                        <td className="text-xs">{String(row.workDate).slice(0, 10)}</td>
+                        <td dir="ltr" className="text-right">{row.checkIn ? String(row.checkIn).slice(11, 16) : '—'}</td>
+                        <td dir="ltr" className="text-right">{row.checkOut ? String(row.checkOut).slice(11, 16) : '—'}</td>
+                        <td className="text-rose-600">{row.lateMinutes}</td>
+                        <td className="text-rose-600">{formatMoney(row.lateValue)}</td>
+                        <td>{row.earlyMinutes}</td>
+                        <td>{formatMoney(row.earlyValue)}</td>
+                        <td>{row.hoursWorked}</td>
+                        <td>{Number(row.status) === 1 ? 'حاضر' : Number(row.status) === 2 ? 'غائب' : Number(row.status) === 3 ? 'إجازة' : 'عطلة'}</td>
+                      </tr>
+                    ))}
+                    {reportRows.length === 0 && <tr><td colSpan={11} className="text-center text-slate-400 py-8">لا توجد سجلات في الفترة</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {reportKind === 'early' && (
+            <div className="card">
+              <div className="card-title"><span>تقرير أذونات الانصراف المبكر ({reportRows.length}{reportSummary ? ` · إجمالي ${reportSummary.minutes} دقيقة` : ''})</span></div>
+              <div className="table-wrap max-h-[34rem] overflow-y-auto">
+                <table className="table">
+                  <thead><tr><th>الموظف</th><th>التاريخ</th><th>من</th><th>إلى</th><th>المدة (دقيقة)</th><th>السبب</th><th>يخصم</th></tr></thead>
+                  <tbody>
+                    {reportRows.map((row: any) => (
+                      <tr key={row.permissionId}>
+                        <td className="font-semibold">{row.employeeName}</td>
+                        <td>{formatDate(row.permissionDate)}</td>
+                        <td dir="ltr" className="text-right">{String(row.fromTime ?? '').slice(0, 5)}</td>
+                        <td dir="ltr" className="text-right">{String(row.toTime ?? '').slice(0, 5)}</td>
+                        <td className="font-bold">{row.minutes}</td>
+                        <td className="text-xs text-slate-500">{row.reason ?? '—'}</td>
+                        <td>{row.deductFromSalary ? 'نعم ✓' : 'لا'}</td>
+                      </tr>
+                    ))}
+                    {reportRows.length === 0 && <tr><td colSpan={7} className="text-center text-slate-400 py-8">لا توجد أذونات معتمدة في الفترة</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {reportKind === 'overtime' && (
+            <div className="card">
+              <div className="card-title">
+                <span>تقرير العمل الإضافي — تقديري × 1.5 للساعة</span>
+                {reportSummary && <span className="text-xs font-normal text-slate-500">{reportSummary.overtimeMinutes} دقيقة · {Number(reportSummary.hours).toFixed(2)} ساعة · {formatMoney(reportSummary.overtimeValue)}</span>}
+              </div>
+              <div className="table-wrap max-h-[34rem] overflow-y-auto">
+                <table className="table">
+                  <thead><tr><th>الموظف</th><th>إضافية (دقيقة)</th><th>الساعات</th><th>أيام العمل الإضافي</th><th>أجر الساعة</th><th>القيمة التقديرية</th></tr></thead>
+                  <tbody>
+                    {reportRows.map((row: any) => (
+                      <tr key={row.employeeId}>
+                        <td className="font-semibold">{row.employeeName}</td>
+                        <td>{row.overtimeMinutes}</td>
+                        <td dir="ltr" className="text-right">{row.hours}</td>
+                        <td>{row.overtimeDays}</td>
+                        <td>{formatMoney(row.hourRate)}</td>
+                        <td className="font-bold text-emerald-700">{formatMoney(row.overtimeValue)}</td>
+                      </tr>
+                    ))}
+                    {reportRows.length === 0 && <tr><td colSpan={6} className="text-center text-slate-400 py-8">لا توجد ساعات إضافية في الفترة</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {reportKind === 'leaves' && (
+            <div className="card">
+              <div className="card-title">
+                <span>تقرير الإجازات والغياب</span>
+                {reportSummary && <span className="text-xs font-normal text-slate-500">إجمالي أيام الغياب {reportSummary.absentDays} · إجمالي أيام الإجازات {Number(reportSummary.totalLeaveDays).toFixed(1)}</span>}
+              </div>
+              <div className="table-wrap max-h-[34rem] overflow-y-auto">
+                <table className="table">
+                  <thead><tr><th>الموظف</th><th>سنوية</th><th>مرضية</th><th>بدون راتب</th><th>إجمالي الإجازات</th><th>أيام الغياب</th><th>طلبات الإجازات</th></tr></thead>
+                  <tbody>
+                    {reportRows.map((row: any) => (
+                      <tr key={row.employeeId}>
+                        <td className="font-semibold">{row.employeeName}</td>
+                        <td>{row.annualDays}</td>
+                        <td>{row.sickDays}</td>
+                        <td>{row.unpaidDays}</td>
+                        <td>{row.totalLeaveDays}</td>
+                        <td className="text-rose-600 font-bold">{row.absentDays}</td>
+                        <td>{row.leaveRequests}</td>
+                      </tr>
+                    ))}
+                    {reportRows.length === 0 && <tr><td colSpan={7} className="text-center text-slate-400 py-8">لا توجد إجازات أو غياب في الفترة</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* -------------------------------------------------------------- employee cards (D11) */}
+      {tab === 'cards' && (
+        <div className="space-y-4">
+          <style>{`
+            @media print {
+              body * { visibility: hidden; }
+              .print-card, .print-card * { visibility: visible; }
+              .print-card { position: fixed; inset: 0; width: 100%; box-shadow: none !important; border: none !important; overflow: auto; padding: 16px; }
+              .no-print { display: none !important; }
+            }
+          `}</style>
+          <div className="card p-4 flex flex-wrap items-end gap-2 no-print">
+            <div>
+              <label className="label">الموظف</label>
+              <select className="input w-56" value={cardEmployeeId} onChange={(e) => setCardEmployeeId(e.target.value)}>
+                <option value="">— اختر —</option>
+                {employees.map((row) => <option key={row.employeeId} value={row.employeeId}>{row.name}</option>)}
+              </select>
+            </div>
+            <div><label className="label">الشهر</label><input className="input" type="month" value={cardMonth} onChange={(e) => setCardMonth(e.target.value)} onBlur={loadCardData} /></div>
+            <button className="btn-primary" onClick={loadCardData}>عرض</button>
+            <button className="btn-soft" onClick={printCard} disabled={!cardEmployeeId}>طباعة الكارت</button>
+          </div>
+
+          {cardEmployee && (
+            <div className="print-card card p-5">
+              <div className="flex flex-wrap items-center justify-between gap-4 border-b-2 border-slate-800 pb-3 mb-3">
+                <div>
+                  <div className="text-xs text-slate-500">كارت حضور وانصراف — {cardMonth}</div>
+                  <div className="text-2xl font-extrabold text-slate-800">{cardEmployee.name}</div>
+                  <div className="text-xs text-slate-500">كود: {cardEmployee.code ?? '—'} · المسمى: {cardEmployee.jobTitle ?? '—'} · الهاتف: {cardEmployee.phone ?? '—'}</div>
+                </div>
+                <div className="text-left text-xs leading-6">
+                  <div>الراتب الأساسي: <b>{formatMoney(cardEmployee.basicSalary ?? 0)}</b></div>
+                  <div>البدلات: <b>{formatMoney(cardEmployee.allowances ?? 0)}</b></div>
+                  <div>تاريخ التعيين: <b>{cardEmployee.hireDate ? String(cardEmployee.hireDate).slice(0, 10) : '—'}</b></div>
+                </div>
+              </div>
+              <table className="table w-full text-center text-[11px]">
+                <thead><tr>{cardDays.map((d) => <th key={d} className="font-bold">{d}</th>)}</tr></thead>
+                <tbody>
+                  <tr>
+                    {cardDays.map((d) => {
+                      const date = `${cardMonth}-${String(d).padStart(2, '0')}`;
+                      const row = cardRowsByDate.get(date);
+                      const st = row ? Number(row.status) : 0;
+                      return (
+                        <td key={d} className={`align-top border border-slate-200 ${st === 2 ? 'bg-rose-50' : st === 3 ? 'bg-amber-50' : st === 1 ? 'bg-emerald-50' : ''}`}>
+                          {row ? (
+                            <div className="leading-4 py-0.5">
+                              <div dir="ltr" className="font-bold">{row.checkIn ? String(row.checkIn).slice(11, 16) : '—'}</div>
+                              <div dir="ltr" className="text-slate-500">{row.checkOut ? String(row.checkOut).slice(11, 16) : '—'}</div>
+                              {Number(row.lateMinutes) > 0 && <div className="text-rose-600 text-[9px]">تأخير {row.lateMinutes}د</div>}
+                              {Number(row.overtimeMinutes) > 0 && <div className="text-emerald-700 text-[9px]">+{row.overtimeMinutes}د</div>}
+                            </div>
+                          ) : <div className="text-slate-300">·</div>}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                </tbody>
+              </table>
+              <div className="flex flex-wrap gap-4 mt-3 text-xs">
+                {(() => {
+                  const present = cardRows.filter((r: any) => Number(r.status) === 1).length;
+                  const absent = cardRows.filter((r: any) => Number(r.status) === 2).length;
+                  const leave = cardRows.filter((r: any) => Number(r.status) === 3).length;
+                  const late = cardRows.reduce((s: number, r: any) => s + Number(r.lateMinutes ?? 0), 0);
+                  const ot = cardRows.reduce((s: number, r: any) => s + Number(r.overtimeMinutes ?? 0), 0);
+                  return (<>
+                    <span>حضور: <b className="text-emerald-700">{present} يوم</b></span>
+                    <span>غياب: <b className="text-rose-600">{absent} يوم</b></span>
+                    <span>إجازة: <b>{leave} يوم</b></span>
+                    <span>تأخير: <b>{late} دقيقة</b></span>
+                    <span>إضافي: <b>{ot} دقيقة</b></span>
+                  </>);
+                })()}
+              </div>
+            </div>
+          )}
+          {!cardEmployee && <div className="card p-6 text-center text-slate-400">اختر موظفًا وشهرًا لعرض الكارت</div>}
         </div>
       )}
 
