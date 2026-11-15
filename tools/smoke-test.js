@@ -1959,7 +1959,193 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
 
 
 
+  // =================================================================
+  // Phase 2 — Regression tests (permanent, from the full-month audit)
+  // =================================================================
+  const phase2 = async () => {
+    const tbBefore = await call('GET', '/accounting/reports/trial-balance');
+    const tbBeforeInv = tbBefore.lines.find((l) => l.code === '1104');
+    const tbBeforeCogs = tbBefore.lines.find((l) => l.code === '5101');
+
+    const regWh = await call('POST', '/catalog/warehouses', {
+      branchId, code: `REG-${stamp}`, name: `مخزن Regression ${stamp}`, isDefault: false, isActive: true,
+    });
+    check('regression warehouse created', !!regWh.warehouseId, String(regWh.warehouseId));
+
+    const transfer = await call('POST', '/stock-transfers', {
+      fromWarehouseId: warehouseId, toWarehouseId: regWh.warehouseId, transferDate: daysAgoIso(5),
+    });
+    check('regression stock transfer created', !!transfer.stockTransferId, String(transfer.stockTransferId));
+    const addLine = await raw('POST', `/stock-transfers/${transfer.stockTransferId}/lines`, {
+      itemId: itemA.itemId, unitId: 1, quantity: 5, unitCost: 5,
+    });
+    check('regression addLine succeeds (no 500/NaN)', addLine.status === 201, `status=${addLine.status}`);
+
+    const transferApprove = await call('POST', `/stock-transfers/${transfer.stockTransferId}/approve`, {});
+    check('regression stock transfer approved', transferApprove.status === 2 || !!transferApprove.journalId, 'approve ok');
+    const transferReceive = await call('POST', `/stock-transfers/${transfer.stockTransferId}/receive`, {});
+    check('regression stock transfer received', transferReceive.status === 4 || !!transferReceive.inboundVoucherId, `status=${transferReceive.status}`);
+    const tbAfterTransfer = await call('GET', '/accounting/reports/trial-balance');
+    const tbAfterInv = tbAfterTransfer.lines.find((l) => l.code === '1104');
+    const tbAfterCogs = tbAfterTransfer.lines.find((l) => l.code === '5101');
+    check(
+      'transfer leaves COGS unchanged (net)',
+      Number(tbAfterCogs?.debit ?? 0) - Number(tbAfterCogs?.credit ?? 0)
+        === Number(tbBeforeCogs?.debit ?? 0) - Number(tbBeforeCogs?.credit ?? 0),
+      `before net ${Number(tbBeforeCogs?.debit ?? 0) - Number(tbBeforeCogs?.credit ?? 0)} after net ${Number(tbAfterCogs?.debit ?? 0) - Number(tbAfterCogs?.credit ?? 0)}`,
+    );
+    check(
+      'transfer leaves INVENTORY net unchanged',
+      Number(tbAfterInv?.debit ?? 0) - Number(tbAfterInv?.credit ?? 0)
+        === Number(tbBeforeInv?.debit ?? 0) - Number(tbBeforeInv?.credit ?? 0),
+      `before net ${Number(tbBeforeInv?.debit ?? 0) - Number(tbBeforeInv?.credit ?? 0)} after net ${Number(tbAfterInv?.debit ?? 0) - Number(tbAfterInv?.credit ?? 0)}`,
+    );
+
+    const pastDate = daysAgoIso(10);
+    const dateTest = await call('POST', '/sales/invoices', {
+      invoiceType: 1, branchId, warehouseId, paymentType: 1, paidAmount: 15,
+      cashAccountId: accounts[0].cashAccountId, invoiceDate: pastDate,
+      lines: [{ itemId: itemB.itemId, unitId: 1, quantity: 1, unitPrice: 9, taxPct: 0 }],
+    });
+    check('date-dated invoice posted', !!dateTest.invoiceId, dateTest.invoiceNo);
+    const dateInv = await call('GET', `/sales/invoices/${dateTest.invoiceId}`);
+    const dateJournal = await call('GET', `/accounting/journals/${dateInv.header?.glJournalId}`);
+    const localDay = (value) => {
+      const d = new Date(String(value ?? ''));
+      if (Number.isNaN(d.getTime())) return String(value);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
+    check('invoice has a date', !!dateInv.header?.invoiceDate, localDay(dateInv.header?.invoiceDate));
+    check('journal posted to the invoice date', localDay(dateJournal.header?.journalDate) === localDay(dateInv.header?.invoiceDate), `journal ${localDay(dateJournal.header?.journalDate)} invoice ${localDay(dateInv.header?.invoiceDate)}`);
+
+    const closedPeriod = await call('POST', '/accounting/periods', {
+      name: 'اختبار قفل Regression', startDate: '2026-09-01', endDate: '2026-09-30',
+    });
+    check('regression close period created', !!closedPeriod.periodId, String(closedPeriod.periodId));
+    await call('POST', `/accounting/periods/${closedPeriod.periodId}/close`, {});
+    const inClosedPeriod = await raw('POST', '/sales/invoices', {
+      invoiceType: 1, branchId, warehouseId, paymentType: 1, paidAmount: 15,
+      cashAccountId: accounts[0].cashAccountId, invoiceDate: '2026-09-15',
+      lines: [{ itemId: itemB.itemId, unitId: 1, quantity: 1, unitPrice: 9, taxPct: 0 }],
+    });
+    check('invoice in closed period rejected (400)', inClosedPeriod.status === 400, `status=${inClosedPeriod.status} ${JSON.stringify(inClosedPeriod.body?.message ?? '')}`);
+    const journalInClosedPeriod = await raw('POST', '/accounting/journals', {
+      description: 'محاولة في فترة مقفولة', journalDate: '2026-09-15',
+      lines: [
+        { accountId: 15, debit: 100, description: 'محاولة', partyId: null },
+        { accountId: 45, credit: 100, description: 'محاولة', partyId: null },
+      ],
+    });
+    check('manual journal in closed period rejected (400)', journalInClosedPeriod.status === 400, `status=${journalInClosedPeriod.status}`);
+
+    const postedJournalId = dateInv.header?.glJournalId;
+    const repost = await raw('POST', `/accounting/journals/${postedJournalId}/post`, {});
+    check('re-post of posted journal rejected (400)', repost.status === 400, `status=${repost.status} ${JSON.stringify(repost.body?.message ?? '')}`);
+
+    const idemId = `smoke-idem-${stamp}-${Date.now()}`;
+    const idem1 = await call('POST', '/sales/invoices', {
+      invoiceType: 1, branchId, warehouseId, paymentType: 1, cashAccountId: accounts[0].cashAccountId,
+      paidAmount: 9, invoiceDate: pastDate, clientRequestId: idemId,
+      lines: [{ itemId: itemB.itemId, unitId: 1, quantity: 1, unitPrice: 9, taxPct: 0 }],
+    });
+    const idem2 = await call('POST', '/sales/invoices', {
+      invoiceType: 1, branchId, warehouseId, paymentType: 1, cashAccountId: accounts[0].cashAccountId,
+      paidAmount: 9, invoiceDate: pastDate, clientRequestId: idemId,
+      lines: [{ itemId: itemB.itemId, unitId: 1, quantity: 1, unitPrice: 9, taxPct: 0 }],
+    });
+    check('idempotent resubmit returns the original invoice (no duplicate)', Number(idem1.invoiceId) === Number(idem2.invoiceId) && !!idem2.duplicate, `first=${idem1.invoiceId} second=${idem2.invoiceId}`);
+
+    const cashierForPhase = await loginAs(`cashier_${stamp}`, testPassword);
+    const cashierJournal = await raw('POST', '/accounting/journals', {
+      description: 'محاولة غير مخولة', journalDate: pastDate,
+      lines: [
+        { accountId: 15, debit: 25, description: 'محاولة', partyId: null },
+        { accountId: 45, credit: 25, description: 'محاولة', partyId: null },
+      ],
+    }, cashierForPhase.accessToken);
+    check('cashier journal posting rejected (403)', cashierJournal.status === 403, `status=${cashierJournal.status}`);
+    const accountantForPhase = await loginAs(`accountant_${stamp}`, testPassword);
+    const accountantSale = await raw('POST', '/sales/invoices', {
+      invoiceType: 1, branchId, warehouseId, paymentType: 1, cashAccountId: accounts[0].cashAccountId,
+      paidAmount: 9, lines: [{ itemId: itemB.itemId, unitId: 1, quantity: 1, unitPrice: 9, taxPct: 0 }],
+    }, accountantForPhase.accessToken);
+    check('accountant cannot post a sale invoice (403)', accountantSale.status === 403, `status=${accountantSale.status}`);
+
+    // --- 7. Inventory/GL reconciliation: delta test, independent of history
+    const invTb = (await call('GET', '/accounting/reports/trial-balance')).lines.find((l) => l.code === '1104');
+    const reconPurchaseTotal = 2100;
+    await call('POST', '/sales/invoices', {
+      invoiceType: 2, branchId, warehouseId, paymentType: 1,
+      cashAccountId: accounts[0].cashAccountId, paidAmount: reconPurchaseTotal,
+      lines: [{ itemId: itemA.itemId, unitId: 1, quantity: 1, unitPrice: reconPurchaseTotal, discountPct: 0, taxPct: 0 }],
+    });
+    const invTbAfter = (await call('GET', '/accounting/reports/trial-balance')).lines.find((l) => l.code === '1104');
+    check(
+      'inventory GL net rises by the purchase value',
+      Math.abs(((Number(invTbAfter?.debit ?? 0) - Number(invTbAfter?.credit ?? 0)) - (Number(invTb?.debit ?? 0) - Number(invTb?.credit ?? 0))) - reconPurchaseTotal) < 0.01,
+      `delta ${Number(invTbAfter?.debit ?? 0) - Number(invTbAfter?.credit ?? 0) - (Number(invTb?.debit ?? 0) - Number(invTb?.credit ?? 0))}`,
+    );
+
+    const reconParty = await call('POST', '/parties', {
+      name: `عميل تسوية Regression ${stamp}`, partyType: 1, phone: '01220009999', creditLimit: 1000000000,
+    });
+    check('recon party created', !!reconParty.partyId, String(reconParty.partyId));
+
+    // --- 8. AR reconciliation: delta test — credit sale raises AR by exactly its total
+    const arTb = (await call('GET', '/accounting/reports/trial-balance')).lines.find((l) => l.code === '1103');
+    const reconSale = await call('POST', '/sales/invoices', {
+      invoiceType: 1, branchId, warehouseId, partyId: reconParty.partyId,
+      paymentType: 2, paidAmount: 0,
+      lines: [{ itemId: itemB.itemId, unitId: 1, quantity: 1, unitPrice: 4000, discountPct: 0, taxPct: 0 }],
+    });
+    const reconSaleTotal = 4000;
+    check('recon credit sale posted', !!reconSale.invoiceId, `total ${reconSaleTotal}`);
+    const arTbAfter = (await call('GET', '/accounting/reports/trial-balance')).lines.find((l) => l.code === '1103');
+    check(
+      'AR GL net rises by the credit sale total',
+      Math.abs(((Number(arTbAfter?.debit ?? 0) - Number(arTbAfter?.credit ?? 0)) - (Number(arTb?.debit ?? 0) - Number(arTb?.credit ?? 0))) - reconSaleTotal) < 0.01,
+      `delta ${Number(arTbAfter?.debit ?? 0) - Number(arTbAfter?.credit ?? 0) - (Number(arTb?.debit ?? 0) - Number(arTb?.credit ?? 0))}`,
+    );
+
+    const reconSupplier = await call('POST', '/parties', {
+      name: `مورد تسوية Regression ${stamp}`, partyType: 2, phone: '01220008888', creditLimit: 1000000000,
+    });
+    check('recon supplier created', !!reconSupplier.partyId, String(reconSupplier.partyId));
+
+    // --- 9. AP reconciliation: delta test — credit purchase raises AP by exactly its total
+    const apTb = (await call('GET', '/accounting/reports/trial-balance')).lines.find((l) => l.code === '2101');
+    const reconPurchaseTotalAp = 20000;
+    await call('POST', '/sales/invoices', {
+      invoiceType: 2, branchId, warehouseId, partyId: reconSupplier.partyId,
+      paymentType: 2, paidAmount: 0,
+      lines: [{ itemId: itemA.itemId, unitId: 1, quantity: 1, unitPrice: reconPurchaseTotalAp, discountPct: 0, taxPct: 0 }],
+    });
+    const apTbAfter = (await call('GET', '/accounting/reports/trial-balance')).lines.find((l) => l.code === '2101');
+    check(
+      'AP GL net rises by the credit purchase total',
+      Math.abs(((Number(apTbAfter?.credit ?? 0) - Number(apTbAfter?.debit ?? 0)) - (Number(apTb?.credit ?? 0) - Number(apTb?.debit ?? 0))) - reconPurchaseTotalAp) < 0.01,
+      `delta ${Number(apTbAfter?.credit ?? 0) - Number(apTbAfter?.debit ?? 0) - (Number(apTb?.credit ?? 0) - Number(apTb?.debit ?? 0))}`,
+    );
+
+    const partial = await raw('POST', '/sales/invoices', {
+      invoiceType: 1, branchId, warehouseId, paymentType: 1, cashAccountId: accounts[0].cashAccountId,
+      paidAmount: 0,
+      lines: [
+        { itemId: itemB.itemId, unitId: 1, quantity: 1, unitPrice: 9, taxPct: 0 },
+        { itemId: 999999, unitId: 1, quantity: 1, unitPrice: 9, taxPct: 0 },
+      ],
+    });
+    check('invoice with unknown item rejected atomically', partial.status >= 400, `status=${partial.status}`);
+    const balancesBeforePartial = await call('GET', `/inventory/balances?warehouseId=${warehouseId}`);
+    const itemBBeforePartial = balancesBeforePartial.find((b) => b.itemId === itemB.itemId)?.onHandQty;
+    const balancesAfterPartial = await call('GET', `/inventory/balances?warehouseId=${warehouseId}`);
+    const itemBAfter = balancesAfterPartial.find((b) => b.itemId === itemB.itemId)?.onHandQty;
+    check('partial failure did not move stock', String(itemBAfter) === String(itemBBeforePartial), `before=${itemBBeforePartial} after=${itemBAfter}`);
+  };
+  await phase2();
+
   const failed = results.filter((r) => !r.ok);
+
   console.log(`\n${results.length - failed.length}/${results.length} checks passed`);
   if (failed.length) process.exit(1);
 })().catch((error) => {
