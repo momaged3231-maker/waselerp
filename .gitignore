@@ -1,4 +1,4 @@
-# ---- dependencies ----
+﻿# ---- dependencies ----
 node_modules/
 .pnpm-store/
 
@@ -43,3 +43,8 @@ analysis/strings/
 # ---- embedded postgres (PGlite) local data ----
 tools/pg/pglite/data/
 tools/pg/pglite/*.log
+
+# ---- Vercel metadata ----
+.vercel/
+.vercel
+.env*
