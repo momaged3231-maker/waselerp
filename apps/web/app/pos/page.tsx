@@ -784,7 +784,7 @@ export default function PosPage() {
 
       <div className="pos-grid gap-4">
         {/* ---------------- Products ---------------- */}
-        <div className="card p-3 md:order-2 flex flex-col min-h-0 max-h-[60dvh] md:max-h-none md:h-full">
+        <div className="card p-3 md:order-1 flex flex-col min-h-0 max-h-[60dvh] md:max-h-none md:h-full">
           <div className="flex items-center justify-between px-1 mb-2">
             <h2 className="font-extrabold text-slate-700">منيو المخزون</h2>
             <div className="flex items-center gap-2">
@@ -898,22 +898,24 @@ export default function PosPage() {
           </div>
         </div>
 
-        {/* ---------------- Cart ---------------- */}
-        <div id="pos-cart" className="card p-3 md:order-1 flex flex-col min-h-0 max-h-[70dvh] md:max-h-none md:h-full md:overflow-y-auto scroll-mt-20">
-          <div className="flex items-center justify-between mb-2 px-1">
-            <h2 className="font-extrabold text-slate-700 flex items-center gap-2">
-              <IconCart className="w-5 h-5 text-brand-600" />
-              الفاتورة الحالية
-              {itemCount > 0 && <span className="badge bg-brand-50 text-brand-700">{itemCount}</span>}
-              {lastInvoiceNo && (
-                <span className="text-[10px] font-normal text-slate-400 hidden sm:inline">آخر فاتورة {lastInvoiceNo}</span>
-              )}
-            </h2>
-            <div className="flex items-center gap-2">
-              <button className="btn-soft text-xs" onClick={() => openDrawer().catch(() => {})} aria-label="فتح درج النقود" title="فتح درج النقود">فتح الدرج</button>
-              <button className="btn-soft text-xs" onClick={clearCart}>إفراغ</button>
+        {/* ---------------- Cart — «الأصناف المختارة» (center rectangle) + «الإجمالي والدفع» (bottom-left) ---------------- */}
+        <div id="pos-cart" className="flex flex-col min-h-0 max-h-[70dvh] md:max-h-none md:h-full md:order-2 md:overflow-y-auto gap-3 scroll-mt-20">
+          {/* الأصناف المختارة — centered rectangle */}
+          <div className="card p-3 flex flex-col min-h-[200px] flex-1">
+            <div className="flex items-center justify-between mb-2 px-1">
+              <h2 className="font-extrabold text-slate-700 flex items-center gap-2">
+                <IconCart className="w-5 h-5 text-brand-600" />
+                الأصناف المختارة
+                {itemCount > 0 && <span className="badge bg-brand-50 text-brand-700">{itemCount}</span>}
+                {lastInvoiceNo && (
+                  <span className="text-[10px] font-normal text-slate-400 hidden sm:inline">آخر فاتورة {lastInvoiceNo}</span>
+                )}
+              </h2>
+              <div className="flex items-center gap-2">
+                <button className="btn-soft text-xs" onClick={() => openDrawer().catch(() => {})} aria-label="فتح درج النقود" title="فتح درج النقود">فتح الدرج</button>
+                <button className="btn-soft text-xs" onClick={clearCart}>إفراغ</button>
+              </div>
             </div>
-          </div>
 
           <div className="flex-1 min-h-[140px] md:max-h-none overflow-y-auto space-y-2 pr-1">
             {cart.map((line) => (
@@ -1060,9 +1062,12 @@ export default function PosPage() {
               <span className="text-[10px] text-slate-400">في وضع «مبلغ» يُوزَّع الخصم بالتساوي على الأسطر</span>
             </div>
           )}
+          </div>
 
-          {/* totals */}
-          <div className="mt-3 pt-3 border-t border-dashed border-slate-200 space-y-1.5 text-sm">
+          {/* الإجمالي والمطلوب وطرق الدفع — أسفل الشمال */}
+          <div className="card p-3 shrink-0 max-h-[48dvh] md:max-h-[52%] overflow-y-auto">
+            {/* totals */}
+            <div className="mt-1 pt-3 border-t border-dashed border-slate-200 space-y-1.5 text-sm">
             <div className="flex justify-between"><span className="text-slate-500">الإجمالي قبل الخصم</span><span>{formatMoney(totals.subtotal)}</span></div>
             <div className="flex justify-between"><span className="text-slate-500">خصم الفاتورة</span><span>{formatMoney(totals.headerDiscount)}</span></div>
             <div className="flex justify-between"><span className="text-slate-500">الضريبة</span><span>{formatMoney(totals.tax)}</span></div>
@@ -1329,6 +1334,7 @@ export default function PosPage() {
               تعليق الفاتورة
             </button>
           )}
+          </div>
         </div>
       </div>
 
