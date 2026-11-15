@@ -25,6 +25,7 @@ export default function PosPage() {
   const { session, can } = useSession();
   const [search, setSearch] = useState('');
   const [results, setResults] = useState<any[]>([]);
+  const [categoryFilter, setCategoryFilter] = useState<number>(0);
   const [cart, setCart] = useState<Line[]>([]);
   const [warehouses, setWarehouses] = useState<any[]>([]);
   const [warehouseId, setWarehouseId] = useState<number | null>(null);
@@ -781,7 +782,7 @@ export default function PosPage() {
 
       <div className="pos-grid gap-4">
         {/* ---------------- Products ---------------- */}
-        <div className="card p-3 lg:order-1 flex flex-col">
+        <div className="card p-3 lg:order-2 flex flex-col min-h-0 max-h-[60dvh] lg:max-h-none lg:h-full">
           <div className="flex items-center justify-between px-1 mb-2">
             <h2 className="font-extrabold text-slate-700">منيو المخزون</h2>
             <div className="flex items-center gap-2">
@@ -845,36 +846,58 @@ export default function PosPage() {
             </span>
           </div>
 
-          <div className="flex-1 min-h-0 overflow-y-auto max-h-[55vh]">
-            <div className="grid grid-cols-2 gap-2">
-              {results.map((item) => (
+          <div className="flex gap-1.5 overflow-x-auto pb-1 mb-2 -mx-1 px-1">
+            {[
+              { id: 0, name: 'الكل' },
+              ...Array.from(
+                new Map(results.filter((i: any) => i.categoryId && i.categoryName).map((i: any) => [i.categoryId, { id: i.categoryId, name: i.categoryName }])).values(),
+              ),
+            ].slice(0, 14).map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setCategoryFilter(categoryFilter === cat.id ? 0 : cat.id)}
+                className={`shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold border transition ${
+                  categoryFilter === cat.id
+                    ? 'bg-brand-700 text-white border-brand-700'
+                    : 'bg-white text-slate-600 border-slate-200 hover:border-brand-400'
+                }`}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2">
+              {(categoryFilter ? results.filter((i: any) => i.categoryId === categoryFilter) : results).map((item) => (
                 <button
                   key={item.itemId}
                   type="button"
                   onClick={() => addItem(item)}
-                  className="text-right rounded-2xl border border-slate-200 bg-white p-3 hover:border-brand-400 hover:bg-brand-50/60 active:scale-[0.98] transition flex flex-col gap-1.5 min-h-[88px]"
+                  className="pos-item-card text-right rounded-2xl border border-slate-200 bg-white p-3 hover:border-brand-500 hover:shadow-lift active:scale-[0.98] transition shadow-sm flex flex-col gap-1.5"
                 >
-                  <div className="text-sm font-bold truncate w-full">{item.name}</div>
+                  <div className="text-[13px] font-bold leading-5 line-clamp-2 w-full">{item.name}</div>
                   <div className="text-[11px] text-slate-500 truncate w-full">{item.code} · {item.baseUnitName}</div>
                   <div className="mt-auto pt-1 w-full flex items-center justify-between gap-2">
-                    <span className="font-extrabold text-brand-700">{formatMoney(item.sellPrice)}</span>
+                    <span className="font-num font-bold text-base text-brand-800 tabular-nums">{formatMoney(item.sellPrice)}</span>
                     {Number(item.onHandQty) > 0 ? (
-                      <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 rounded-md px-1.5 py-0.5">رصيد {Number(item.onHandQty).toFixed(0)}</span>
+                      <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 rounded-lg px-2 py-0.5">رصيد {Number(item.onHandQty).toFixed(0)}</span>
                     ) : (
-                      <span className="text-[10px] font-semibold text-rose-600 bg-rose-50 rounded-md px-1.5 py-0.5">نفاد</span>
+                      <span className="text-[10px] font-semibold text-rose-700 bg-rose-50 rounded-lg px-2 py-0.5">نفاد</span>
                     )}
                   </div>
                 </button>
               ))}
             </div>
-            {results.length === 0 && (
+            {((categoryFilter ? results.filter((i: any) => i.categoryId === categoryFilter) : results).length === 0) && (
               <div className="text-center text-sm text-slate-400 py-10">لا توجد نتائج</div>
             )}
           </div>
         </div>
 
         {/* ---------------- Cart ---------------- */}
-        <div className="card p-3 lg:order-2 flex flex-col">
+        <div className="card p-3 lg:order-1 flex flex-col min-h-0 max-h-[70dvh] lg:max-h-none lg:h-full">
           <div className="flex items-center justify-between mb-2 px-1">
             <h2 className="font-extrabold text-slate-700 flex items-center gap-2">
               <IconCart className="w-5 h-5 text-brand-600" />
@@ -890,7 +913,7 @@ export default function PosPage() {
             </div>
           </div>
 
-          <div className="flex-1 max-h-[40vh] overflow-y-auto space-y-2 pr-1">
+          <div className="flex-1 min-h-0 max-h-[42dvh] lg:max-h-none overflow-y-auto space-y-2 pr-1">
             {cart.map((line) => (
               <div key={line.itemId} className={`rounded-2xl border p-2.5 ${line.isGift ? 'border-emerald-300 bg-emerald-50/60' : 'border-slate-200 bg-slate-50/70'}`}>
                 <div className="flex items-start justify-between gap-2">

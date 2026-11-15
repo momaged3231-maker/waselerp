@@ -158,8 +158,8 @@ export default function AppShell({ children, title }: { children: React.ReactNod
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 right-0 z-40 w-[272px] bg-slate-950 text-slate-300 flex flex-col transition-transform duration-200 ease-out
-                    lg:static lg:translate-x-0 ${open ? 'translate-x-0 shadow-2xl' : 'translate-x-full'}`}
+        className={`fixed inset-y-0 right-0 z-40 w-[272px] bg-navy-900 text-slate-300 flex flex-col transition-transform duration-200 ease-out
+                    lg:static lg:translate-x-0 ${open ? 'translate-x-0 shadow-lift' : 'translate-x-full'}`}
       >
         {/* Brand */}
         <div className="px-5 pt-5 pb-4 border-b border-white/[0.06]">
@@ -224,7 +224,7 @@ export default function AppShell({ children, title }: { children: React.ReactNod
         </nav>
 
         {/* User + version */}
-        <div className="border-t border-white/[0.06] p-3">
+        <div className="border-t border-white/[0.06] p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <div className="flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-white/[0.04] transition-colors duration-150">
             <div
               className="w-9 h-9 rounded-full bg-gradient-to-br from-brand-400 to-brand-700 text-white text-[12px] font-extrabold flex items-center justify-center select-none"
