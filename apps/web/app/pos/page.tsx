@@ -683,7 +683,7 @@ export default function PosPage() {
 
   return (
     <AppShell title="نقطة البيع">
-      <div className="pb-24 lg:pb-0">
+      <div className="pb-24 md:pb-0">
       {printProfiles.length > 0 && (
         <div className="card p-2 mb-3 flex flex-wrap items-center gap-2 text-sm">
           <span className="text-slate-500">ملف الطباعة لهذا الجهاز:</span>
@@ -784,7 +784,7 @@ export default function PosPage() {
 
       <div className="pos-grid gap-4">
         {/* ---------------- Products ---------------- */}
-        <div className="card p-3 lg:order-2 flex flex-col min-h-0 max-h-[60dvh] lg:max-h-none lg:h-full">
+        <div className="card p-3 md:order-2 flex flex-col min-h-0 max-h-[60dvh] md:max-h-none md:h-full">
           <div className="flex items-center justify-between px-1 mb-2">
             <h2 className="font-extrabold text-slate-700">منيو المخزون</h2>
             <div className="flex items-center gap-2">
@@ -871,7 +871,7 @@ export default function PosPage() {
           </div>
 
           <div className="flex-1 min-h-0 overflow-y-auto">
-            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2">
               {(categoryFilter ? results.filter((i: any) => i.categoryId === categoryFilter) : results).map((item) => (
                 <button
                   key={item.itemId}
@@ -899,7 +899,7 @@ export default function PosPage() {
         </div>
 
         {/* ---------------- Cart ---------------- */}
-        <div id="pos-cart" className="card p-3 lg:order-1 flex flex-col min-h-0 max-h-[70dvh] lg:max-h-none lg:h-full scroll-mt-20">
+        <div id="pos-cart" className="card p-3 md:order-1 flex flex-col min-h-0 max-h-[70dvh] md:max-h-none md:h-full scroll-mt-20">
           <div className="flex items-center justify-between mb-2 px-1">
             <h2 className="font-extrabold text-slate-700 flex items-center gap-2">
               <IconCart className="w-5 h-5 text-brand-600" />
@@ -915,7 +915,7 @@ export default function PosPage() {
             </div>
           </div>
 
-          <div className="flex-1 min-h-0 max-h-[42dvh] lg:max-h-none overflow-y-auto space-y-2 pr-1">
+          <div className="flex-1 min-h-0 max-h-[42dvh] md:max-h-none overflow-y-auto space-y-2 pr-1">
             {cart.map((line) => (
               <div key={line.itemId} className={`rounded-2xl border p-2.5 ${line.isGift ? 'border-emerald-300 bg-emerald-50/60' : 'border-slate-200 bg-slate-50/70'}`}>
                 <div className="flex items-start justify-between gap-2">
@@ -1452,7 +1452,7 @@ export default function PosPage() {
       )}
 
       {/* Sticky checkout summary — always visible on phones/tablets so the cashier never loses sight of the cart */}
-      <div className="fixed bottom-0 inset-x-0 z-30 lg:hidden bg-white/95 backdrop-blur border-t border-slate-200 px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] no-print">
+      <div className="fixed bottom-0 inset-x-0 z-30 md:hidden bg-white/95 backdrop-blur border-t border-slate-200 px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] no-print">
         <div className="flex items-center gap-2">
           <div className="min-w-0 shrink-0">
             <div className="text-[10px] text-slate-500 leading-4">{itemCount} قطعة</div>

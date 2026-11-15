@@ -147,10 +147,15 @@ body {
   grid-template-columns: minmax(0, 1fr);
   align-items: start;
 }
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
   .pos-grid {
-    grid-template-columns: minmax(360px, 400px) minmax(0, 1fr); /* RTL: first track = right → cart */
+    grid-template-columns: minmax(300px, 340px) minmax(0, 1fr); /* RTL: first track = right → cart */
     height: calc(100dvh - 8.5rem);
+  }
+}
+@media (min-width: 1280px) {
+  .pos-grid {
+    grid-template-columns: minmax(360px, 420px) minmax(0, 1fr);
   }
 }
 
