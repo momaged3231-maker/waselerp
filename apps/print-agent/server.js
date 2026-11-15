@@ -176,6 +176,19 @@ function buildKitchenTicketBytes(order, width = 42) {
   return Buffer.concat(chunks);
 }
 
+/** Small test page — used by the «اختبار طباعة» button in settings. */
+function buildTestBytes(width = 42) {
+  const chunks = [cmd.init(), cmd.spacing(24)];
+  chunks.push(line('WaselERP', { align: 'center', width, bold: true, double: true }));
+  chunks.push(line('اختبار طباعة', { align: 'center', width, bold: true }));
+  chunks.push(line(new Date().toLocaleString('ar-EG'), { align: 'center', width }));
+  chunks.push(line('-'.repeat(width), { width }));
+  chunks.push(line('إذا ظهر هذا النص فالطابعة تعمل بشكل صحيح', { align: 'center', width }));
+  chunks.push(line('-'.repeat(width), { width }));
+  chunks.push(cmd.feed(3), cmd.cut());
+  return Buffer.concat(chunks);
+}
+
 // ------------------------------------------------------------------ //
 // Transports
 // ------------------------------------------------------------------ //
@@ -317,6 +330,22 @@ const server = http.createServer(async (request, response) => {
         }
       }
       return send(200, { ok: true, bytes: bytes.length, copies });
+    }
+
+    if (url.pathname === '/test-print' && request.method === 'POST') {
+      const body = await readBody(request);
+      const config = loadConfig();
+      const target = body.printer ?? (config.defaultPrinter ? { type: 'windows', name: config.defaultPrinter } : null);
+      if (!target) return send(400, { ok: false, error: 'no printer configured' });
+      const bytes = buildTestBytes(Number(body.width ?? config.paperWidth ?? 42));
+      if (target.type === 'network') {
+        await sendToNetworkPrinter(target.host, target.port, bytes);
+      } else if (target.type === 'file') {
+        await writeToFile(target.path ?? 'test-print.bin', bytes);
+      } else {
+        await sendToWindowsPrinter(target.name, bytes);
+      }
+      return send(200, { ok: true, bytes: bytes.length });
     }
 
     if (url.pathname === '/print' && request.method === 'POST') {

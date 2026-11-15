@@ -61,3 +61,7 @@ export async function printKitchenTicket(
 export async function openDrawer(printer?: PrinterTarget) {
   return agent('/open-drawer', { method: 'POST', body: { printer } });
 }
+
+export async function testPrint(printer?: PrinterTarget, width?: number) {
+  return agent('/test-print', { method: 'POST', body: { printer, width } });
+}

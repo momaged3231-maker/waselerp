@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { agentHealth, getAgentConfig, listPrinters, openDrawer, saveAgentConfig } from '@/lib/print';
+import { agentHealth, getAgentConfig, listPrinters, openDrawer, saveAgentConfig, testPrint } from '@/lib/print';
 
 /** Print agent panel — printer defaults on THIS device (per-station, mirrors «اعدادات الطابعه» in Ezees). */
 export default function PrintAgentPanel() {
@@ -15,6 +15,8 @@ export default function PrintAgentPanel() {
   const [netName, setNetName] = useState('');
   const [netHost, setNetHost] = useState('');
   const [netPort, setNetPort] = useState('9100');
+  const [testingKey, setTestingKey] = useState<string | null>(null);
+  const [testMsg, setTestMsg] = useState('');
 
   async function refresh() {
     setError('');
@@ -63,6 +65,19 @@ export default function PrintAgentPanel() {
     setNetName('');
     setNetHost('');
     setNetPort('9100');
+  }
+
+  async function runTest(printer: any, key: string) {
+    setTestingKey(key);
+    setTestMsg('');
+    try {
+      await testPrint(printer);
+      setTestMsg(`✓ طباعة اختبار ناجحة — ${printer?.name ?? printer?.host ?? ''}`);
+    } catch (err: any) {
+      setTestMsg(`✗ ${err?.message ?? 'فشل الاختبار'}`);
+    } finally {
+      setTestingKey(null);
+    }
   }
 
   function removeNetworkPrinter(index: number) {
@@ -156,11 +171,41 @@ export default function PrintAgentPanel() {
       </div>
 
       <div className="mt-4">
+        <label className="label">طابعات Windows المكتشفة</label>
+        <div className="text-[11px] text-slate-500 mb-2">يتم كشفها تلقائيًا من جهاز Windows (USB/شبكة/مشاركة). اضغط «اختبار طباعة» للتأكد من عمل الطابعة.</div>
+        <div className="space-y-2">
+          {printers.length === 0 && (
+            <div className="text-xs text-slate-400">لا توجد طابعات مكتشفة (أو الوكيل غير متصل)</div>
+          )}
+          {printers.map((p: any, index: number) => (
+            <div key={`win-${p.name}-${index}`} className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm">
+              <span className="min-w-0 flex-1">
+                <b>{p.name}</b>
+                {p.driver && <span className="text-slate-400 text-xs"> — {p.driver}</span>}
+                {p.port && <span className="text-slate-400 text-xs"> ({p.port})</span>}
+              </span>
+              <button
+                type="button"
+                className="btn-soft text-xs"
+                disabled={!online || testingKey === `win-${index}`}
+                onClick={() => runTest({ type: 'windows', name: p.name }, `win-${index}`)}
+              >
+                {testingKey === `win-${index}` ? 'جارٍ…' : 'اختبار طباعة'}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-4">
         <label className="label">طابعات الشبكة (TCP 9100)</label>
         <div className="space-y-2 mt-1">
           {(config?.networkPrinters ?? []).map((p: any, index: number) => (
             <div key={`${p.host}:${p.port}:${index}`} className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm">
               <span className="min-w-0 flex-1"><b>{p.name}</b> — <span dir="ltr" className="text-slate-500">{p.host}:{p.port}</span></span>
+              <button type="button" className="btn-soft text-xs" disabled={!online || testingKey === `net-${index}`} onClick={() => runTest(p, `net-${index}`)}>
+                {testingKey === `net-${index}` ? 'جارٍ…' : 'اختبار طباعة'}
+              </button>
               <button type="button" className="w-8 h-8 rounded-lg text-rose-500 hover:bg-rose-50 flex items-center justify-center" onClick={() => removeNetworkPrinter(index)} aria-label="حذف">×</button>
             </div>
           ))}
@@ -175,6 +220,10 @@ export default function PrintAgentPanel() {
           <button type="button" className="btn-soft" disabled={!online} onClick={addNetworkPrinter}>إضافة</button>
         </div>
       </div>
+
+      {testMsg && (
+        <div className={`mt-3 text-xs font-bold ${testMsg.startsWith('✓') ? 'text-emerald-600' : 'text-rose-600'}`}>{testMsg}</div>
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-3 mt-5 border-t border-slate-100 pt-4">
         <button className="btn-soft text-xs" disabled={!online} onClick={() => openDrawer().catch(() => {})}>اختبار درج الكاشير</button>
