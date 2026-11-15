@@ -15,6 +15,8 @@ node tools/pg/start.js
 # 1) المخطط + البيانات الأساسية
 node tools/pg/run-sql.js wasel db/schema.postgres.sql
 cd apps/api && npx ts-node --transpile-only src/cli/seed.ts && cd ../..
+node tools/pg/migrate-all.js wasel      # (بديل موحّد) schema + كل migrations + سجل schema_migrations
+node tools/pg/seed-reference.js wasel   # بذور التعريفات: بنوك/ألوان/مقاسات/محافظات + ربط bank_id
 
 # 2) بيانات تجريبية (اختياري)
 node tools/demo-data.js

@@ -74,6 +74,9 @@ jobs:
         working-directory: apps/api
         run: npx ts-node --transpile-only src/cli/seed.ts
 
+      - name: Seed reference masters
+        run: node tools/pg/seed-reference.js "$PGDATABASE"
+
       # ---------------- Tests ----------------
       - name: Start API
         working-directory: apps/api
