@@ -159,7 +159,7 @@ export class StockTransferService {
 
   private async draftHeader(id: number) {
     const row = await this.db.one<any>(
-      'SELECT stock_transfer_id, status FROM stock_transfers WHERE stock_transfer_id = $1::bigint',
+      'SELECT stock_transfer_id, status, from_warehouse_id FROM stock_transfers WHERE stock_transfer_id = $1::bigint',
       [id],
     );
     if (!row) throw new BadRequestException('تحويل المخزون غير موجود');
@@ -324,8 +324,8 @@ export class StockTransferService {
         });
 
         journalLines.push(
-          { accountId: await this.resolveMappingId(client, 'COGS'), debit: value, description: 'صادر تحويل' },
-          { accountId: await this.resolveMappingId(client, 'INVENTORY'), credit: value, description: 'تخفيض مخزون مصدر' },
+          { accountId: await this.resolveMappingId(client, 'INVENTORY'), debit: value, description: 'صادر تحويل — لا أثر مالي' },
+          { accountId: await this.resolveMappingId(client, 'INVENTORY'), credit: value, description: 'صادر تحويل — لا أثر مالي' },
         );
       }
 
@@ -434,8 +434,8 @@ export class StockTransferService {
         });
 
         journalLines.push(
-          { accountId: await this.resolveMappingId(client, 'INVENTORY'), debit: value, description: 'وارد تحويل' },
-          { accountId: await this.resolveMappingId(client, 'INVENTORY_ADDITION'), credit: value, description: 'إضافات مخزون وجههة' },
+          { accountId: await this.resolveMappingId(client, 'INVENTORY'), debit: value, description: 'وارد تحويل — لا أثر مالي' },
+          { accountId: await this.resolveMappingId(client, 'INVENTORY'), credit: value, description: 'وارد تحويل — لا أثر مالي' },
         );
       }
 

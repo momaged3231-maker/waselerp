@@ -452,13 +452,21 @@ export class SalesService {
       if (invoiceType !== 1) repId = undefined;
 
       // ---- period + items ------------------------------------------------
-      const period = await client.query<{ period_id: number }>(
-        `SELECT period_id FROM periods
-          WHERE branch_id = $1 AND is_closed = false
-          ORDER BY start_date DESC LIMIT 1`,
-        [effectiveBranch],
+      // Period must cover *this invoice's* date — a closed cover-period blocks the document.
+      const invoiceDateStr = dto.invoiceDate ?? new Date().toISOString().slice(0, 10);
+      const period = await client.query<{ period_id: number; is_closed: boolean; name: string | null }>(
+        `SELECT period_id, is_closed, name FROM periods
+          WHERE branch_id = $1
+            AND start_date <= $2::date
+            AND (end_date IS NULL OR end_date >= $2::date)
+          ORDER BY (end_date IS NULL) ASC, start_date DESC
+          LIMIT 1`,
+        [effectiveBranch, invoiceDateStr],
       );
       const periodId = period.rows.length ? Number(period.rows[0].period_id) : null;
+      if (period.rows.length && period.rows[0].is_closed) {
+        throw new BadRequestException(`الفترة المحاسبية «${period.rows[0].name}» مقفلة ولا تقبل مستندات جديدة`);
+      }
 
       const itemIds = [...new Set(dto.lines.map((l) => Number(l.itemId)))];
       const items = await client.query<any>(
@@ -939,6 +947,7 @@ export class SalesService {
         serviceCharge,
         costTotal,
         userId: user.userId,
+        journalDate: dto.invoiceDate ?? undefined,
       });
       if (journalId) {
         await client.query('UPDATE invoices SET gl_journal_id = $2::bigint WHERE invoice_id = $1::bigint',
