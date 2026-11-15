@@ -10,7 +10,7 @@ import {
   IconWarehouse, IconUsers,
   IconCalendar, IconWallet, IconBookOpen, IconChartBar, IconBriefcase,
   IconDeviceMobile, IconBell, IconFolder, IconSettings, IconLogout,
-  IconMenu, IconCloudUp, IconWifiOff, IconBuilding, IconChevronDown,
+  IconMenu, IconCloudUp, IconWifiOff, IconBuilding, IconChevronDown, IconClock,
 } from '@/components/icons';
 
 type NavItem = {
@@ -39,6 +39,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'التشغيل',
     items: [
       { href: '/pos', label: 'نقطة البيع', icon: IconCart, permission: 'pos.operate' },
+      { href: '/shifts', label: 'فترات العمل', icon: IconClock, permission: 'cash.view' },
       { href: '/restaurant', label: 'المطاعم', icon: IconUtensils, permission: 'pos.operate' },
       { href: '/maintenance', label: 'الصيانة', icon: IconWrench, permission: 'maintenance.view' },
     ],

@@ -413,6 +413,7 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
   check('box and piece sales share one balance', mixedBalance === 0, String(mixedBalance));
 
   // 27. P0 — cashier shift: gate, expected cash and shortage posting
+  const shiftPolicyBefore = (await call('GET', '/treasury/shifts/policy')).requireShift;
   await call('PUT', '/admin/settings', { RequireCashierShift: 'true' });
   const policy = await raw('GET', '/treasury/shifts/policy', null, cashier.accessToken);
   check('shift policy exposed', policy.data?.requireShift === true, JSON.stringify(policy.data));
@@ -448,7 +449,7 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
   const shortageRow = (await call('GET', '/treasury/transactions?limit=50'))
     .find((row) => String(row.description ?? '').includes('عجز'));
   check('shortage posted to cash', !!shortageRow, String(shortageRow?.amount));
-  await call('PUT', '/admin/settings', { RequireCashierShift: 'false' });
+  await call('PUT', '/admin/settings', { RequireCashierShift: String(!!shiftPolicyBefore) });
 
   // 28. purchases endpoints
   const purchases = await call('GET', '/purchases/invoices?pageSize=10');

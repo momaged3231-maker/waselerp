@@ -757,7 +757,7 @@ export default function PosPage() {
             <span className="text-slate-500">
               المتوقع في الدرج: <b className="text-slate-800">{formatMoney(currentShift.expectedCash)}</b>
             </span>
-            <Link href="/treasury" className="btn-soft text-xs">إدارة الوردية</Link>
+            <Link href="/shifts" className="btn-soft text-xs">فترات العمل</Link>
           </div>
         </div>
       )}
