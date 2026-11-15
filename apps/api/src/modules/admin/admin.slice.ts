@@ -240,17 +240,74 @@ export class AdminService {
   }
 
   // ---------------- audit ---------------- //
-  async audit(limit: number, action?: string) {
+  async audit(limit: number, action?: string, userId?: number, from?: string, to?: string, search?: string) {
+    const params: any[] = [];
+    const where: string[] = [];
+    const put = (value: any, cast = 'text') => {
+      params.push(value);
+      return `$${params.length}::${cast}`;
+    };
+    if (action && action.trim()) where.push(`a.action = ${put(action.trim())}`);
+    if (userId && Number(userId) > 0) where.push(`a.user_id = ${put(Number(userId), 'int')}`);
+    if (from) where.push(`a.created_at::date >= ${put(from, 'date')}`);
+    if (to) where.push(`a.created_at::date <= ${put(to, 'date')}`);
+    if (search && search.trim()) {
+      const like = `%${search.trim()}%`;
+      const idx = params.length + 1;
+      params.push(like);
+      where.push(`(a.details ILIKE $${idx} OR COALESCE(a.entity,'') ILIKE $${idx} OR COALESCE(a.entity_id,'') ILIKE $${idx} OR a.action ILIKE $${idx})`);
+    }
+    const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
     return this.db.query(
       `SELECT a.activity_log_id AS "activityLogId", a.created_at AS "createdAt", a.action, a.entity,
-              a.entity_id AS "entityId", a.details, u.full_name AS "userName", b.name AS "branchName"
+              a.entity_id AS "entityId", a.details, a.user_id AS "userId", u.full_name AS "userName", b.name AS "branchName"
          FROM activity_log a
          LEFT JOIN users u ON u.user_id = a.user_id
          LEFT JOIN branches b ON b.branch_id = a.branch_id
-        WHERE ($1::text = '' OR a.action = $1)
-        ORDER BY a.activity_log_id DESC LIMIT $2`,
-      [action ?? '', limit],
+         ${whereSql}
+         ORDER BY a.activity_log_id DESC LIMIT ${put(Math.min(Math.max(Number(limit) || 200, 1), 1000), 'int')}`,
+      params,
     );
+  }
+
+  /** Read-only diagnostics for the support team — Tools → «بيانات الدعم الفني». */
+  async supportInfo() {
+    const dbInfo = await this.db.one<any>(
+      `SELECT version() AS version, current_database() AS name`,
+    );
+    const size = await this.db.one<any>(
+      `SELECT pg_database_size(current_database()) AS size`,
+    );
+    const tables = await this.db.one<any>(
+      `SELECT count(*)::int AS c FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'`,
+    );
+    const counts: any = await this.db.one<any>(
+      `SELECT (SELECT count(*)::int FROM users) AS users,
+              (SELECT count(*)::int FROM items) AS items,
+              (SELECT count(*)::int FROM parties) AS parties,
+              (SELECT count(*)::int FROM invoices) AS invoices,
+              (SELECT count(*)::int FROM attachments) AS attachments,
+              (SELECT coalesce(sum(file_size),0)::bigint FROM attachments) AS attachment_bytes,
+              (SELECT count(*)::int FROM app_settings) AS settings`,
+    ) ?? {};
+    return {
+      appVersion: process.env.npm_package_version ?? '1.0.0',
+      nodeVersion: process.version,
+      dbName: String(dbInfo?.name ?? ''),
+      dbVersion: String(dbInfo?.version ?? ''),
+      dbSizeBytes: Number(size?.size ?? 0),
+      tables: Number(tables?.c ?? 0),
+      users: Number(counts.users ?? 0),
+      items: Number(counts.items ?? 0),
+      parties: Number(counts.parties ?? 0),
+      invoices: Number(counts.invoices ?? 0),
+      attachments: Number(counts.attachments ?? 0),
+      attachmentBytes: Number(counts.attachment_bytes ?? 0),
+      settingsKeys: Number(counts.settings ?? 0),
+      uptimeSeconds: Math.floor(process.uptime()),
+      serverTime: new Date().toISOString(),
+      isEmbeddedPglite: String(dbInfo?.version ?? '').toLowerCase().includes('pglite'),
+    };
   }
 }
 
@@ -348,10 +405,31 @@ export class AdminController {
     return this.service.updateSettings(body);
   }
 
+  /** Tools → «بيانات الدعم الفني» — read-only diagnostics, no secrets. */
+  @RequirePermissions('settings.manage')
+  @Get('support-info')
+  supportInfo() {
+    return this.service.supportInfo();
+  }
+
   @RequireAnyPermission('settings.manage', 'users.manage')
   @Get('audit')
-  audit(@Query('limit') limit: string, @Query('action') action: string) {
-    return this.service.audit(Math.min(Number(limit) || 100, 1000), action);
+  audit(
+    @Query('limit') limit: string,
+    @Query('action') action: string,
+    @Query('userId') userId: string,
+    @Query('from') from: string,
+    @Query('to') to: string,
+    @Query('search') search: string,
+  ) {
+    return this.service.audit(
+      Math.min(Math.max(Number(limit) || 200, 1), 1000),
+      action,
+      userId ? Number(userId) : undefined,
+      from,
+      to,
+      search,
+    );
   }
 }
 

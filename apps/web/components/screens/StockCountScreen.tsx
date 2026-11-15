@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import AppShell from '@/components/AppShell';
 import { apiFetch, formatDate, formatMoney } from '@/lib/api';
 import { useSession } from '@/lib/session';
 
@@ -9,7 +8,7 @@ const STATUS: Record<number, string> = {
   1: 'غير معتمد', 2: 'معتمد', 3: 'ملغى',
 };
 
-export default function StockCountPage() {
+export default function StockCountScreen() {
   const { can } = useSession();
   const [rows, setRows] = useState<any[]>([]);
   const [warehouses, setWarehouses] = useState<any[]>([]);
@@ -133,7 +132,7 @@ export default function StockCountPage() {
     : items;
 
   return (
-    <AppShell title="سند الجرد">
+    <>
       {error && <div className="card p-3 mb-3 border-rose-200 bg-rose-50 text-rose-700 text-sm">{error}</div>}
       {message && <div className="card p-3 mb-3 border-emerald-200 bg-emerald-50 text-emerald-700 text-sm">{message}</div>}
 
@@ -343,6 +342,6 @@ export default function StockCountPage() {
           </div>
         </div>
       </div>
-    </AppShell>
+    </>
   );
 }

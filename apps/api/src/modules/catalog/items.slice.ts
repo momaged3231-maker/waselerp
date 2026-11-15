@@ -7,6 +7,7 @@ import { resolvePrices } from '../../common/pricing';
 import { CurrentBranch, CurrentUser, AuthUser, RequirePermissions } from '../../common/security';
 import { LiveEventsService } from '../events/live-events.service';
 import { EventsModule } from '../events/events.slice';
+import { parseImportFile, buildTemplateXlsx, applyHeaderAliases, ITEM_IMPORT_ALIASES } from '../../common/spreadsheet';
 
 export interface ItemDto {
   itemId?: number;
@@ -218,6 +219,216 @@ export class ItemsService {
     });
     return { itemId, unitCount: units.length };
   }
+
+  // ------------------------------------------------------------------ //
+  //  Bulk price edit + CSV/XLSX import (Tools → «أسعار الأصناف» / «استيراد أصناف»)
+  // ------------------------------------------------------------------ //
+
+  private static readonly IMPORT_HEADER = ['code', 'barcode', 'name', 'category', 'unit', 'cost_price', 'sell_price', 'vat_pct', 'reorder_point'];
+  private static readonly IMPORT_EXAMPLE: (string | number)[] = ['ITM-000001', '6221000000011', 'صنف مثال', 'فئة عامة', 'PCS', 10, 15, 0, 5];
+
+  template(format: string) {
+    if (format === 'xlsx') {
+      return {
+        fileName: 'items-import-template.xlsx',
+        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        base64: buildTemplateXlsx(ItemsService.IMPORT_HEADER, ItemsService.IMPORT_EXAMPLE).toString('base64'),
+      };
+    }
+    const csv = [ItemsService.IMPORT_HEADER.join(','), ItemsService.IMPORT_EXAMPLE.join(',')].join('\r\n') + '\r\n';
+    return {
+      fileName: 'items-import-template.csv',
+      mimeType: 'text/csv; charset=utf-8',
+      base64: Buffer.from('﻿' + csv, 'utf-8').toString('base64'),
+    };
+  }
+
+  /** Normalises the numbers the import accepts (commas/arabic digits/currency tolerated). */
+  private parseNumberish(value: string | undefined, fallback = 0): number {
+    if (value === undefined || String(value).trim() === '') return fallback;
+    const cleaned = String(value)
+      .replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)))
+      .replace(/[^\d.,\-]/g, '')
+      .replace(/,/g, '');
+    const n = Number(cleaned);
+    return Number.isFinite(n) ? n : fallback;
+  }
+
+  private async resolveImportRows(raw: Record<string, string>[], client: import('pg').PoolClient) {
+    const [categories, units] = await Promise.all([
+      client.query<any>('SELECT category_id AS id, code, name FROM categories'),
+      client.query<any>('SELECT unit_id AS id, code, name FROM units'),
+    ]);
+    const byKey = (rows: any[]) => {
+      const map = new Map<string, number>();
+      for (const row of rows) {
+        if (row.code) map.set(String(row.code).trim().toLowerCase(), Number(row.id));
+        if (row.name) map.set(String(row.name).trim().toLowerCase(), Number(row.id));
+      }
+      return map;
+    };
+    const categoryByKey = byKey(categories.rows);
+    const unitByKey = byKey(units.rows);
+
+    const rows: any[] = [];
+    const errors: { row: number; message: string }[] = [];
+    raw.forEach((rawRow, index) => {
+      const line = index + 2; // header is line 1
+      const name = String(rawRow.name ?? '').trim();
+      if (!name) { errors.push({ row: line, message: 'الاسم مطلوب' }); return; }
+      const categoryRef = String(rawRow.category ?? '').trim();
+      const categoryId = categoryRef ? categoryByKey.get(categoryRef.toLowerCase()) ?? null : null;
+      if (categoryRef && categoryId === null && !/^\d+$/.test(categoryRef)) {
+        errors.push({ row: line, message: `الفئة غير موجودة: ${categoryRef}` }); return;
+      }
+      const unitRef = String(rawRow.unit ?? 'PCS').trim() || 'PCS';
+      const unitId = unitByKey.get(unitRef.toLowerCase()) ?? null;
+      if (unitId === null && !/^\d+$/.test(unitRef)) {
+        errors.push({ row: line, message: `الوحدة غير موجودة: ${unitRef}` }); return;
+      }
+      const costPrice = this.parseNumberish(rawRow.cost_price, 0);
+      const sellPrice = this.parseNumberish(rawRow.sell_price, 0);
+      const vatPct = this.parseNumberish(rawRow.vat_pct, 0);
+      const reorderPoint = this.parseNumberish(rawRow.reorder_point, 0);
+      if (costPrice < 0 || sellPrice < 0 || vatPct < 0 || reorderPoint < 0) {
+        errors.push({ row: line, message: 'الأسعار/الضريبة/حد الطلب يجب أن تكون ≥ 0' }); return;
+      }
+      rows.push({
+        line, code: String(rawRow.code ?? '').trim(), barcode: String(rawRow.barcode ?? '').trim() || null,
+        name, categoryId: categoryRef && /^\d+$/.test(categoryRef) ? Number(categoryRef) : categoryId,
+        baseUnitId: unitRef && /^\d+$/.test(unitRef) ? Number(unitRef) : unitId,
+        costPrice, sellPrice, vatPct, reorderPoint,
+      });
+    });
+    return { rows, errors };
+  }
+
+  async importFile(dto: any, user: AuthUser, branchId: number) {
+    const mode = dto?.mode === 'apply' ? 'apply' : 'preview';
+    const parsed = parseImportFile({ csv: dto?.csv, xlsxBase64: dto?.xlsxBase64 });
+    if (!parsed.raw.length) throw new BadRequestException('الملف لا يحتوي أي صفوف بيانات');
+    const withAliases = applyHeaderAliases(parsed.raw, ITEM_IMPORT_ALIASES);
+
+    return this.db.transaction(async (client) => {
+      const { rows, errors } = await this.resolveImportRows(withAliases, client);
+
+      if (mode === 'preview') {
+        return {
+          mode, total: parsed.raw.length, valid: rows.length, invalid: errors.length,
+          errors, sample: rows.slice(0, 10),
+        };
+      }
+
+      // apply
+      let created = 0;
+      let updated = 0;
+      const failed: { row: number; message: string }[] = [...errors];
+      for (const row of rows) {
+        try {
+          const existing = row.code
+            ? (await client.query<any>('SELECT item_id AS id FROM items WHERE code = $1', [row.code])).rows[0]
+            : null;
+          if (existing) {
+            await client.query(
+              `UPDATE items SET barcode=$2, name=$3, category_id=$4, base_unit_id=$5,
+                      cost_price=$6, sell_price=$7, vat_pct=$8, reorder_point=$9, version = version + 1
+               WHERE item_id=$1`,
+              [existing.id, row.barcode, row.name, row.categoryId, row.baseUnitId,
+                row.costPrice, row.sellPrice, row.vatPct, row.reorderPoint],
+            );
+            updated += 1;
+          } else {
+            let code = row.code;
+            if (!code) {
+              const auto = await client.query<any>(
+                `SELECT setting_value FROM app_settings WHERE setting_key = 'ItemCodeAuto'`,
+              );
+              if (!['true', '1'].includes(String(auto.rows[0]?.setting_value ?? '').toLowerCase())) {
+                failed.push({ row: row.line, message: 'الكود مطلوب (أو فعّل «كود الصنف تلقائيًا» من الإعدادات)' });
+                continue;
+              }
+              const seq = await this.db.nextNumber(client, 'ITEM');
+              code = `ITM-${String(seq).padStart(6, '0')}`;
+            }
+            await client.query(
+              `INSERT INTO items (code, barcode, name, category_id, base_unit_id,
+                      cost_price, sell_price, vat_pct, reorder_point, is_service, has_serial, is_active)
+               VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,false,false,true)`,
+              [code, row.barcode, row.name, row.categoryId, row.baseUnitId,
+                row.costPrice, row.sellPrice, row.vatPct, row.reorderPoint],
+            );
+            created += 1;
+          }
+        } catch (error: any) {
+          failed.push({ row: row.line, message: error?.message ?? 'تعذر الحفظ' });
+        }
+      }
+      await client.query(
+        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
+         VALUES ($1::int, $2::int, 'item.import', 'item', NULL, $3::text)`,
+        [user.userId, branchId, `استيراد أصناف: ${created} جديد، ${updated} محدّث، ${failed.length} فاشل`],
+      );
+      return { mode, total: parsed.raw.length, created, updated, failed };
+    });
+  }
+
+  /** Bulk edit sell/cost prices with preview — Tools → «أسعار الأصناف». */
+  async bulkPrice(dto: any, user: AuthUser) {
+    const scope = dto?.scope === 'category' ? 'category' : dto?.scope === 'ids' ? 'ids' : 'all';
+    const categoryId = scope === 'category' ? Number(dto?.categoryId ?? 0) : 0;
+    if (scope === 'category' && !categoryId) throw new BadRequestException('اختر الفئة أولًا');
+    const ids: number[] = scope === 'ids' && Array.isArray(dto?.itemIds)
+      ? [...new Set((dto.itemIds as any[]).map((n) => Number(n)))].filter((n) => Number.isFinite(n) && n > 0)
+      : [];
+    if (scope === 'ids' && !ids.length) throw new BadRequestException('حدد أصنافًا أولًا');
+    const field = dto?.field === 'costPrice' ? 'costPrice' : 'sellPrice';
+    const column = field === 'costPrice' ? 'cost_price' : 'sell_price';
+    const op = ['increasePct', 'decreasePct', 'increaseAmount', 'decreaseAmount'].includes(dto?.op)
+      ? dto.op : 'increasePct';
+    const value = Number(dto?.value);
+    if (!Number.isFinite(value) || value < 0) {
+      throw new BadRequestException('القيمة يجب أن تكون رقمًا ≥ 0');
+    }
+    const mode = dto?.mode === 'apply' ? 'apply' : 'preview';
+
+    const rows = await this.db.query<any>(
+      `SELECT item_id AS id, code, name, ${column} AS price
+         FROM items
+        WHERE is_active = true
+          AND ($1::int = 0 OR category_id = $1::int)
+          AND ($2::int[] IS NULL OR item_id = ANY($2::int[]))
+        ORDER BY name`,
+      [categoryId, scope === 'ids' ? ids : null],
+    );
+    const factor = op.endsWith('Pct') ? value / 100 : null;
+    const adjust = (price: number) => {
+      const current = Number(price);
+      if (op === 'increasePct') return Math.round(current * (1 + factor!) * 100) / 100;
+      if (op === 'decreasePct') return Math.max(0, Math.round(current * (1 - factor!) * 100) / 100);
+      if (op === 'increaseAmount') return Math.round((current + value) * 100) / 100;
+      return Math.max(0, Math.round((current - value) * 100) / 100); // decreaseAmount
+    };
+    const changed = rows.map((row) => ({
+      ...row, newPrice: adjust(row.price), price: Number(row.price),
+    }));
+    if (mode === 'preview') {
+      return { mode, field, op, value, scope, categoryId, count: changed.length, sample: changed.slice(0, 10) };
+    }
+    await this.db.transaction(async (client) => {
+      for (const row of changed) {
+        await client.query(
+          `UPDATE items SET ${column} = $2::numeric, version = version + 1 WHERE item_id = $1::int`,
+          [row.id, row.newPrice],
+        );
+      }
+      await client.query(
+        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
+         VALUES ($1::int, NULL, 'item.bulk_price', 'item', NULL, $2::text)`,
+        [user.userId, `تعديل جماعي للأسعار (${field}, ${op}, ${value}) على ${changed.length} صنف`],
+      );
+    });
+    return { mode, field, op, value, scope, categoryId, updated: changed.length };
+  }
 }
 
 @Controller('items')
@@ -249,6 +460,27 @@ export class ItemsController {
   @Get('lookup')
   lookup(@Query('code') code: string, @CurrentBranch() branchId: number) {
     return this.service.lookupByCode(code, branchId);
+  }
+
+  /** Template for the items import (CSV or XLSX) — before @Get(':id') or it would shadow it. */
+  @RequirePermissions('items.manage')
+  @Get('import/template')
+  importTemplate(@Query('format') format: string) {
+    return this.service.template(String(format ?? 'csv').toLowerCase() === 'xlsx' ? 'xlsx' : 'csv');
+  }
+
+  /** Upload CSV/XLSX (base64 or raw csv text) — mode=preview (default) or mode=apply. */
+  @RequirePermissions('items.manage')
+  @Post('import')
+  importFile(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
+    return this.service.importFile(dto, user, branchId);
+  }
+
+  /** Bulk edit sell/cost prices — mode=preview (default) or mode=apply. */
+  @RequirePermissions('items.manage')
+  @Post('bulk-price')
+  bulkPrice(@Body() dto: any, @CurrentUser() user: AuthUser) {
+    return this.service.bulkPrice(dto, user);
   }
 
   @RequirePermissions('items.view')

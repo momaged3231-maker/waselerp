@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import AppShell from '@/components/AppShell';
 import { apiFetch, formatMoney } from '@/lib/api';
 import { useSession } from '@/lib/session';
 
@@ -11,7 +10,7 @@ const LIST_TYPES: Record<number, string> = {
 
 type Tab = 'lists' | 'coupons' | 'offers';
 
-export default function PricingPage() {
+export default function PricingScreen() {
   const { can } = useSession();
   const canManage = can('items.manage');
 
@@ -162,7 +161,7 @@ export default function PricingPage() {
   const current = lists.find((row) => Number(row.priceListId) === selected);
 
   return (
-    <AppShell title="الأسعار والترويج">
+    <>
       {error && <div className="card p-3 mb-3 border-rose-200 bg-rose-50 text-rose-700 text-sm">{error}</div>}
       {message && <div className="card p-3 mb-3 border-emerald-200 bg-emerald-50 text-emerald-700 text-sm">{message}</div>}
 
@@ -429,6 +428,6 @@ export default function PricingPage() {
           </div>
         </div>
       )}
-    </AppShell>
+    </>
   );
 }

@@ -7,7 +7,7 @@ import { useSession } from '@/lib/session';
 import { useOfflineQueue } from '@/lib/offline';
 import {
   IconHome, IconCart, IconUtensils, IconWrench, IconReceipt, IconFileText,
-  IconTag, IconWarehouse, IconClipboardCheck, IconPackage, IconArrowsSwitch, IconUsers,
+  IconWarehouse, IconArrowsSwitch, IconUsers,
   IconCalendar, IconWallet, IconBookOpen, IconChartBar, IconBriefcase,
   IconBarcode, IconDeviceMobile, IconBell, IconFolder, IconSettings, IconLogout,
   IconMenu, IconCloudUp, IconWifiOff, IconBuilding, IconChevronDown,
@@ -48,7 +48,6 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: '/invoices', label: 'الفواتير', icon: IconReceipt, permission: 'sales.view' },
       { href: '/documents', label: 'العروض والأوامر', icon: IconFileText, permission: 'sales.view' },
-      { href: '/pricing', label: 'قوائم الأسعار', icon: IconTag, permission: 'items.view' },
       { href: '/installments', label: 'التقسيط', icon: IconCalendar, permission: 'parties.ledger' },
     ],
   },
@@ -57,8 +56,6 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'المخزون',
     items: [
       { href: '/inventory', label: 'حركة المخزون', icon: IconWarehouse, permission: 'stock.view' },
-      { href: '/stock-count', label: 'سند الجرد', icon: IconClipboardCheck, permission: 'stock.view' },
-      { href: '/stock-voucher', label: 'أذون المخازن', icon: IconPackage, permission: 'stock.view' },
       { href: '/stock-transfer', label: 'تحويل غير مباشر', icon: IconArrowsSwitch, permission: 'stock.view' },
       { href: '/labels', label: 'ملصقات الأصناف', icon: IconBarcode, permission: 'stock.view' },
       { href: '/mobile-stocktake', label: 'جرد موبايل', icon: IconDeviceMobile, permission: 'stock.manage' },
@@ -80,6 +77,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: '/hr', label: 'شئون العاملين', icon: IconBriefcase, permission: 'hr.view' },
       { href: '/crm', label: 'إدارة العملاء CRM', icon: IconUsers, permission: 'crm.view' },
+      { href: '/tools', label: 'الأدوات', icon: IconWrench, permission: 'items.view' },
       { href: '/definitions', label: 'البيانات الأساسية', icon: IconFolder, permissions: ['items.view', 'parties.view'] },
       { href: '/admin', label: 'الإعدادات', icon: IconSettings, permission: 'users.manage' },
     ],

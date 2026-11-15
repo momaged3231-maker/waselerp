@@ -573,13 +573,13 @@ const ADVANCED_UNAVAILABLE: { title: string; reason: string }[] = [
 ];
 
 export default function AdminPage() {
-  const [tab, setTab] = useState<'users' | 'roles' | 'settings' | 'advanced' | 'print' | 'audit' | 'zatca' | 'eta' | 'backup'>('users');
+  const [tab, setTab] = useState<'users' | 'roles' | 'settings' | 'advanced' | 'print' | 'zatca' | 'eta' | 'backup'>('users');
 
   const [users, setUsers] = useState<any[]>([]);
   const [roles, setRoles] = useState<any[]>([]);
   const [permissions, setPermissions] = useState<any[]>([]);
   const [settings, setSettings] = useState<Record<string, string>>({});
-  const [audit, setAudit] = useState<any[]>([]);
+
   const [zatca, setZatca] = useState<any>({});
   const [zatcaStatus, setZatcaStatus] = useState<any>(null);
   const [eta, setEta] = useState<any>({});
@@ -614,7 +614,6 @@ export default function AdminPage() {
     }
     if (tab === 'settings') setSettings(await apiFetch('/admin/settings'));
     if (tab === 'print') setPrintProfiles(await apiFetch('/settings/print-profiles'));
-    if (tab === 'audit') setAudit(await apiFetch('/admin/audit?limit=100'));
     if (tab === 'zatca') {
       setZatca(await apiFetch('/zatca/config') ?? {});
       setZatcaStatus(await apiFetch('/zatca/status'));
@@ -835,7 +834,7 @@ export default function AdminPage() {
   return (
     <AppShell title="الإعدادات">
       <div className="flex gap-2 mb-4 flex-wrap">
-        {([['users', 'المستخدمون'], ['roles', 'الأدوار والصلاحيات'], ['settings', 'إعدادات النظام'], ['advanced', 'الإعدادات المتقدمة'], ['print', 'ملفات الطباعة (المحطات)'], ['eta', 'الفاتورة الإلكترونية (مصر)'], ['zatca', 'الضريبة الإلكترونية (السعودية)'], ['backup', 'النسخ الاحتياطي'], ['audit', 'سجل العمليات']] as const).map(([key, label]) => (
+        {([['users', 'المستخدمون'], ['roles', 'الأدوار والصلاحيات'], ['settings', 'إعدادات النظام'], ['advanced', 'الإعدادات المتقدمة'], ['print', 'ملفات الطباعة (المحطات)'], ['eta', 'الفاتورة الإلكترونية (مصر)'], ['zatca', 'الضريبة الإلكترونية (السعودية)'], ['backup', 'النسخ الاحتياطي']] as const).map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)} className={tab === key ? 'btn-primary' : 'btn-soft'}>{label}</button>
         ))}
       </div>
@@ -1525,29 +1524,9 @@ export default function AdminPage() {
         </div>
       )}
 
-      {tab === 'audit' && (
-        <div className="card">
-          <div className="card-title"><span>سجل العمليات ({audit.length})</span></div>
-          <div className="table-wrap">
-            <table className="table">
-              <thead><tr><th>التاريخ</th><th>المستخدم</th><th>الفرع</th><th>العملية</th><th>الكيان</th><th>التفاصيل</th></tr></thead>
-              <tbody>
-                {audit.map((row) => (
-                  <tr key={row.activityLogId}>
-                    <td>{formatDate(row.createdAt)}</td>
-                    <td className="font-semibold">{row.userName ?? '—'}</td>
-                    <td className="text-slate-500">{row.branchName ?? '—'}</td>
-                    <td><span className="badge bg-slate-100 text-slate-600">{row.action}</span></td>
-                    <td className="text-xs">{row.entity} #{row.entityId}</td>
-                    <td className="text-xs text-slate-500">{row.details ?? '—'}</td>
-                  </tr>
-                ))}
-                {audit.length === 0 && <tr><td colSpan={6} className="text-center text-slate-400 py-8">لا توجد عمليات</td></tr>}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+      <div className="card p-4 border-sky-200 bg-sky-50 text-sky-900 text-xs leading-6">
+        <b>سجل العمليات</b> انتقل إلى «الأدوات ← سجل عمليات المستخدمين» — مع فلاتر مستخدم/فترة/نوع وتصدير CSV.
+      </div>
     </AppShell>
   );
 }
