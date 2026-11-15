@@ -31,7 +31,7 @@ export default function PrintAgentPanel() {
         getAgentConfig().catch(() => null),
         listPrinters().catch(() => []),
       ]);
-      setConfig(cfg ?? { defaultPrinter: '', autoOpenDrawer: true, paperWidth: 42, networkPrinters: [] });
+      setConfig(cfg ?? { defaultPrinter: '', autoOpenDrawer: true, paperWidth: 42, networkPrinters: [], encoding: 'win1256', codePage: null });
       setPrinters(printers);
     }
     // cloud agents (cross-location)
@@ -184,6 +184,35 @@ export default function PrintAgentPanel() {
                 {option.label}
               </button>
             ))}
+          </div>
+        </div>
+
+        <div className="sm:col-span-2 grid sm:grid-cols-2 gap-4">
+          <div>
+            <label className="label">ترميز Arabic (encoding)</label>
+            <select
+              className="input"
+              disabled={!online}
+              value={config?.encoding ?? 'win1256'}
+              onChange={(e) => setConfig({ ...config, encoding: e.target.value })}
+            >
+              <option value="win1256">Windows-1256 (الأكثر شيوعًا)</option>
+              <option value="cp864">CP864 (DOS Arabic)</option>
+              <option value="cp720">CP720</option>
+            </select>
+            <div className="text-[11px] text-slate-500 mt-1">غيّره إذا ظهرت ???? أو حروف خاطئة.</div>
+          </div>
+          <div>
+            <label className="label">Code Page (ESC t) — اختياري</label>
+            <input
+              className="input"
+              disabled={!online}
+              type="number"
+              placeholder="فارغ = لا تغيير"
+              value={config?.codePage ?? ''}
+              onChange={(e) => setConfig({ ...config, codePage: e.target.value === '' ? null : Number(e.target.value) })}
+            />
+            <div className="text-[11px] text-slate-500 mt-1">POS-80C: جرّب 13 أو 32. اتركه فارغًا للطابعة الافتراضية.</div>
           </div>
         </div>
 

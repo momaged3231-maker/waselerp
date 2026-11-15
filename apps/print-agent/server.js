@@ -31,7 +31,7 @@ const loadConfig = () => {
   try {
     return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
   } catch {
-    return { defaultPrinter: '', networkPrinters: [], autoOpenDrawer: false, paperWidth: 42 };
+    return { defaultPrinter: '', networkPrinters: [], autoOpenDrawer: false, paperWidth: 42, encoding: 'win1256', codePage: 13 };
   }
 };
 
@@ -58,11 +58,14 @@ const cmd = {
   feed: (n) => Buffer.from([ESC, 0x64, n]),
   cut: () => Buffer.from([GS, 0x56, 0x00]),
   drawer: () => Buffer.from([ESC, 0x70, 0x00, 0x19, 0xfa]),
+  codePage: (n) => Buffer.from([ESC, 0x74, Number(n) & 0xff]),
 };
 
 /** Arabic-capable thermal printers usually speak Windows-1256 / CP864. */
 function encodeText(text) {
-  return iconv.encode(String(text ?? ''), 'win1256');
+  const cfg = loadConfig();
+  const enc = (cfg && cfg.encoding) || 'win1256';
+  return iconv.encode(String(text ?? ''), enc);
 }
 
 function line(text, { align = 'left', width = 42, bold = false, double = false } = {}) {
@@ -80,7 +83,13 @@ function line(text, { align = 'left', width = 42, bold = false, double = false }
 }
 
 function buildReceiptBytes(receipt, width = 42) {
-  const chunks = [cmd.init(), cmd.spacing(24)];
+  const chunks = [cmd.init()];
+  const cfg0 = loadConfig();
+  const cp = (cfg0 && cfg0.codePage === undefined) ? 13 : (cfg0 && cfg0.codePage);
+  if (cp != null && cp !== '') {
+    chunks.push(cmd.codePage(cp));
+  }
+  chunks.push(cmd.spacing(24));
   const store = receipt.store ?? {};
   const showBranch = receipt.showBranch !== false;
   const showParty = receipt.showParty !== false;
@@ -134,7 +143,13 @@ function buildReceiptBytes(receipt, width = 42) {
 
 /** Kitchen ticket (no prices) — sent when a table order goes to the kitchen. */
 function buildKitchenTicketBytes(order, width = 42) {
-  const chunks = [cmd.init(), cmd.spacing(24)];
+  const chunks = [cmd.init()];
+  const cfg0 = loadConfig();
+  const cp = (cfg0 && cfg0.codePage === undefined) ? 13 : (cfg0 && cfg0.codePage);
+  if (cp != null && cp !== '') {
+    chunks.push(cmd.codePage(cp));
+  }
+  chunks.push(cmd.spacing(24));
   const stamp = new Date().toLocaleString('ar-EG', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
   const showPrices = order.showPrices === true;
 
@@ -178,7 +193,13 @@ function buildKitchenTicketBytes(order, width = 42) {
 
 /** Small test page — used by the «اختبار طباعة» button in settings. */
 function buildTestBytes(width = 42) {
-  const chunks = [cmd.init(), cmd.spacing(24)];
+  const chunks = [cmd.init()];
+  const cfg0 = loadConfig();
+  const cp = (cfg0 && cfg0.codePage === undefined) ? 13 : (cfg0 && cfg0.codePage);
+  if (cp != null && cp !== '') {
+    chunks.push(cmd.codePage(cp));
+  }
+  chunks.push(cmd.spacing(24));
   chunks.push(line('WaselERP', { align: 'center', width, bold: true, double: true }));
   chunks.push(line('اختبار طباعة', { align: 'center', width, bold: true }));
   chunks.push(line(new Date().toLocaleString('ar-EG'), { align: 'center', width }));
