@@ -22,9 +22,14 @@
 | `--radius-card` / `--radius-control` | أنصاف أقطار الكروت والعناصر |
 | `--shadow-card / --shadow-lift` | الظلال الناعمة |
 
-### الوضع الداكن (جاهز — مش مفعّل)
-`:root[data-theme='dark']` معرّفة بكل التوكنز نفسها (بطاقات navy مرفوعة، accent سمائي ساطع).
-**ما فيش كسر:** كل المكونات بتقرأ من التوكنز/الأصناف، فأي تفعيل مستقبلي = تغيير `data-theme` + ضبط كلاسات slate على `.card/.input`. لا تُدخل ألوان hex عشوائية — دايمًا عبر التوكنز.
+### الوضع الداكن (مفعّل — D31)
+`html[data-theme='dark']` نشط بالكامل عبر `lib/theme.tsx` (ThemeProvider + مفتاح في شريط AppShell العلوي):
+- **الاختيار** محفوظ `localStorage('wasel-theme')`؛ بدون اختيار يتبع `prefers-color-scheme`؛ سكربت inline في `layout.tsx` يمنع وميض الوضع الخاطئ (FOUC).
+- **المكونات الأساسية** (`.card/.card-title/.btn-soft/.btn-primary/.input/.label/.table/.badge`) تقرأ من التوكنز مباشرة — تتحول تلقائيًا.
+- **توكنز إضافية**: `--wm-soft / --wm-soft-hover / --wm-th / --wm-line-strong` (قيم فاتحة/داكنة في `:root` و`:root[data-theme='dark']`).
+- **طبقة معاكسة للكلاسات** في `globals.css`: `[data-theme='dark'] .bg-slate-100 …` مبنية على **مسح فعلي لكل كلاسات الألوان المستخدمة (151 توكن)** — الكلاسات غير المذكورة بقيت بقيمها **عمدًا**: الكحلي الصلب (`bg-slate-900/bg-navy-*`)، النصوص على الكحلي (`text-slate-100/200/300`)، الأزرار الصلبة (`bg-brand-700/emerald-600/rose-600`)، والتدرجات والـ overlays.
+- **الطباعة دائمًا فاتحة**: `beforeprint` يبدّل `data-theme` مؤقتًا إلى light (يبقى إيصال/فاتورة A4 مقروءة) و`afterprint` يرجّع.
+- **قاعدة ثابتة**: أي كلاس لون جديد يُستخدم في شاشة → لو ظهر باهتًا في الداكن أضِف سطرًا له في طبقة `[data-theme='dark']` — ممنوع ألوان hex عشوائية داخل الشاشات.
 
 ## 3) الأصناف المشتركة (`@layer components`)
 - `.card` · `.card-title` — بطاقة قياسية (border + radius + shadow-card)

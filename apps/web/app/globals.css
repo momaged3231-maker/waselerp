@@ -6,6 +6,7 @@
    WaselERP — Design tokens (D17 ReDesign: Soft Rounded / Navy + Sky)
    Light is the default; dark lives in [data-theme='dark'] and is
    wired through the same tokens (components read the variables).
+   D31: تم تفعيل الوضعين معًا — مفتاح التبديل في AppShell (lib/theme.tsx).
    ============================================================ */
 :root {
   --wm-surface: 248 250 252;      /* #f8fafc app background */
@@ -13,6 +14,10 @@
   --wm-ink: 15 23 42;             /* #0f172a */
   --wm-ink-soft: 71 85 105;       /* #475569 */
   --wm-line: 226 232 240;         /* #e2e8f0 */
+  --wm-line-strong: 203 213 225;  /* #cbd5e1 — input borders */
+  --wm-soft: 241 245 249;         /* #f1f5f9 — soft buttons/chips */
+  --wm-soft-hover: 226 232 240;   /* #e2e8f0 */
+  --wm-th: 248 250 252;           /* #f8fafc — table head */
   --wm-sky: 3 105 161;            /* #0369a1 */
   --wm-navy: 15 23 42;            /* #0f172a */
   --wm-ring: 3 105 161;
@@ -28,6 +33,10 @@
   --wm-ink: 226 232 240;          /* #e2e8f0 */
   --wm-ink-soft: 148 163 184;     /* #94a3b8 */
   --wm-line: 51 65 85;            /* #334155 */
+  --wm-line-strong: 71 85 105;    /* visible input borders on dark */
+  --wm-soft: 30 41 59;            /* #1e293b */
+  --wm-soft-hover: 51 65 85;      /* #334155 */
+  --wm-th: 19 28 47;              /* darker head than card */
   --wm-sky: 56 189 248;           /* #38bdf8 accent on dark */
   --wm-navy: 2 6 23;
   --wm-ring: 56 189 248;
@@ -71,8 +80,7 @@ body {
 }
 
 ::selection {
-  background: #bae6fd;
-  color: #082f3f;
+  background: rgb(var(--wm-ring) / 0.28);
 }
 
 ::-webkit-scrollbar {
@@ -80,7 +88,7 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: rgb(var(--wm-line-strong));
   border-radius: 8px;
 }
 .scrollbar-dark::-webkit-scrollbar-thumb {
@@ -89,33 +97,64 @@ body {
 
 @layer components {
   .card {
-    @apply bg-white rounded-[var(--radius-card)] shadow-card border border-slate-200/70;
+    @apply rounded-[var(--radius-card)] shadow-card border;
+    background-color: rgb(var(--wm-card));
+    border-color: rgb(var(--wm-line) / 0.7);
   }
   .card-title {
-    @apply flex items-center justify-between px-5 py-4 border-b border-slate-100 font-bold text-slate-800;
+    @apply flex items-center justify-between px-5 py-4 border-b font-bold;
+    color: rgb(var(--wm-ink));
+    border-color: rgb(var(--wm-line));
   }
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold
            transition disabled:opacity-50 disabled:cursor-not-allowed select-none min-h-[40px];
   }
   .btn-primary {
-    @apply btn bg-brand-700 text-white hover:bg-brand-800 active:bg-brand-900 shadow-sm;
+    @apply btn text-white shadow-sm;
+    background-color: #0369a1;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background-color: #075985;
+  }
+  .btn-primary:active:not(:disabled) {
+    background-color: #0c4a6e;
   }
   .btn-soft {
-    @apply btn bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200/60;
+    @apply btn border;
+    background-color: rgb(var(--wm-soft));
+    color: rgb(var(--wm-ink));
+    border-color: rgb(var(--wm-line) / 0.6);
+  }
+  .btn-soft:hover:not(:disabled) {
+    background-color: rgb(var(--wm-soft-hover));
   }
   .btn-danger {
-    @apply btn bg-rose-600 text-white hover:bg-rose-700;
+    @apply btn text-white;
+    background-color: #e11d48;
+  }
+  .btn-danger:hover:not(:disabled) {
+    background-color: #be123c;
   }
   .btn-success {
-    @apply btn bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm;
+    @apply btn text-white shadow-sm;
+    background-color: #059669;
+  }
+  .btn-success:hover:not(:disabled) {
+    background-color: #047857;
   }
   .input {
-    @apply w-full rounded-2xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none
-           focus:border-brand-600 focus:ring-2 focus:ring-brand-100 transition min-h-[40px];
+    @apply w-full rounded-2xl border px-3 py-2.5 text-sm outline-none transition min-h-[40px];
+    background-color: rgb(var(--wm-card));
+    border-color: rgb(var(--wm-line-strong));
+  }
+  .input:focus {
+    border-color: rgb(var(--wm-ring));
+    box-shadow: 0 0 0 3px rgb(var(--wm-ring) / 0.15);
   }
   .label {
-    @apply block text-xs font-semibold text-slate-500 mb-1.5;
+    @apply block text-xs font-semibold mb-1.5;
+    color: rgb(var(--wm-ink-soft));
   }
   .table-wrap {
     @apply overflow-x-auto;
@@ -124,18 +163,134 @@ body {
     @apply w-full text-sm text-right;
   }
   .table thead th {
-    @apply bg-slate-50 text-slate-500 font-semibold text-xs px-4 py-3 whitespace-nowrap border-b border-slate-200;
+    @apply font-semibold text-xs px-4 py-3 whitespace-nowrap border-b;
+    background-color: rgb(var(--wm-th));
+    color: rgb(var(--wm-ink-soft));
+    border-color: rgb(var(--wm-line));
   }
   .table tbody td {
-    @apply px-4 py-3 border-b border-slate-100 whitespace-nowrap;
+    @apply px-4 py-3 border-b whitespace-nowrap;
+    border-color: rgb(var(--wm-line) / 0.6);
   }
   .table tbody tr:hover {
-    @apply bg-brand-50/60;
+    background-color: rgb(var(--wm-ring) / 0.07);
   }
   .badge {
     @apply inline-flex items-center gap-1 rounded-xl px-2 py-0.5 text-xs font-semibold;
   }
 }
+
+/* ============================================================
+   Dark theme — utility overrides.
+   Every rule is derived from the actual classes used in the app
+   (scan: 151 tokens). Classes NOT listed here keep their light
+   values on purpose: they sit on navy surfaces, on colored solids,
+   or are overlays that work in both themes.
+   ============================================================ */
+[data-theme='dark'] .card {
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 2px 12px rgb(0 0 0 / 0.35);
+}
+
+/* Surfaces */
+[data-theme='dark'] .bg-white { background-color: rgb(var(--wm-card)); }
+[data-theme='dark'] .bg-white\/95 { background-color: rgb(var(--wm-card) / 0.95); }
+[data-theme='dark'] .bg-slate-50,
+[data-theme='dark'] .hover\:bg-slate-50:hover { background-color: rgb(19 28 47); }
+[data-theme='dark'] .bg-slate-50\/60 { background-color: rgb(30 41 59 / 0.6); }
+[data-theme='dark'] .bg-slate-50\/70 { background-color: rgb(30 41 59 / 0.7); }
+[data-theme='dark'] .bg-slate-100,
+[data-theme='dark'] .hover\:bg-slate-100:hover,
+[data-theme='dark'] .bg-gray-100 { background-color: rgb(30 41 59); }
+[data-theme='dark'] .bg-slate-200,
+[data-theme='dark'] .hover\:bg-slate-200:hover,
+[data-theme='dark'] .bg-slate-200\/60,
+[data-theme='dark'] .hover\:bg-slate-200\/60:hover { background-color: rgb(51 65 85); }
+[data-theme='dark'] .bg-slate-300,
+[data-theme='dark'] .bg-slate-400 { background-color: rgb(71 85 105); }
+
+/* Soft state chips (bg-*50/100 → dark tints; solids stay untouched) */
+[data-theme='dark'] .bg-amber-50 { background-color: rgb(42 31 8); }
+[data-theme='dark'] .bg-amber-100,
+[data-theme='dark'] .hover\:bg-amber-100:hover { background-color: rgb(58 43 10); }
+[data-theme='dark'] .bg-blue-50 { background-color: rgb(23 37 84); }
+[data-theme='dark'] .bg-brand-50,
+[data-theme='dark'] .hover\:bg-brand-50:hover,
+[data-theme='dark'] .bg-sky-50 { background-color: rgb(12 41 61); }
+[data-theme='dark'] .hover\:bg-brand-50\/40:hover { background-color: rgb(56 189 248 / 0.08); }
+[data-theme='dark'] .bg-brand-50\/60 { background-color: rgb(56 189 248 / 0.10); }
+[data-theme='dark'] .bg-brand-600\/15 { background-color: rgb(56 189 248 / 0.12); }
+[data-theme='dark'] .bg-emerald-50,
+[data-theme='dark'] .hover\:bg-emerald-50:hover { background-color: rgb(6 44 34); }
+[data-theme='dark'] .bg-emerald-50\/50 { background-color: rgb(6 44 34 / 0.5); }
+[data-theme='dark'] .bg-emerald-50\/60 { background-color: rgb(6 44 34 / 0.6); }
+[data-theme='dark'] .bg-emerald-50\/70 { background-color: rgb(6 44 34 / 0.7); }
+[data-theme='dark'] .bg-emerald-100,
+[data-theme='dark'] .bg-emerald-100\/50 { background-color: rgb(6 59 46); }
+[data-theme='dark'] .bg-rose-50,
+[data-theme='dark'] .hover\:bg-rose-50:hover { background-color: rgb(59 14 22); }
+[data-theme='dark'] .bg-rose-50\/50 { background-color: rgb(59 14 22 / 0.5); }
+[data-theme='dark'] .bg-rose-100 { background-color: rgb(88 19 37); }
+[data-theme='dark'] .bg-violet-50 { background-color: rgb(46 16 82); }
+[data-theme='dark'] .bg-yellow-50 { background-color: rgb(57 47 8); }
+
+/* Borders */
+[data-theme='dark'] .border-slate-100 { border-color: rgb(30 41 59); }
+[data-theme='dark'] .border-slate-200 { border-color: rgb(39 51 71); }
+[data-theme='dark'] .border-slate-200\/60,
+[data-theme='dark'] .border-slate-200\/70 { border-color: rgb(39 51 71 / 0.7); }
+[data-theme='dark'] .border-slate-300,
+[data-theme='dark'] .hover\:border-slate-300:hover,
+[data-theme='dark'] .border-slate-800 { border-color: rgb(51 65 85); }
+[data-theme='dark'] .border-amber-200 { border-color: rgb(88 63 18); }
+[data-theme='dark'] .border-amber-300 { border-color: rgb(120 87 24); }
+[data-theme='dark'] .border-emerald-100 { border-color: rgb(23 78 60); }
+[data-theme='dark'] .border-emerald-200 { border-color: rgb(30 91 71); }
+[data-theme='dark'] .border-emerald-300 { border-color: rgb(39 105 82); }
+[data-theme='dark'] .border-rose-200 { border-color: rgb(88 19 37); }
+[data-theme='dark'] .border-rose-300 { border-color: rgb(120 28 53); }
+[data-theme='dark'] .border-sky-200 { border-color: rgb(21 58 88); }
+[data-theme='dark'] .border-brand-200 { border-color: rgb(21 45 74); }
+
+/* Rings (soft rings only; brand/emerald/amber focus rings stay bright) */
+[data-theme='dark'] .ring-slate-200 { --tw-ring-color: rgb(51 65 85); }
+[data-theme='dark'] .ring-amber-100 { --tw-ring-color: rgb(58 43 10); }
+[data-theme='dark'] .ring-emerald-100 { --tw-ring-color: rgb(23 78 60); }
+[data-theme='dark'] .ring-rose-100 { --tw-ring-color: rgb(88 19 37); }
+[data-theme='dark'] .ring-sky-100 { --tw-ring-color: rgb(12 41 61); }
+[data-theme='dark'] .ring-violet-100 { --tw-ring-color: rgb(46 16 82); }
+
+/* Texts — muted/dark inks become light; accent 600-900 become bright tints */
+[data-theme='dark'] .text-slate-500 { color: rgb(148 163 184); }
+[data-theme='dark'] .text-slate-600 { color: rgb(203 213 225); }
+[data-theme='dark'] .text-slate-700,
+[data-theme='dark'] .hover\:text-slate-700:hover { color: rgb(226 232 240); }
+[data-theme='dark'] .text-slate-800 { color: rgb(241 245 249); }
+[data-theme='dark'] .text-gray-500 { color: rgb(156 163 175); }
+[data-theme='dark'] .text-gray-600 { color: rgb(209 213 219); }
+[data-theme='dark'] .text-brand-600 { color: rgb(125 211 252); }
+[data-theme='dark'] .text-brand-700 { color: rgb(56 189 248); }
+[data-theme='dark'] .text-brand-800 { color: rgb(186 230 253); }
+[data-theme='dark'] .text-sky-600 { color: rgb(125 211 252); }
+[data-theme='dark'] .text-sky-700 { color: rgb(186 230 253); }
+[data-theme='dark'] .text-sky-800 { color: rgb(224 242 254); }
+[data-theme='dark'] .text-sky-900 { color: rgb(240 249 255); }
+[data-theme='dark'] .text-emerald-600 { color: rgb(52 211 153); }
+[data-theme='dark'] .text-emerald-700 { color: rgb(110 231 183); }
+[data-theme='dark'] .text-emerald-800 { color: rgb(167 243 208); }
+[data-theme='dark'] .text-emerald-900 { color: rgb(209 250 229); }
+[data-theme='dark'] .text-amber-600 { color: rgb(251 191 36); }
+[data-theme='dark'] .text-amber-700 { color: rgb(252 211 77); }
+[data-theme='dark'] .text-amber-800 { color: rgb(253 230 138); }
+[data-theme='dark'] .text-amber-900 { color: rgb(254 243 199); }
+[data-theme='dark'] .text-rose-600 { color: rgb(251 113 133); }
+[data-theme='dark'] .text-rose-700 { color: rgb(253 164 175); }
+[data-theme='dark'] .text-rose-800 { color: rgb(254 205 211); }
+[data-theme='dark'] .text-blue-600 { color: rgb(147 197 253); }
+[data-theme='dark'] .text-blue-700 { color: rgb(191 219 254); }
+[data-theme='dark'] .text-green-600 { color: rgb(134 239 172); }
+[data-theme='dark'] .text-green-700 { color: rgb(187 247 208); }
+[data-theme='dark'] .text-violet-600 { color: rgb(196 181 253); }
+[data-theme='dark'] .text-red-600 { color: rgb(248 113 113); }
 
 /* ============================================================
    POS layout — products column on the right (boxed), «الأصناف المختارة»
@@ -179,7 +334,8 @@ body {
   }
 }
 
-/* Print */
+/* Print — the theme provider also flips data-theme to 'light' on
+   beforeprint (lib/theme.tsx) so tokens resolve to their light values. */
 @media print {
   .no-print, aside, header, nav {
     display: none !important;

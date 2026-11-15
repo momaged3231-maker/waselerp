@@ -11,7 +11,9 @@ import {
   IconCalendar, IconWallet, IconBookOpen, IconChartBar, IconBriefcase,
   IconDeviceMobile, IconBell, IconFolder, IconSettings, IconLogout,
   IconMenu, IconCloudUp, IconWifiOff, IconBuilding, IconChevronDown, IconClock,
+  IconSun, IconMoon,
 } from '@/components/icons';
+import { useTheme } from '@/lib/theme';
 
 type NavItem = {
   href: string;
@@ -105,6 +107,7 @@ export default function AppShell({ children, title }: { children: React.ReactNod
   const queue = useOfflineQueue();
   const router = useRouter();
   const pathname = usePathname();
+  const { theme, toggle: toggleTheme } = useTheme();
   const [open, setOpen] = useState(false);
   // Desktop: hide/show the sidebar (persisted per device) — POS gets the full screen
   const [collapsed, setCollapsed] = useState<boolean>(() =>
@@ -316,6 +319,15 @@ export default function AppShell({ children, title }: { children: React.ReactNod
               {queue.pendingCount} بانتظار الإرسال
             </button>
           )}
+
+          <button
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'الوضع الفاتح' : 'الوضع الداكن'}
+            aria-label={theme === 'dark' ? 'التبديل إلى الوضع الفاتح' : 'التبديل إلى الوضع الداكن'}
+            className="w-10 h-10 inline-flex items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+          >
+            {theme === 'dark' ? <IconSun className="w-5 h-5" /> : <IconMoon className="w-5 h-5" />}
+          </button>
 
           {session.branches.length > 1 && (
             <label className="relative inline-flex items-center">
