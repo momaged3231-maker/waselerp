@@ -1,4 +1,12 @@
-export const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:4000/api';
+// API base: prefer the build-time env override; otherwise resolve against the
+// device that loaded the page, so LAN browsers (tablet on the shop floor,
+// another PC) can reach the API on the server host instead of their own
+// localhost.
+export const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE ??
+  (typeof window !== 'undefined'
+    ? `http://${window.location.hostname}:4000/api`
+    : 'http://localhost:4000/api');
 
 export type BranchInfo = { branchId: number; code: string; name: string };
 export type UserInfo = {

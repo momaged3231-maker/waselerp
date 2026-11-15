@@ -1,5 +1,5 @@
 /* WaselERP service worker: offline shell + queued write operations. */
-const CACHE = 'wasel-shell-v1';
+const CACHE = 'wasel-shell-v2';
 const SHELL = ['/', '/login/', '/manifest.json'];
 
 self.addEventListener('install', (event) => {

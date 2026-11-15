@@ -30,6 +30,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'نظرة عامة',
     items: [
       { href: '/', label: 'الرئيسية', icon: IconHome, permission: 'dashboard.view' },
+      { href: '/definitions', label: 'البيانات الأساسية', icon: IconFolder, permissions: ['items.view', 'parties.view'] },
       { href: '/reminders', label: 'التذكيرات', icon: IconBell, permission: 'dashboard.view' },
     ],
   },
@@ -76,7 +77,6 @@ const NAV_GROUPS: NavGroup[] = [
       { href: '/hr', label: 'شئون العاملين', icon: IconBriefcase, permission: 'hr.view' },
       { href: '/crm', label: 'إدارة العملاء CRM', icon: IconUsers, permission: 'crm.view' },
       { href: '/tools', label: 'الأدوات', icon: IconWrench, permission: 'items.view' },
-      { href: '/definitions', label: 'البيانات الأساسية', icon: IconFolder, permissions: ['items.view', 'parties.view'] },
       { href: '/settings', label: 'الإعدادات', icon: IconSettings, permission: 'users.manage' },
     ],
   },

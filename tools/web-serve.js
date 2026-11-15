@@ -31,7 +31,12 @@ http.createServer((request, response) => {
   }
 
   const ext = path.extname(filePath);
-  response.writeHead(200, { 'Content-Type': MIME[ext] ?? 'application/octet-stream' });
+  // Local server: always revalidate so browsers never mix an old cached
+  // bundle with the current `out/` directory (stale chunk refs = blank page).
+  response.writeHead(200, {
+    'Content-Type': MIME[ext] ?? 'application/octet-stream',
+    'Cache-Control': 'no-cache, must-revalidate',
+  });
   fs.createReadStream(filePath).pipe(response);
 }).listen(PORT, () => {
   console.log(`[web] serving ${ROOT} on http://localhost:${PORT}`);
