@@ -784,7 +784,7 @@ export default function PosPage() {
 
       <div className="pos-grid gap-4">
         {/* ---------------- Products ---------------- */}
-        <div className="card p-3 md:order-1 flex flex-col min-h-0 max-h-[60dvh] md:max-h-none md:h-full">
+        <div className="card p-3 md:order-1 flex flex-col gap-2">
           <div className="flex items-center justify-between px-1 mb-2">
             <h2 className="font-extrabold text-slate-700">منيو المخزون</h2>
             <div className="flex items-center gap-2">
@@ -899,9 +899,9 @@ export default function PosPage() {
         </div>
 
         {/* ---------------- Cart — «الأصناف المختارة» (center rectangle) + «الإجمالي والدفع» (bottom-left) ---------------- */}
-        <div id="pos-cart" className="flex flex-col min-h-0 max-h-[70dvh] md:max-h-none md:h-full md:order-2 md:overflow-y-auto gap-3 scroll-mt-20">
+        <div id="pos-cart" className="flex flex-col md:order-2 gap-3 scroll-mt-20">
           {/* الأصناف المختارة — centered rectangle */}
-          <div className="card p-3 flex flex-col min-h-[200px] flex-1">
+          <div className="card p-3 flex flex-col">
             <div className="flex items-center justify-between mb-2 px-1">
               <h2 className="font-extrabold text-slate-700 flex items-center gap-2">
                 <IconCart className="w-5 h-5 text-brand-600" />
@@ -917,7 +917,7 @@ export default function PosPage() {
               </div>
             </div>
 
-          <div className="flex-1 min-h-[140px] md:max-h-none overflow-y-auto space-y-2 pr-1">
+          <div className="min-h-[140px] space-y-2 pr-1">
             {cart.map((line) => (
               <div key={line.itemId} className={`rounded-2xl border p-2.5 ${line.isGift ? 'border-emerald-300 bg-emerald-50/60' : 'border-slate-200 bg-slate-50/70'}`}>
                 <div className="flex items-start justify-between gap-2">

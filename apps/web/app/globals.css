@@ -138,8 +138,9 @@ body {
 }
 
 /* ============================================================
-   POS layout (D17) — cart on the right (expanded), products fill
-   the rest on wide screens; stacks cleanly on phones/tablets.
+   POS layout — products column on the right (boxed), «الأصناف المختارة»
+   in the middle, totals/payments bottom-left; natural heights, the page
+   scrolls when the invoice grows (no inner scrollbars).
    ============================================================ */
 .pos-grid {
   display: grid;
@@ -149,8 +150,7 @@ body {
 }
 @media (min-width: 768px) {
   .pos-grid {
-    grid-template-columns: minmax(300px, 340px) minmax(0, 1fr); /* RTL: first track = right → cart */
-    height: calc(100dvh - 8.5rem);
+    grid-template-columns: minmax(300px, 340px) minmax(0, 1fr); /* RTL: first track = right → products */
   }
 }
 @media (min-width: 1280px) {
