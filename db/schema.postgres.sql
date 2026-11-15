@@ -333,7 +333,7 @@ CREATE TABLE IF NOT EXISTS invoices (
     client_request_id varchar(64),
     created_at      timestamptz NOT NULL DEFAULT now(),
     version         integer NOT NULL DEFAULT 1,
-    UNIQUE (invoice_no, invoice_type)
+    UNIQUE (invoice_no, invoice_type, branch_id)
 );
 CREATE INDEX IF NOT EXISTS ix_invoices_branch_date_type ON invoices(branch_id, invoice_date, invoice_type);
 CREATE INDEX IF NOT EXISTS ix_invoices_party ON invoices(party_id);
