@@ -89,7 +89,7 @@ Write-Host "[wasel] wrote $envFile"
 # 4. default printer
 if ($DefaultPrinter) {
   $cfgPath = Join-Path $agentDir 'agent-config.json'
-  $cfg = @{ defaultPrinter = $DefaultPrinter; networkPrinters = @(); autoOpenDrawer = $false; paperWidth = 42; encoding = 'win1256'; codePage = 13 }
+  $cfg = @{ defaultPrinter = $DefaultPrinter; networkPrinters = @(); autoOpenDrawer = $false; paperWidth = 42; encoding = 'win1256'; codePage = $null }
   if (Test-Path $cfgPath) {
     try { $cfg = Get-Content $cfgPath -Raw | ConvertFrom-Json } catch { }
     $cfg.defaultPrinter = $DefaultPrinter

@@ -31,7 +31,7 @@ const loadConfig = () => {
   try {
     return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
   } catch {
-    return { defaultPrinter: '', networkPrinters: [], autoOpenDrawer: false, paperWidth: 42, encoding: 'win1256', codePage: 13 };
+    return { defaultPrinter: '', networkPrinters: [], autoOpenDrawer: false, paperWidth: 42, encoding: 'win1256', codePage: null };
   }
 };
 
@@ -85,7 +85,7 @@ function line(text, { align = 'left', width = 42, bold = false, double = false }
 function buildReceiptBytes(receipt, width = 42) {
   const chunks = [cmd.init()];
   const cfg0 = loadConfig();
-  const cp = (cfg0 && cfg0.codePage === undefined) ? 13 : (cfg0 && cfg0.codePage);
+  const cp = cfg0 && cfg0.codePage;
   if (cp != null && cp !== '') {
     chunks.push(cmd.codePage(cp));
   }
@@ -145,7 +145,7 @@ function buildReceiptBytes(receipt, width = 42) {
 function buildKitchenTicketBytes(order, width = 42) {
   const chunks = [cmd.init()];
   const cfg0 = loadConfig();
-  const cp = (cfg0 && cfg0.codePage === undefined) ? 13 : (cfg0 && cfg0.codePage);
+  const cp = cfg0 && cfg0.codePage;
   if (cp != null && cp !== '') {
     chunks.push(cmd.codePage(cp));
   }
@@ -191,11 +191,26 @@ function buildKitchenTicketBytes(order, width = 42) {
   return Buffer.concat(chunks);
 }
 
-/** Small test page — used by the «اختبار طباعة» button in settings. */
+/** Arabic diagnostic page: prints the Arabic sample under many code pages
+ *  so the user can spot which ESC t value renders Arabic on THIS printer. */
+function buildCodepagesBytes(width = 42) {
+  const candidates = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,63,64];
+  const chunks = [cmd.init(), cmd.spacing(22)];
+  chunks.push(line('Diag: Arabic code page', { align: 'center', width, bold: true }));
+  chunks.push(line('win1256 bytes under each ESC t N', { align: 'center', width }));
+  chunks.push(line('-'.repeat(width), { width }));
+  for (const n of candidates) {
+    chunks.push(cmd.codePage(n));
+    chunks.push(encodeText(`cp${String(n).padStart(2, ' ')}: اختبار ١٢٣`));
+    chunks.push(Buffer.from('\r\n'));
+  }
+  chunks.push(cmd.feed(3), cmd.cut());
+  return Buffer.concat(chunks);
+}
 function buildTestBytes(width = 42) {
   const chunks = [cmd.init()];
   const cfg0 = loadConfig();
-  const cp = (cfg0 && cfg0.codePage === undefined) ? 13 : (cfg0 && cfg0.codePage);
+  const cp = cfg0 && cfg0.codePage;
   if (cp != null && cp !== '') {
     chunks.push(cmd.codePage(cp));
   }
@@ -363,6 +378,22 @@ const server = http.createServer(async (request, response) => {
         await sendToNetworkPrinter(target.host, target.port, bytes);
       } else if (target.type === 'file') {
         await writeToFile(target.path ?? 'test-print.bin', bytes);
+      } else {
+        await sendToWindowsPrinter(target.name, bytes);
+      }
+      return send(200, { ok: true, bytes: bytes.length });
+    }
+
+    if (url.pathname === '/test-codepages' && request.method === 'POST') {
+      const body = await readBody(request);
+      const config = loadConfig();
+      const target = body.printer ?? (config.defaultPrinter ? { type: 'windows', name: config.defaultPrinter } : null);
+      if (!target) return send(400, { ok: false, error: 'no printer configured' });
+      const bytes = buildCodepagesBytes(Number(body.width ?? config.paperWidth ?? 42));
+      if (target.type === 'network') {
+        await sendToNetworkPrinter(target.host, target.port, bytes);
+      } else if (target.type === 'file') {
+        await writeToFile(target.path ?? 'codepages.bin', bytes);
       } else {
         await sendToWindowsPrinter(target.name, bytes);
       }
