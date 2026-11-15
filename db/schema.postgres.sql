@@ -1119,6 +1119,8 @@ CREATE TABLE IF NOT EXISTS restaurant_settings (
     service_charge_minimum numeric(18,2) NOT NULL DEFAULT 0,
     -- 1 amount per guest, 2 minimum per guest (the shortfall is charged)
     service_charge_mode smallint NOT NULL DEFAULT 1,
+    -- 3 = percentage of the bill (service_charge_pct); 0 disables percentage mode
+    service_charge_pct numeric(18,4) NOT NULL DEFAULT 0,
     -- the GL account the service charge is credited to
     service_charge_account_id integer REFERENCES gl_accounts(account_id),
     -- categories shown as separate columns on the kitchen screen
@@ -1128,6 +1130,7 @@ CREATE TABLE IF NOT EXISTS restaurant_settings (
     UNIQUE (branch_id)
 );
 ALTER TABLE restaurant_settings ADD COLUMN IF NOT EXISTS service_charge_mode smallint NOT NULL DEFAULT 1;
+ALTER TABLE restaurant_settings ADD COLUMN IF NOT EXISTS service_charge_pct numeric(18,4) NOT NULL DEFAULT 0;
 
 -- Restaurant halls (القاعات). Each hall owns a set of numbered tables.
 CREATE TABLE IF NOT EXISTS restaurant_halls (
