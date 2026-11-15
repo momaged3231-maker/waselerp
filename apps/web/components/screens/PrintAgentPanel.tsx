@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { agentHealth, getAgentConfig, listPrinters, openDrawer, saveAgentConfig, testPrint } from '@/lib/print';
+import { apiFetch } from '@/lib/api';
 
 /** Print agent panel — printer defaults on THIS device (per-station, mirrors «اعدادات الطابعه» in Ezees). */
 export default function PrintAgentPanel() {
@@ -17,6 +18,8 @@ export default function PrintAgentPanel() {
   const [netPort, setNetPort] = useState('9100');
   const [testingKey, setTestingKey] = useState<string | null>(null);
   const [testMsg, setTestMsg] = useState('');
+  const [cloudAgents, setCloudAgents] = useState<any[]>([]);
+  const [cloudMsg, setCloudMsg] = useState('');
 
   async function refresh() {
     setError('');
@@ -30,6 +33,13 @@ export default function PrintAgentPanel() {
       ]);
       setConfig(cfg ?? { defaultPrinter: '', autoOpenDrawer: true, paperWidth: 42, networkPrinters: [] });
       setPrinters(printers);
+    }
+    // cloud agents (cross-location)
+    try {
+      const agents = await apiFetch('/print-agents');
+      setCloudAgents(Array.isArray(agents) ? agents : []);
+    } catch {
+      setCloudAgents([]);
     }
   }
 
@@ -75,6 +85,28 @@ export default function PrintAgentPanel() {
       setTestMsg(`✓ طباعة اختبار ناجحة — ${printer?.name ?? printer?.host ?? ''}`);
     } catch (err: any) {
       setTestMsg(`✗ ${err?.message ?? 'فشل الاختبار'}`);
+    } finally {
+      setTestingKey(null);
+    }
+  }
+
+  async function runCloudTest(agentId: number, printerName: string, key: string) {
+    setTestingKey(key);
+    setCloudMsg('');
+    try {
+      const job = await apiFetch('/print-agents/jobs', { method: 'POST', body: { agentId, printerName, printerType: 'windows', payload: { kind: 'test' }, copies: 1, width: config?.paperWidth ?? 42 } });
+      // poll for completion (up to 8s)
+      let status = 'pending';
+      for (let i = 0; i < 8 && status === 'pending'; i += 1) {
+        await new Promise((r) => setTimeout(r, 1000));
+        const j = await apiFetch(`/print-agents/jobs/${job.jobId}`);
+        status = j.status;
+        if (j.error) throw new Error(j.error);
+      }
+      if (status !== 'done') throw new Error('انتهت المهلة (timeout)');
+      setCloudMsg(`✓ طباعة اختبار (cloud) ناجحة — ${printerName} (وكيل #${agentId})`);
+    } catch (err: any) {
+      setCloudMsg(`✗ ${err?.message ?? 'فشل الاختبار (cloud)'}`);
     } finally {
       setTestingKey(null);
     }
@@ -196,6 +228,46 @@ export default function PrintAgentPanel() {
           ))}
         </div>
       </div>
+
+      <div className="mt-4">
+        <label className="label">وكلاء الطباعة (cross-location / cloud)</label>
+        <div className="text-[11px] text-slate-500 mb-2">وكلاء مُسجّلون في السيرفر (من أجهزة كاشير أخرى). اطبع على طابعة في موقع آخر عبر السحابة (queue).</div>
+        <div className="space-y-2">
+          {cloudAgents.length === 0 && (
+            <div className="text-xs text-slate-400">لا يوجد وكلاء مُسجّلون (أو غير متصل بالسيرفر)</div>
+          )}
+          {cloudAgents.map((a: any) => (
+            <div key={a.agentId} className="rounded-xl border border-slate-200 px-3 py-2 text-sm">
+              <div className="flex items-center justify-between gap-2">
+                <span>
+                  <b>{a.machineName}</b>
+                  <span className={`ml-2 badge ${a.isOnline ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                    {a.isOnline ? 'متصل' : 'غير متصل'}
+                  </span>
+                  <span className="text-slate-400 text-xs ml-2">({(a.printers ?? []).length} طابعة)</span>
+                </span>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {(a.printers ?? []).map((p: any, idx: number) => (
+                  <button
+                    key={`${a.agentId}-${p.name}-${idx}`}
+                    type="button"
+                    className="btn-soft text-xs"
+                    disabled={testingKey === `cloud-${a.agentId}-${idx}`}
+                    onClick={() => runCloudTest(a.agentId, p.name, `cloud-${a.agentId}-${idx}`)}
+                  >
+                    {testingKey === `cloud-${a.agentId}-${idx}` ? 'جارٍ…' : `اختبار: ${p.name}`}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {cloudMsg && (
+        <div className={`mt-3 text-xs font-bold ${cloudMsg.startsWith('✓') ? 'text-emerald-600' : 'text-rose-600'}`}>{cloudMsg}</div>
+      )}
 
       <div className="mt-4">
         <label className="label">طابعات الشبكة (TCP 9100)</label>

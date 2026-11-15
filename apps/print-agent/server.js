@@ -401,6 +401,64 @@ const server = http.createServer(async (request, response) => {
   }
 });
 
+// ------------------------------------------------------------------ //
+// Cloud (cross-location) integration
+// ------------------------------------------------------------------ //
+const cloud = require('./agent-cloud');
+
+async function executeCloudJob(job) {
+  const cfg = loadConfig();
+  const width = Number(job.width ?? cfg.paperWidth ?? 42);
+  const copies = Math.min(5, Math.max(1, Number(job.copies) || 1));
+  const payload = job.payload ?? {};
+  let bytes;
+  if (payload.kind === 'kitchen') {
+    bytes = buildKitchenTicketBytes(payload.order ?? payload, width);
+  } else if (payload.kind === 'test') {
+    bytes = buildTestBytes(width);
+  } else {
+    bytes = buildReceiptBytes(payload.receipt ?? payload, width);
+  }
+
+  const printerName = job.printerName || job.printer_name;
+  const printerType = job.printerType || job.printer_type;
+  const target = printerType === 'network'
+    ? { type: 'network', host: null, port: 9100, name: printerName }
+    : { type: 'windows', name: printerName };
+
+  // network printer host/port may be stored in config; resolve from networkPrinters if needed
+  let resolvedTarget = target;
+  if (target.type === 'network' && !target.host) {
+    const np = (cfg.networkPrinters ?? []).find((p) => p.name === printerName);
+    if (np) resolvedTarget = { type: 'network', host: np.host, port: np.port, name: np.name };
+  }
+
+  for (let i = 0; i < copies; i += 1) {
+    if (resolvedTarget.type === 'network') {
+      await sendToNetworkPrinter(resolvedTarget.host, resolvedTarget.port, bytes);
+    } else if (resolvedTarget.type === 'file') {
+      await writeToFile(resolvedTarget.path ?? 'receipt.bin', bytes);
+    } else {
+      await sendToWindowsPrinter(resolvedTarget.name, bytes);
+    }
+  }
+  // drawer pulse for receipts (best-effort, once)
+  if (payload.kind !== 'kitchen' && cfg.autoOpenDrawer && resolvedTarget.type !== 'file') {
+    try {
+      if (resolvedTarget.type === 'network') await sendToNetworkPrinter(resolvedTarget.host, resolvedTarget.port, cmd.drawer());
+      else await sendToWindowsPrinter(resolvedTarget.name, cmd.drawer());
+    } catch {}
+  }
+  return bytes.length;
+}
+
+const listPrintersForCloud = async () => {
+  const wins = await listWindowsPrinters();
+  return wins.map((p) => ({ type: 'windows', name: p.Name, driver: p.DriverName, port: p.PortName }));
+};
+
+cloud.init({ listPrinters: listPrintersForCloud, executeJob: executeCloudJob });
+
 server.listen(PORT, HOST, () => {
   console.log(`[print-agent] listening on http://${HOST}:${PORT}`);
   console.log(`[print-agent] token: ${TOKEN === 'wasel-local-agent' ? 'DEFAULT (change it!)' : 'custom'}`);

@@ -2,12 +2,27 @@
   "name": "@wasel/print-agent",
   "version": "1.0.0",
   "private": true,
-  "description": "Local print agent for WaselERP (ESC/POS thermal printers + cash drawer)",
+  "description": "Local print agent for WaselERP (ESC/POS thermal printers + cash drawer) - cloud (cross-location) enabled",
   "main": "server.js",
+  "bin": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build:exe": "pkg . --targets node24-win-x64 --output dist/wasel-print-agent.exe"
+  },
+  "pkg": {
+    "assets": [
+      "printer.ps1",
+      "agent-cloud.js"
+    ],
+    "targets": [
+      "node24-win-x64"
+    ],
+    "outputPath": "dist"
   },
   "dependencies": {
     "iconv-lite": "^0.6.3"
+  },
+  "devDependencies": {
+    "@yao-pkg/pkg": "^6.25.0"
   }
 }
