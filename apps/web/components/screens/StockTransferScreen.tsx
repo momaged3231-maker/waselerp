@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import AppShell from '@/components/AppShell';
 import { apiFetch, formatDate, formatMoney } from '@/lib/api';
 import { useSession } from '@/lib/session';
 
@@ -9,7 +8,7 @@ const STATUS: Record<number, string> = {
   1: 'مسودة', 2: 'أذن صادر تم إنشاؤه', 3: 'أذن وارد تم إنشاؤه', 4: 'مكتمل', 5: 'ملغي',
 };
 
-export default function StockTransferPage() {
+export default function StockTransferScreen() {
   const { can } = useSession();
   const [rows, setRows] = useState<any[]>([]);
   const [warehouses, setWarehouses] = useState<any[]>([]);
@@ -150,7 +149,7 @@ export default function StockTransferPage() {
   const canReceive = selected && Number(selected.header.status) === 2;
 
   return (
-    <AppShell title="تحويل غير مباشر بين المخازن">
+    <>
       {error && <div className="card p-3 mb-3 border-rose-200 bg-rose-50 text-rose-700 text-sm">{error}</div>}
       {message && <div className="card p-3 mb-3 border-emerald-200 bg-emerald-50 text-emerald-700 text-sm">{message}</div>}
 
@@ -373,6 +372,6 @@ export default function StockTransferPage() {
           </div>
         </div>
       </div>
-    </AppShell>
+    </>
   );
 }

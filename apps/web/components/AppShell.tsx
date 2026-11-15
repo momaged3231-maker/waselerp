@@ -7,9 +7,9 @@ import { useSession } from '@/lib/session';
 import { useOfflineQueue } from '@/lib/offline';
 import {
   IconHome, IconCart, IconUtensils, IconWrench, IconReceipt, IconFileText,
-  IconWarehouse, IconArrowsSwitch, IconUsers,
+  IconWarehouse, IconUsers,
   IconCalendar, IconWallet, IconBookOpen, IconChartBar, IconBriefcase,
-  IconBarcode, IconDeviceMobile, IconBell, IconFolder, IconSettings, IconLogout,
+  IconDeviceMobile, IconBell, IconFolder, IconSettings, IconLogout,
   IconMenu, IconCloudUp, IconWifiOff, IconBuilding, IconChevronDown,
 } from '@/components/icons';
 
@@ -53,11 +53,9 @@ const NAV_GROUPS: NavGroup[] = [
   },
   {
     key: 'inventory',
-    label: 'المخزون',
+    label: 'المخازن',
     items: [
-      { href: '/inventory', label: 'حركة المخزون', icon: IconWarehouse, permission: 'stock.view' },
-      { href: '/stock-transfer', label: 'تحويل غير مباشر', icon: IconArrowsSwitch, permission: 'stock.view' },
-      { href: '/labels', label: 'ملصقات الأصناف', icon: IconBarcode, permission: 'stock.view' },
+      { href: '/warehouses', label: 'المخازن', icon: IconWarehouse, permission: 'stock.view' },
       { href: '/mobile-stocktake', label: 'جرد موبايل', icon: IconDeviceMobile, permission: 'stock.manage' },
     ],
   },

@@ -1,10 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import AppShell from '@/components/AppShell';
 import { apiFetch, formatDate, formatMoney } from '@/lib/api';
 
-export default function InventoryPage() {
+export default function InventoryScreen() {
   const [tab, setTab] = useState<'balances' | 'alerts' | 'movements' | 'operations'>('balances');
   const [balances, setBalances] = useState<any[]>([]);
   const [alerts, setAlerts] = useState<any[]>([]);
@@ -34,7 +33,7 @@ export default function InventoryPage() {
   const totalValue = balances.reduce((sum, row) => sum + Number(row.stockValue ?? 0), 0);
 
   return (
-    <AppShell title="المخزون">
+    <>
       <div className="flex flex-wrap gap-2 mb-4">
         {([['balances', 'الأرصدة'], ['alerts', 'تنبيهات حد الطلب'], ['movements', 'الحركات'], ['operations', 'التحويلات والجرد']] as const).map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)} className={tab === key ? 'btn-primary' : 'btn-soft'}>{label}</button>
@@ -161,7 +160,7 @@ export default function InventoryPage() {
           </div>
         </div>
       )}
-    </AppShell>
+    </>
   );
 }
 

@@ -5,8 +5,6 @@ import AppShell from '@/components/AppShell';
 import PricingScreen from '@/components/screens/PricingScreen';
 import PriceBulkEditScreen from '@/components/screens/PriceBulkEditScreen';
 import ItemImportScreen from '@/components/screens/ItemImportScreen';
-import StockCountScreen from '@/components/screens/StockCountScreen';
-import StockVoucherScreen from '@/components/screens/StockVoucherScreen';
 import PartiesImportScreen from '@/components/screens/PartiesImportScreen';
 import OpeningBalancesScreen from '@/components/screens/OpeningBalancesScreen';
 import AuditScreen from '@/components/screens/AuditScreen';
@@ -16,8 +14,6 @@ type ToolKey =
   | 'pricing'
   | 'price-bulk'
   | 'items-import'
-  | 'stock-count'
-  | 'stock-voucher'
   | 'parties-import'
   | 'opening-balances'
   | 'audit'
@@ -27,8 +23,6 @@ const TOOLS: { key: ToolKey; label: string }[] = [
   { key: 'pricing', label: 'إدارة قوائم الأسعار' },
   { key: 'price-bulk', label: 'إدارة أسعار الأصناف' },
   { key: 'items-import', label: 'استيراد أصناف' },
-  { key: 'stock-count', label: 'إدارة جرد المخازن' },
-  { key: 'stock-voucher', label: 'إدارة اذونات مخزن' },
   { key: 'parties-import', label: 'استيراد عملاء وموردين' },
   { key: 'opening-balances', label: 'تعيين أرصدة البداية' },
   { key: 'audit', label: 'سجل عمليات المستخدمين' },
@@ -46,10 +40,6 @@ export default function ToolsPage() {
         return <PriceBulkEditScreen />;
       case 'items-import':
         return <ItemImportScreen />;
-      case 'stock-count':
-        return <StockCountScreen />;
-      case 'stock-voucher':
-        return <StockVoucherScreen />;
       case 'parties-import':
         return <PartiesImportScreen />;
       case 'opening-balances':

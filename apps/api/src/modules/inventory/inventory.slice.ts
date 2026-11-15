@@ -100,6 +100,29 @@ export class InventoryService {
     );
   }
 
+  /** Search the serial-number ledger for a part (purchases, transfers, sales, returns). */
+  async searchSerial(params: { query: string; branchId: number }) {
+    const query = params.query.trim();
+    if (query.length < 2) throw new BadRequestException('اكتب رقمين على الأقل للبحث');
+    const like = `%${query}%`;
+    return this.db.query(
+      `SELECT m.stock_movement_id AS "movementId", m.serial_no AS "serialNo",
+              i.item_id AS "itemId", i.code AS "itemCode", i.name AS "itemName",
+              m.move_date AS "moveDate", m.move_type AS "moveType", m.quantity,
+              m.reference_type AS "referenceType", m.reference_no AS "referenceNo",
+              w.name AS "warehouseName", b.name AS "branchName"
+         FROM stock_movements m
+         JOIN items i ON i.item_id = m.item_id
+         LEFT JOIN warehouses w ON w.warehouse_id = m.warehouse_id
+         LEFT JOIN branches b ON b.branch_id = m.branch_id
+        WHERE m.serial_no ILIKE $1::text
+          AND ($2::int = 0 OR m.branch_id = $2::int)
+        ORDER BY m.move_date DESC, m.stock_movement_id DESC
+        LIMIT 200`,
+      [like, params.branchId],
+    );
+  }
+
   async movements(params: { itemId?: number; warehouseId?: number; branchId?: number; from?: string; to?: string; limit: number }) {
     return this.db.query(
       `SELECT m.stock_movement_id AS "movementId", m.move_date AS "moveDate", m.move_type AS "moveType",
@@ -240,6 +263,12 @@ export class InventoryController {
       search,
       lowStockOnly: lowStock === 'true',
     });
+  }
+
+  @RequirePermissions('stock.view')
+  @Get('serial-search')
+  serialSearch(@Query('query') query: string, @CurrentBranch() branchId: number) {
+    return this.service.searchSerial({ query: String(query ?? '').trim(), branchId });
   }
 
   @RequirePermissions('stock.view')

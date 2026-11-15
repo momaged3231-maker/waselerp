@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import AppShell from '@/components/AppShell';
 import { apiFetch } from '@/lib/api';
 import { useSession } from '@/lib/session';
 
@@ -26,7 +25,7 @@ function Barcode({ code }: { code: string }) {
   );
 }
 
-export default function LabelsPage() {
+export default function LabelsScreen() {
   const { can } = useSession();
   const [items, setItems] = useState<Item[]>([]);
   const [search, setSearch] = useState('');
@@ -66,7 +65,7 @@ export default function LabelsPage() {
   }
 
   return (
-    <AppShell>
+    <>
       <div className="p-4 space-y-4">
         <h1 className="text-xl font-bold">طباعة ملصقات الأصناف</h1>
         {error && <div className="text-red-600 text-sm">{error}</div>}
@@ -129,6 +128,6 @@ export default function LabelsPage() {
         </div>
         {items.length === 0 && <div className="text-gray-500 text-sm">لا توجد أصناف</div>}
       </div>
-    </AppShell>
+    </>
   );
 }

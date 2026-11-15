@@ -24,6 +24,7 @@ export interface ItemDto {
   reorderPoint?: number;
   isService?: boolean;
   hasSerial?: boolean;
+  isGrouped?: boolean;
   isActive?: boolean;
   notes?: string;
 }
@@ -115,7 +116,7 @@ export class ItemsService {
               i.cost_price AS "costPrice", i.sell_price AS "sellPrice",
               i.vat_pct AS "vatPct", i.discount_pct AS "discountPct", i.reorder_point AS "reorderPoint",
               i.is_service AS "isService", i.has_serial AS "hasSerial", i.is_active AS "isActive",
-              i.notes,
+              i.is_grouped AS "isGrouped", i.notes,
               COALESCE((SELECT SUM(q.on_hand_qty) FROM item_warehouse_qty q
                          WHERE q.item_id = i.item_id AND q.unit_id = i.base_unit_id), 0) AS "onHandQty"
          FROM items i
@@ -170,13 +171,13 @@ export class ItemsService {
       }
       const row = await client.query(
         `INSERT INTO items (code, barcode, name, name_en, category_id, base_unit_id, cost_price, sell_price,
-                            vat_pct, discount_pct, reorder_point, is_service, has_serial, is_active, notes)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+                            vat_pct, discount_pct, reorder_point, is_service, has_serial, is_grouped, is_active, notes)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
          RETURNING item_id`,
         [
           code, dto.barcode ?? null, dto.name, dto.nameEn ?? null, dto.categoryId ?? null,
           dto.baseUnitId, dto.costPrice, dto.sellPrice, dto.vatPct ?? 0, dto.discountPct ?? 0,
-          dto.reorderPoint ?? 0, dto.isService ?? false, dto.hasSerial ?? false, dto.isActive ?? true, dto.notes ?? null,
+          dto.reorderPoint ?? 0, dto.isService ?? false, dto.hasSerial ?? false, dto.isGrouped ?? false, dto.isActive ?? true, dto.notes ?? null,
         ],
       );
       return { itemId: Number(row.rows[0].item_id), code };
@@ -186,16 +187,27 @@ export class ItemsService {
   }
 
   async update(id: number, dto: ItemDto) {
+    if (dto.isGrouped === false) {
+      const current = await this.db.one<{ is_grouped: boolean }>(
+        'SELECT is_grouped FROM items WHERE item_id = $1::int',
+        [id],
+      );
+      if (current?.is_grouped) {
+        throw new BadRequestException('لا يمكن إلغاء خيار «صنف مجمع» بعد حفظه — كدليل البرنامج المرجعي');
+      }
+    }
     await this.db.query(
       `UPDATE items SET code=$2, barcode=$3, name=$4, name_en=$5, category_id=$6, base_unit_id=$7,
               cost_price=$8, sell_price=$9, vat_pct=$10, discount_pct=$11, reorder_point=$12,
-              is_service=$13, has_serial=$14, is_active=$15, notes=$16, version = version + 1
+              is_service=$13, has_serial=$14, is_grouped=COALESCE($15, is_grouped), is_active=$16, notes=$17, version = version + 1
         WHERE item_id=$1`,
-      [
-        id, dto.code, dto.barcode ?? null, dto.name, dto.nameEn ?? null, dto.categoryId ?? null,
-        dto.baseUnitId, dto.costPrice, dto.sellPrice, dto.vatPct ?? 0, dto.discountPct ?? 0,
-        dto.reorderPoint ?? 0, dto.isService ?? false, dto.hasSerial ?? false, dto.isActive ?? true, dto.notes ?? null,
-      ],
+        [
+          id, dto.code, dto.barcode ?? null, dto.name, dto.nameEn ?? null, dto.categoryId ?? null,
+          dto.baseUnitId, dto.costPrice, dto.sellPrice, dto.vatPct ?? 0, dto.discountPct ?? 0,
+          dto.reorderPoint ?? 0, dto.isService ?? false, dto.hasSerial ?? false,
+          dto.isGrouped === undefined || dto.isGrouped === null ? null : Boolean(dto.isGrouped),
+          dto.isActive ?? true, dto.notes ?? null,
+        ],
     );
     this.live.publish({ type: 'item.updated', itemIds: [id] });
     return { itemId: id };
@@ -218,6 +230,104 @@ export class ItemsService {
       }
     });
     return { itemId, unitCount: units.length };
+  }
+
+  // ---- assembled items (BOM — «كارت التصنيع») ----
+  async listGrouped() {
+    return this.db.query(
+      `SELECT i.item_id AS "itemId", i.code, i.name, i.cost_price AS "costPrice", i.sell_price AS "sellPrice",
+              i.is_active AS "isActive",
+              (SELECT count(*)::int FROM item_components ic WHERE ic.parent_item_id = i.item_id) AS "componentsCount",
+              (SELECT COALESCE(SUM(ic.quantity * child.cost_price), 0)
+                 FROM item_components ic JOIN items child ON child.item_id = ic.child_item_id
+                WHERE ic.parent_item_id = i.item_id)::numeric AS "componentsCost"
+         FROM items i WHERE i.is_grouped = true AND i.is_active = true ORDER BY i.name`,
+    );
+  }
+
+  async getComponents(id: number) {
+    return this.db.query(
+      `SELECT ic.child_item_id AS "childItemId", i.code, i.name, u.name AS "unitName",
+              ic.quantity, ic.unit_id AS "unitId", i.cost_price AS "childCostPrice"
+         FROM item_components ic
+         JOIN items i ON i.item_id = ic.child_item_id
+         LEFT JOIN units u ON u.unit_id = ic.unit_id
+        WHERE ic.parent_item_id = $1::int ORDER BY i.name`,
+      [id],
+    );
+  }
+
+  /** Replaces the component BOM of an assembled item and recalculates its cost from the children. */
+  async setComponents(id: number, dto: any, user: AuthUser) {
+    const item = await this.db.one<any>('SELECT item_id FROM items WHERE item_id = $1::int AND is_grouped = true', [id]);
+    if (!item) throw new BadRequestException('الصنف غير موجود أو ليس «صنف مجمع»');
+    const lines = Array.isArray(dto?.lines) ? dto.lines : [];
+    if (lines.length === 0) throw new BadRequestException('أضف مكوّنًا واحدًا على الأقل قبل الحفظ');
+    const seen = new Set<number>();
+    for (const line of lines) {
+      const child = Number(line?.childItemId);
+      if (!child) throw new BadRequestException('اختر مكوّنًا لكل سطر');
+      if (child === id) throw new BadRequestException('الصنف المجمع لا يمكن أن يكون مكوّنًا من نفسه');
+      if (seen.has(child)) throw new BadRequestException('مكوّن مكرر في نفس الكارت');
+      seen.add(child);
+      if (!Number(line?.quantity) || Number(line.quantity) <= 0) throw new BadRequestException('الكمية يجب أن تكون أكبر من صفر');
+    }
+    return this.db.transaction(async (client) => {
+      await client.query('DELETE FROM item_components WHERE parent_item_id = $1::int', [id]);
+      for (const line of lines) {
+        const childId = Number(line.childItemId);
+        const unitRow = await client.query('SELECT base_unit_id FROM items WHERE item_id = $1::int', [childId]);
+        const unitId = line?.unitId ? Number(line.unitId) : (unitRow.rows[0] ? Number(unitRow.rows[0].base_unit_id) : 1);
+        await client.query(
+          'INSERT INTO item_components (parent_item_id, child_item_id, quantity, unit_id) VALUES ($1::int,$2::int,$3::numeric,$4::int)',
+          [id, childId, Number(line.quantity), unitId],
+        );
+      }
+      // Cost of the assembled item = sum of its children's costs (like the reference guide).
+      const costRow = await client.query(
+        `SELECT COALESCE(SUM(ic.quantity * child.cost_price), 0) AS cost
+           FROM item_components ic JOIN items child ON child.item_id = ic.child_item_id
+          WHERE ic.parent_item_id = $1::int`,
+        [id],
+      );
+      const cost = Math.round(Number(costRow.rows[0]?.cost ?? 0) * 100) / 100;
+      await client.query('UPDATE items SET cost_price = $2::numeric WHERE item_id = $1::int', [id, cost]);
+      await client.query(
+        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
+         VALUES ($1::int, NULL, 'item.components', 'item', $2::text, $3::text)`,
+        [user.userId, String(id), `تعديل مكونات صنف مجمع (${lines.length} مكوّن، التكلفة ${cost})`],
+      );
+      return { parentItemId: id, componentsCount: lines.length, costPrice: cost };
+    });
+  }
+
+  /** Manufacturing availability: how many units of each assembled item can be built from stock. */
+  async assemblyAvailability(branchId: number) {
+    const grouped = await this.db.query<any>(
+      `SELECT i.item_id AS "itemId", i.code, i.name, u.name AS "unitName",
+              i.sell_price AS "sellPrice", i.cost_price AS "costPrice"
+         FROM items i LEFT JOIN units u ON u.unit_id = i.base_unit_id
+        WHERE i.is_grouped = true AND i.is_active = true ORDER BY i.name`,
+    );
+    const items = [];
+    for (const row of grouped) {
+      const components = await this.getComponents(Number(row.itemId));
+      let buildable = Infinity;
+      for (const comp of components) {
+        const stock = await this.db.one<{ q: string }>(
+          `SELECT COALESCE(SUM(q.on_hand_qty), 0)::numeric AS q
+             FROM item_warehouse_qty q
+             JOIN warehouses w ON w.warehouse_id = q.warehouse_id
+            WHERE q.item_id = $1::int AND ($2::int = 0 OR w.branch_id = $2::int)`,
+          [Number(comp.childItemId), branchId ?? 0],
+        );
+        comp.onHand = Number(stock?.q ?? 0);
+        comp.lineBuildable = Math.floor(comp.onHand / Number(comp.quantity));
+        if (comp.lineBuildable < buildable) buildable = comp.lineBuildable;
+      }
+      items.push({ ...row, components, buildable: Number.isFinite(buildable) ? buildable : 0 });
+    }
+    return items;
   }
 
   // ------------------------------------------------------------------ //
@@ -462,6 +572,20 @@ export class ItemsController {
     return this.service.lookupByCode(code, branchId);
   }
 
+  /** Assembled items (BOM — كارت التصنيع) list — registered before @Get(':id'). */
+  @RequirePermissions('items.view')
+  @Get('grouped')
+  listGrouped() {
+    return this.service.listGrouped();
+  }
+
+  /** Manufacturing availability per assembled item — registered before @Get(':id'). */
+  @RequirePermissions('items.view')
+  @Get('assembly-availability')
+  assemblyAvailability(@CurrentBranch() branchId: number) {
+    return this.service.assemblyAvailability(branchId);
+  }
+
   /** Template for the items import (CSV or XLSX) — before @Get(':id') or it would shadow it. */
   @RequirePermissions('items.manage')
   @Get('import/template')
@@ -505,6 +629,18 @@ export class ItemsController {
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.service.remove(id);
+  }
+
+  @RequirePermissions('items.manage')
+  @Get(':id/components')
+  getComponents(@Param('id', ParseIntPipe) id: number) {
+    return this.service.getComponents(id);
+  }
+
+  @RequirePermissions('items.manage')
+  @Put(':id/components')
+  setComponents(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser) {
+    return this.service.setComponents(id, dto, user);
   }
 
   @RequirePermissions('items.manage')

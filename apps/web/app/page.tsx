@@ -46,7 +46,7 @@ export default function DashboardPage() {
             <Link href="/invoices" className="btn-soft"><IconReceipt className="w-4 h-4" /> فواتير المبيعات</Link>
           )}
           {can('stock.manage') && (
-            <Link href="/inventory" className="btn-soft"><IconWarehouse className="w-4 h-4" /> حركة المخزون</Link>
+            <Link href="/warehouses" className="btn-soft"><IconWarehouse className="w-4 h-4" /> المخازن</Link>
           )}
         </div>
 
