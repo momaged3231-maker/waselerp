@@ -1,8 +1,8 @@
 # E2 — Inter-Branch Transfer — Delivery & Evidence Report
 
 **Decision baseline:** E6 approved (`62fe031`), E2 authorized 2026-11-16 (Option B + accounting conditions)
-**Commit:** `947d31e` — `feat(e2): inter-branch stock transfer — independent slice, clearing account 1108`
-**Status:** implemented and fully verified on **isolated test environments only** — **awaiting independent accounting review**
+**Commits:** `947d31e` code → `b1b5c3c` docs → `6f70418` findOne fix
+**Status:** implemented, fully verified on **isolated test environments only** — **awaiting independent accounting review**
 **Not authorized:** production · E4 · integrated reversal after receipt · production seed/migration
 
 ---
@@ -29,9 +29,10 @@
 
 ### 2.1 Smoke (isolated PGlite `wasel_e6rev`, fresh after `e6-review-reset`)
 ```
-594/594 checks passed   (19 E2 checks + accountant view-only + double-approve; regression: E1/E3/E5/E6 sections all green)
+596/596 checks passed   (21 E2 checks incl. accountant view-only, double-approve and both-owner details;
+                        regression: E1/E3/E5/E6 sections all green; run identity BT flow re-verified)
 ```
-- create without clientRequestId → 400 · duplicate → same document · cashier receive → 403 · source-side receive → 403 · **accountant list 200, create/approve/receive/cancel all 403** · duplicate approve → 400 · clearing company-wide 0.00 · cancel after receipt → 400 · third branch → 404 · cancel pre-receipt → status 5 · stock restored exactly (63 → 63)
+- create without clientRequestId → 400 · duplicate → same document · cashier receive → 403 · source-side receive → 403 · **accountant list 200, create/approve/receive/cancel all 403** · duplicate approve → 400 · clearing company-wide 0.00 · cancel after receipt → 400 · third branch → 404 · cancel pre-receipt → status 5 · stock restored exactly (63 → 63) · **document details load from source and destination branches (lines + movements)**
 
 ### 2.2 Real PostgreSQL 18.6 concurrency (`wasel_signoff`, port 5432, API 4270) — 24/24
 - Scenario A: three concurrent `receive` on one transfer → **exactly one** 201, two 400; destination stock +30 exactly; source stock −30 exactly; exactly two journals (approve + one receive); exactly one transferIn movement; one audit row; **1108 = 0 company-wide**; TB balanced
@@ -58,10 +59,20 @@ API /reports/branch-transfers/suspense → company.match = true
 ```
 Scenario + independent verifier: `tools/month4-ops.js` · `tools/month4-check.js` (no shared logic with the ops path; GL/TB read straight from the DB).
 
-### 2.4 Build & UI
-- `npm run build` (API) ✓ · `npm run web:build` ✓ — static export includes `/warehouses` (15.5 kB) and `/warehouses/branch-transfers` (323 B)
+### 2.4 Build, UI and the two bugs found by looking at the app
+- `npm run build` (API) ✓ · `npm run web:build` ✓ — static export includes `/warehouses` and `/warehouses/branch-transfers`
 - XLSX export `branch-transfers` verified live: HTTP 200, base64 PK\x03\x04 (valid workbook)
-- Screen renders the document flow; all API paths it uses were exercised green. **Manual browser walk-through (login → create → approve → switch branch → receive → print A5) was NOT run in this environment** — see Open points
+- **End-to-end browser walk-through on the isolated month-4 stack** (login → branch select → `/warehouses/branch-transfers`):
+  list rendered the two sim transfers with correct status badges; created a new transfer via the UI
+  (source warehouse → destination branch → its warehouse loaded through the gated cross-branch
+  `/catalog/warehouses?branchId=` read), added a line (LAP ×1 @800), approved in the source view
+  (badge «⚠ صادر — بانتظار الاستلام» + amber in-transit chip), **switched branch in the top bar**,
+  received («مكتمل — مستلم», journals #11/#12, vouchers #5/#6), zero console errors.
+  Company-wide 1108 stayed exactly **0.00** after the UI cycle (per-branch structural halves +4,000/−4,000).
+- **Visual verification caught two real bugs** in `findOne` (returned 500):
+  1. `l.branch_transfer_line_id` — the lines PK is `line_id` (fixed in `6f70418`);
+  2. the movements projection referenced un-joined alias `t` («missing FROM-clause entry») — replaced with a single warehouse-name projection (fixed in `6f70418`).
+  The smoke now asserts document details load with lines from both branches, so this class is pinned in the gate.
 
 ### 2.5 Notes / observations
 - **Per-branch 1108 is structurally ±half** (A carries the debit leg, B the credit leg): the approved two-journal design can never settle per-branch — the invariant is **company-wide zero**, which is what the report and gate assert. In-flight value (status 2) is always visible via the suspense report and the screen badges.
@@ -87,9 +98,9 @@ Scenario + independent verifier: `tools/month4-ops.js` · `tools/month4-check.js
 | Clearing nets to zero company-wide after complete/cancel | ✅ (smoke, real-PG, M4) |
 | Period locks (accounting + administrative) enforced, both branches | ✅ (real-PG D & C; smoke) |
 | Idempotency & concurrency (create/approve/receive/cancel) | ✅ (real-PG A/B; smoke) |
-| Permissions per role + branch scope isolation | ✅ (smoke 594/594) |
+| Permissions per role + branch scope isolation | ✅ (smoke 596/596) |
 | Regression E1/E3/E5/E6 | ✅ (fresh smoke sections green) |
-| UI (approved path `/warehouses/branch-transfers`) | ✅ build; ⚠ browser walk-through pending |
+| UI (approved path `/warehouses/branch-transfers`) | ✅ **end-to-end browser walk-through on isolated stack** (create→approve→switch→receive→complete; 1108 intact); A5 print block present |
 | Independent accounting review | ⬅ **STOP — awaiting review** |
 
-**Decision:** implementation complete, evidence collected, committed as `947d31e`. **No deployment.** Awaiting the independent accounting review verdict before any merge/push/production step.
+**Decision:** implementation complete, evidence collected, commits `947d31e` → `b1b5c3c` → `6f70418`. **No deployment.** Awaiting the independent accounting review verdict before any merge/push/production step.
