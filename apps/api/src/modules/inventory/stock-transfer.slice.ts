@@ -5,7 +5,7 @@ import {
 import { PoolClient } from 'pg';
 import { DatabaseService } from '../../common/database/database.service';
 import { assertDeletionAllowed } from '../../common/delete-guard';
-import { applyMovement, getWarehouseCost, toBaseUnits } from '../../common/stock';
+import { applyMovement, getWarehouseCost, lockWarehouseAverageCost, toBaseUnits } from '../../common/stock';
 import { postJournal, resolveMapping } from '../../common/posting';
 import { asIsoDate } from '../../common/dates';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
@@ -285,6 +285,29 @@ export class StockTransferService {
       );
       if (!lines.rows.length) throw new BadRequestException('لا توجد أصناف في التحويل');
 
+      // Re-read the source moving average INSIDE this transaction — the approved
+      // cost is authoritative, never the line-add snapshot. Same item may appear
+      // on multiple lines: it gets ONE locked average for all of them.
+      const requiredByItem = new Map<number, number>();
+      for (const line of lines.rows) {
+        const itemId = Number(line.item_id);
+        requiredByItem.set(itemId, round6((requiredByItem.get(itemId) ?? 0) + round6(Number(line.quantity))));
+      }
+      const costByItem = new Map<number, number>();
+      for (const itemId of [...requiredByItem.keys()].sort((a, b) => a - b)) {
+        const locked = await lockWarehouseAverageCost(client, itemId, Number(transfer.from_warehouse_id), requiredByItem.get(itemId)!);
+        costByItem.set(itemId, locked.unitCost);
+      }
+      for (const line of lines.rows) {
+        const live = costByItem.get(Number(line.item_id))!;
+        if (Math.abs(Number(line.unit_cost) - live) > 1e-9) {
+          await client.query(
+            'UPDATE stock_transfer_lines SET unit_cost = $2::numeric WHERE stock_transfer_line_id = $1::bigint',
+            [line.stock_transfer_line_id, live],
+          );
+        }
+      }
+
       // Create outbound voucher (type 2 = outgoing) from source warehouse.
       const outSerial = await this.db.nextNumber(client, `stockvoucher:${Number(transfer.branch_id)}`);
       const outNo = `SV-${new Date().getFullYear()}-${String(outSerial).padStart(6, '0')}`;
@@ -303,7 +326,7 @@ export class StockTransferService {
 
       for (const line of lines.rows) {
         const qtyBase = round6(Number(line.quantity));
-        const unitCost = Number(line.unit_cost ?? 0);
+        const unitCost = costByItem.get(Number(line.item_id))!; // authoritative: re-read + locked at approve
         const value = round2(qtyBase * unitCost);
         netValue = round2(netValue + value);
 

@@ -68,6 +68,46 @@ export async function getWarehouseCost(client: PoolClient, itemId: number, wareh
 }
 
 /**
+ * The AUTHORITATIVE source-warehouse moving-average cost, re-read INSIDE the
+ * current transaction with a row lock on the warehouse balance. Approved at
+ * the posting event (approve / issue), never at line-add time and never by
+ * the caller. Re-validates available quantity at the same instant.
+ *
+ * Returns { unitCost, available }. Falls back to the item's cost_price only
+ * when the warehouse has a zero average with stock on hand (matches the
+ * add-line behaviour).
+ */
+export async function lockWarehouseAverageCost(
+  client: PoolClient,
+  itemId: number,
+  warehouseId: number,
+  requiredQty: number,
+): Promise<{ unitCost: number; available: number }> {
+  // items may not exist anymore — this mirrors getWarehouseCost's shape
+  const item = await client.query<any>(
+    'SELECT name, base_unit_id, cost_price FROM items WHERE item_id = $1',
+    [itemId],
+  );
+  if (!item.rows.length) throw new BadRequestException(`الصنف غير موجود (id ${itemId})`);
+  const baseUnitId = Number(item.rows[0].base_unit_id);
+  const { rows } = await client.query<{ on_hand_qty: string; avg_cost: string }>(
+    `SELECT on_hand_qty, avg_cost
+       FROM item_warehouse_qty
+      WHERE item_id = $1::int AND warehouse_id = $2::int AND unit_id = $3::int
+      FOR UPDATE`,
+    [itemId, warehouseId, baseUnitId],
+  );
+  const available = Number(rows[0]?.on_hand_qty ?? 0);
+  const unitCost = Number(rows[0]?.avg_cost ?? 0) || Number(item.rows[0].cost_price ?? 0);
+  if (available + 1e-6 < requiredQty) {
+    throw new BadRequestException(
+      `الكمية في المخزن غير كافية للصنف «${item.rows[0].name}» (المتاح ${available}، المطلوب ${requiredQty}) — عدّل الكمية ثم حاول مرة أخرى`,
+    );
+  }
+  return { unitCost, available };
+}
+
+/**
  * Writes one movement to the ledger and keeps the balance row in sync.
  *
  * The balance row is always keyed by the item's BASE unit, so selling the same
