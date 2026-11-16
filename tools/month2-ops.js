@@ -169,8 +169,9 @@ const daysAgo = (days) => { const d = new Date(); d.setDate(d.getDate() - days);
   const transfer = await call('POST', '/stock-transfers', {
     fromWarehouseId: whMain.warehouseId, toWarehouseId: whSub.warehouseId, transferDate: daysAgoIso(13), notes: 'تحويل داخلي بين المخازن — Day 13',
   });
+  // P4-3 — no manual unitCost: the API derives the cost from the source warehouse average.
   await call('POST', `/stock-transfers/${transfer.stockTransferId}/lines`, {
-    itemId: item('M2-LAP-I7'), unitId: PCS, quantity: 2, unitCost: itemCost('M2-LAP-I7'),
+    itemId: item('M2-LAP-I7'), unitId: PCS, quantity: 2,
   });
   await call('POST', `/stock-transfers/${transfer.stockTransferId}/approve`, {});
   await call('POST', `/stock-transfers/${transfer.stockTransferId}/receive`, {});

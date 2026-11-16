@@ -318,6 +318,15 @@ export function IconBuilding(props: IconProps) {
   );
 }
 
+export function IconLandmark(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4 9.5 12 4l8 5.5" />
+      <path d="M5.5 9.5h13M5.5 20h13M7 12.5v4.5M10.3 12.5v4.5M13.7 12.5v4.5M17 12.5v4.5" />
+    </Icon>
+  );
+}
+
 export function IconTrendUp(props: IconProps) {
   return (
     <Icon {...props}>

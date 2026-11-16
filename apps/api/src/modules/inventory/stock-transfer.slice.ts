@@ -171,6 +171,11 @@ export class StockTransferService {
 
   /** Adds a line to a draft transfer. Same item + same unit merges quantities. */
   async addLine(id: number, dto: any) {
+    // P4-3 — the transfer cost is ALWAYS the source warehouse's moving-average cost.
+    // Passing a manual unitCost would silently drift warehouse valuations against the GL.
+    if (dto.unitCost != null && Number(dto.unitCost) > 0) {
+      throw new BadRequestException('تكلفة التحويل تُحسب تلقائيًا من متوسط تكلفة المخزن المصدر — لا يجوز تمرير تكلفة يدوية (أي تصحيح استثنائي يتم عبر تسوية جرد بصلاحية مستقلة وسبب موثق)');
+    }
     const header = await this.draftHeader(id);
     const itemId = Number(dto.itemId);
     if (!itemId) throw new BadRequestException('اختر الصنف');
@@ -225,6 +230,9 @@ export class StockTransferService {
 
   /** Edits the quantity of a line. */
   async updateLine(id: number, lineId: number, dto: any) {
+    if (dto.unitCost != null && Number(dto.unitCost) > 0) {
+      throw new BadRequestException('تكلفة التحويل تُحسب تلقائيًا من متوسط تكلفة المخزن المصدر — لا يجوز تمرير تكلفة يدوية');
+    }
     await this.draftHeader(id);
     return this.db.transaction(async (client) => {
       const line = await client.query<any>(
@@ -236,10 +244,9 @@ export class StockTransferService {
       if (quantity <= 0) throw new BadRequestException('الكمية يجب أن تكون أكبر من صفر');
       await client.query(
         `UPDATE stock_transfer_lines
-            SET quantity = $2::numeric, unit_cost = COALESCE($3, unit_cost),
-                notes = COALESCE($4, notes)
+            SET quantity = $2::numeric, notes = COALESCE($3, notes)
           WHERE stock_transfer_line_id = $1::bigint`,
-        [lineId, quantity, dto.unitCost ?? null, dto.notes ?? null],
+        [lineId, quantity, dto.notes ?? null],
       );
       return { lineId, quantity };
     });

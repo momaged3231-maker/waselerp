@@ -11,7 +11,7 @@ import {
   IconCalendar, IconWallet, IconBookOpen, IconChartBar, IconBriefcase,
   IconDeviceMobile, IconBell, IconFolder, IconSettings, IconLogout,
   IconMenu, IconCloudUp, IconWifiOff, IconBuilding, IconChevronDown, IconClock,
-  IconSun, IconMoon,
+  IconSun, IconMoon, IconLandmark,
 } from '@/components/icons';
 import { useTheme } from '@/lib/theme';
 
@@ -69,6 +69,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: '/treasury', label: 'الخزينة', icon: IconWallet, permission: 'cash.view' },
       { href: '/accounting', label: 'المحاسبة', icon: IconBookOpen, permission: 'accounting.view' },
+      { href: '/accounting/bank-recon', label: 'المطابقة البنكية', icon: IconLandmark, permission: 'bank.view' },
       { href: '/reports/builder', label: 'منشئ التقارير', icon: IconChartBar, permission: 'reports.view' },
       { href: '/reports', label: 'التقارير', icon: IconChartBar, permission: 'reports.view' },
     ],

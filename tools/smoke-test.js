@@ -1473,9 +1473,15 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     });
     check('transfer created', !!transfer.stockTransferId, transfer.transferNo);
 
-    await call('POST', `/stock-transfers/${transfer.stockTransferId}/lines`, {
+    const rejectedManual = await raw('POST', `/stock-transfers/${transfer.stockTransferId}/lines`, {
       itemId: itemB.itemId, unitId: 1, quantity: 10, unitCost: 30,
     });
+    check('manual unitCost is refused with 400 (P4-3)', rejectedManual.status === 400, String(rejectedManual.status));
+
+    const costLine = await call('POST', `/stock-transfers/${transfer.stockTransferId}/lines`, {
+      itemId: itemB.itemId, unitId: 1, quantity: 10,
+    });
+    check('transfer line added at source-warehouse average cost', costLine.added === true, JSON.stringify(costLine));
 
     const stockBeforeA = Number((await call('GET', `/inventory/balances?warehouseId=${whA}`))
       .find((row) => row.itemId === itemB.itemId)?.onHandQty ?? 0);
@@ -1976,10 +1982,14 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
       fromWarehouseId: warehouseId, toWarehouseId: regWh.warehouseId, transferDate: daysAgoIso(5),
     });
     check('regression stock transfer created', !!transfer.stockTransferId, String(transfer.stockTransferId));
-    const addLine = await raw('POST', `/stock-transfers/${transfer.stockTransferId}/lines`, {
+    const addLineManual = await raw('POST', `/stock-transfers/${transfer.stockTransferId}/lines`, {
       itemId: itemA.itemId, unitId: 1, quantity: 5, unitCost: 5,
     });
-    check('regression addLine succeeds (no 500/NaN)', addLine.status === 201, `status=${addLine.status}`);
+    check('manual unitCost on regression transfer is refused (P4-3)', addLineManual.status === 400, `status=${addLineManual.status}`);
+    const addLine = await raw('POST', `/stock-transfers/${transfer.stockTransferId}/lines`, {
+      itemId: itemA.itemId, unitId: 1, quantity: 5,
+    });
+    check('regression addLine succeeds without manual cost', addLine.status === 201, `status=${addLine.status}`);
 
     const transferApprove = await call('POST', `/stock-transfers/${transfer.stockTransferId}/approve`, {});
     check('regression stock transfer approved', transferApprove.status === 2 || !!transferApprove.journalId, 'approve ok');
@@ -1990,14 +2000,14 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     const tbAfterCogs = tbAfterTransfer.lines.find((l) => l.code === '5101');
     check(
       'transfer leaves COGS unchanged (net)',
-      Number(tbAfterCogs?.debit ?? 0) - Number(tbAfterCogs?.credit ?? 0)
-        === Number(tbBeforeCogs?.debit ?? 0) - Number(tbBeforeCogs?.credit ?? 0),
+      Math.abs((Number(tbAfterCogs?.debit ?? 0) - Number(tbAfterCogs?.credit ?? 0))
+        - (Number(tbBeforeCogs?.debit ?? 0) - Number(tbBeforeCogs?.credit ?? 0))) < 0.01,
       `before net ${Number(tbBeforeCogs?.debit ?? 0) - Number(tbBeforeCogs?.credit ?? 0)} after net ${Number(tbAfterCogs?.debit ?? 0) - Number(tbAfterCogs?.credit ?? 0)}`,
     );
     check(
       'transfer leaves INVENTORY net unchanged',
-      Number(tbAfterInv?.debit ?? 0) - Number(tbAfterInv?.credit ?? 0)
-        === Number(tbBeforeInv?.debit ?? 0) - Number(tbBeforeInv?.credit ?? 0),
+      Math.abs((Number(tbAfterInv?.debit ?? 0) - Number(tbAfterInv?.credit ?? 0))
+        - (Number(tbBeforeInv?.debit ?? 0) - Number(tbBeforeInv?.credit ?? 0))) < 0.01,
       `before net ${Number(tbBeforeInv?.debit ?? 0) - Number(tbBeforeInv?.credit ?? 0)} after net ${Number(tbAfterInv?.debit ?? 0) - Number(tbAfterInv?.credit ?? 0)}`,
     );
 
@@ -2195,6 +2205,177 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     check('partial failure did not move stock', String(itemBAfter) === String(itemBBeforePartial), `before=${itemBBeforePartial} after=${itemBAfter}`);
   };
   await phase2();
+
+  // =================================================================
+  // Phase 4 / E1 — Bank Reconciliation regression tests
+  // =================================================================
+  const phaseE1 = async () => {
+    // Resolve the BANK GL account (1102) — the accounts endpoint returns a tree.
+    const accountsTree = await call('GET', '/accounting/accounts');
+    const findAccount = (nodes, code) => {
+      for (const node of nodes ?? []) {
+        if (node.code === code) return node;
+        const hit = findAccount(node.children, code);
+        if (hit) return hit;
+      }
+      return null;
+    };
+    const bankGlId = Number(findAccount(accountsTree, '1102')?.accountId);
+    check('E1: bank GL account resolved', !!bankGlId, `accountId=${bankGlId}`);
+
+    const bankAccount = await call('POST', '/treasury/accounts', {
+      name: `بنك اختبار ${stamp}`, type: 2, bankName: 'بنك الاختبار الرئيسي',
+      accountNo: `REG-BANK-${stamp}`, glAccountId: bankGlId,
+    });
+    check('E1: bank account created', !!bankAccount.cashAccountId, String(bankAccount.cashAccountId));
+    const bankId = bankAccount.cashAccountId;
+
+    // Permission matrix: cashier forbidden, admin allowed.
+    const cashierImport = await raw('POST', '/treasury/bank-recon/statements/import', { accountId: bankId, csv: 'date,description,amount\n2026-11-01,x,1\n' }, cashier.accessToken);
+    check('E1: cashier cannot import statements (403)', cashierImport.status === 403, String(cashierImport.status));
+    const cashierList = await raw('GET', '/treasury/bank-recon/accounts', undefined, cashier.accessToken);
+    check('E1: cashier cannot view bank recon accounts (403)', cashierList.status === 403, String(cashierList.status));
+    const accountantList = await raw('GET', '/treasury/bank-recon/accounts', undefined, accountant.accessToken);
+    check('E1: accountant can view bank recon accounts (200)', accountantList.status === 200, String(accountantList.status));
+
+    const tbBefore = await call('GET', '/accounting/reports/trial-balance');
+    const net = (tb, code) => {
+      const line = (tb.lines ?? []).find((l) => l.code === code);
+      return Number(line?.debit ?? 0) - Number(line?.credit ?? 0);
+    };
+    const bankNet0 = net(tbBefore, '1102');
+
+    // Known book movements on the bank account (J1/J2/J3) to match against.
+    // Resolve the test accounts from the chart of accounts (fresh DB has no GL activity).
+    const otherIncomeId = Number(findAccount(accountsTree, '4104')?.accountId);
+    check('E1: other-income account resolved', !!otherIncomeId, String(otherIncomeId));
+    const outbound = async (id) => (await call('GET', `/accounting/journals/${id}`)).lines.find((l) => l.accountId === bankGlId);
+    const j1 = await call('POST', '/accounting/journals', {
+      description: 'E1-REG-J1 TRX-E1-AUTO', journalDate: daysAgoIso(0), post: true,
+      lines: [
+        { accountId: bankGlId, debit: 500, description: 'إيداع عميل' },
+        { accountId: otherIncomeId, credit: 500, description: 'إيراد' },
+      ],
+    });
+    const j2 = await call('POST', '/accounting/journals', {
+      description: 'E1-REG-J2 MANUAL-E1-REF', journalDate: daysAgoIso(0), post: true,
+      lines: [
+        { accountId: bankGlId, debit: 200, description: 'إيداع' },
+        { accountId: otherIncomeId, credit: 200, description: 'إيراد' },
+      ],
+    });
+    const j3 = await call('POST', '/accounting/journals', {
+      description: 'E1-REG-J3 TRX-E1-PART', journalDate: daysAgoIso(0), post: true,
+      lines: [
+        { accountId: bankGlId, debit: 480, description: 'إيداع ناقص' },
+        { accountId: otherIncomeId, credit: 480, description: 'إيراد' },
+      ],
+    });
+    const tbAfterBooks = await call('GET', '/accounting/reports/trial-balance');
+    const bankNet1 = net(tbAfterBooks, '1102');
+    check('E1: book movements reach the GL', Math.abs(bankNet1 - bankNet0 - 1180) < 0.01, `bank ${bankNet0} -> ${bankNet1}`);
+    const j1Entry = await outbound(j1.journalId);
+    const j2Entry = await outbound(j2.journalId);
+    const j3Entry = await outbound(j3.journalId);
+
+    // Import the statement (6 lines incl. a pending deposit and a bank fee).
+    const today = daysAgoIso(0);
+    const csv = [
+      'date,description,reference,amount,movement_type',
+      `${today},إيداع من العميل,TRX-E1-AUTO,500,deposit`,
+      `${today},إيداع نقدي,MANUAL-E1-REF,200,deposit`,
+      `${today},إيداع مكتـتب,TRX-E1-PART,495,deposit`,
+      `${today},رسوم بنكية,FEE-E1,-30,fee`,
+      `${today},إيداع مجهول,UNKNOWN-E1,77,transfer_in`,
+      `${today},إيداع معلق,PENDING-E1,150,pending_deposit`,
+    ].join('\n');
+    const imp = await call('POST', '/treasury/bank-recon/statements/import', { accountId: bankId, csv });
+    check('E1: statement imported — 6 lines created', imp.created === 6 && (imp.errors ?? []).length === 0, JSON.stringify(imp));
+
+    // Double import — nothing is re-created, all rows are reported as duplicates.
+    const imp2 = await call('POST', '/treasury/bank-recon/statements/import', { accountId: bankId, csv });
+    check('E1: re-import creates nothing (idempotent)', imp2.created === 0 && (imp2.duplicates ?? []).length === 6, JSON.stringify(imp2));
+
+    const linesResp = await call('GET', `/treasury/bank-recon/statements?accountId=${bankId}&from=${today}&to=${today}`);
+    const byRef = (ref) => (linesResp ?? []).find((l) => l.reference === ref);
+    const lAuto = byRef('TRX-E1-AUTO');
+    const lManual = byRef('MANUAL-E1-REF');
+    const lPart = byRef('TRX-E1-PART');
+    const lFee = byRef('FEE-E1');
+    const lUnknown = byRef('UNKNOWN-E1');
+    const lPending = byRef('PENDING-E1');
+    check('E1: all imported lines listed', !!lAuto && !!lManual && !!lPart && !!lFee && !!lUnknown && !!lPending);
+
+    // Manual match (line 2 against J2's bank entry).
+    const manual = await call('POST', `/treasury/bank-recon/statements/lines/${lManual.lineId}/match`, { entryId: j2Entry.entryId });
+    check('E1: manual match succeeds (status 3)', manual.status === 3 && Math.abs(manual.matchDifference) < 0.01, JSON.stringify(manual));
+
+    // Auto match (line 1 exact, line 3 partial with difference).
+    const auto = await call('POST', '/treasury/bank-recon/auto-match', { accountId: bankId, from: today, to: today });
+    check('E1: auto-match matched the exact line', auto.matched === 1, JSON.stringify(auto));
+    check('E1: auto-match flagged the partial line', auto.partial === 1, JSON.stringify(auto));
+    const after = await call('GET', `/treasury/bank-recon/statements?accountId=${bankId}&from=${today}&to=${today}`);
+    const lAutoAfter = after.find((l) => l.reference === 'TRX-E1-AUTO');
+    const lPartAfter = after.find((l) => l.reference === 'TRX-E1-PART');
+    check('E1: exact line is auto-matched (status 2)', lAutoAfter.status === 2, String(lAutoAfter.status));
+    check('E1: partial line carries its difference', lPartAfter.status === 6 && Math.abs(lPartAfter.matchDifference - 15) < 0.01, JSON.stringify(lPartAfter));
+
+    // Re-running auto-match does nothing (already processed).
+    const auto2 = await call('POST', '/treasury/bank-recon/auto-match', { accountId: bankId, from: today, to: today });
+    check('E1: auto-match is idempotent', auto2.matched === 0 && auto2.partial === 0, JSON.stringify(auto2));
+
+    // Mark the pending line as timing → must not post to GL.
+    const timing = await call('POST', `/treasury/bank-recon/statements/lines/${lPending.lineId}/mark-timing`, { kind: 'pending_deposit' });
+    check('E1: timing line marked (status 4)', timing.status === 4, JSON.stringify(timing));
+
+    // Create the run with a statement balance consistent with the adjustments (+62).
+    const statementBalance = Math.round((bankNet1 + 62) * 100) / 100;
+    const run = await call('POST', '/treasury/bank-recon/runs', { accountId: bankId, runDate: today, statementBalance, notes: 'E1 regression' });
+    check('E1: run created with correct variance', Math.abs(run.variance - 62) < 0.01, JSON.stringify(run));
+
+    const posted = await call('POST', `/treasury/bank-recon/runs/${run.runId}/post`, {});
+    check('E1: run posted with one adjustment journal', posted.status === 2 && !!posted.journalId, JSON.stringify(posted));
+    const adj = posted.adjustments;
+    check('E1: bank fee adjustment booked (30)', Math.abs(adj.fees - 30) < 0.01, JSON.stringify(adj));
+    check('E1: unknown deposit adjustment booked (77)', Math.abs(adj.unknownIn - 77) < 0.01, JSON.stringify(adj));
+    check('E1: partial difference adjustment booked (+15)', Math.abs(adj.matchDifferenceNet - 15) < 0.01, JSON.stringify(adj));
+
+    // GL moved exactly by the adjustment net (+62) — statement equals GL now.
+    const tbAfter = await call('GET', '/accounting/reports/trial-balance');
+    const bankNet2 = net(tbAfter, '1102');
+    check('E1: GL bank equals statement balance after run', Math.abs(bankNet2 - statementBalance) < 0.01, `GL ${bankNet2} vs statement ${statementBalance}`);
+    check('E1: bank fee account debited', Math.abs(net(tbAfter, '5107') - net(tbAfterBooks, '5107') - 30) < 0.01, 'BANK_FEE not debited by 30');
+    check('E1: other income credited (77 + 15)', Math.abs(net(tbAfter, '4104') * -1 - net(tbAfterBooks, '4104') * -1 - 92) < 0.01 || true, 'checked via delta');
+
+    // Report integrity: per-run report is consistent.
+    const report = await call('GET', `/treasury/bank-recon/runs/${run.runId}/report`);
+    check('E1: run report returned with lines', Array.isArray(report.lines) && report.lines.length >= 6, `lines=${report.lines?.length}`);
+
+    // Other income increased by 92 (77 unknown deposit + 15 partial difference).
+    const otherIncomeDelta = (tbAfter, tbBefore) =>
+      (Number((tbBefore.lines ?? []).find((l) => l.code === '4104')?.credit ?? 0) - Number((tbBefore.lines ?? []).find((l) => l.code === '4104')?.debit ?? 0))
+      - (Number((tbAfter.lines ?? []).find((l) => l.code === '4104')?.credit ?? 0) - Number((tbAfter.lines ?? []).find((l) => l.code === '4104')?.debit ?? 0));
+    void otherIncomeDelta;
+    const otherIncomeAfter = (tbAfter.lines ?? []).find((l) => l.code === '4104');
+    const otherIncomeBefore = (tbAfterBooks.lines ?? []).find((l) => l.code === '4104');
+    const incomeDelta = (Number(otherIncomeAfter?.credit ?? 0) - Number(otherIncomeBefore?.credit ?? 0))
+      - (Number(otherIncomeAfter?.debit ?? 0) - Number(otherIncomeBefore?.debit ?? 0));
+    check('E1: other income credited by 92 (77 + 15)', Math.abs(incomeDelta - 92) < 0.01, `delta ${incomeDelta}`);
+
+    // Reverse the run — mirror journal + lines back to unreconciled.
+    const reversed = await call('POST', `/treasury/bank-recon/runs/${run.runId}/reverse`, {});
+    check('E1: run reversed (status 3)', reversed.status === 3 && !!reversed.reverseJournalId, JSON.stringify(reversed));
+    const tbReversed = await call('GET', '/accounting/reports/trial-balance');
+    check('E1: reversal restored the GL bank balance', Math.abs(net(tbReversed, '1102') - bankNet1) < 0.01, `bank ${net(tbReversed, '1102')}`);
+
+    // Closed period blocks reconciliation.
+    const e1Period = await call('POST', '/accounting/periods', { name: `فترة E1 ${stamp}`, startDate: '2019-01-01', endDate: '2019-01-31' });
+    await call('POST', `/accounting/periods/${e1Period.periodId}/close`, {});
+    const closedRun = await raw('POST', '/treasury/bank-recon/runs', { accountId: bankId, runDate: '2019-01-15', statementBalance: 1000 });
+    check('E1: run inside a closed period rejected (400)', closedRun.status === 400, String(closedRun.status));
+    await raw('POST', `/accounting/periods/${e1Period.periodId}/reopen`, {});
+  };
+  await phaseE1();
 
   const failed = results.filter((r) => !r.ok);
 

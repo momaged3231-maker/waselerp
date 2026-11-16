@@ -4,6 +4,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { DatabaseModule } from './common/database/database.module';
 import { JwtAuthGuard, PermissionsGuard } from './common/security';
+import { BankReconModule } from './modules/bank-recon/bank-recon.slice';
 import { AuthModule } from './modules/auth/auth.slice';
 import { CatalogModule } from './modules/catalog/catalog.slice';
 import { ItemsModule } from './modules/catalog/items.slice';
@@ -47,6 +48,7 @@ import { PrintAgentsModule } from './modules/print-agents/print-agents.slice';
     }),
     DatabaseModule,
     AuthModule,
+    BankReconModule,
     CatalogModule,
     ItemsModule,
     PartiesModule,

@@ -8,6 +8,7 @@ const TABS = [
   { href: '/accounting/journals', label: 'القيود' },
   { href: '/accounting/vouchers', label: 'السندات والشيكات' },
   { href: '/accounting/securities', label: 'الأوراق المالية والبنوك' },
+  { href: '/accounting/bank-recon', label: 'المطابقة البنكية' },
   { href: '/accounting/reports', label: 'التقارير المالية' },
 ];
 
