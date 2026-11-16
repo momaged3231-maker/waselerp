@@ -147,7 +147,7 @@ export class BranchTransferService {
     );
     if (!row) throw new NotFoundException('سند التحويل غير موجود في هذا الفرع');
     const lines = await this.db.query<any>(
-      `SELECT l.branch_transfer_line_id AS "lineId", l.line_number AS "lineNumber",
+      `SELECT l.line_id AS "lineId", l.line_number AS "lineNumber",
               l.item_id AS "itemId", i.code AS "itemCode", i.name AS "itemName",
               l.unit_id AS "unitId", un.name AS "unitName",
               l.quantity, l.unit_cost AS "unitCost",
@@ -163,10 +163,10 @@ export class BranchTransferService {
     const movements = await this.db.query<any>(
       `SELECT m.move_type AS "moveType", m.move_date AS "moveDate", m.quantity,
               m.unit_cost AS "unitCost", m.reference_no AS "referenceNo",
-              f.name AS "fromWarehouse", t.name AS "toWarehouse"
+              m.warehouse_id AS "warehouseId", w.name AS "warehouseName", m.branch_id AS "branchId"
          FROM stock_movements m
-         LEFT JOIN warehouses f ON f.warehouse_id = m.warehouse_id
-         WHERE (m.reference_id = $1::bigint AND m.reference_no LIKE 'BT-%')
+         LEFT JOIN warehouses w ON w.warehouse_id = m.warehouse_id
+        WHERE (m.reference_id = $1::bigint AND m.reference_no LIKE 'BT-%')
         ORDER BY m.stock_movement_id`,
       [id],
     );

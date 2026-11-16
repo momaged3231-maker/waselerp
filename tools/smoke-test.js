@@ -1526,6 +1526,14 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     const btReceive = await rawB('POST', `/branch-transfers/${bt.branchTransferId}/receive`, {});
     check('E2: transfer received at destination branch (journal in dest branch)',
       btReceive.status === 201 && btReceive.body?.status === 4, `status=${btReceive.status} ${JSON.stringify(btReceive.body).slice(0, 120)}`);
+    const btDetailA = await raw('GET', `/branch-transfers/${bt.branchTransferId}`);
+    check('E2: document details load from the source branch (lines + movements)',
+      btDetailA.status === 200 && Array.isArray(btDetailA.data?.lines) && btDetailA.data.lines.length > 0,
+      String(btDetailA.status));
+    const btDetailB = await rawB('GET', `/branch-transfers/${bt.branchTransferId}`);
+    check('E2: document details load from the destination branch too',
+      btDetailB.status === 200 && Array.isArray(btDetailB.body?.lines) && btDetailB.body.lines.length > 0,
+      `status=${btDetailB.status} lines=${btDetailB.body?.lines?.length}`);
     const balB = await rawB('GET', `/inventory/balances?warehouseId=${whB2.warehouseId}`);
     const qtyB = Number((balB.body ?? []).find((row) => row.itemId === itemB.itemId)?.onHandQty ?? 0);
     check('E2: stock increased at destination after receive', qtyB >= 5, `qty=${qtyB}`);
