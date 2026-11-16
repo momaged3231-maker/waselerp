@@ -54,6 +54,9 @@ export class FixedAssetsService {
     if (period.isClosed) {
       throw new BadRequestException(`الفترة المحاسبية «${period.name ?? date}» مقفلة — لا يمكن الترحيل فيها`);
     }
+    if (period.manualLock) {
+      throw new BadRequestException(`الفترة «${period.name ?? date}» مقفولة إداريًا — أزل القفلة الإدارية قبل الترحيل`);
+    }
     return period.periodId;
   }
 

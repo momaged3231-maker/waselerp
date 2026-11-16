@@ -43,6 +43,13 @@ export interface JournalInput {
    * the document totals are already rounded; manual journals stay strict.
    */
   autoBalance?: boolean;
+  /**
+   * EXPLICIT EXCEPTION: post into a locked/closed period under an independent,
+   * narrowly-scoped permission (accounting.backpost — enforced by the caller).
+   * The reason is mandatory and is written to activity_log; backposted journals
+   * never arrive through the automatic document flows.
+   */
+  backpostReason?: string | null;
 }
 
 export interface MappedAccount {
@@ -83,9 +90,9 @@ export async function resolvePeriod(
   client: PoolClient,
   branchId: number,
   date: string,
-): Promise<{ periodId: number | null; isClosed: boolean; name: string | null }> {
+): Promise<{ periodId: number | null; isClosed: boolean; manualLock: boolean; name: string | null }> {
   const { rows } = await client.query<any>(
-    `SELECT period_id, is_closed, name
+    `SELECT period_id, is_closed, manual_lock, name
        FROM periods
       WHERE branch_id = $1::int
         AND start_date <= $2::date
@@ -94,19 +101,52 @@ export async function resolvePeriod(
       LIMIT 1`,
     [branchId, date],
   );
-  if (!rows.length) return { periodId: null, isClosed: false, name: null };
+  if (!rows.length) return { periodId: null, isClosed: false, manualLock: false, name: null };
   return {
     periodId: Number(rows[0].period_id),
     isClosed: !!rows[0].is_closed,
+    manualLock: !!rows[0].manual_lock,
     name: rows[0].name,
   };
 }
 
-/** Throws when the target date falls inside a closed accounting period. */
-export async function assertPeriodOpen(client: PoolClient, branchId: number, date: string): Promise<number | null> {
+/**
+ * Throws when the target date falls inside a locked accounting or
+ * administratively-locked period. The ONLY exception is an explicitly
+ * backposted journal under `accounting.backpost` (the caller enforces the
+ * permission) with a mandatory reason — every automatic document flow stays
+ * blocked unconditionally.
+ */
+export async function assertPeriodOpen(
+  client: PoolClient,
+  branchId: number,
+  date: string,
+  opts?: { backpostReason?: string | null; backpostUserId?: number | null },
+): Promise<number | null> {
   const period = await resolvePeriod(client, branchId, date);
   if (period.isClosed) {
+    if (opts?.backpostReason?.trim()) {
+      await client.query(
+        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
+         VALUES ($1::int,$2::int,'period.backpost','period',$3::bigint,$4)`,
+        [opts.backpostUserId ?? null, branchId, period.periodId,
+          `ترحيل بتصريح إلى فترة مقفولة «${period.name}» — ${opts.backpostReason.trim()}`],
+      );
+      return period.periodId;
+    }
     throw new BadRequestException(`الفترة المحاسبية «${period.name}» مقفلة ولا تقبل ترحيل جديد`);
+  }
+  if (period.manualLock) {
+    if (opts?.backpostReason?.trim()) {
+      await client.query(
+        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
+         VALUES ($1::int,$2::int,'period.backpost','period',$3::bigint,$4)`,
+        [opts.backpostUserId ?? null, branchId, period.periodId,
+          `ترحيل بتصريح إلى فترة مقفولة إداريًا «${period.name}» — ${opts.backpostReason.trim()}`],
+      );
+      return period.periodId;
+    }
+    throw new BadRequestException(`الفترة «${period.name}» مقفولة إداريًا ولا تقبل ترحيل قيود — أزل القفلة الإدارية أولًا`);
   }
   return period.periodId;
 }
@@ -174,7 +214,10 @@ export async function postJournal(client: PoolClient, input: JournalInput): Prom
   }
 
   const journalDate = input.journalDate ?? new Date().toISOString().slice(0, 10);
-  const periodId = await assertPeriodOpen(client, input.branchId, journalDate);
+  const periodId = await assertPeriodOpen(client, input.branchId, journalDate, {
+    backpostReason: input.backpostReason ?? null,
+    backpostUserId: input.userId ?? null,
+  });
   const journalNo = await nextJournalNumber(client, input.branchId, input.sequenceKey);
 
   const header = await client.query<{ journal_id: number }>(

@@ -479,6 +479,136 @@ const state = {};
   const tbEnd = await call('GET', '/accounting/reports/trial-balance');
   check('trial balance still balanced after the whole suite', tbEnd.balanced === true, '');
 
+  console.log('\n--- G14 manual administrative lock ≠ accounting close ---');
+  // Fresh closable period in branch A with a revenue movement
+  const pManualLock = await mkPeriod(A, 'فترة القفل الإداري', '2027-01-01', '2027-01-31');
+  await call('POST', '/accounting/journals', { description: 'إيرادات للقفل الإداري', journalDate: '2027-01-15', post: true, lines: [
+    { accountId: glId('1101'), debit: 1000, description: 'نقدية' },
+    { accountId: glId('4101'), credit: 1000, description: 'إيرادات' },
+  ] });
+  const lockRes = await call('POST', `/accounting/periods/${pManualLock}/manual-lock`, { reason: 'اختبار فصل القفل الإداري عن الإقفال المحاسبي' });
+  check('manual-lock applied (201)', lockRes?.manualLock === true, JSON.stringify(lockRes));
+  const pRowLock = (await call('GET', '/accounting/periods')).find((p) => p.periodId === pManualLock);
+  check('manual lock does NOT flip is_closed', pRowLock?.isClosed === false && pRowLock?.manualLock === true, JSON.stringify(pRowLock));
+  check('manual lock does NOT set closing_entry_id', pRowLock?.closingEntryId == null, JSON.stringify(pRowLock));
+  const lockedInvoice = await raw('POST', '/accounting/journals', { description: 'محاولة في فترة مقفولة إداريًا', journalDate: '2027-01-20', post: true, lines: [
+    { accountId: glId('5106'), debit: 50, description: 'محاولة' },
+    { accountId: glId('1101'), credit: 50, description: 'محاولة' },
+  ] });
+  check('journal rejected inside a manually locked period (400)', lockedInvoice.status === 400, `status=${lockedInvoice.status}`);
+  const backpostNoPerm = await raw('POST', '/accounting/journals', { description: 'backpost بتصريح مدير النظام', journalDate: '2027-01-20', post: true, backpostReason: 'اختبار الصلاحية الواضحة — ترحيل بتصريح إلى فترة مقفولة إداريًا', lines: [
+    { accountId: glId('5106'), debit: 50, description: 'x' },
+    { accountId: glId('1101'), credit: 50, description: 'y' },
+  ] });
+  check('admin WITH accounting.backpost CAN backpost into a manually locked period (201)', backpostNoPerm.status === 201, `status=${backpostNoPerm.status} body=${JSON.stringify(backpostNoPerm.body).slice(0, 120)}`);
+  const refusedClose = await raw('POST', `/accounting/periods/${pManualLock}/close-month`, {});
+  check('accounting close refused inside a manually locked period (400)', refusedClose.status === 400 && String(refusedClose.body?.message ?? '').includes('مقفولة إداريًا'), `status=${refusedClose.status} msg=${refusedClose.body?.message}`);
+  const reverseOnLock = await raw('POST', `/accounting/periods/${pManualLock}/reverse-close`, { reason: 'محاولة' });
+  check('reverse-close refused inside a manually locked period (400)', reverseOnLock.status === 400, `status=${reverseOnLock.status}`);
+  const unlockRes = await call('POST', `/accounting/periods/${pManualLock}/manual-unlock`, { reason: 'انتهى اختبار القفل الإداري' });
+  check('manual-unlock applied (201)', unlockRes?.manualLock === false && unlockRes?.isClosed === false, JSON.stringify(unlockRes));
+  const afterUnlockJournal = await call('POST', '/accounting/journals', { description: 'قيد بعد إزالة القفلة', journalDate: '2027-01-20', post: true, lines: [
+    { accountId: glId('5106'), debit: 25, description: 'x' },
+    { accountId: glId('1101'), credit: 25, description: 'y' },
+  ] });
+  check('journal posting allowed again after manual-unlock', !!afterUnlockJournal?.journalId, JSON.stringify(afterUnlockJournal));
+  // Operational flow: generate E3 dues + E5 depreciation for Jan 2027, THEN the close passes cleanly
+  await call('POST', '/accounting/bank-expense-rules/run', { asOf: '2027-01-31' });
+  await call('POST', '/accounting/assets/run-depreciation', { periodMonth: '2026-12' });
+  await call('POST', '/accounting/assets/run-depreciation', { periodMonth: '2027-01' });
+  const closeAfterUnlock = await call('POST', `/accounting/periods/${pManualLock}/close-month`, {});
+  check('accounting close succeeds after manual-unlock (after generating E3/E5 dues)', closeAfterUnlock?.isClosed === true, JSON.stringify(closeAfterUnlock).slice(0, 160));
+
+  console.log('\n--- G15 override authorization (close_override required) ---');
+  // Create an Accountant-with-accounting.close test user to prove separation from close_override.
+  const stamp = Date.now();
+  const roles = await call('GET', '/admin/roles');
+  const accountantRole = roles.find((r) => r.nameEn === 'Accountant');
+  check('accountant role exists for the permission test', !!accountantRole, JSON.stringify(roles.map((r) => r.nameEn)));
+  const accountantRoleIds = [accountantRole?.roleId].filter(Boolean);
+  // Replace the Accountant permission set with itself + accounting.close (NO close_override)
+  await call('PUT', `/admin/roles/${accountantRole.roleId}/permissions`, {
+    codes: ['dashboard.view','items.view','parties.view','parties.manage','parties.ledger','sales.view','purchases.view','purchases.manage','stock.view','cash.view','cash.manage','reports.view','hr.view','accounting.view','accounting.manage','accounting.post','accounting.close','bank.view','bank.manage','assets.view','assets.manage','attachments.view','attachments.manage','crm.view'],
+  });
+  const closeOnlyUser = await call('POST', '/admin/users', {
+    userName: `closeonly_${stamp}`, password: 'Test$12345', fullName: 'مدير فروع — إقفال فقط',
+    defaultBranchId: A, roleIds: [accountantRole.roleId],
+  });
+  const ovCashier = await call('POST', '/admin/users', {
+    userName: `ovcashier_${stamp}`, password: 'Test$12345', fullName: 'كاشير التجاوز',
+    defaultBranchId: A, roleIds: [(await call('GET', '/admin/roles')).find((r) => r.nameEn === 'Cashier').roleId], maxDiscountPct: 5, isCashier: true,
+  });
+  check('override-test users created', !!closeOnlyUser.userId && !!ovCashier.userId, JSON.stringify({ closeOnlyUser, ovCashier }));
+  const loginAs = async (u) => {
+    const r = await fetch(`${BASE}/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userName: u, password: 'Test$12345' }) });
+    const d = await r.json();
+    return d.accessToken;
+  };
+  const closeOnlyToken = await loginAs(`closeonly_${stamp}`);
+  const cashierToken = await loginAs(`ovcashier_${stamp}`);
+  const pOverride = await mkPeriod(A, 'فترة تجاوز E3/E5', '2027-02-01', '2027-02-28');
+  // make two due expense rules + one due depreciation asset
+  const ovBank = await call('POST', '/treasury/accounts', { name: 'بنك المراجعة للتجاوز', type: 2, bankName: 'بنك', glAccountId: glId('1102'), openingBalance: 0 });
+  const ovRule1 = await mkRule({ name: 'MREVIEW-OVR شهري 1', bankAccountId: ovBank.cashAccountId, expenseAccountId: glId('5107'), amount: 50, frequency: 1, dayOfMonth: 5, startDate: '2026-10-05' });
+  const ovRule2 = await mkRule({ name: 'MREVIEW-OVR شهري 2', bankAccountId: ovBank.cashAccountId, expenseAccountId: glId('5107'), amount: 60, frequency: 1, dayOfMonth: 18, startDate: '2026-10-05' });
+  const ovAsset = await call('POST', '/accounting/assets', { name: 'أصل المراجعة للتجاوز', category: 'معدات', cost: 24000, residualValue: 0, usefulLifeMonths: 24, acquisitionDate: '2026-09-01', inServiceDate: '2026-10-05', depreciationMethod: 1, paymentType: 1, cashAccountId: cashMain.cashAccountId });
+  check('setup for override test complete', ovRule1 > 0 && ovRule2 > 0 && !!ovAsset?.assetId, JSON.stringify({ ovRule1, ovRule2, ovAsset }));
+  // Close attempt WITHOUT any override → refused with BOTH dues listed
+  const refusedOverride = await raw('POST', `/accounting/periods/${pOverride}/close-month`, {});
+  check('close refused while dues outstanding', refusedOverride.status === 400, `status=${refusedOverride.status}`);
+  const refusedMsg = String(refusedOverride.body?.message ?? '');
+  check('refusal message names BOTH due items (each item visible)', refusedMsg.includes('MREVIEW-OVR شهري 1') && refusedMsg.includes('MREVIEW-OVR شهري 2'), refusedMsg);
+  // close_only user (accounting.close, NO close_override) must NOT bypass → 403
+  const closeOnlyAttempt = await raw('POST', `/accounting/periods/${pOverride}/close-month`, { bypassReason: 'تجاوز بلا صلاحية override' }, A, closeOnlyToken);
+  check('accounting.close alone cannot override (403)', closeOnlyAttempt.status === 403, `status=${closeOnlyAttempt.status}`);
+  // cashier (no accounting.close at all) must NOT bypass either → 403
+  const cashierAttempt = await raw('POST', `/accounting/periods/${pOverride}/close-month`, { bypassReason: 'محاولة كاشير' }, A, cashierToken);
+  check('cashier cannot override (403)', cashierAttempt.status === 403, `status=${cashierAttempt.status}`);
+  const pRowOverride = (await call('GET', '/accounting/periods')).find((p) => p.periodId === pOverride);
+  check('after unauthorized attempts the period is still open (is_closed=false)', pRowOverride?.isClosed === false, JSON.stringify(pRowOverride));
+  // Per-item override for ONE due item; the other still blocks (not all dues auto-waived)
+  const perItem = await raw('POST', `/accounting/periods/${pOverride}/close-month`, {
+    overrides: [
+      { checkCode: 'e3_bank_expense_due', dueKey: `rule:${ovRule1}:2027-02-05`, reason: 'تجاوز معتمد — الاستحقاق الأول فقط' },
+    ],
+  });
+  check('partial override by privileged user still refuses (400) — remaining due blocks', perItem.status === 400, `status=${perItem.status} msg=${perItem.body?.message}`);
+  check('remaining due still listed after partial override', String(perItem.body?.message ?? '').includes('MREVIEW-OVR شهري 2'), perItem.body?.message);
+  // Now override ALL dues due in Feb 2027 (E3: ovRule1, ovRule2 + the monthly gate rules r1/r5/r6/r9; E5: a1, a3, ovAsset) → close must succeed
+  const closeOverrideAll = await raw('POST', `/accounting/periods/${pOverride}/close-month`, {
+    overrides: [
+      { checkCode: 'e3_bank_expense_due', dueKey: `rule:${ovRule1}:2027-02-05`, reason: 'تجاوز معتمد — الاستحقاق الأول' },
+      { checkCode: 'e3_bank_expense_due', dueKey: `rule:${ovRule2}:2027-02-18`, reason: 'تجاوز معتمد — الاستحقاق الثاني' },
+      { checkCode: 'e3_bank_expense_due', dueKey: `rule:${r1}:2027-02-20`, reason: 'تجاوز معتمد — قاعدة المراجعة الشهرية' },
+      { checkCode: 'e3_bank_expense_due', dueKey: `rule:${r5}:2027-02-03`, reason: 'تجاوز معتمد — قاعدة اليوم الثالث' },
+      { checkCode: 'e3_bank_expense_due', dueKey: `rule:${r6}:2027-02-25`, reason: 'تجاوز معتمد — القاعدة قبل الإيقاف' },
+      { checkCode: 'e3_bank_expense_due', dueKey: `rule:${rNovA}:2027-02-10`, reason: 'تجاوز معتمد — القاعدة قبل موعد الإيقاف في نوفمبر' },
+      { checkCode: 'e5_depreciation_due', dueKey: `asset:${a1}:2027-02`, reason: 'تجاوز معتمد — إهلاك أصل أ1 في الفترة' },
+      { checkCode: 'e5_depreciation_due', dueKey: `asset:${a3}:2027-02`, reason: 'تجاوز معتمد — إهلاك أصل أ3 في الفترة' },
+      { checkCode: 'e5_depreciation_due', dueKey: `asset:${ovAsset.assetId}:2027-02`, reason: 'تجاوز معتمد — إهلاك أصل الاختبار' },
+    ],
+  });
+  check('full override by privileged user succeeds (201)', closeOverrideAll.status === 201, `status=${closeOverrideAll.status} body=${JSON.stringify(closeOverrideAll.body).slice(0, 160)}`);
+  const reportOver = await call('GET', `/accounting/periods/${pOverride}/close-report`);
+  const allOvr = (reportOver.overrides ?? []).filter((o) => ['e3_bank_expense_due', 'e5_depreciation_due'].includes(o.checkCode));
+  check('override audit rows recorded (user/reason/amount/date) — all 9 due items', allOvr.length === 9 && allOvr.every((o) => Number(o.dueAmount) > 0 && String(o.reason).length > 5 && o.overriddenBy), JSON.stringify(reportOver.overrides));
+
+  console.log('\n--- G17 empty override reason rejected ---');
+  const pEmptyReason = await mkPeriod(A, 'فترة سبب فارغ', '2027-03-01', '2027-03-31');
+  const blankReason = await raw('POST', `/accounting/periods/${pEmptyReason}/close-month`, {
+    overrides: [{ checkCode: 'e3_bank_expense_due', dueKey: 'rule:1:2027-03-05', reason: '' }],
+  });
+  check('override with empty reason refused (400)', blankReason.status === 400, `status=${blankReason.status}`);
+
+  console.log('\n--- G18 override without permission does not create audit rows ---');
+  const pNoWrite = await mkPeriod(A, 'فترة بلا كتابة للتجاوز', '2027-04-01', '2027-04-30');
+  const noWriteBtn = await raw('POST', `/accounting/periods/${pNoWrite}/close-month`, {
+    overrides: [{ checkCode: 'e3_bank_expense_due', dueKey: 'rule:99999:2027-04-05', reason: 'سبب حقيقي' }],
+  }, A, cashierToken);
+  check('cashier cannot override; audit register stays empty', noWriteBtn.status === 403, `status=${noWriteBtn.status}`);
+  const reportNoWrite = await call('GET', `/accounting/periods/${pNoWrite}/close-report`);
+  check('no override rows were written for the unauthorized attempt', (reportNoWrite.overrides ?? []).length === 0, JSON.stringify(reportNoWrite.overrides));
+
   // ================= summary =================
   const failed = results.filter((r) => !r.ok);
   console.log(`\n==================================================`);

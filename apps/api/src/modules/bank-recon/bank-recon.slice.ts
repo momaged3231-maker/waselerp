@@ -110,6 +110,9 @@ async function assertPeriodOpen(client: any, branchId: number, date: string, wha
   if (period.isClosed) {
     throw new BadRequestException(`الفترة المحاسبية «${period.name ?? date}» مقفلة — ${what}`);
   }
+  if (period.manualLock) {
+    throw new BadRequestException(`الفترة «${period.name ?? date}» مقفولة إداريًا — ${what}`);
+  }
   return period.periodId;
 }
 

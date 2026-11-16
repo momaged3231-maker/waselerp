@@ -1,6 +1,6 @@
 import {
   Body, Controller, Delete, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Query,
-  BadRequestException,
+  BadRequestException, ForbiddenException,
 } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
 import { assertDeletionAllowed } from '../../common/delete-guard';
@@ -314,6 +314,17 @@ export class AccountingService {
   async createJournal(dto: any, user: AuthUser, branchId: number) {
     const lines: JournalLineDto[] = Array.isArray(dto.lines) ? dto.lines : [];
     if (lines.length < 2) throw new BadRequestException('أضف سطرين على الأقل للقيد');
+    // EXPLICIT EXCEPTION: backpost into a closed/locked period. Requires the dedicated
+    // `accounting.backpost` permission and a mandatory reason — every other document
+    // flow (invoices, vouchers, E3/E5/payroll…) stays hard-blocked.
+    const backpostReason = String(dto?.backpostReason ?? '').trim();
+    if (backpostReason) {
+      if (!user.permissions.includes('accounting.backpost')) {
+        throw new ForbiddenException('ترحيل قيد إلى فترة مقفلة يتطلب صلاحية accounting.backpost — غير مصرح لك');
+      }
+    } else if (String(dto?.backpostReason ?? '') !== '') {
+      throw new BadRequestException('backpostReason يجب أن يكون نصًا غير فارغ');
+    }
     return this.db.transaction(async (client) => {
       const journalId = await postJournal(client, {
         branchId: dto.branchId ? Number(dto.branchId) : branchId,
@@ -331,6 +342,7 @@ export class AccountingService {
         })),
         userId: user.userId,
         post: dto.post !== false,
+        backpostReason: backpostReason || null,
       });
       await client.query(
         `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
@@ -895,8 +907,11 @@ export class AccountingService {
       `SELECT p.period_id AS "periodId", p.name, p.start_date AS "startDate", p.end_date AS "endDate",
               p.is_closed AS "isClosed", p.closed_at AS "closedAt", p.notes,
               u.full_name AS "closedBy",
+              p.manual_lock AS "manualLock", p.manual_lock_at AS "manualLockAt", p.manual_lock_reason AS "manualLockReason",
+              l.full_name AS "manualLockedBy",
               (SELECT COUNT(*)::int FROM gl_journals j WHERE j.period_id = p.period_id) AS "journalCount"
          FROM periods p LEFT JOIN users u ON u.user_id = p.closed_by
+              LEFT JOIN users l ON l.user_id = p.manual_lock_by
         WHERE ($1::int = 0 OR p.branch_id = $1::int)
         ORDER BY p.start_date DESC`,
       [branchId],
@@ -937,47 +952,62 @@ export class AccountingService {
   }
 
   /**
-   * MANUAL accounting lock (legacy). Marks the period closed WITHOUT any checklist,
-   * journal or RETAINED_EARNINGS transfer — it exists so back-office flows (and the
-   * regression suite) can freeze a period's ledger. It is NOT the monthly closing;
-   * the monthly closing is `closeMonth` (pre-close checklist + balanced journal).
-   * Audited like every other state change.
+   * MANUAL administrative lock — freezes the period administratively:
+   * no journals, no postings, no closing, no reversal. It does NOT touch
+   * `is_closed`, `closing_entry_id`, `net_income` — the accounting state is
+   * untouched by design. Audited with a mandatory reason.
    */
-  async closePeriod(id: number, user: AuthUser) {
-    const row = await this.db.one<any>(
-      'SELECT period_id, name, is_closed FROM periods WHERE period_id = $1::int',
-      [id],
-    );
-    if (!row) throw new BadRequestException('الفترة غير موجودة');
-    if (row.is_closed) throw new BadRequestException('الفترة مقفلة بالفعل');
-    await this.db.query(
-      `UPDATE periods SET is_closed = true, closed_at = now(), closed_by = $2 WHERE period_id = $1::int`,
-      [id, user.userId],
-    );
-    await this.db.query(
-      `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-       SELECT $2::int, p.branch_id, 'period.manual_lock', 'period', p.period_id, $3
-         FROM periods p WHERE p.period_id = $1::int`,
-      [id, user.userId, `قفل يدوي بلا أثر محاسبي «${row.name}» — الإقفال الآلي الشهري هو المرجع المحاسبي`],
-    );
-    return { periodId: id, isClosed: true, warning: 'قفل يدوي بلا ترحيل محاسبي — استخدم الإقفال الشهري الآلي للإقفال المحاسبي الكامل' };
+  async manualLock(id: number, dto: any, user: AuthUser, branchId: number) {
+    const reason = String(dto?.reason ?? '').trim();
+    if (!reason) throw new BadRequestException('سبب القفل الإداري إلزامي — اذكر السبب (مثل: حفظ الدفاتر أثناء التدقيق)');
+    return this.db.transaction(async (client) => {
+      const { rows } = await client.query(
+        `SELECT period_id, name, is_closed, manual_lock FROM periods
+          WHERE period_id = $1::int AND branch_id = $2::int FOR UPDATE`,
+        [id, branchId],
+      );
+      if (!rows.length) throw new BadRequestException('الفترة غير موجودة في هذا الفرع');
+      const p = rows[0];
+      if (p.manual_lock) throw new BadRequestException('الفترة مقفولة إداريًا بالفعل');
+      await client.query(
+        `UPDATE periods SET manual_lock = true, manual_lock_at = now(), manual_lock_by = $2::int, manual_lock_reason = $3
+          WHERE period_id = $1::int`,
+        [id, user.userId, reason],
+      );
+      await client.query(
+        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
+         VALUES ($1::int,$2::int,'period.manual_lock','period',$3::bigint,$4)`,
+        [user.userId, branchId, id, `قفل إداري للفترة «${p.name}» — ${reason}`],
+      );
+      return { periodId: id, manualLock: true, isClosed: !!p.is_closed, reason };
+    });
   }
 
-  /** MANUAL unlock (legacy) — paired with `closePeriod`. Audited. No accounting effect. */
-  async reopenPeriod(id: number, user: AuthUser) {
-    const row = await this.db.one<any>('SELECT period_id, name, is_closed FROM periods WHERE period_id = $1::int', [id]);
-    if (!row) throw new BadRequestException('الفترة غير موجودة');
-    await this.db.query(
-      'UPDATE periods SET is_closed = false, closed_at = NULL, closed_by = NULL WHERE period_id = $1::int',
-      [id],
-    );
-    await this.db.query(
-      `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-       SELECT $2::int, p.branch_id, 'period.manual_unlock', 'period', p.period_id, $3
-         FROM periods p WHERE p.period_id = $1::int`,
-      [id, user.userId, `فتح يدوي للفترة «${row.name}» — بلا أثر محاسبي`],
-    );
-    return { periodId: id, isClosed: false };
+  /** MANUAL administrative unlock — lifts the administrative freeze. Accounting state unchanged. */
+  async manualUnlock(id: number, dto: any, user: AuthUser, branchId: number) {
+    const reason = String(dto?.reason ?? '').trim();
+    if (!reason) throw new BadRequestException('سبب إزالة القفلة الإدارية إلزامي — اذكر السبب');
+    return this.db.transaction(async (client) => {
+      const { rows } = await client.query(
+        `SELECT period_id, name, is_closed, manual_lock FROM periods
+          WHERE period_id = $1::int AND branch_id = $2::int FOR UPDATE`,
+        [id, branchId],
+      );
+      if (!rows.length) throw new BadRequestException('الفترة غير موجودة في هذا الفرع');
+      const p = rows[0];
+      if (!p.manual_lock) throw new BadRequestException('الفترة غير مقفولة إداريًا');
+      await client.query(
+        `UPDATE periods SET manual_lock = false, manual_lock_at = NULL, manual_lock_by = NULL, manual_lock_reason = NULL
+          WHERE period_id = $1::int`,
+        [id],
+      );
+      await client.query(
+        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
+         VALUES ($1::int,$2::int,'period.manual_unlock','period',$3::bigint,$4)`,
+        [user.userId, branchId, id, `إزالة القفلة الإدارية عن الفترة «${p.name}» — ${reason}`],
+      );
+      return { periodId: id, manualLock: false, isClosed: !!p.is_closed, reason };
+    });
   }
 
   // ------------------------------------------------------------------ //
@@ -1027,7 +1057,10 @@ export class AccountingService {
    * period_close_checks (idempotent per period+check via UNIQUE upsert).
    * Never throws: returns the check rows; the closing call enforces them.
    */
-  private async runCloseChecklist(client: PoolClient, period: any, branchId: number, userId: number | null, bypassReason?: string | null) {
+  private async runCloseChecklist(client: PoolClient, period: any, branchId: number, userId: number | null,
+    opts?: { bypassReason?: string | null; overrides?: { checkCode: string; dueKey: string; reason: string }[] | null; canOverride?: boolean; dryRun?: boolean }) {
+    type DueItem = { key: string; label: string; amount: number };
+    const bypassReason = opts?.bypassReason ?? null;
     const from = asIsoDate(period.start_date)!;
     const to = asIsoDate(period.end_date) ?? new Date().toISOString().slice(0, 10);
     const results: { checkCode: string; checkLabel: string; status: number; details?: string | null }[] = [];
@@ -1041,6 +1074,59 @@ export class AccountingService {
            SET status = EXCLUDED.status, details = EXCLUDED.details, checked_at = now(), resolved_by = EXCLUDED.resolved_by`,
         [period.period_id, branchId, checkCode, checkLabel, status, details ?? null, userId],
       );
+    };
+
+    /**
+     * Splits the missing dues of an E3/E5 check into waived vs remaining.
+     * Overrides (per-item or whole-check legacy bypassReason) only apply when the
+     * caller holds the dedicated permission `accounting.close_override`; otherwise
+     * the request fails closed with 403 and nothing is written or bypassed.
+     */
+    const waive = (missing: DueItem[], checkCode: string) => {
+      const canOv = !!opts?.canOverride;
+      const waiverReason = String(opts?.bypassReason ?? '').trim() || null;
+      const perItem = (opts?.overrides ?? []).filter((o) => o.checkCode === checkCode && !!String(o.reason ?? '').trim());
+      const wantsOverride = !!waiverReason || (opts?.overrides ?? []).some((o) => o.checkCode === checkCode);
+      if (wantsOverride && !canOv) {
+        throw new ForbiddenException('تجاوز فحوص الإقفال E3 وE5 يتطلب صلاحية accounting.close_override — غير مصرح لك');
+      }
+      if (!canOv || (!waiverReason && perItem.length === 0)) return { waived: [] as { item: DueItem; reason: string }[], remaining: missing };
+      if (waiverReason) return { waived: missing.map((item) => ({ item, reason: waiverReason })), remaining: [] as DueItem[] };
+      const keyOf = (s: string) => s;
+      const waived: { item: DueItem; reason: string }[] = [];
+      const remaining: DueItem[] = [];
+      for (const item of missing) {
+        const match = perItem.find((o) => keyOf(o.dueKey) === item.key);
+        if (match) waived.push({ item, reason: String(match.reason).trim() });
+        else remaining.push(item);
+      }
+      return { waived, remaining };
+    };
+
+    /** Writes the immutable override audit rows for the waived dues (transactional with the close). */
+    const recordOverrides = async (waived: { item: DueItem; reason: string }[], checkCode: string) => {
+      if (!waived.length || opts?.dryRun) return;
+      for (const { item, reason } of waived) {
+        try {
+          await client.query(
+            `INSERT INTO period_close_overrides (period_id, branch_id, check_code, due_key, due_label, due_amount, reason, created_by)
+             VALUES ($1::int,$2::int,$3,$4,$5,$6::numeric,$7,$8::int)`,
+            [period.period_id, branchId, checkCode, item.key, item.label, item.amount, reason, userId],
+          );
+        } catch (err: any) {
+          if (err?.code === '23505') {
+            throw new BadRequestException('تم تسجيل تجاوز مكرر لهذا الاستحقاق في هذه الفترة — غير مسموح بتغييره بعد اعتماده');
+          }
+          throw new BadRequestException('تعذر تسجيل تجاوز الإقفال — راجع السجل');
+        }
+      }
+      for (const { item, reason } of waived) {
+        await client.query(
+          `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
+           VALUES ($1::int,$2::int,'period.close_override','period',$3::bigint,$4)`,
+          [userId, branchId, period.period_id, `تجاوز «${item.label}» بمبلغ ${item.amount.toFixed(2)} — ${reason}`],
+        );
+      }
     };
 
     // 1) Every posted journal in the period is balanced
@@ -1125,12 +1211,12 @@ export class AccountingService {
     // occurrence refused because its period was locked stays due and blocks this close.
     {
       const { rows: rules } = await client.query(
-        `SELECT rule_id, name, frequency, day_of_month, start_date, end_date, is_active, suspended_at
+        `SELECT rule_id, name, frequency, day_of_month, start_date, end_date, is_active, suspended_at, amount
            FROM bank_expense_rules
           WHERE branch_id = $1::int`,
         [branchId],
       );
-      const missing: string[] = [];
+      const missing: DueItem[] = [];
       for (const rule of rules) {
         if (!rule.is_active) continue;
         const ruleStart = asIsoDate(rule.start_date)!;
@@ -1143,18 +1229,25 @@ export class AccountingService {
             `SELECT 1 FROM bank_expense_runs WHERE rule_id = $1::int AND period_key = $2::date AND status = 1`,
             [rule.rule_id, occ],
           );
-          if (!hit.rows.length) missing.push(`${rule.name} — ${occ}`);
+          if (!hit.rows.length) {
+            missing.push({
+              key: `rule:${Number(rule.rule_id)}:${occ}`,
+              label: `${rule.name} — ${occ}`,
+              amount: Math.round(Number(rule.amount) * 100) / 100,
+            });
+          }
         }
       }
+      const { waived, remaining } = waive(missing, 'e3_bank_expense_due');
+      await recordOverrides(waived, 'e3_bank_expense_due');
       const label = 'كل استحقاقات الرسوم البنكية (E3) في الفترة مقيّدة';
-      if (missing.length === 0) {
-        await record('e3_bank_expense_due', label, 2, null);
-      } else if (bypassReason) {
-        await record('e3_bank_expense_due', label, 4,
-          `تجاوز ${missing.length} استحقاقًا غير مولّد بقرار مصرّح: ${bypassReason} (${missing.slice(0, 6).join('؛ ')}${missing.length > 6 ? ' …' : ''})`);
+      if (remaining.length === 0) {
+        await record('e3_bank_expense_due', label, waived.length ? 4 : 2,
+          waived.length ? `تجاوز ${waived.length} استحقاقًا بقرار مصرّح — ${waived.map((w) => `${w.item.label} (${w.item.amount.toFixed(2)}) — ${w.reason}`).join('؛ ')}` : null);
       } else {
-        await record('e3_bank_expense_due', label, 3,
-          `استحقاقات لم يولّد لها E3 — شغّل "توليد الرسوم البنكية" أولًا: ${missing.slice(0, 8).join('؛ ')}${missing.length > 8 ? ` … (+${missing.length - 8})` : ''}`);
+        const parts = [`${remaining.length} استحقاقًا لم يولّد لها E3: ${remaining.slice(0, 8).map((m) => `${m.label} (${m.amount.toFixed(2)})`).join('؛ ')}${remaining.length > 8 ? ' …' : ''}`];
+        if (waived.length) parts.push(`${waived.length} استحقاقًا مُتجاوزًا: ${waived.map((w) => `${w.item.label} (${w.item.amount.toFixed(2)})`).join('؛ ')}`);
+        await record('e3_bank_expense_due', label, 3, parts.join(' — '));
       }
     }
 
@@ -1167,7 +1260,7 @@ export class AccountingService {
     // value mismatch vs GL; post depreciation BEFORE disposing to avoid it.
     {
       const months = monthsInRange(from, to);
-      const missing: string[] = [];
+      const missing: DueItem[] = [];
       const { rows: assets } = await client.query(
         `SELECT a.* FROM fixed_assets a
           WHERE a.branch_id = $1::int AND a.status = 1 AND a.in_service_date <= $2::date`,
@@ -1188,18 +1281,25 @@ export class AccountingService {
             `SELECT 1 FROM asset_depreciation_lines WHERE asset_id = $1::int AND period_month = $2::date`,
             [asset.asset_id, monthDate],
           );
-          if (!hit.rows.length) missing.push(`${asset.asset_code} «${asset.name}» — ${monthDate.slice(0, 7)} بمبلغ ${amount.toFixed(2)}`);
+          if (!hit.rows.length) {
+            missing.push({
+              key: `asset:${Number(asset.asset_id)}:${monthDate.slice(0, 7)}`,
+              label: `${asset.asset_code} «${asset.name}» — ${monthDate.slice(0, 7)}`,
+              amount,
+            });
+          }
         }
       }
+      const { waived, remaining } = waive(missing, 'e5_depreciation_due');
+      await recordOverrides(waived, 'e5_depreciation_due');
       const label = 'كل استحقاقات الإهلاك (E5) في الفترة مقيّدة';
-      if (missing.length === 0) {
-        await record('e5_depreciation_due', label, 2, null);
-      } else if (bypassReason) {
-        await record('e5_depreciation_due', label, 4,
-          `تجاوز ${missing.length} شهر إهلاك غير مسجّل بقرار مصرّح: ${bypassReason} (${missing.slice(0, 6).join('؛ ')}${missing.length > 6 ? ' …' : ''})`);
+      if (remaining.length === 0) {
+        await record('e5_depreciation_due', label, waived.length ? 4 : 2,
+          waived.length ? `تجاوز ${waived.length} شهر إهلاك بقرار مصرّح — ${waived.map((w) => `${w.item.label} (${w.item.amount.toFixed(2)}) — ${w.reason}`).join('؛ ')}` : null);
       } else {
-        await record('e5_depreciation_due', label, 3,
-          `إهلاك مستحق غير مسجّل — شغّل "تشغيل الإهلاك" أولًا: ${missing.slice(0, 8).join('؛ ')}${missing.length > 8 ? ` … (+${missing.length - 8})` : ''}`);
+        const parts = [`${remaining.length} شهر إهلاك مستحق غير مسجّل: ${remaining.slice(0, 8).map((m) => `${m.label} (${m.amount.toFixed(2)})`).join('؛ ')}${remaining.length > 8 ? ' …' : ''}`];
+        if (waived.length) parts.push(`${waived.length} عنصر مُتجاوز: ${waived.map((w) => `${w.item.label} (${w.item.amount.toFixed(2)})`).join('؛ ')}`);
+        await record('e5_depreciation_due', label, 3, parts.join(' — '));
       }
     }
 
@@ -1217,7 +1317,8 @@ export class AccountingService {
   async preCloseCheck(id: number, user: AuthUser, branchId: number) {
     return this.db.transaction(async (client) => {
       const period = await this.periodByIdForBranch(client, id, branchId);
-      return this.runCloseChecklist(client, period, branchId, user.userId);
+      const out = await this.runCloseChecklist(client, period, branchId, user.userId, { dryRun: true });
+      return { ...out, overrideAvailable: !!user.permissions.includes('accounting.close_override') };
     });
   }
 
@@ -1229,6 +1330,19 @@ export class AccountingService {
    */
   async closeMonth(id: number, dto: any, user: AuthUser, branchId: number) {
     const bypassReason = String(dto?.bypassReason ?? '').trim() || null;
+    const overrides: { checkCode: string; dueKey: string; reason: string }[] = Array.isArray(dto?.overrides)
+      ? dto.overrides
+          .filter((o: any) => o && ['e3_bank_expense_due', 'e5_depreciation_due'].includes(String(o.checkCode)))
+          .map((o: any) => ({ checkCode: String(o.checkCode), dueKey: String(o.dueKey ?? '').trim(), reason: String(o.reason ?? '').trim() }))
+      : [];
+    for (const o of overrides) {
+      if (!o.dueKey) throw new BadRequestException('كل قيد تجاوز (override) يحتاج dueKey — العنصر المطلوب تجاوزه');
+      if (!o.reason) throw new BadRequestException('سبب التجاوز إلزامي لكل عنصر');
+    }
+    if (bypassReason === null && overrides.length === 0 && (dto?.bypassReason !== undefined || dto?.overrides !== undefined)) {
+      // explicit but empty override payload — treat as none, do not error
+    }
+    const canOverride = !!user.permissions.includes('accounting.close_override');
     return this.db.transaction(async (client) => {
       // FOR UPDATE: a concurrent close/reopen of the SAME period must wait for us —
       // exactly one request wins; the loser re-reads the row and refuses.
@@ -1236,10 +1350,19 @@ export class AccountingService {
       if (period.is_closed) {
         throw new BadRequestException(`الفترة «${period.name}» مقفلة بالفعل — لا يمكن إقفالها مرة أخرى`);
       }
-      const checklist = await this.runCloseChecklist(client, period, branchId, user.userId, bypassReason);
+      if (period.manual_lock) {
+        throw new BadRequestException(`الفترة «${period.name}» مقفولة إداريًا — أزل القفلة الإدارية قبل الإقفال المحاسبي`);
+      }
+      const checklist = await this.runCloseChecklist(client, period, branchId, user.userId, {
+        bypassReason,
+        overrides: overrides.length ? overrides : null,
+        canOverride,
+      });
       if (checklist.failed > 0) {
-        const labels = checklist.checks.filter((c) => c.status === 3).map((c) => c.checkLabel).join('، ');
-        throw new BadRequestException(`تعذر الإقفال — ${labels}`);
+        const parts = checklist.checks
+          .filter((c) => c.status === 3)
+          .map((c) => `${c.checkLabel}${c.details ? ` — ${c.details}` : ''}`);
+        throw new BadRequestException(`تعذر الإقفال — ${parts.join(' ؛ ')}`);
       }
 
       const from = asIsoDate(period.start_date)!;
@@ -1314,6 +1437,9 @@ export class AccountingService {
       // the loser sees is_closed=false and is refused.
       const period = await this.periodByIdForBranch(client, id, branchId, true);
       if (!period.is_closed) throw new BadRequestException(`الفترة «${period.name}» ليست مقفلة`);
+      if (period.manual_lock) {
+        throw new BadRequestException(`الفترة «${period.name}» مقفولة إداريًا — أزل القفلة الإدارية قبل عكس الإقفال`);
+      }
       const entryId = period.closing_entry_id ? Number(period.closing_entry_id) : null;
       const reverseDate = asIsoDate(period.end_date) ?? asIsoDate(new Date().toISOString().slice(0, 10))!;
       // Reopen FIRST: the mirror journal must be dated INSIDE the period it reverses.
@@ -1353,8 +1479,11 @@ export class AccountingService {
     const period = await this.db.one<any>(
       `SELECT p.period_id AS "periodId", p.name, p.start_date AS "startDate", p.end_date AS "endDate",
               p.is_closed AS "isClosed", p.closed_at AS "closedAt", p.net_income AS "netIncome",
-              p.closing_entry_id AS "closingEntryId", p.notes, u.full_name AS "closedBy"
+              p.closing_entry_id AS "closingEntryId", p.notes, u.full_name AS "closedBy",
+              p.manual_lock AS "manualLock", p.manual_lock_at AS "manualLockAt", p.manual_lock_reason AS "manualLockReason",
+              l.full_name AS "manualLockedBy"
          FROM periods p LEFT JOIN users u ON u.user_id = p.closed_by
+              LEFT JOIN users l ON l.user_id = p.manual_lock_by
         WHERE p.period_id = $1::int AND p.branch_id = $2::int`,
       [id, branchId],
     );
@@ -1364,6 +1493,14 @@ export class AccountingService {
          FROM period_close_checks WHERE period_id = $1::int ORDER BY check_id`,
       [id],
     );
+    const overrides = await this.db.query<any>(
+      `SELECT o.override_id AS "overrideId", o.check_code AS "checkCode", o.due_key AS "dueKey",
+              o.due_label AS "dueLabel", o.due_amount::numeric AS "dueAmount", o.reason,
+              o.created_at AS "createdAt", u.full_name AS "overriddenBy"
+         FROM period_close_overrides o JOIN users u ON u.user_id = o.created_by
+        WHERE o.period_id = $1::int ORDER BY o.created_at ASC, o.override_id ASC`,
+      [id],
+    );
     const closingJournal = period.closingEntryId
       ? await this.journal(Number(period.closingEntryId))
       : null;
@@ -1371,6 +1508,7 @@ export class AccountingService {
       period,
       checks: checks.map((c) => ({ ...c, statusName: c.status === 2 ? 'ناجح' : c.status === 3 ? 'فاشل' : c.status === 4 ? 'مستثنى بقرار' : 'معلق' })),
       closingJournal,
+      overrides,
     };
   }
 
@@ -2129,16 +2267,16 @@ export class AccountingController {
     return this.service.createPeriod(dto, branchId);
   }
 
-  @RequirePermissions('accounting.close')
-  @Post('periods/:id/close')
-  closePeriod(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
-    return this.service.closePeriod(id, user);
+  @RequirePermissions('periods.admin')
+  @Post('periods/:id/manual-lock')
+  manualLock(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
+    return this.service.manualLock(id, dto ?? {}, user, branchId);
   }
 
-  @RequirePermissions('accounting.close')
-  @Post('periods/:id/reopen')
-  reopenPeriod(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
-    return this.service.reopenPeriod(id, user);
+  @RequirePermissions('periods.admin')
+  @Post('periods/:id/manual-unlock')
+  manualUnlock(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
+    return this.service.manualUnlock(id, dto ?? {}, user, branchId);
   }
 
   @RequirePermissions('accounting.close')

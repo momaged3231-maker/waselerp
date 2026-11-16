@@ -551,29 +551,33 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     closedPeriod = { periodId: created.periodId, isClosed: false };
   }
   check('period created', !!closedPeriod.periodId, String(closedPeriod.periodId));
-  const closeResult = await raw('POST', `/accounting/periods/${closedPeriod.periodId}/close`, {});
-  check('period closed', closeResult.status === 201, String(closeResult.status));
+  const closeResult = await raw('POST', `/accounting/periods/${closedPeriod.periodId}/manual-lock`, { reason: 'اختبار قفل الترحيل' });
+  check('manual administrative lock applied (201)', closeResult.status === 201, String(closeResult.status));
+  const afterLock = await call('GET', '/accounting/periods');
+  const lockedRow = afterLock.find((p) => p.periodId === closedPeriod.periodId);
+  check('manual lock does NOT set is_closed', lockedRow && lockedRow.isClosed === false, JSON.stringify(lockedRow));
 
   const blocked = await raw('POST', '/accounting/journals', {
     journalDate: '2020-06-15',
-    description: 'قيد داخل فترة مقفلة',
+    description: 'قيد داخل فترة مقفولة إداريًا',
     lines: [
       { accountId: expenseAccount.accountId, debit: 10 },
       { accountId: cashAccount.accountId, credit: 10 },
     ],
   });
-  check('posting into a closed period rejected', blocked.status === 400, String(blocked.status));
+  check('posting into a manually locked period rejected (400)', blocked.status === 400, String(blocked.status));
 
-  await raw('POST', `/accounting/periods/${closedPeriod.periodId}/reopen`, {});
+  const unlockResult = await raw('POST', `/accounting/periods/${closedPeriod.periodId}/manual-unlock`, { reason: 'انتهى اختبار القفل' });
+  check('manual administrative unlock applied (201)', unlockResult.status === 201, String(unlockResult.status));
   const allowed = await raw('POST', '/accounting/journals', {
     journalDate: '2020-06-15',
-    description: 'قيد بعد فتح الفترة',
+    description: 'قيد بعد إزالة القفلة الإدارية',
     lines: [
       { accountId: expenseAccount.accountId, debit: 10 },
       { accountId: cashAccount.accountId, credit: 10 },
     ],
   });
-  check('posting works after reopening', allowed.status === 201, String(allowed.status));
+  check('posting works after manual unlock (201)', allowed.status === 201, String(allowed.status));
 
   // checks
   const registeredCheck = await raw('POST', '/accounting/checks', {
@@ -2084,7 +2088,7 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
       name: 'اختبار قفل Regression', startDate: '2026-09-01', endDate: '2026-09-30',
     });
     check('regression close period created', !!closedPeriod.periodId, String(closedPeriod.periodId));
-    await call('POST', `/accounting/periods/${closedPeriod.periodId}/close`, {});
+    await call('POST', `/accounting/periods/${closedPeriod.periodId}/manual-lock`, { reason: 'اختبار Regression — قفل الترحيل' });
     const inClosedPeriod = await raw('POST', '/sales/invoices', {
       invoiceType: 1, branchId, warehouseId, paymentType: 1, paidAmount: 15,
       cashAccountId: accounts[0].cashAccountId, invoiceDate: '2026-09-15',
@@ -2092,13 +2096,15 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     });
     check('invoice in closed period rejected (400)', inClosedPeriod.status === 400, `status=${inClosedPeriod.status} ${JSON.stringify(inClosedPeriod.body?.message ?? '')}`);
     const journalInClosedPeriod = await raw('POST', '/accounting/journals', {
-      description: 'محاولة في فترة مقفولة', journalDate: '2026-09-15',
+      description: 'محاولة في فترة مقفولة إداريًا', journalDate: '2026-09-15',
       lines: [
         { accountId: 15, debit: 100, description: 'محاولة', partyId: null },
         { accountId: 45, credit: 100, description: 'محاولة', partyId: null },
       ],
     });
-    check('manual journal in closed period rejected (400)', journalInClosedPeriod.status === 400, `status=${journalInClosedPeriod.status}`);
+    check('manual journal in locked period rejected (400)', journalInClosedPeriod.status === 400, `status=${journalInClosedPeriod.status}`);
+
+    await call('POST', `/accounting/periods/${closedPeriod.periodId}/manual-unlock`, { reason: 'انتهى اختبار Regression' });
 
     const postedJournalId = dateInv.header?.glJournalId;
     const repost = await raw('POST', `/accounting/journals/${postedJournalId}/post`, {});
@@ -2410,12 +2416,12 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
       (suspenseAfterReverse.entries ?? []).every((e) => e.status !== 1),
       `open=${(suspenseAfterReverse.entries ?? []).filter((e) => e.status === 1).length}`);
 
-    // Closed period blocks reconciliation.
+    // Manually-locked period blocks reconciliation.
     const e1Period = await call('POST', '/accounting/periods', { name: `فترة E1 ${stamp}`, startDate: '2019-01-01', endDate: '2019-01-31' });
-    await call('POST', `/accounting/periods/${e1Period.periodId}/close`, {});
+    await call('POST', `/accounting/periods/${e1Period.periodId}/manual-lock`, { reason: 'اختبار منع الترحيل في فترة E1' });
     const closedRun = await raw('POST', '/treasury/bank-recon/runs', { accountId: bankId, runDate: '2019-01-15', statementBalance: 1000 });
-    check('E1: run inside a closed period rejected (400)', closedRun.status === 400, String(closedRun.status));
-    await raw('POST', `/accounting/periods/${e1Period.periodId}/reopen`, {});
+    check('E1: run inside a manually locked period rejected (400)', closedRun.status === 400, String(closedRun.status));
+    await raw('POST', `/accounting/periods/${e1Period.periodId}/manual-unlock`, { reason: 'انتهى اختبار E1' });
   };
   await phaseE1();
 
@@ -2595,12 +2601,12 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     const reversedDetail = await call('GET', `/accounting/assets/${sellFast.assetId}`);
     check('E5: reversed asset back to status 1', reversedDetail.asset.status === 1, JSON.stringify(reversedDetail.asset.status));
 
-    // ---- 14) الفترة المحاسبية المغلقة ترفض تشغيل الإهلاك
+    // ---- 14) الفترة المقفولة إداريًا ترفض تشغيل الإهلاك
     const e5Period = await call('POST', '/accounting/periods', { name: `فترة E5 ${stamp}`, startDate: '2018-01-01', endDate: '2018-01-31' });
-    await call('POST', `/accounting/periods/${e5Period.periodId}/close`, {});
+    await call('POST', `/accounting/periods/${e5Period.periodId}/manual-lock`, { reason: 'اختبار منع الإهلاك في فترة مقفولة إداريًا' });
     const closedRun = await raw('POST', '/accounting/assets/run-depreciation', { periodMonth: '2018-01' });
-    check('E5: depreciation inside a closed period rejected (400)', closedRun.status === 400, String(closedRun.status));
-    await raw('POST', `/accounting/periods/${e5Period.periodId}/reopen`, {});
+    check('E5: depreciation inside a manually locked period rejected (400)', closedRun.status === 400, String(closedRun.status));
+    await raw('POST', `/accounting/periods/${e5Period.periodId}/manual-unlock`, { reason: 'انتهى اختبار E5' });
 
     // ---- 15) صلاحيات المستخدمين
     const cashierCreate = await raw('POST', '/accounting/assets', {
@@ -2803,9 +2809,9 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     const editBlocked = await raw('PUT', `/accounting/bank-expense-rules/${ruleA.ruleId}`, { amount: 999 });
     check('E3: editing amount after generation is rejected (400)', editBlocked.status === 400, String(editBlocked.status));
 
-    // الفترة المقفولة ترفض الترحيل وتحققه في السجل
+    // الفترة المقفولة إداريًا ترفض الترحيل وتحققه في السجل
     const e3Period = await call('POST', '/accounting/periods', { name: `فترة E3 ${stamp}`, startDate: '2017-01-01', endDate: '2017-01-31' });
-    await call('POST', `/accounting/periods/${e3Period.periodId}/close`, {});
+    await call('POST', `/accounting/periods/${e3Period.periodId}/manual-lock`, { reason: 'اختبار منع توليد الرسوم في فترة مقفولة إداريًا' });
     const refusedRule = await call('POST', '/accounting/bank-expense-rules', {
       name: `رسوم قديمة ${stamp}`, bankAccountId: feeBankId, expenseAccountId: feeAccountId,
       amount: 100, frequency: 1, dayOfMonth: 15, startDate: '2017-01-15',
@@ -2813,11 +2819,11 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     });
     const runClosed = await call('POST', '/accounting/bank-expense-rules/run', { asOf: '2017-01-15' });
     const refusedClosed = (runClosed.refused ?? []).find((r) => r.ruleId === refusedRule.ruleId);
-    check('E3: closed period refuses the occurrence with an Arabic reason',
-      !!refusedClosed && String(refusedClosed.reason).includes('مقفلة'), JSON.stringify(refusedClosed));
+    check('E3: manually locked period refuses the occurrence with an Arabic reason',
+      !!refusedClosed && String(refusedClosed.reason).includes('مقفولة إداريًا'), JSON.stringify(refusedClosed));
+    await raw('POST', `/accounting/periods/${e3Period.periodId}/manual-unlock`, { reason: 'انتهى اختبار E3' });
     const runsList = await call('GET', `/accounting/bank-expense-rules/runs?ruleId=${refusedRule.ruleId}`);
     check('E3: refused occurrence is recorded in the run log', (runsList ?? []).some((r) => r.status === 2), JSON.stringify(runsList));
-    await raw('POST', `/accounting/periods/${e3Period.periodId}/reopen`, {});
 
     // Match-then-reverse: the statement line must REOPEN after the generating journal is reversed
     const ruleB = await call('POST', '/accounting/bank-expense-rules', {

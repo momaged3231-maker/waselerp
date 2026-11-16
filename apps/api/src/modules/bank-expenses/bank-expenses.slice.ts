@@ -357,6 +357,9 @@ export class BankExpensesService {
             if (period.isClosed) {
               status = 2;
               refusalReason = `الفترة المحاسبية «${period.name}» مقفلة`;
+            } else if (period.manualLock) {
+              status = 2;
+              refusalReason = `الفترة «${period.name}» مقفولة إداريًا — لا يمكن ترحيل قيد مصروف بنكي`;
             } else {
               journalId = await postJournal(client, {
                 branchId, journalType: 6, journalDate: occIso,
@@ -434,6 +437,9 @@ export class BankExpensesService {
       const period = await resolvePeriod(client, branchId, reverseDate);
       if (period.isClosed) {
         throw new BadRequestException(`الفترة المحاسبية «${period.name}» مقفلة — لا يمكن العكس فيها`);
+      }
+      if (period.manualLock) {
+        throw new BadRequestException(`الفترة «${period.name}» مقفولة إداريًا — أزل القفلة الإدارية قبل العكس`);
       }
       const reverseJournalId = await reverseJournal(client, Number(run.journal_id), {
         userId: user.userId, date: reverseDate,
