@@ -103,7 +103,7 @@ export class SalesService {
         'ReceiptCopies', 'ReceiptPaperSize', 'KitchenTicketEnabled', 'KitchenTicketCopies', 'KitchenPrinterName',
         'DefaultPaymentType', 'AutoPrintReceipt', 'DefaultOrderType',
         'KitchenTicketShowPrice', 'KitchenTicketPerCategory', 'KitchenDisplayAutoRefresh',
-        'RestaurantAutoPay', 'RestaurantDefaultTableCount', 'RestaurantHideHall', 'RestaurantHideDelivery']],
+        'RestaurantAutoPay', 'RestaurantDefaultTableCount', 'RestaurantHideHall', 'RestaurantHideDelivery', 'RestaurantsEnabled']],
     );
     const map = new Map(rows.map((row) => [row.setting_key, row.setting_value]));
     const value = (key: string) => map.get(key) ?? '';
@@ -145,6 +145,7 @@ export class SalesService {
       restaurantDefaultTableCount: int('RestaurantDefaultTableCount', 1, 99, 20),
       restaurantHideHall: bool('RestaurantHideHall', false),
       restaurantHideDelivery: bool('RestaurantHideDelivery', false),
+      restaurantsEnabled: bool('RestaurantsEnabled', true),
       defaultPaymentType,
       autoPrintReceipt: bool('AutoPrintReceipt', true),
       defaultOrderType: [1, 2, 3, 4].includes(Number(value('DefaultOrderType')))
@@ -283,6 +284,14 @@ export class SalesService {
         const customerRequired = await getBooleanSetting(client, 'RequireCustomerOnSale', false);
         if (customerRequired) {
           throw new BadRequestException('تحديد العميل إلزامي عند تسجيل الفاتورة — اختر العميل أو عطّل «طلب تحديد العميل» من الإعدادات');
+        }
+      }
+
+      // The whole restaurant unit can be disabled («الإعدادات ← مطاعم»): refuse table orders outright.
+      if (!isPurchase && Number(dto.orderType) === 4) {
+        const restaurantsEnabled = await getBooleanSetting(client, 'RestaurantsEnabled', true);
+        if (!restaurantsEnabled) {
+          throw new BadRequestException('وحدة المطاعم معطلة من «الإعدادات ← مطاعم» — فعّلها أولًا لإصدار طلب صالة');
         }
       }
 

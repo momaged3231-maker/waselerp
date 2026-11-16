@@ -131,6 +131,7 @@ const SETTINGS: [string, string][] = [
   ['RestaurantAutoPay', 'false'],
   ['RestaurantHideHall', 'false'],
   ['RestaurantHideDelivery', 'false'],
+  ['RestaurantsEnabled', 'true'],
 ];
 
 function hashPassword(password: string) {

@@ -33,6 +33,7 @@ export default function RestaurantPage() {
   const [modifiers, setModifiers] = useState<any[]>([]);
   const [settings, setSettings] = useState<any>({});
   const [hallForm, setHallForm] = useState({ name: '', code: '', tableCount: 8 });
+  const [restaurantsEnabled, setRestaurantsEnabled] = useState<boolean | null>(null);
   const [noteForm, setNoteForm] = useState('');
   const [modifierForm, setModifierForm] = useState({ itemId: 0, name: '', price: 0, maxQuantity: 1 });
   const [kitchenColumn, setKitchenColumn] = useState(0);
@@ -78,14 +79,24 @@ export default function RestaurantPage() {
     }
   }
 
-  useEffect(() => { load().catch((e) => setError(e.message)); }, []);
   useEffect(() => {
+    apiFetch<any>('/settings/features')
+      .then((features) => {
+        const enabled = features?.restaurantsEnabled !== false;
+        setRestaurantsEnabled(enabled);
+        if (enabled) load().catch((e) => setError(e.message));
+      })
+      .catch(() => setRestaurantsEnabled(true));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (restaurantsEnabled !== true) return;
     apiFetch<any[]>(`/pos/kitchen${kitchenColumn ? `?categoryId=${kitchenColumn}` : ''}`)
       .then(setKitchen).catch(() => {});
-  }, [kitchenColumn]);
+  }, [kitchenColumn, restaurantsEnabled]);
 
   // Kitchen display auto-refresh («الإعدادات ← مطاعم ← تحديث شاشة المطبخ تلقائيًا») — poll every 5s; manual refresh button stays available
-  const autoRefresh = ctx?.kitchenDisplayAutoRefresh !== false;
+  const autoRefresh = ctx?.kitchenDisplayAutoRefresh !== false && restaurantsEnabled === true;
   useEffect(() => {
     if (!autoRefresh) return undefined;
     const timer = window.setInterval(() => {
@@ -364,6 +375,30 @@ export default function RestaurantPage() {
         }],
       };
     });
+  }
+
+  if (restaurantsEnabled === null) {
+    return (
+      <AppShell title="المطاعم والصالات">
+        <div className="card p-8 text-center text-slate-400 text-sm">جارٍ التحميل…</div>
+      </AppShell>
+    );
+  }
+
+  if (restaurantsEnabled === false) {
+    return (
+      <AppShell title="المطاعم والصالات">
+        <div className="card p-8 max-w-lg mx-auto text-center space-y-4 mt-8">
+          <div className="text-4xl">🔒</div>
+          <h2 className="font-extrabold text-slate-800 text-lg">وحدة المطاعم معطلة</h2>
+          <p className="text-sm text-slate-500 leading-7">
+            وحدة المطاعم (الصالة والطاولات وشاشة المطبخ والإرسال للمطبخ) معطلة على هذا السيستم.
+            بقية النظام — مبيعات ومخزون ومحاسبة وخزينة — يعمل بشكل طبيعي.
+          </p>
+          <a className="btn-primary inline-block" href="/settings/">تفعيل من «الإعدادات ← مطاعم»</a>
+        </div>
+      </AppShell>
+    );
   }
 
   return (

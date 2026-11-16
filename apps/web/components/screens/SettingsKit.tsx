@@ -260,6 +260,21 @@ export const POS_SECTIONS: SettingSection[] = [
   },
 ];
 
+/** Master switch for the whole restaurant unit — consumed by the shell, POS and the server guards. */
+export const RESTAURANT_MASTER_SECTION: SettingSection = {
+  id: 'restaurant-master',
+  title: 'وحدة المطاعم — المفتاح الرئيسي',
+  desc: 'فعّل/عطّل وحدة المطاعم بالكامل. عند التعطيل تختفي كل واجهة المطاعم من السيستم («المطاعم» من القائمة الجانبية · «طاولة» من نقطة البيع · إدارة القاعات والطاولات والطلبات والإرسال للمطبخ) ويرفض الخادم أي عملية مطعم مع رسالة عربية — بقية السيستم (مبيعات/مخزون/محاسبة/خزينة) يعمل كما هو.',
+  fields: [
+    {
+      key: 'RestaurantsEnabled',
+      label: 'تفعيل وحدة المطاعم',
+      type: 'boolean',
+      desc: 'الوحدة تشمل: الصالة والطاولات وشاشة المطبخ والإرسال للمطبخ. التوصيل (توصيل) مستقل بمفتاح «إخفاء نظام التوصيل» داخل «نظام العمل». مناسب لتفريع النظام لصيدلية/ماركت/كافيه/فندق/مركز غوص.',
+    },
+  ],
+};
+
 export const RESTAURANT_SECTIONS: SettingSection[] = [
   {
     id: 'restaurant-kitchen-ticket',
@@ -307,7 +322,7 @@ export const RESTAURANT_SECTIONS: SettingSection[] = [
 ];
 
 export const KNOWN_SETTING_KEYS = new Set(
-  [...GENERAL_SECTIONS, ...INVOICE_SECTIONS, ...PRINTER_SECTIONS, ...BARCODE_SECTIONS, ...EXTRAS_SECTIONS, ...POS_SECTIONS, ...RESTAURANT_SECTIONS]
+  [...GENERAL_SECTIONS, ...INVOICE_SECTIONS, ...PRINTER_SECTIONS, ...BARCODE_SECTIONS, ...EXTRAS_SECTIONS, ...POS_SECTIONS, ...RESTAURANT_SECTIONS, RESTAURANT_MASTER_SECTION]
     .flatMap((section) => section.fields.map((field) => field.key)),
 );
 // Company identity keys are managed in Definitions → «بيانات الشركة» and must not be duplicated here.
@@ -315,7 +330,7 @@ export const MOVED_SETTING_KEYS = new Set(['CompanyName', 'CompanyPhone', 'Compa
 
 // Arabic labels for every known key — reuses the field labels from the structured tabs.
 const ARABIC_SETTING_LABELS_INTERNAL: Record<string, string> = {};
-for (const sections of [GENERAL_SECTIONS, INVOICE_SECTIONS, PRINTER_SECTIONS, BARCODE_SECTIONS, EXTRAS_SECTIONS, POS_SECTIONS, RESTAURANT_SECTIONS]) {
+for (const sections of [GENERAL_SECTIONS, INVOICE_SECTIONS, PRINTER_SECTIONS, BARCODE_SECTIONS, EXTRAS_SECTIONS, POS_SECTIONS, RESTAURANT_SECTIONS, [RESTAURANT_MASTER_SECTION]]) {
   for (const section of sections) {
     for (const field of section.fields) ARABIC_SETTING_LABELS_INTERNAL[field.key] = field.label;
   }

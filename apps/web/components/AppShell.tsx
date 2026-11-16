@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, type ComponentType } from 'react';
 import { useSession } from '@/lib/session';
+import { apiFetch } from '@/lib/api';
 import { useOfflineQueue } from '@/lib/offline';
 import {
   IconHome, IconCart, IconUtensils, IconWrench, IconReceipt, IconFileText,
@@ -113,10 +114,18 @@ export default function AppShell({ children, title }: { children: React.ReactNod
   const pathname = usePathname();
   const { theme, toggle: toggleTheme } = useTheme();
   const [open, setOpen] = useState(false);
+  // Restaurant unit master switch — hides «المطاعم» from the sidebar when disabled
+  const [restaurantsEnabled, setRestaurantsEnabled] = useState(true);
   // Desktop: hide/show the sidebar (persisted per device) — POS gets the full screen
   const [collapsed, setCollapsed] = useState<boolean>(() =>
     typeof window !== 'undefined' && window.localStorage.getItem('wasel-sidebar-collapsed') === '1',
   );
+
+  useEffect(() => {
+    apiFetch<any>('/settings/features')
+      .then((features) => setRestaurantsEnabled(features?.restaurantsEnabled !== false))
+      .catch(() => { /* offline — keep current state */ });
+  }, []);
 
   function toggleSidebar() {
     setCollapsed((value) => {
@@ -165,6 +174,7 @@ export default function AppShell({ children, title }: { children: React.ReactNod
     .map((group) => ({
       ...group,
       items: group.items.filter((item) => {
+        if (item.href === '/restaurant' && !restaurantsEnabled) return false;
         const required = item.permissions ?? (item.permission ? [item.permission] : []);
         return required.length === 0 || required.some((token) => can(token));
       }),

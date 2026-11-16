@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api';
-import { SettingSections, RESTAURANT_SECTIONS } from '@/components/screens/SettingsKit';
+import { SettingSections, SettingToggle, useSettings, RESTAURANT_SECTIONS } from '@/components/screens/SettingsKit';
 
 const CHARGE_MODES = [
   { value: 1, label: 'مبلغ ثابت لكل ضيف' },
@@ -10,8 +10,16 @@ const CHARGE_MODES = [
   { value: 3, label: 'نسبة % من إجمالي الفاتورة' },
 ];
 
-/** «مطاعم» — kitchen printer/ticket/display + operating mode + رسوم الخدمة (per-branch, restored by POS/restaurant). */
+/** Reads the master restaurant toggle from the shared settings map (default ON). */
+export function isRestaurantsEnabled(map: Record<string, string>): boolean {
+  const raw = String(map['RestaurantsEnabled'] ?? 'true').trim().toLowerCase();
+  return raw !== 'false' && raw !== '0';
+}
+
+/** «مطاعم» — المفتاح الرئيسي لوحدة المطاعم بالكامل + كل إعدادات المطعم مجتمعة هنا (مطبخ/شاشة/نظام عمل) + رسوم الخدمة (للفرع). */
 export default function RestaurantSettingsScreen() {
+  const { map, setValue } = useSettings();
+  const enabled = isRestaurantsEnabled(map);
   const [settings, setSettings] = useState<any>(null);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
@@ -44,12 +52,41 @@ export default function RestaurantSettingsScreen() {
 
   return (
     <div className="space-y-4 max-w-4xl">
-      <div className="card p-4">
-        <div className="font-extrabold text-slate-800">مطاعم — إعدادات التشغيل</div>
-        <div className="text-xs text-slate-500 mt-1">ورقة المطبخ وشاشة المطبخ ونظام العمل — تُستهلك فعليًا في شاشة «المطاعم» ونقطة البيع عند «إرسال للمطبخ». رسوم الخدمة تُحفظ للفرع النشط أسفل الصفحة.</div>
+      {/* Master switch — one place for the whole restaurant unit */}
+      <div className={`card p-5 border-2 transition-colors ${enabled ? 'border-emerald-200 bg-emerald-50/40' : 'border-slate-200 bg-slate-50'}`}>
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="text-base font-extrabold text-slate-800">وحدة المطاعم — المفتاح الرئيسي</span>
+              <span className={`badge ${enabled ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}`}>{enabled ? 'مفعّلة' : 'معطلة'}</span>
+            </div>
+            <p className="text-xs text-slate-500 mt-1.5 leading-6">
+              كل شيء خاص بالمطاعم في مكان واحد: الصالة والطاولات وشاشة المطبخ والإرسال للمطبخ وإعدادات التشغيل أدناه.
+              التعطيل يُخفي «المطاعم» من القائمة الجانبية ويُخفي «طاولة» من نقطة البيع ويُظهر هذه الشاشة للتعديل فقط بعد التفعيل —
+              ويرفض الخادم أي عملية مطعم برسالة عربية. بقية السيستم (مبيعات/مخزون/محاسبة/خزينة) لا يتأثر.
+              <span className="block mt-1 text-slate-400">التوصيل (توصيل) له مفتاحه المستقل داخل «نظام العمل ← إخفاء نظام التوصيل».</span>
+            </p>
+          </div>
+          <div className="flex flex-col items-center gap-1 shrink-0">
+            <SettingToggle
+              checked={enabled}
+              onToggle={() => setValue('RestaurantsEnabled', enabled ? 'false' : 'true')}
+              label="تفعيل وحدة المطاعم"
+            />
+            <span className="text-[10px] text-slate-500">يُحفظ بزر «حفظ» أعلى الصفحة</span>
+          </div>
+        </div>
       </div>
 
-      <SettingSections sections={RESTAURANT_SECTIONS} />
+      {!enabled && (
+        <div className="card p-4 border-amber-200 bg-amber-50 text-amber-900 text-xs leading-6">
+          <b>وحدة المطاعم معطلة</b> — كل الإعدادات أسفل هذه البطاقة مقفلة (عرض فقط). لتعديلها فعّل «وحدة المطاعم» في الأعلى ثم احفظ.
+          عند التعطيل أيضًا: القائمة الجانبية لا تُظهر «المطاعم» · نقطة البيع لا تُظهر «طاولة» · وشاشة المطاعم تفتح بإشعار التعطيل.
+        </div>
+      )}
+
+      <div className={`space-y-4 ${enabled ? '' : 'opacity-50 pointer-events-none select-none'}`} aria-disabled={!enabled}>
+        <SettingSections sections={RESTAURANT_SECTIONS} />
 
       <div className="card p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -133,6 +170,7 @@ export default function RestaurantSettingsScreen() {
             </div>
           </>
         )}
+      </div>
       </div>
     </div>
   );

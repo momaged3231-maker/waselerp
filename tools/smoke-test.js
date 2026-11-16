@@ -3199,6 +3199,53 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
   };
   await phaseE6();
 
+  // =================================================================
+  // Phase R — Restaurant unit master switch (RestaurantsEnabled)
+  // =================================================================
+  const phaseRestaurants = async () => {
+    // Ensure we leave the suite with the unit ENABLED (default) — and the switch off/on only here.
+    await call('PUT', '/admin/settings', { RestaurantsEnabled: 'false' });
+
+    const featuresOff = await call('GET', '/settings/features');
+    check('R: features endpoint reports restaurant unit DISABLED', featuresOff.restaurantsEnabled === false, JSON.stringify(featuresOff));
+
+    const tableOrderOff = await raw('POST', '/pos/table-orders', { tableId: 1, lines: [{ itemId: itemB.itemId, unitId: 1, quantity: 1, unitPrice: 100, discountPct: 0, taxPct: 0 }] });
+    check('R: creating a table order is refused while the unit is disabled (400)', tableOrderOff.status === 400, String(tableOrderOff.status));
+
+    const saveTableOff = await raw('POST', '/pos/tables', { name: `R-OFF-${stamp}`, tableType: 1, capacity: 2 });
+    check('R: creating a table is refused while the unit is disabled (400)', saveTableOff.status === 400, String(saveTableOff.status));
+
+    const saveHallOff = await raw('POST', '/pos/halls', { name: `R-OFF-${stamp}`, code: `RO${String(stamp).slice(-4)}`, tableCount: 2 });
+    check('R: creating a hall is refused while the unit is disabled (400)', saveHallOff.status === 400, String(saveHallOff.status));
+
+    const hallOrderOff = await raw('POST', '/sales/invoices', {
+      invoiceType: 1, branchId, warehouseId, paymentType: 1, cashAccountId: accounts[0].cashAccountId, paidAmount: 100,
+      orderType: 4,
+      lines: [{ itemId: itemB.itemId, unitId: 1, quantity: 1, unitPrice: 100, discountPct: 0, taxPct: 0 }],
+    });
+    check('R: issuing a hall (table) invoice is refused while the unit is disabled (400)', hallOrderOff.status === 400, String(hallOrderOff.status));
+
+    // Reads stay open (read-only shell)
+    const tablesStillReadable = await raw('GET', '/pos/tables');
+    check('R: tables list remains readable (200)', tablesStillReadable.status === 200, String(tablesStillReadable.status));
+
+    // Counter sales keep working with the restaurant unit off (pharmacy/market behaviour)
+    const counterSaleOff = await call('POST', '/sales/invoices', {
+      invoiceType: 1, branchId, warehouseId, paymentType: 1, cashAccountId: accounts[0].cashAccountId, paidAmount: 100,
+      orderType: 1,
+      lines: [{ itemId: itemB.itemId, unitId: 1, quantity: 1, unitPrice: 100, discountPct: 0, taxPct: 0 }],
+    });
+    check('R: counter sale (orderType 1) works with the unit disabled', !!counterSaleOff.invoiceId, JSON.stringify(counterSaleOff));
+
+    // Re-enable and confirm the unit is usable again
+    await call('PUT', '/admin/settings', { RestaurantsEnabled: 'true' });
+    const featuresOn = await call('GET', '/settings/features');
+    check('R: features endpoint reports restaurant unit ENABLED', featuresOn.restaurantsEnabled === true, JSON.stringify(featuresOn));
+    const tableOrderOn = await call('POST', '/pos/table-orders', { tableId: 1, lines: [{ itemId: itemB.itemId, unitId: 1, quantity: 1, unitPrice: 100, discountPct: 0, taxPct: 0 }] });
+    check('R: creating a table order works again after re-enabling', !!tableOrderOn.tableOrderId, JSON.stringify(tableOrderOn));
+  };
+  await phaseRestaurants();
+
   const failed = results.filter((r) => !r.ok);
 
   console.log(`\n${results.length - failed.length}/${results.length} checks passed`);

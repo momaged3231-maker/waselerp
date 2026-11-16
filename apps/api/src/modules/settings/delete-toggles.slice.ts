@@ -49,6 +49,21 @@ export class DeleteTogglesController {
       serverEpochMs: Date.now(),
     };
   }
+
+  /**
+   * Feature switches for the shell (any authenticated user can read flags only).
+   * restaurantsEnabled=false hides the restaurant unit from the UI and the server refuses table orders.
+   */
+  @Get('features')
+  async features() {
+    const rows = await this.db.query<{ setting_key: string; setting_value: string | null }>(
+      `SELECT setting_key, setting_value FROM app_settings WHERE setting_key = 'RestaurantsEnabled'`,
+    );
+    const map = new Map(rows.map((row) => [row.setting_key, String(row.setting_value ?? 'true')]));
+    const raw = (map.get('RestaurantsEnabled') ?? 'true').trim().toLowerCase();
+    const restaurantsEnabled = raw !== 'false' && raw !== '0';
+    return { restaurantsEnabled };
+  }
 }
 
 @Module({ controllers: [DeleteTogglesController] })

@@ -20,6 +20,25 @@ const round2 = (value: number) => Math.round((Number(value) + Number.EPSILON) * 
 export class PosService {
   constructor(private readonly db: DatabaseService, private readonly sales: SalesService) {}
 
+  /** Reads the master restaurant switch (app_settings.RestaurantsEnabled — default ON). */
+  private async restaurantsEnabled(): Promise<boolean> {
+    const row = await this.db.one<{ setting_value: string | null }>(
+      `SELECT setting_value FROM app_settings WHERE setting_key = 'RestaurantsEnabled'`,
+    );
+    const raw = String(row?.setting_value ?? 'true').trim().toLowerCase();
+    return raw !== 'false' && raw !== '0';
+  }
+
+  /**
+   * Refuses restaurant operations when the unit is disabled
+   * («الإعدادات ← مطاعم»). GET endpoints stay open so clients can render read-only state.
+   */
+  private async assertRestaurantsEnabled() {
+    if (!(await this.restaurantsEnabled())) {
+      throw new BadRequestException('وحدة المطاعم معطلة من «الإعدادات ← مطاعم» — فعّلها أولًا للتعامل مع القاعات/الطاولات/طلبات الصالة');
+    }
+  }
+
   // ------------------------------------------------------------------ //
   //  Parked carts (تعليق الفاتورة)
   // ------------------------------------------------------------------ //
@@ -100,6 +119,7 @@ export class PosService {
   }
 
   async saveTable(dto: any, branchId: number) {
+    await this.assertRestaurantsEnabled();
     const name = String(dto.name ?? '').trim();
     if (!name) throw new BadRequestException('اسم الطاولة مطلوب');
     const row = await this.db.one<{ table_id: number }>(
@@ -115,6 +135,7 @@ export class PosService {
   }
 
   async deleteTable(id: number) {
+    await this.assertRestaurantsEnabled();
     await assertDeletionAllowed(this.db, 'pos');
     const open = await this.db.one<{ c: number }>(
       'SELECT count(*)::int AS c FROM table_orders WHERE table_id = $1::int AND status <> 4',
@@ -141,6 +162,7 @@ export class PosService {
   }
 
   async saveModifier(dto: any) {
+    await this.assertRestaurantsEnabled();
     if (!dto.itemId || !dto.name) throw new BadRequestException('الصنف واسم الإضافة مطلوبان');
     const row = await this.db.one<{ modifier_id: number }>(
       `INSERT INTO item_modifiers (item_id, name, price, max_quantity, sort_order, is_active)
@@ -153,6 +175,7 @@ export class PosService {
   }
 
   async deleteModifier(id: number) {
+    await this.assertRestaurantsEnabled();
     await assertDeletionAllowed(this.db, 'pos');
     await this.db.query('DELETE FROM item_modifiers WHERE modifier_id = $1::int', [id]);
     return { modifierId: id, deleted: true };
@@ -208,6 +231,7 @@ export class PosService {
   }
 
   async saveTableOrder(dto: any, user: AuthUser, branchId: number) {
+    await this.assertRestaurantsEnabled();
     const lines = Array.isArray(dto.lines) ? dto.lines : [];
     if (!lines.length) throw new BadRequestException('أضف صنفًا واحدًا على الأقل');
 
@@ -284,6 +308,7 @@ export class PosService {
 
   /** Moves a table order (or one of its lines) through the kitchen states. */
   async setKitchenStatus(id: number, dto: any) {
+    await this.assertRestaurantsEnabled();
     const status = Number(dto.status);
     if (![1, 2, 3, 4].includes(status)) throw new BadRequestException('حالة المطبخ غير صحيحة');
 
@@ -342,6 +367,7 @@ export class PosService {
    * code "A" with 10 tables produces A1 .. A10.
    */
   async saveHall(dto: any, user: AuthUser, branchId: number) {
+    await this.assertRestaurantsEnabled();
     const name = String(dto.name ?? '').trim();
     const code = String(dto.code ?? '').trim().toUpperCase();
     if (!name) throw new BadRequestException('اسم القاعة مطلوب');
@@ -386,6 +412,7 @@ export class PosService {
   }
 
   async deleteHall(id: number) {
+    await this.assertRestaurantsEnabled();
     await assertDeletionAllowed(this.db, 'pos');
     const hall = await this.db.one<any>(
       'SELECT hall_id, name, branch_id FROM restaurant_halls WHERE hall_id = $1::int',
@@ -426,6 +453,7 @@ export class PosService {
   }
 
   async saveNoteTemplate(dto: any, branchId: number) {
+    await this.assertRestaurantsEnabled();
     const name = String(dto.name ?? '').trim();
     if (!name) throw new BadRequestException('نص الملاحظة مطلوب');
     const row = await this.db.one<{ note_id: number }>(
@@ -438,6 +466,7 @@ export class PosService {
   }
 
   async deleteNoteTemplate(id: number) {
+    await this.assertRestaurantsEnabled();
     await assertDeletionAllowed(this.db, 'pos');
     await this.db.query('DELETE FROM note_templates WHERE note_id = $1::int', [id]);
     return { noteId: id, deleted: true };
@@ -546,6 +575,7 @@ export class PosService {
    * Only lines the kitchen has not started yet can be moved.
    */
   async splitTableOrder(id: number, dto: any, user: AuthUser, branchId: number) {
+    await this.assertRestaurantsEnabled();
     const lineIds = (Array.isArray(dto.lineIds) ? dto.lineIds : []).map(Number).filter(Boolean);
     if (!lineIds.length) throw new BadRequestException('اختر السطور المراد فصلها');
     const targetTableId = Number(dto.tableId);
@@ -657,6 +687,7 @@ export class PosService {
 
   /** Moves a whole order to another (free) table. */
   async moveTableOrder(id: number, dto: any, user: AuthUser) {
+    await this.assertRestaurantsEnabled();
     const targetTableId = Number(dto.tableId);
     if (!targetTableId) throw new BadRequestException('اختر الطاولة الجديدة');
 
@@ -735,6 +766,7 @@ export class PosService {
 
   /** Closes a table order by turning it into a sales invoice. */
   async closeTableOrder(id: number, dto: any, user: AuthUser, branchId: number) {
+    await this.assertRestaurantsEnabled();
     const order = await this.tableOrder(id);
     if (Number(order.header.invoiceId)) {
       throw new BadRequestException('الطلب محوَّل لفاتورة بالفعل');

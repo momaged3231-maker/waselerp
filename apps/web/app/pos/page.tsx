@@ -226,7 +226,9 @@ export default function PosPage() {
       const def = Number(ctx?.defaultPaymentType);
       if ([1, 2, 3].includes(def)) setPaymentType(def);
       // D5: default order type opens the POS screen (draft restore overrides it later).
-      const defOrder = Number(ctx?.defaultOrderType);
+      // The restaurant master switch demotes «طاولة» to «ماشر» when the unit is disabled.
+      let defOrder = Number(ctx?.defaultOrderType);
+      if (ctx?.restaurantsEnabled === false && defOrder === 4) defOrder = 1;
       if ([1, 2, 3, 4].includes(defOrder)) setOrderType(defOrder);
     }).catch(() => {});
     loadShift();
@@ -453,6 +455,13 @@ export default function PosPage() {
     window.localStorage.removeItem('wasel.pos.draft');
     setDraftAvailable(false);
   }
+
+  // Master restaurant switch: if the unit was disabled while the cart is on «طاولة», fall back to «ماشر».
+  useEffect(() => {
+    if (printContext?.restaurantsEnabled === false && orderType === 4) {
+      setOrderType(1);
+    }
+  }, [printContext, orderType]);
 
   const tenderRef = useRef<HTMLInputElement>(null);
 
@@ -1148,7 +1157,7 @@ export default function PosPage() {
                   { value: 1, label: 'ماشر' },
                   ...(printContext?.restaurantHideDelivery ? [] : [{ value: 2, label: 'توصيل' }]),
                   { value: 3, label: 'سفري' },
-                  ...(printContext?.restaurantHideHall ? [] : [{ value: 4, label: 'طاولة' }]),
+                  ...(printContext?.restaurantsEnabled === false ? [] : (printContext?.restaurantHideHall ? [] : [{ value: 4, label: 'طاولة' }])),
                 ] as { value: number; label: string }[]).map((o) => (
                   <button
                     key={o.value}
