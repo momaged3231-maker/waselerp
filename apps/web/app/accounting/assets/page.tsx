@@ -295,7 +295,7 @@ export default function AssetsPage() {
               <div><label className="label">طريقة الإهلاك</label>
                 <select className="input w-full" value={form.depreciationMethod} onChange={(e) => setForm({ ...form, depreciationMethod: Number(e.target.value) })}>
                   <option value={1}>خط مستقيم</option>
-                  <option value={2}>رصيد متناقص</option>
+                  {/* رصيد متناقص: معطّل حتى تكتمل اختباراته — تفعيله يتطلب اعتمادًا منفصلًا */}
                 </select></div>
               <div><label className="label">الدفع</label>
                 <select className="input w-full" value={form.paymentType} onChange={(e) => setForm({ ...form, paymentType: Number(e.target.value) })}>

@@ -10,6 +10,7 @@ const TABS = [
   { href: '/accounting/securities', label: 'الأوراق المالية والبنوك' },
   { href: '/accounting/bank-recon', label: 'المطابقة البنكية' },
   { href: '/accounting/assets', label: 'الأصول الثابتة' },
+  { href: '/accounting/bank-expenses', label: 'الرسوم البنكية الآلية' },
   { href: '/accounting/reports', label: 'التقارير المالية' },
 ];
 

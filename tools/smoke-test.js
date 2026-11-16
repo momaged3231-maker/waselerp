@@ -2622,8 +2622,232 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     // ---- تعديل التكلفة بعد التسجيل مرفوض
     const editCost = await raw('PUT', `/accounting/assets/${creditAsset.assetId}`, { cost: 99999 });
     check('E5: editing cost after registration is rejected (400)', editCost.status === 400, String(editCost.status));
+
+    // ============ Declining balance battery — activation pending separate owner approval ============
+    // Independent hand-computed expectations (not derived from the engine under test).
+    const nextMonthIso = monthIso(addMonths(thisMonth, 1));
+
+    // Successive periods, straight off the rate: 800 / 773.33 / 747.56
+    const dbAsset = await call('POST', '/accounting/assets', {
+      name: `خادم E5 ${stamp}`, category: 'أجهزة كمبيوتر', cost: 24000, usefulLifeMonths: 24,
+      residualValue: 2400, acquisitionDate: `${lastMonth}-01`, inServiceDate: `${lastMonth}-01`,
+      depreciationMethod: 2, depreciationRatePct: 40, paymentType: 1, cashAccountId: accounts[0].cashAccountId,
+    });
+    check('E5-DB: diminishing balance asset registered', !!dbAsset.assetId, JSON.stringify(dbAsset));
+    const dbRun1 = await call('POST', '/accounting/assets/run-depreciation', { periodMonth: lastMonth });
+    const dbRun2 = await call('POST', '/accounting/assets/run-depreciation', { periodMonth: thisMonth });
+    const dbRun3 = await call('POST', '/accounting/assets/run-depreciation', { periodMonth: nextMonthIso });
+    const dbPosted = [dbRun1, dbRun2, dbRun3].map((r) => (r.posted ?? []).find((p) => p.assetId === dbAsset.assetId));
+    check('E5-DB: successive months follow the declining balance (800 / 773.33 / 747.56)',
+      dbPosted.every((p) => !!p)
+        && Math.abs(dbPosted[0].amount - 800) < 0.01
+        && Math.abs(dbPosted[1].amount - 773.33) < 0.01
+        && Math.abs(dbPosted[2].amount - 747.56) < 0.01,
+      JSON.stringify(dbPosted.map((p) => p?.amount)));
+
+    // Residual value is never exceeded — rate 100 with residual near cost caps at depreciable
+    const dbCapAsset = await call('POST', '/accounting/assets', {
+      name: `كرسي E5 ${stamp}`, category: 'أثاث', cost: 1000, usefulLifeMonths: 5,
+      residualValue: 990, acquisitionDate: firstThisMonth, inServiceDate: firstThisMonth,
+      depreciationMethod: 2, depreciationRatePct: 100, paymentType: 1, cashAccountId: accounts[0].cashAccountId,
+    });
+    await call('POST', '/accounting/assets/run-depreciation', { periodMonth: thisMonth });
+    const dbCapDetail = await call('GET', `/accounting/assets/${dbCapAsset.assetId}`);
+    check('E5-DB: residual value is never exceeded (book lands at 990)',
+      Math.abs(dbCapDetail.asset.accumulatedDepreciation - 10) < 0.01 && Math.abs(dbCapDetail.asset.bookValue - 990) < 0.01,
+      JSON.stringify({ accumulated: dbCapDetail.asset.accumulatedDepreciation, bookValue: dbCapDetail.asset.bookValue }));
+
+    // Final month of life settles the full remainder exactly on residual
+    const dbFinAsset = await call('POST', '/accounting/assets', {
+      name: `عددية E5 ${stamp}`, category: 'معدات', cost: 1200, usefulLifeMonths: 3,
+      residualValue: 600, acquisitionDate: `${lastMonth}-01`, inServiceDate: `${lastMonth}-01`,
+      depreciationMethod: 2, depreciationRatePct: 100, paymentType: 1, cashAccountId: accounts[0].cashAccountId,
+    });
+    await call('POST', '/accounting/assets/run-depreciation', { periodMonth: lastMonth });
+    await call('POST', '/accounting/assets/run-depreciation', { periodMonth: thisMonth });
+    const dbFinNext = await call('POST', '/accounting/assets/run-depreciation', { periodMonth: nextMonthIso });
+    const dbFinPosted = (dbFinNext.posted ?? []).find((p) => p.assetId === dbFinAsset.assetId);
+    const dbFinDetail = await call('GET', `/accounting/assets/${dbFinAsset.assetId}`);
+    check('E5-DB: final month settles exactly on residual (600 / 600)',
+      Math.abs(dbFinDetail.asset.bookValue - 600) < 0.01 && Math.abs(dbFinDetail.asset.accumulatedDepreciation - 600) < 0.01,
+      JSON.stringify({ accumulated: dbFinDetail.asset.accumulatedDepreciation, bookValue: dbFinDetail.asset.bookValue, posted: dbFinPosted }));
+
+    // Dispose then reverse — reposting an already-posted month is a no-op, never double
+    await call('POST', `/accounting/assets/${dbFinAsset.assetId}/dispose`, {
+      disposalType: 1, disposalDate: today, disposalAmount: 600, cashAccountId: accounts[0].cashAccountId, reason: 'بيع',
+    });
+    const dbFinReversed = await call('POST', `/accounting/assets/${dbFinAsset.assetId}/reverse-disposal`, {});
+    check('E5-DB: reversed disposal returns asset to service', dbFinReversed.reverseJournalId > 0, JSON.stringify(dbFinReversed));
+    const dbFinReRun = await call('POST', '/accounting/assets/run-depreciation', { periodMonth: thisMonth });
+    const dbFinRePosted = (dbFinReRun.posted ?? []).find((p) => p.assetId === dbFinAsset.assetId);
+    check('E5-DB: re-running a posted month never double-posts', !dbFinRePosted, JSON.stringify(dbFinRePosted));
+
+    // Expected vs Actual — every depreciation line equals the running sum of its predecessors
+    const dbFinCheck = await call('GET', `/accounting/assets/${dbFinAsset.assetId}`);
+    const linesOk = (dbFinCheck.lines ?? []).every((l) => {
+      const upto = (dbFinCheck.lines ?? [])
+        .filter((x) => x.periodMonth <= l.periodMonth)
+        .reduce((s, x) => s + Number(x.depreciationAmount), 0);
+      return Math.abs(upto - Number(l.accumulated)) < 0.01;
+    });
+    check('E5-DB: expected vs actual — accumulated is exactly the running sum of posted lines', linesOk, 'sum(lines) === accumulated');
   };
   await phaseE5();
+
+  // =================================================================
+  // Phase E3 — Auto Bank Expenses regression tests
+  // =================================================================
+  const phaseE3 = async () => {
+    const monthIso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const todayIso = daysAgoIso(0);
+    const thisMonth = monthIso(new Date());
+
+    // Bank account (type 2) linked to GL 1102 for the fee rules.
+    const tbBank = await call('GET', '/accounting/accounts');
+    const findAccount = (nodes, code) => {
+      for (const node of nodes ?? []) {
+        if (node.code === code) return node;
+        const hit = findAccount(node.children, code);
+        if (hit) return hit;
+      }
+      return null;
+    };
+    const bankGl = findAccount(tbBank, '1102');
+    const fee5107 = findAccount(tbBank, '5107');
+    check('E3: GL accounts resolved (1102 / 5107)', !!bankGl && !!fee5107, '');
+
+    const feeBank = await call('POST', '/treasury/accounts', {
+      name: `بنك رسوم ${stamp}`, type: 2, bankName: 'بنك الرسوم',
+      accountNo: `FEE-${stamp}`, glAccountId: Number(bankGl.accountId),
+    });
+    check('E3: bank account created for fee rules', !!feeBank.cashAccountId, String(feeBank.cashAccountId));
+    const feeBankId = feeBank.cashAccountId;
+    const feeAccountId = Number(fee5107.accountId);
+
+    // Rule 1 — رسوم POS الشهرية 777 — مبلغ فريد كي لا يلتبس مع قيود E1 في المطابقة التلقائية
+    const ruleA = await call('POST', '/accounting/bank-expense-rules', {
+      name: `رسوم POS الشهرية ${stamp}`, bankAccountId: feeBankId, expenseAccountId: feeAccountId,
+      amount: 777, frequency: 1, dayOfMonth: Number(todayIso.slice(8, 10)),
+      startDate: `${thisMonth}-01`, counterpartyName: 'شبكة فيزا',
+    });
+    check('E3: monthly rule created', !!ruleA.ruleId, JSON.stringify(ruleA));
+
+    // تشغيل التوليد — should post exactly one journal (Dr 5107 / Cr 1102)
+    const run1 = await call('POST', '/accounting/bank-expense-rules/run', {});
+    const aPosted = (run1.posted ?? []).filter((p) => p.ruleId === ruleA.ruleId);
+    check('E3: run generates exactly one journal for the due rule', aPosted.length === 1, JSON.stringify(aPosted));
+    const feeJournal = await call('GET', `/accounting/journals/${aPosted[0]?.journalId}`);
+    const feeDebit = feeJournal.lines.find((l) => Number(l.debit) > 0);
+    const feeCredit = feeJournal.lines.find((l) => Number(l.credit) > 0);
+    check('E3: fee journal is Dr 5107 / Cr BANK',
+      feeDebit?.accountCode === '5107' && feeCredit?.accountCode === '1102',
+      JSON.stringify({ debit: feeDebit?.accountCode, credit: feeCredit?.accountCode }));
+
+    // Re-running does not duplicate the same occurrence
+    const tbBefore = await call('GET', '/accounting/reports/trial-balance');
+    const run2 = await call('POST', '/accounting/bank-expense-rules/run', {});
+    const tbAfter = await call('GET', '/accounting/reports/trial-balance');
+    const netOf = (tb, code) => {
+      const line = (tb.lines ?? []).find((l) => l.code === code);
+      return Number(line?.debit ?? 0) - Number(line?.credit ?? 0);
+    };
+    const aPosted2 = (run2.posted ?? []).filter((p) => p.ruleId === ruleA.ruleId);
+    check('E3: re-running never double-posts the same occurrence', aPosted2.length === 0, JSON.stringify(aPosted2));
+    check('E3: re-run leaves the expense GL unchanged',
+      Math.abs(netOf(tbAfter, '5107') - netOf(tbBefore, '5107')) < 0.01,
+      `delta ${netOf(tbAfter, '5107') - netOf(tbBefore, '5107')}`);
+
+    // قاعدة ربع سنوية
+    const quarterlyStart = new Date();
+    quarterlyStart.setMonth(quarterlyStart.getMonth() - 4);
+    const qMonth = monthIso(quarterlyStart);
+    const ruleQ = await call('POST', '/accounting/bank-expense-rules', {
+      name: `عمولة quarterly ${stamp}`, bankAccountId: feeBankId, expenseAccountId: feeAccountId,
+      amount: 1200, frequency: 2, dayOfMonth: 1, startDate: `${qMonth}-01`,
+    });    const runQ = await call('POST', '/accounting/bank-expense-rules/run', {});
+    const qPosted = (runQ.posted ?? []).filter((p) => p.ruleId === ruleQ.ruleId);
+    check('E3: quarterly rule posts from its start month onward (occurrences)', qPosted.length >= 1, JSON.stringify(qPosted));
+
+    // قاعدة سنوية — تولّد واقعة واحدة فقط في أول سنة من بدايتها (اليوم = نفس يوم البدء)
+    const yearRule = await call('POST', '/accounting/bank-expense-rules', {
+      name: `تجديد سنوي ${stamp}`, bankAccountId: feeBankId, expenseAccountId: feeAccountId,
+      amount: 9999, frequency: 4, dayOfMonth: Number(todayIso.slice(8, 10)),
+      startDate: todayIso,
+    });
+    const runY = await call('POST', '/accounting/bank-expense-rules/run', {});
+    const yPosted = (runY.posted ?? []).filter((p) => p.ruleId === yearRule.ruleId);
+    check('E3: annual rule posts exactly one occurrence in its first year', yPosted.length === 1, JSON.stringify(yPosted));
+    const yearReRun = await call('POST', '/accounting/bank-expense-rules/run', {});
+    const yPosted2 = (yearReRun.posted ?? []).filter((p) => p.ruleId === yearRule.ruleId);
+    check('E3: annual rule never double-posts within its year', yPosted2.length === 0, JSON.stringify(yPosted2));
+
+    // الإيقاف/الاستئناف
+    await call('POST', `/accounting/bank-expense-rules/${ruleA.ruleId}/suspend`, { reason: 'اختبار الإيقاف' });
+    const runSuspended = await call('POST', '/accounting/bank-expense-rules/run', {});
+    const aPostedS = (runSuspended.posted ?? []).filter((p) => p.ruleId === ruleA.ruleId);
+    check('E3: suspended rule generates nothing', aPostedS.length === 0, JSON.stringify(aPostedS));
+    await call('POST', `/accounting/bank-expense-rules/${ruleA.ruleId}/resume`, {});
+    const runResumed = await call('POST', '/accounting/bank-expense-rules/run', {});
+    // already generated this month — resumed run does not re-post, but does not refuse either
+    const aPostedR = (runResumed.posted ?? []).filter((p) => p.ruleId === ruleA.ruleId);
+    check('E3: resumed rule is picked up again (already posted this month is skipped)', aPostedR.length === 0, JSON.stringify(aPostedR));
+
+    // تعديل القيد قبل التوليد مسموح، وبعد التوليد مرفوض
+    const ruleEdit = await call('POST', '/accounting/bank-expense-rules', {
+      name: `تعديل ${stamp}`, bankAccountId: feeBankId, expenseAccountId: feeAccountId,
+      amount: 300, frequency: 1, dayOfMonth: 28, startDate: `${thisMonth}-28`,
+    });
+    const editOk = await call('PUT', `/accounting/bank-expense-rules/${ruleEdit.ruleId}`, { amount: 350, name: `تعديل ${stamp} محدّث` });
+    check('E3: editing before first generation is allowed', !!editOk.ruleId, JSON.stringify(editOk));
+    const editBlocked = await raw('PUT', `/accounting/bank-expense-rules/${ruleA.ruleId}`, { amount: 999 });
+    check('E3: editing amount after generation is rejected (400)', editBlocked.status === 400, String(editBlocked.status));
+
+    // الفترة المقفولة ترفض الترحيل وتحققه في السجل
+    const e3Period = await call('POST', '/accounting/periods', { name: `فترة E3 ${stamp}`, startDate: '2017-01-01', endDate: '2017-01-31' });
+    await call('POST', `/accounting/periods/${e3Period.periodId}/close`, {});
+    const refusedRule = await call('POST', '/accounting/bank-expense-rules', {
+      name: `رسوم قديمة ${stamp}`, bankAccountId: feeBankId, expenseAccountId: feeAccountId,
+      amount: 100, frequency: 1, dayOfMonth: 15, startDate: '2017-01-15',
+    });
+    const runClosed = await call('POST', '/accounting/bank-expense-rules/run', {});
+    const refusedClosed = (runClosed.refused ?? []).find((r) => r.ruleId === refusedRule.ruleId);
+    check('E3: closed period refuses the occurrence with an Arabic reason',
+      !!refusedClosed && String(refusedClosed.reason).includes('مقفلة'), JSON.stringify(refusedClosed));
+    const runsList = await call('GET', `/accounting/bank-expense-rules/runs?ruleId=${refusedRule.ruleId}`);
+    check('E3: refused occurrence is recorded in the run log', (runsList ?? []).some((r) => r.status === 2), JSON.stringify(runsList));
+    await raw('POST', `/accounting/periods/${e3Period.periodId}/reopen`, {});
+
+    // عكس قيد مولّد
+    const runsA = await call('GET', `/accounting/bank-expense-rules/runs?ruleId=${ruleA.ruleId}&status=1`);
+    const aRunId = (runsA ?? [])[0]?.runId;
+    const reversed = await call('POST', `/accounting/bank-expense-rules/runs/${aRunId}/reverse`, {});
+    check('E3: reversing a generated run posts a mirror journal', reversed.status === 3 && !!reversed.reverseJournalId, JSON.stringify(reversed));
+
+    // Permissions — cashier forbidden, accountant allowed
+    const cashierCreate = await raw('POST', '/accounting/bank-expense-rules', {
+      name: 'x', bankAccountId: feeBankId, expenseAccountId: feeAccountId,
+      amount: 1, frequency: 1, dayOfMonth: 1, startDate: todayIso,
+    }, cashier.accessToken);
+    check('E3: cashier cannot create rules (403)', cashierCreate.status === 403, String(cashierCreate.status));
+    const accountantList = await raw('GET', '/accounting/bank-expense-rules', undefined, accountant.accessToken);
+    check('E3: accountant can view rules (200)', accountantList.status === 200, String(accountantList.status));
+
+    // E1 integration — a bank statement line matching the fee rule's journal auto-matches, never duplicates
+    const e3Csv = [
+      'date,description,reference,amount,movement_type',
+      `${todayIso},رسوم بنكية,E3-FEE-${stamp},-777,fee`,
+    ].join('\n');
+    const e3Imp = await call('POST', '/treasury/bank-recon/statements/import', { accountId: feeBankId, csv: e3Csv });
+    check('E3: matching bank statement line imported', e3Imp.created === 1, JSON.stringify(e3Imp));
+    const e3Auto = await call('POST', '/treasury/bank-recon/auto-match', { accountId: feeBankId, from: todayIso, to: todayIso });
+    check('E3: fee rule journal auto-matches the statement line (no duplicate fee booked)',
+      e3Auto.matched === 1, JSON.stringify(e3Auto));
+
+    // السلامة العامة — trial balance stays balanced after all E3 operations
+    const tbEnd = await call('GET', '/accounting/reports/trial-balance');
+    check('E3: trial balance balanced after E3 operations', tbEnd.balanced === true, JSON.stringify({ d: tbEnd.totalDebit, c: tbEnd.totalCredit }));
+  };
+  await phaseE3();
 
   const failed = results.filter((r) => !r.ok);
 

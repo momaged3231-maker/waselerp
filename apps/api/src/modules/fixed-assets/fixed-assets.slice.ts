@@ -368,6 +368,11 @@ export class FixedAssetsService {
     if (method === 2) {
       const rate = Number(asset.depreciation_rate_pct);
       if (!(rate > 0)) return 0;
+      // Final month of the useful life settles the full remainder down to residual,
+      // so the register always lands exactly on residual value at end of life.
+      if (monthsElapsed >= Number(asset.useful_life_months) - 1) {
+        return round2(Math.max(0, Math.min(cost - prior, depreciable - prior)));
+      }
       base = (cost - prior) * (rate / 100 / 12) * (monthsElapsed === 0 ? monthFraction : 1);
     } else {
       const monthly = depreciable / life;
