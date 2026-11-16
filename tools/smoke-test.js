@@ -2764,7 +2764,8 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     const ruleQ = await call('POST', '/accounting/bank-expense-rules', {
       name: `عمولة quarterly ${stamp}`, bankAccountId: feeBankId, expenseAccountId: feeAccountId,
       amount: 1200, frequency: 2, dayOfMonth: 1, startDate: `${qMonth}-01`,
-    });    const runQ = await call('POST', '/accounting/bank-expense-rules/run', {});
+      endDate: `${qMonth}-31`,
+    });    const runQ = await call('POST', '/accounting/bank-expense-rules/run', { asOf: `${qMonth}-31` });
     const qPosted = (runQ.posted ?? []).filter((p) => p.ruleId === ruleQ.ruleId);
     check('E3: quarterly rule posts from its start month onward (occurrences)', qPosted.length >= 1, JSON.stringify(qPosted));
 
@@ -2808,8 +2809,9 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     const refusedRule = await call('POST', '/accounting/bank-expense-rules', {
       name: `رسوم قديمة ${stamp}`, bankAccountId: feeBankId, expenseAccountId: feeAccountId,
       amount: 100, frequency: 1, dayOfMonth: 15, startDate: '2017-01-15',
+      endDate: '2017-01-31',
     });
-    const runClosed = await call('POST', '/accounting/bank-expense-rules/run', {});
+    const runClosed = await call('POST', '/accounting/bank-expense-rules/run', { asOf: '2017-01-15' });
     const refusedClosed = (runClosed.refused ?? []).find((r) => r.ruleId === refusedRule.ruleId);
     check('E3: closed period refuses the occurrence with an Arabic reason',
       !!refusedClosed && String(refusedClosed.reason).includes('مقفلة'), JSON.stringify(refusedClosed));
@@ -2882,6 +2884,172 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     check('E3: trial balance balanced after E3 operations', tbEnd.balanced === true, JSON.stringify({ d: tbEnd.totalDebit, c: tbEnd.totalCredit }));
   };
   await phaseE3();
+
+  // =================================================================
+  // Phase E6 — Automated period closing regression tests
+  // =================================================================
+  const phaseE6 = async () => {
+    const tbNet = (tb, code) => {
+      const line = (tb.lines ?? []).find((l) => l.code === code);
+      return Number(line?.debit ?? 0) - Number(line?.credit ?? 0);
+    };
+    const mkPeriod = async (name, startDate, endDate) => {
+      const created = await call('POST', '/accounting/periods', { name, startDate, endDate });
+      return created.periodId;
+    };
+    const findAccount = (nodes, code) => {
+      for (const node of nodes ?? []) {
+        if (node.code === code) return node;
+        const hit = findAccount(node.children, code);
+        if (hit) return hit;
+      }
+      return null;
+    };
+    // Best-effort: close any open branch shift before the closing tests start.
+    try {
+      const cur = await call('GET', '/treasury/shifts/current');
+      if (cur && (cur.shiftId || cur.status === 1)) {
+        await call('POST', '/treasury/shifts/close', { countedCash: Number(cur.expectedCash ?? 0) });
+      }
+    } catch { /* no open shift or already closed */ }
+
+    // Deactivate EVERY bank-expense rule — E3 phase leaves dozens of rules firing every month,
+    // which would otherwise contaminate the periods used here (luglio/agosto/...).
+    const allRules = await call('GET', '/accounting/bank-expense-rules');
+    for (const rule of allRules ?? []) {
+      try {
+        await call('POST', `/accounting/bank-expense-rules/${rule.ruleId}/deactivate`, {});
+      } catch { /* already inactive — fine */ }
+    }
+
+    const accountsTree = await call('GET', '/accounting/accounts');
+    const fee5107 = Number(findAccount(accountsTree, '5107')?.accountId);
+
+    // === Profitable month (2026-07) — sale cash, no material expenses
+    const pProfit = await mkPeriod(`E6 ربح ${stamp}`, '2026-05-01', '2026-05-31');
+    const sale = await call('POST', '/sales/invoices', {
+      invoiceType: 1, branchId, warehouseId, paymentType: 1, cashAccountId: accounts[0].cashAccountId, paidAmount: 1140,
+      invoiceDate: '2026-05-15',
+      lines: [{ itemId: itemB.itemId, unitId: 1, quantity: 1, unitPrice: 1000, discountPct: 0, taxPct: 14 }],
+    });
+    check('E6: profitable month — sale posted', !!sale.invoiceId, String(sale));
+    const preProfit = await call('POST', `/accounting/periods/${pProfit}/preclose-check`, {});
+    check('E6: pre-close check passes a clean profitable month', preProfit.failed === 0, JSON.stringify(preProfit));
+    const closedProfit = await call('POST', `/accounting/periods/${pProfit}/close-month`, {});
+    check('E6: profitable month closes with net profit', Number(closedProfit.netProfit) > 0, JSON.stringify(closedProfit));
+    check('E6: profitable month links a closing journal', !!closedProfit.journalId, JSON.stringify(closedProfit));
+    const plAfter = await call('GET', '/accounting/reports/profit-loss?from=2026-05-01&to=2026-05-31');
+    check('E6: revenue/expense accounts are zeroed after closing',
+      Number(plAfter.totalRevenue) === 0 && Number(plAfter.totalExpense) === 0, JSON.stringify(plAfter));
+
+    // === Post-closing protection: posting into a closed period is refused
+    const lateInvoice = await raw('POST', '/sales/invoices', {
+      invoiceType: 1, branchId, warehouseId, paymentType: 1, cashAccountId: accounts[0].cashAccountId, paidAmount: 114,
+      invoiceDate: '2026-05-20',
+      lines: [{ itemId: itemB.itemId, unitId: 1, quantity: 1, unitPrice: 100, discountPct: 0, taxPct: 14 }],
+    });
+    check('E6: posting into a closed period is refused (400)', lateInvoice.status === 400, String(lateInvoice.status));
+
+    // === Re-closing an already-closed period is refused
+    const reClose = await raw('POST', `/accounting/periods/${pProfit}/close-month`, {});
+    check('E6: re-closing an already-closed period is refused (400)', reClose.status === 400, String(reClose.status));
+
+    // === Empty month (2026-06) — closes WITHOUT a journal and zero net income
+    const pEmpty = await mkPeriod(`E6 فارغة ${stamp}`, '2026-06-01', '2026-06-30');
+    const closedEmpty = await call('POST', `/accounting/periods/${pEmpty}/close-month`, {});
+    check('E6: empty month closes without a journal and with net income 0',
+      closedEmpty.journalId == null && Math.abs(Number(closedEmpty.netProfit)) < 0.01, JSON.stringify(closedEmpty));
+
+    // === Loss month (2026-08) — an E3 fee + an E5 depreciation + a sale
+    const pLoss = await mkPeriod(`E6 خسارة ${stamp}`, '2026-08-01', '2026-08-31');
+    const bankList = await call('GET', '/treasury/accounts');
+    const someBank = bankList.find((a) => Number(a.type) === 2);
+    const feeRule = await call('POST', '/accounting/bank-expense-rules', {
+      name: `رسوم E6 ${stamp}`, bankAccountId: someBank.cashAccountId,
+      expenseAccountId: fee5107, amount: 250, frequency: 1, dayOfMonth: 15, startDate: '2026-08-01',
+    });
+    const feeRun = await call('POST', '/accounting/bank-expense-rules/run', { asOf: '2026-08-15' });
+    check('E3: fee rule generated for the loss month', feeRun.posted.length === 1, JSON.stringify(feeRun));
+
+    const lossAsset = await call('POST', '/accounting/assets', {
+      name: `أصل E6 ${stamp}`, category: 'معدات', cost: 12000, usefulLifeMonths: 12, residualValue: 0,
+      acquisitionDate: '2026-08-01', inServiceDate: '2026-08-01', depreciationMethod: 1, paymentType: 1, cashAccountId: accounts[0].cashAccountId,
+    });
+    const depRun = await call('POST', '/accounting/assets/run-depreciation', { periodMonth: '2026-08' });
+    check('E5: depreciation generated for the loss month', (depRun.posted ?? []).length >= 1, JSON.stringify(depRun));
+
+    await call('POST', '/sales/invoices', {
+      invoiceType: 1, branchId, warehouseId, paymentType: 1, cashAccountId: accounts[0].cashAccountId, paidAmount: 1000,
+      invoiceDate: '2026-08-10',
+      lines: [{ itemId: itemB.itemId, unitId: 1, quantity: 1, unitPrice: 1000, discountPct: 0, taxPct: 0 }],
+    });
+    // Expected net loss computed independently from the API (before closing).
+    const plBeforeClose = await call('GET', '/accounting/reports/profit-loss?from=2026-08-01&to=2026-08-31');
+    const expectedNet = Number(plBeforeClose.netProfit);
+    const preLoss = await call('POST', `/accounting/periods/${pLoss}/preclose-check`, {});
+    check('E6: loss month passes the pre-close checklist', preLoss.failed === 0, JSON.stringify(preLoss));
+    const closedLoss = await call('POST', `/accounting/periods/${pLoss}/close-month`, {});
+    check('E6: loss month closes with the exact expected net loss', Math.abs(Number(closedLoss.netProfit) - expectedNet) < 0.01, JSON.stringify(closedLoss));
+    const plAfterLoss = await call('GET', '/accounting/reports/profit-loss?from=2026-08-01&to=2026-08-31');
+    check('E6: loss month accounts zeroed after closing',
+      Number(plAfterLoss.totalRevenue) === 0 && Number(plAfterLoss.totalExpense) === 0, JSON.stringify(plAfterLoss));
+    const closingLossJournal = await call('GET', `/accounting/journals/${closedLoss.journalId}`);
+    const retainedLine = (closingLossJournal.lines ?? []).find((l) => l.accountCode === '3103');
+    check('E6: loss transferred to retained earnings (Dr 3103)',
+      retainedLine && Math.abs(Number(retainedLine.debit) - Math.abs(expectedNet)) < 0.01, JSON.stringify(retainedLine));
+
+    // === Unmatched bank line blocks closing without an explicit bypass (period 2026-04)
+    const pBypass = await mkPeriod(`E6 تجاوز ${stamp}`, '2026-04-01', '2026-04-30');
+    const csv = [
+      'date,description,reference,amount,movement_type',
+      `2026-04-20,سحب مجهول,E6-BYP-${stamp},-77,withdrawal`,
+    ].join('\n');
+    await call('POST', '/treasury/bank-recon/statements/import', { accountId: someBank.cashAccountId, csv });
+    const preBypass = await call('POST', `/accounting/periods/${pBypass}/preclose-check`, {});
+    const bankCheck = (preBypass.checks ?? []).find((c) => c.checkCode === 'no_unreconciled_bank_lines');
+    check('E6: unmatched bank line blocks the checklist', bankCheck?.status === 3, JSON.stringify(bankCheck));
+    const bypassRefused = await raw('POST', `/accounting/periods/${pBypass}/close-month`, {});
+    check('E6: closing without a bypass reason is refused (400)', bypassRefused.status === 400, String(bypassRefused.status));
+    const bypassed = await call('POST', `/accounting/periods/${pBypass}/close-month`, { bypassReason: 'استبعاد تجريبياً للتأكد من البوابة' });
+    check('E6: closing with an explicit bypass reason succeeds', bypassed.isClosed === true, JSON.stringify(bypassed));
+    const bypassReport = await call('GET', `/accounting/periods/${pBypass}/close-report`);
+    const bankCheckAfter = (bypassReport.checks ?? []).find((c) => c.checkCode === 'no_unreconciled_bank_lines');
+    check('E6: bank check recorded as bypassed with the reason', bankCheckAfter?.status === 4, JSON.stringify(bankCheckAfter));
+
+    // === Reverse the loss-month closing (reason required), then re-close
+    const expectedLoss = Number(expectedNet);  // before closing, per the pre-close read
+    const reversed = await call('POST', `/accounting/periods/${pLoss}/reverse-close`, { reason: 'اختبار عكس الإقفال' });
+    check('E6: reversing a closing reopens the period', reversed.isClosed === false && !!reversed.reverseJournalId, JSON.stringify(reversed));
+    const tbAfterRev = await call('GET', '/accounting/reports/trial-balance');
+    check('E6: trial balance balanced after reversal', tbAfterRev.balanced === true, '');
+    const noReason = await raw('POST', `/accounting/periods/${pLoss}/reverse-close`, {});
+    check('E6: reverse-close requires a reason (400)', noReason.status === 400, String(noReason.status));
+    const reClosed = await call('POST', `/accounting/periods/${pLoss}/close-month`, {});
+    check('E6: period can be re-closed after reversal', reClosed.isClosed === true, JSON.stringify(reClosed));
+
+    // === Trial balance remains balanced after all closings
+    const tbEnd = await call('GET', '/accounting/reports/trial-balance');
+    check('E6: trial balance balanced after E6 closings', tbEnd.balanced === true, '');
+
+    // === Permissions: admin closes (done above), accountant & cashier cannot
+    const adminClose = await raw('POST', `/accounting/periods/${pProfit}/close-month`, {});
+    check('E6: admin closing an already-closed period is refused with 400', adminClose.status === 400, String(adminClose.status));
+    const cashierClose = await raw('POST', `/accounting/periods/${pProfit}/close-month`, {}, cashier.accessToken);
+    check('E6: cashier cannot close a period (403)', cashierClose.status === 403, String(cashierClose.status));
+    const accountantClose = await raw('POST', `/accounting/periods/${pProfit}/close-month`, {}, accountant.accessToken);
+    check('E6: accountant cannot close (403) — closing is admin-only', accountantClose.status === 403, String(accountantClose.status));
+
+    // === Reversing a non-closed period is refused
+    const notClosed = await call('POST', '/accounting/periods', { name: `E6 مفتوحة ${stamp}`, startDate: '2026-02-01', endDate: '2026-02-28' });
+    const revOpen = await raw('POST', `/accounting/periods/${notClosed.periodId}/reverse-close`, { reason: 'x' });
+    check('E6: reversing a non-closed period is refused (400)', revOpen.status === 400, String(revOpen.status));
+
+    // === Close report returns period + checks (loss month was re-closed above)
+    const report = await call('GET', `/accounting/periods/${pLoss}/close-report`);
+    check('E6: close-report returns period + checks',
+      !!report.period && Array.isArray(report.checks) && report.checks.length >= 6, JSON.stringify(report.period));
+  };
+  await phaseE6();
 
   const failed = results.filter((r) => !r.ok);
 

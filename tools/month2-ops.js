@@ -1,5 +1,5 @@
 /* Phase 4 — Month 2 Operations driver: executes all 30 days of operations via API. */
-const BASE = 'http://127.0.0.1:4250/api';
+const BASE = process.env.M2_BASE ?? 'http://127.0.0.1:4250/api';
 let token = null;
 let branchId = null;
 
@@ -37,7 +37,12 @@ const daysAgo = (days) => { const d = new Date(); d.setDate(d.getDate() - days);
   token = login.accessToken;
   branchId = login.activeBranchId;
 
-  const daysAgoIso = (d) => { const dt = new Date(); dt.setDate(dt.getDate() - d); return dt.toISOString().slice(0, 10); };
+  const daysAgoIso = (d) => {
+    // M3 anchor: month2 lives entirely inside أكتوبر 2026 so month3 can follow via E6 closing.
+    const dt = new Date(2026, 9, 31);
+    dt.setDate(dt.getDate() - d);
+    return dt.toISOString().slice(0, 10);
+  };
 
   const whMain = (await call('GET', '/catalog/warehouses')).find((w) => w.code === 'WH-MAIN');
   const whSub = (await call('GET', '/catalog/warehouses')).find((w) => String(w.code).startsWith('WH-SUB'));

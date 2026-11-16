@@ -72,6 +72,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: '/accounting/bank-recon', label: 'المطابقة البنكية', icon: IconLandmark, permission: 'bank.view' },
       { href: '/accounting/assets', label: 'الأصول الثابتة', icon: IconBuilding, permission: 'assets.view' },
       { href: '/accounting/bank-expenses', label: 'الرسوم البنكية الآلية', icon: IconReceipt, permission: 'accounting.view' },
+      { href: '/accounting/periods', label: 'الفترات والإقفال', icon: IconCalendar, permission: 'accounting.close' },
       { href: '/reports/builder', label: 'منشئ التقارير', icon: IconChartBar, permission: 'reports.view' },
       { href: '/reports', label: 'التقارير', icon: IconChartBar, permission: 'reports.view' },
     ],

@@ -11,6 +11,7 @@ const TABS = [
   { href: '/accounting/bank-recon', label: 'المطابقة البنكية' },
   { href: '/accounting/assets', label: 'الأصول الثابتة' },
   { href: '/accounting/bank-expenses', label: 'الرسوم البنكية الآلية' },
+  { href: '/accounting/periods', label: 'الفترات والإقفال' },
   { href: '/accounting/reports', label: 'التقارير المالية' },
 ];
 

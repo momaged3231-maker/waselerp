@@ -1,5 +1,5 @@
 /* Phase 4 — Month 2 Scenario part 1: environment setup (settings, warehouses, items, parties, opening). */
-const BASE = 'http://127.0.0.1:4250/api';
+const BASE = process.env.M2_BASE ?? 'http://127.0.0.1:4250/api';
 let token = null;
 let branchId = null;
 
@@ -15,7 +15,8 @@ async function call(method, path, body, branchOverride) {
   try { return JSON.parse(t); } catch { if (!r.ok) throw new Error(`${method} ${path} -> ${r.status} ${t.slice(0,300)}`); return t; }
 }
 
-const daysAgo = (days) => { const d = new Date(); d.setDate(d.getDate() - days); return d.toISOString().slice(0, 10); };
+// M3 anchor: month2 = أكتوبر 2026 so month3 follows via E6 closing.
+const daysAgo = (days) => { const d = new Date(2026, 9, 31); d.setDate(d.getDate() - days); return d.toISOString().slice(0, 10); };
 
 (async () => {
   const login = await call('POST', '/auth/login', { userName: 'admin', password: 'admin123' });

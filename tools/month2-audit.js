@@ -3,7 +3,7 @@ const path = require('path');
 const { Client } = require(path.resolve(process.cwd(), 'apps/api/node_modules/pg'));
 
 (async () => {
-  const c = new Client({ connectionString: 'postgres://postgres:postgres@localhost:5433/wasel_month2' });
+  const c = new Client({ connectionString: process.env.M2_DB ?? 'postgres://postgres:postgres@localhost:5433/wasel_month2' });
   await c.connect();
   const out = {};
 
