@@ -2419,6 +2419,212 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
   };
   await phaseE1();
 
+  // =================================================================
+  // Phase E5 — Fixed Assets & Depreciation regression tests
+  // =================================================================
+  const phaseE5 = async () => {
+    const monthIso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const addMonths = (iso, delta) => {
+      const d = new Date(`${iso}-15T00:00:00`);
+      d.setMonth(d.getMonth() + delta);
+      return d;
+    };
+    const now = new Date();
+    const thisMonth = monthIso(now);
+    const today = daysAgoIso(0);
+    const firstThisMonth = `${thisMonth}-01`;
+    const fifteenThisMonth = `${thisMonth}-15`;
+    const lastMonth = monthIso(addMonths(thisMonth, -1));
+
+    // ---- 1) شراء أصل نقدًا
+    const cashAsset = await call('POST', '/accounting/assets', {
+      name: `Laptop E5 ${stamp}`, category: 'أجهزة كمبيوتر', cost: 24000, usefulLifeMonths: 24,
+      residualValue: 0, acquisitionDate: firstThisMonth, inServiceDate: firstThisMonth,
+      depreciationMethod: 1, paymentType: 1, cashAccountId: accounts[0].cashAccountId,
+    });
+    check('E5: cash purchase asset registered', !!cashAsset.assetId, JSON.stringify(cashAsset));
+    const cashJournal = await call('GET', `/accounting/journals/${cashAsset.journalId}`);
+    const cashDebitTotal = (cashJournal.lines ?? []).reduce((s, l) => s + Number(l.debit), 0);
+    const cashCreditTotal = (cashJournal.lines ?? []).reduce((s, l) => s + Number(l.credit), 0);
+    const cashDebitAcct = (cashJournal.lines ?? []).find((l) => l.debit > 0);
+    check('E5: acquisition journal balanced via posting.ts',
+      Math.abs(cashDebitTotal - cashCreditTotal) < 0.01 && cashDebitAcct?.accountCode === '1201',
+      JSON.stringify({ debit: cashDebitTotal, credit: cashCreditTotal, debitCode: cashDebitAcct?.accountCode }));
+
+    // ---- 2) شراء أصل آجلًا
+    const supplier = await call('POST', '/parties', { name: `مورد أصول ${stamp}`, partyType: 2, phone: '01055550000', creditLimit: 1000000 });
+    const creditAsset = await call('POST', '/accounting/assets', {
+      name: `شاشة E5 ${stamp}`, category: 'أجهزة كمبيوتر', cost: 12000, usefulLifeMonths: 12,
+      residualValue: 1200, acquisitionDate: firstThisMonth, inServiceDate: firstThisMonth,
+      depreciationMethod: 1, paymentType: 2, supplierId: supplier.partyId,
+    });
+    check('E5: credit purchase asset registered', !!creditAsset.assetId, JSON.stringify(creditAsset));
+    const creditJournal = await call('GET', `/accounting/journals/${creditAsset.journalId}`);
+    const creditApLine = (creditJournal.lines ?? []).find((l) => l.accountCode === '2101');
+    check('E5: credit purchase credits AP', !!creditApLine && Math.abs(Number(creditApLine.credit) - 12000) < 0.01, JSON.stringify(creditApLine));
+
+    // ---- 3) أصل يبدأ استخدامه منتصف الشهر (rate must follow the policy: days/daysInMonth)
+    const midAsset = await call('POST', '/accounting/assets', {
+      name: `طاولة E5 ${stamp}`, category: 'أثاث', cost: 12000, usefulLifeMonths: 12,
+      residualValue: 0, acquisitionDate: firstThisMonth, inServiceDate: fifteenThisMonth,
+      depreciationMethod: 1, paymentType: 1, cashAccountId: accounts[0].cashAccountId,
+    });
+    check('E5: mid-month asset registered', !!midAsset.assetId, JSON.stringify(midAsset));
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const expectedMidDep = Math.round((12000 / 12) * ((daysInMonth - 15 + 1) / daysInMonth) * 100) / 100;
+
+    // ---- 4) تشغيل الإهلاك للشهر الحالي (full month for assets in service on the 1st)
+    const run1 = await call('POST', '/accounting/assets/run-depreciation', { periodMonth: thisMonth });
+    check('E5: depreciation run posted', run1.posted.length >= 1, JSON.stringify(run1));
+    const cashPosted = run1.posted.find((p) => p.assetId === cashAsset.assetId);
+    check('E5: full-month asset depreciated exactly (24000/24 = 1000)',
+      !!cashPosted && Math.abs(cashPosted.amount - 1000) < 0.01, JSON.stringify(cashPosted));
+    const midPosted = run1.posted.find((p) => p.assetId === midAsset.assetId);
+    check('E5: mid-month asset depreciation matches days policy',
+      !!midPosted && Math.abs(midPosted.amount - expectedMidDep) < 0.01,
+      `expected ${expectedMidDep} got ${midPosted?.amount}`);
+
+    // ---- 5) إهلاك عدة أشهر (أصل أُنشئ في بداية الشهر الماضي — شهر مفتوح)
+    const oldAsset = await call('POST', '/accounting/assets', {
+      name: `سيارة E5 ${stamp}`, category: 'سيارات', cost: 36000, usefulLifeMonths: 12,
+      residualValue: 0, acquisitionDate: `${lastMonth}-01`, inServiceDate: `${lastMonth}-01`,
+      depreciationMethod: 1, paymentType: 1, cashAccountId: accounts[0].cashAccountId,
+    });
+    const run2 = await call('POST', '/accounting/assets/run-depreciation', { periodMonth: lastMonth });
+    const run4 = await call('POST', '/accounting/assets/run-depreciation', { periodMonth: thisMonth });
+    const oldPosted = [run2, run4].map((r) => (r.posted ?? []).find((p) => p.assetId === oldAsset.assetId));
+    check('E5: multi-month depreciation posts for every month',
+      oldPosted.every((p) => p && Math.abs(p.amount - 3000) < 0.01), JSON.stringify(oldPosted));
+    const oldDetail = await call('GET', `/accounting/assets/${oldAsset.assetId}`);
+    check('E5: accumulated after two months = 6000',
+      Math.abs(oldDetail.asset.accumulatedDepreciation - 6000) < 0.01,
+      `accumulated ${oldDetail.asset.accumulatedDepreciation}`);
+    check('E5: book value after two months = 30000',
+      Math.abs(oldDetail.asset.bookValue - 30000) < 0.01, `bookValue ${oldDetail.asset.bookValue}`);
+
+    // ---- 6) منع تكرار الإهلاك (running again for the same month posts nothing new)
+    const tbBeforeRepeat = await call('GET', '/accounting/reports/trial-balance');
+    const repeat = await call('POST', '/accounting/assets/run-depreciation', { periodMonth: thisMonth });
+    const tbAfterRepeat = await call('GET', '/accounting/reports/trial-balance');
+    check('E5: re-running the same month posts nothing',
+      (repeat.posted ?? []).length === 0 && (repeat.total ?? 0) === 0, JSON.stringify(repeat));
+    const net = (tb, code) => Number((tb.lines ?? []).find((l) => l.code === code)?.debit ?? 0)
+      - Number((tb.lines ?? []).find((l) => l.code === code)?.credit ?? 0);
+    check('E5: re-run does not move the depreciation account GL',
+      Math.abs(net(tbAfterRepeat, '5108') - net(tbBeforeRepeat, '5108')) < 0.01,
+      `delta ${net(tbAfterRepeat, '5108') - net(tbBeforeRepeat, '5108')}`);
+
+    // ---- 7) القيمة التخريدية محترمة (الشهر الأخير يتوقف عندها)
+    const capAsset = await call('POST', '/accounting/assets', {
+      name: `مكيف E5 ${stamp}`, category: 'معدات', cost: 1000, usefulLifeMonths: 1,
+      residualValue: 900, acquisitionDate: firstThisMonth, inServiceDate: firstThisMonth,
+      depreciationMethod: 1, paymentType: 1, cashAccountId: accounts[0].cashAccountId,
+    });
+    await call('POST', '/accounting/assets/run-depreciation', { periodMonth: thisMonth });
+    const d = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const nextMonth = monthIso(d);
+    const capDetail = await call('GET', `/accounting/assets/${capAsset.assetId}`);
+    check('E5: asset at residual value stops depreciating',
+      Math.abs(capDetail.asset.accumulatedDepreciation - 100) < 0.01 && Math.abs(capDetail.asset.bookValue - 900) < 0.01,
+      JSON.stringify({ accumulated: capDetail.asset.accumulatedDepreciation, bookValue: capDetail.asset.bookValue }));
+
+    // ---- 8) منع الإهلاك بعد الوصول للقيمة التخريدية
+    const capNext = await call('POST', '/accounting/assets/run-depreciation', { periodMonth: nextMonth });
+    const capNextPosted = (capNext.posted ?? []).find((p) => p.assetId === capAsset.assetId);
+    check('E5: no depreciation after reaching residual value', !capNextPosted, JSON.stringify(capNextPosted));
+
+    // ---- 9) استبعاد أصل دون إهلاك سابق (بيع بربح)
+    const sellFast = await call('POST', '/accounting/assets', {
+      name: `كراسي E5 ${stamp}`, category: 'أثاث', cost: 5000, usefulLifeMonths: 60,
+      residualValue: 0, acquisitionDate: firstThisMonth, inServiceDate: firstThisMonth,
+      depreciationMethod: 1, paymentType: 1, cashAccountId: accounts[0].cashAccountId,
+    });
+    const disposeFast = await call('POST', `/accounting/assets/${sellFast.assetId}/dispose`, {
+      disposalType: 1, disposalDate: today, disposalAmount: 6000, cashAccountId: accounts[0].cashAccountId, reason: 'بيع بمكسب',
+    });
+    check('E5: sale without prior depreciation posts (gain 1000)',
+      Math.abs(disposeFast.gainLoss - 1000) < 0.01, JSON.stringify(disposeFast));
+    const sellFastDetail = await call('GET', `/accounting/assets/${sellFast.assetId}`);
+    check('E5: sold asset status is 3 (sold)', sellFastDetail.asset.status === 3, JSON.stringify(sellFastDetail.asset.status));
+
+    // ---- 10) استبعاد أصل بإهلاك متراكم (استهلاك كامل)
+    const fullCap = await call('POST', '/accounting/assets', {
+      name: `ماكينة E5 ${stamp}`, category: 'معدات', cost: 10000, usefulLifeMonths: 10,
+      residualValue: 0, acquisitionDate: firstThisMonth, inServiceDate: firstThisMonth,
+      depreciationMethod: 1, paymentType: 1, cashAccountId: accounts[0].cashAccountId,
+    });
+    await call('POST', '/accounting/assets/run-depreciation', { periodMonth: thisMonth });
+    const disposeWriteoff = await call('POST', `/accounting/assets/${fullCap.assetId}/dispose`, {
+      disposalType: 4, disposalDate: today, reason: 'تفريخ — لم تعد صالحة',
+    });
+    check('E5: write-off of depreciated asset books the remaining loss',
+      Math.abs(disposeWriteoff.bookValue - 9000) < 0.01 && Math.abs(disposeWriteoff.gainLoss - (-9000)) < 0.01,
+      JSON.stringify(disposeWriteoff));
+    const writeoffJournal = await call('GET', `/accounting/journals/${disposeWriteoff.journalId}`);
+    const accumLine = (writeoffJournal.lines ?? []).find((l) => l.accountCode === '1202');
+    check('E5: write-off debits accumulated depreciation', !!accumLine && Math.abs(Number(accumLine.debit) - 1000) < 0.01, JSON.stringify(accumLine));
+    const writeoffDetail = await call('GET', `/accounting/assets/${fullCap.assetId}`);
+    check('E5: written-off asset status is 5', writeoffDetail.asset.status === 5, JSON.stringify(writeoffDetail.asset.status));
+
+    // ---- 11) بيع أصل بربح (راكم 9000 الآن: شهران + شهر الفحص التالي في الخطوة 8)
+    // oldAsset accumulated now = 9,000 → bookValue = 36,000 − 9,000 = 27,000
+    const profitAsset = oldAsset.assetId;
+    const disposeProfit = await call('POST', `/accounting/assets/${profitAsset}/dispose`, {
+      disposalType: 1, disposalDate: today, disposalAmount: 30000, cashAccountId: accounts[0].cashAccountId, reason: 'بيع بربح',
+    });
+    check('E5: sale with profit computes gain (30000 − 27000 = 3000)',
+      Math.abs(disposeProfit.gainLoss - 3000) < 0.01, JSON.stringify(disposeProfit));
+
+    // ---- 12) بيع أصل بخسارة
+    const lossAsset = await call('POST', '/accounting/assets', {
+      name: `كمبيوتر E5 ${stamp}`, category: 'أجهزة كمبيوتر', cost: 8000, usefulLifeMonths: 8,
+      residualValue: 0, acquisitionDate: firstThisMonth, inServiceDate: firstThisMonth,
+      depreciationMethod: 1, paymentType: 1, cashAccountId: accounts[0].cashAccountId,
+    });
+    await call('POST', '/accounting/assets/run-depreciation', { periodMonth: thisMonth }); // −1000
+    const disposeLoss = await call('POST', `/accounting/assets/${lossAsset.assetId}/dispose`, {
+      disposalType: 1, disposalDate: today, disposalAmount: 5000, cashAccountId: accounts[0].cashAccountId, reason: 'بيع بخسارة',
+    });
+    check('E5: sale with loss computes loss (5000 − 7000 = −2000)',
+      Math.abs(disposeLoss.gainLoss - (-2000)) < 0.01, JSON.stringify(disposeLoss));
+
+    // ---- 13) عكس استبعاد
+    const reverseDisposed = await call('POST', `/accounting/assets/${sellFast.assetId}/reverse-disposal`, {});
+    check('E5: reversed disposal restores in-service status',
+      reverseDisposed.reverseJournalId > 0, JSON.stringify(reverseDisposed));
+    const reversedDetail = await call('GET', `/accounting/assets/${sellFast.assetId}`);
+    check('E5: reversed asset back to status 1', reversedDetail.asset.status === 1, JSON.stringify(reversedDetail.asset.status));
+
+    // ---- 14) الفترة المحاسبية المغلقة ترفض تشغيل الإهلاك
+    const e5Period = await call('POST', '/accounting/periods', { name: `فترة E5 ${stamp}`, startDate: '2018-01-01', endDate: '2018-01-31' });
+    await call('POST', `/accounting/periods/${e5Period.periodId}/close`, {});
+    const closedRun = await raw('POST', '/accounting/assets/run-depreciation', { periodMonth: '2018-01' });
+    check('E5: depreciation inside a closed period rejected (400)', closedRun.status === 400, String(closedRun.status));
+    await raw('POST', `/accounting/periods/${e5Period.periodId}/reopen`, {});
+
+    // ---- 15) صلاحيات المستخدمين
+    const cashierCreate = await raw('POST', '/accounting/assets', {
+      name: 'x', category: 'أجهزة كمبيوتر', cost: 100, usefulLifeMonths: 1, acquisitionDate: today, inServiceDate: today,
+    }, cashier.accessToken);
+    check('E5: cashier cannot create assets (403)', cashierCreate.status === 403, String(cashierCreate.status));
+    const cashierView = await raw('GET', '/accounting/assets', undefined, cashier.accessToken);
+    check('E5: cashier cannot view assets (403)', cashierView.status === 403, String(cashierView.status));
+    const accountantView = await raw('GET', '/accounting/assets', undefined, accountant.accessToken);
+    check('E5: accountant can view assets (200)', accountantView.status === 200, String(accountantView.status));
+
+    // ---- 16) سجل الأصول مطابق للأستاذ + قيود متوازنة
+    const tbFinal = await call('GET', '/accounting/reports/trial-balance');
+    check('E5: trial balance still balanced after E5', tbFinal.balanced === true, JSON.stringify({ d: tbFinal.totalDebit, c: tbFinal.totalCredit }));
+    const summaryReport = await call('GET', '/accounting/assets/report/summary');
+    check('E5: asset register matches GL (book value = 1201 − 1202)',
+      summaryReport.registerMatchesGl === true, JSON.stringify(summaryReport));
+
+    // ---- تعديل التكلفة بعد التسجيل مرفوض
+    const editCost = await raw('PUT', `/accounting/assets/${creditAsset.assetId}`, { cost: 99999 });
+    check('E5: editing cost after registration is rejected (400)', editCost.status === 400, String(editCost.status));
+  };
+  await phaseE5();
+
   const failed = results.filter((r) => !r.ok);
 
   console.log(`\n${results.length - failed.length}/${results.length} checks passed`);

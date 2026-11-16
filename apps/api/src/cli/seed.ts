@@ -48,6 +48,8 @@ const PERMISSIONS: [string, string, string][] = [
   ['accounting.close', 'المحاسبة', 'إقفال الفترات المحاسبية وفتحها'],
   ['bank.view', 'المطابقة البنكية', 'عرض المطابقة البنكية ومسيراتها'],
   ['bank.manage', 'المطابقة البنكية', 'استيراد كشوف البنك والمطابقة والترحيل والعكس'],
+  ['assets.view', 'الأصول الثابتة', 'عرض بطاقات الأصول وجداول الإهلاك والتقارير'],
+  ['assets.manage', 'الأصول الثابتة', 'تسجيل أصول والإهلاك واستبعاد الأصول'],
   ['attachments.view', 'المرفقات', 'عرض المرفقات'],
   ['attachments.manage', 'المرفقات', 'إضافة وحذف المرفقات'],
   ['maintenance.view', 'الصيانة', 'عرض أذون الصيانة والتقارير'],
@@ -65,6 +67,7 @@ const ROLES: { name: string; nameEn: string; codes: string[] }[] = [
       'sales.view', 'purchases.view', 'purchases.manage', 'stock.view', 'cash.view', 'cash.manage',
       'reports.view', 'hr.view', 'accounting.view', 'accounting.manage', 'accounting.post',
       'bank.view', 'bank.manage',
+      'assets.view', 'assets.manage',
       'attachments.view', 'attachments.manage', 'crm.view'],
   },
   {
@@ -80,7 +83,7 @@ const ROLES: { name: string; nameEn: string; codes: string[] }[] = [
   {
     name: 'أمين مخزن', nameEn: 'StoreKeeper',
     codes: ['dashboard.view', 'items.view', 'items.manage', 'stock.view', 'stock.manage',
-      'purchases.view', 'purchases.manage', 'attachments.view', 'attachments.manage'],
+      'purchases.view', 'purchases.manage', 'attachments.view', 'attachments.manage', 'assets.view'],
   },
 ];
 
@@ -147,8 +150,8 @@ const CHART: {
   { code: '1106', name: 'مصروفات مدفوعة مقدماً', nameEn: 'Prepaid Expenses', type: 1, parent: '11' },
   { code: '1107', name: 'أوراق قبض', nameEn: 'Notes Receivable', type: 1, mapping: 'NOTES_RECEIVABLE', mappingLabel: 'أوراق قبض', parent: '11' },
   { code: '12', name: 'الأصول الثابتة', nameEn: 'Fixed Assets', type: 1, group: true, parent: '1' },
-  { code: '1201', name: 'أثاث وتجهيزات', nameEn: 'Furniture & Fixtures', type: 1, parent: '12' },
-  { code: '1202', name: 'مجمع إهلاك الأصول الثابتة', nameEn: 'Accumulated Depreciation', type: 1, normal: 2, parent: '12' },
+  { code: '1201', name: 'أثاث وتجهيزات', nameEn: 'Furniture & Fixtures', type: 1, parent: '12', mapping: 'FIXED_ASSET', mappingLabel: 'الأصول الثابتة' },
+  { code: '1202', name: 'مجمع إهلاك الأصول الثابتة', nameEn: 'Accumulated Depreciation', type: 1, normal: 2, parent: '12', mapping: 'ACCUMULATED_DEP', mappingLabel: 'مجمع إهلاك الأصول' },
 
   { code: '2', name: 'الخصوم', nameEn: 'Liabilities', type: 2, group: true },
   { code: '21', name: 'الخصوم المتداولة', nameEn: 'Current Liabilities', type: 2, group: true, parent: '2' },
@@ -180,7 +183,7 @@ const CHART: {
   { code: '5105', name: 'كهرباء ومياه واتصالات', nameEn: 'Utilities', type: 5, parent: '5' },
   { code: '5106', name: 'مصروفات إدارية وعمومية', nameEn: 'General Expenses', type: 5, mapping: 'OTHER_EXPENSE', mappingLabel: 'مصروفات إدارية', parent: '5' },
   { code: '5107', name: 'مصروفات مالية', nameEn: 'Financial Expenses', type: 5, mapping: 'BANK_FEE', mappingLabel: 'مصروفات بنكية', parent: '5' },
-  { code: '5108', name: 'إهلاكات الأصول الثابتة', nameEn: 'Depreciation', type: 5, parent: '5' },
+  { code: '5108', name: 'إهلاكات الأصول الثابتة', nameEn: 'Depreciation', type: 5, parent: '5', mapping: 'DEPRECIATION_EXPENSE', mappingLabel: 'مصروف إهلاك الأصول' },
   { code: '5109', name: 'خصم الموردين', nameEn: 'Purchase Discounts', type: 5, normal: 2, parent: '5', mapping: 'PURCHASE_DISCOUNT', mappingLabel: 'خصم الموردين' },
   { code: '5110', name: 'فروقات الصندوق', nameEn: 'Cash Short / Over', type: 5, parent: '5', mapping: 'CASH_DIFF', mappingLabel: 'فروقات الصندوق' },
   { code: '5111', name: 'فروقات الجرد', nameEn: 'Inventory Variance', type: 5, parent: '5', mapping: 'INVENTORY_VARIANCE', mappingLabel: 'فروقات الجرد' },
