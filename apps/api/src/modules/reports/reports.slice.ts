@@ -93,6 +93,20 @@ const XLSX_REPORTS: Record<string, { title: string; columns: XlsxColumn[] }> = {
       { key: 'commissionAmount', label: 'قيمة العمولة', type: 'number' },
     ],
   },
+  'branch-transfers': {
+    title: 'تحويلات بين الفروع',
+    columns: [
+      { key: 'transferNo', label: 'التحويل' },
+      { key: 'transferDate', label: 'التاريخ', type: 'date' },
+      { key: 'fromBranchName', label: 'من فرع' },
+      { key: 'toBranchName', label: 'إلى فرع' },
+      { key: 'fromWarehouseName', label: 'من مخزن' },
+      { key: 'toWarehouseName', label: 'إلى مخزن' },
+      { key: 'lineCount', label: 'بنود', type: 'number' },
+      { key: 'totalValue', label: 'القيمة', type: 'number' },
+      { key: 'statusName', label: 'الحالة' },
+    ],
+  },
 };
 
 @Injectable()
@@ -310,6 +324,76 @@ export class ReportsService {
     );
   }
 
+  /** Cross-branch (inter-branch) transfers — documents where the current branch is either side. */
+  async branchTransfers(params: { branchId: number; from?: string; to?: string; status?: number }) {
+    return this.db.query(
+      `SELECT t.branch_transfer_id AS "branchTransferId", t.transfer_no AS "transferNo",
+              t.transfer_date AS "transferDate",
+              t.from_branch_id AS "fromBranchId", fb.name AS "fromBranchName",
+              t.to_branch_id AS "toBranchId", tb.name AS "toBranchName",
+              t.from_warehouse_id AS "fromWarehouseId", fw.name AS "fromWarehouseName",
+              t.to_warehouse_id AS "toWarehouseId", tw.name AS "toWarehouseName",
+              t.status, CASE t.status WHEN 1 THEN 'مسودة' WHEN 2 THEN 'صدر — بانتظار الاستلام' WHEN 4 THEN 'مكتمل' ELSE 'ملغي' END AS "statusName",
+              t.total_value AS "totalValue",
+              (SELECT count(*)::int FROM branch_transfer_lines l
+                WHERE l.branch_transfer_id = t.branch_transfer_id) AS "lineCount",
+              u.full_name AS "createdBy"
+         FROM branch_transfers t
+         JOIN branches fb ON fb.branch_id = t.from_branch_id
+         JOIN branches tb ON tb.branch_id = t.to_branch_id
+         JOIN warehouses fw ON fw.warehouse_id = t.from_warehouse_id
+         JOIN warehouses tw ON tw.warehouse_id = t.to_warehouse_id
+         LEFT JOIN users u ON u.user_id = t.created_by
+        WHERE (t.from_branch_id = $1::int OR t.to_branch_id = $1::int)
+          AND ($2::date IS NULL OR t.transfer_date >= $2::date)
+          AND ($3::date IS NULL OR t.transfer_date <= $3::date)
+          AND ($4::int = 0 OR t.status = $4::int)
+        ORDER BY t.transfer_date DESC, t.branch_transfer_id DESC`,
+      [params.branchId, params.from ?? null, params.to ?? null, params.status ?? 0],
+    );
+  }
+
+  /**
+   * Inter-branch clearing account (1108), company-wide.
+   * glClearing must equal the value of all shipments still in transit (status 2),
+   * and must be exactly 0.00 once everything is received or cancelled.
+   */
+  async branchTransferSuspense() {
+    const result = await this.db.query<any>(
+      `SELECT COALESCE(SUM(e.debit - e.credit), 0)::numeric AS balance
+         FROM gl_entries e JOIN gl_journals j ON j.journal_id = e.journal_id
+         JOIN gl_accounts a ON a.account_id = e.account_id
+        WHERE a.code = '1108' AND j.status = 2`,
+    );
+    const openRows = await this.db.query<any>(
+      `SELECT COALESCE(SUM(t.total_value), 0)::numeric AS value
+         FROM branch_transfers t
+        WHERE t.status = 2`,
+    );
+    const perBranch = await this.db.query<any>(
+      `SELECT j.branch_id AS "branchId", b.name AS "branchName",
+              COALESCE(SUM(e.debit - e.credit), 0)::numeric AS balance
+         FROM gl_entries e JOIN gl_journals j ON j.journal_id = e.journal_id
+         JOIN gl_accounts a ON a.account_id = e.account_id
+         JOIN branches b ON b.branch_id = j.branch_id
+        WHERE a.code = '1108' AND j.status = 2
+        GROUP BY j.branch_id, b.name
+        ORDER BY j.branch_id`,
+    );
+    const glClearing = Number(result[0]?.balance ?? 0);
+    const inTransitValue = Number(openRows[0]?.value ?? 0);
+    return {
+      company: {
+        glClearing,
+        inTransitValue,
+        match: Math.abs(glClearing - inTransitValue) < 0.005,
+      },
+      perBranch: perBranch.map((row) => ({
+        branchId: Number(row.branchId), branchName: row.branchName, balance: Number(row.balance),
+      })),
+    };
+  }
+
   /** Sales rep commissions: per-rep sales totals and commission amounts. */
   async commissions(branchId: number, from: string, to: string) {
     return this.db.query(
@@ -431,6 +515,9 @@ export class ReportsService {
       case 'commissions':
         rows = await this.commissions(params.branchId, params.from, params.to);
         break;
+      case 'branch-transfers':
+        rows = await this.branchTransfers({ branchId: params.branchId, from: params.from, to: params.to, status: 0 });
+        break;
       default:
         throw new BadRequestException('تقرير غير معروف للتصدير');
     }
@@ -520,6 +607,18 @@ export class ReportsController {
   @Get('commissions')
   commissions(@CurrentBranch() branchId: number, @Query('from') from: string, @Query('to') to: string) {
     return this.service.commissions(branchId, from, to);
+  }
+
+  @RequireAnyPermission('reports.view', 'transfer.interbranch.view')
+  @Get('branch-transfers')
+  branchTransfers(@CurrentBranch() branchId: number, @Query('from') from: string, @Query('to') to: string, @Query('status') status: string, @Query('inTransitOnly') _ignored?: string) {
+    return this.service.branchTransfers({ branchId, from: from || undefined, to: to || undefined, status: status ? Number(status) : 0 });
+  }
+
+  @RequireAnyPermission('reports.view', 'transfer.interbranch.view')
+  @Get('branch-transfers/suspense')
+  branchTransferSuspense() {
+    return this.service.branchTransferSuspense();
   }
 
   @RequirePermissions('reports.view')

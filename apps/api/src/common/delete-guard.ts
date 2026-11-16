@@ -42,6 +42,7 @@ export const DELETE_SCREENS: Record<string, string> = {
   pos: 'POS (القاعات والموائع والمعدلات والملاحظات)',
   stockVouchers: 'أذون المخزن',
   stockTransfers: 'التحويلات',
+  branchTransfers: 'التحويلات بين الفروع',
   stockCounts: 'الجرد',
   reportDefinitions: 'تعريفات التقارير',
 };

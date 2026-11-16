@@ -4,6 +4,7 @@ import { useState } from 'react';
 import AppShell from '@/components/AppShell';
 import StockVoucherScreen from '@/components/screens/StockVoucherScreen';
 import StockTransferScreen from '@/components/screens/StockTransferScreen';
+import BranchTransferScreen from '@/components/screens/BranchTransferScreen';
 import StockCountScreen from '@/components/screens/StockCountScreen';
 import LabelsScreen from '@/components/screens/LabelsScreen';
 import AssemblyScreen from '@/components/screens/AssemblyScreen';
@@ -19,6 +20,7 @@ import StockReportScreen from '@/components/screens/StockReportScreen';
 type WarehouseTab =
   | 'stock-voucher'
   | 'stock-transfer'
+  | 'branch-transfers'
   | 'stock-count'
   | 'labels'
   | 'assembly'
@@ -34,6 +36,7 @@ type WarehouseTab =
 const TABS: { key: WarehouseTab; label: string }[] = [
   { key: 'stock-voucher', label: 'أذن مخزن' },
   { key: 'stock-transfer', label: 'أذن تحويل مخزن' },
+  { key: 'branch-transfers', label: 'تحويل بين فروع' },
   { key: 'stock-count', label: 'أذن تسوية الجرد' },
   { key: 'labels', label: 'طباعة الباركود' },
   { key: 'assembly', label: 'كارت التصنيع' },
@@ -56,6 +59,8 @@ export default function WarehousesPage() {
         return <StockVoucherScreen />;
       case 'stock-transfer':
         return <StockTransferScreen />;
+      case 'branch-transfers':
+        return <BranchTransferScreen />;
       case 'stock-count':
         return <StockCountScreen />;
       case 'labels':

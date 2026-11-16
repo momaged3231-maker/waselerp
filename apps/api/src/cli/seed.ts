@@ -49,6 +49,9 @@ const PERMISSIONS: [string, string, string][] = [
   ['accounting.close_override', 'المحاسبة', 'تجاوز فحوص الإقفال E3 وE5 بقرار موثق (صلاحية مستقلة)'],
   ['accounting.backpost', 'المحاسبة', 'ترحيل قيود إلى فترة مقفلة/مقفولة إداريًا بتصريح واستثناء موثق'],
   ['periods.admin', 'الإعدادات', 'قفل وفتح الفترة إداريًا دون أثر محاسبي (إداري)'],
+  ['transfer.interbranch.view', 'المخزون', 'عرض التحويلات بين الفروع (سندات صادرة/مستلمة)'],
+  ['transfer.interbranch.manage', 'المخزون', 'إنشاء واعتماد واستلام التحويلات بين الفروع'],
+  ['transfer.interbranch.cancel', 'المخزون', 'إلغاء تحويل بين فروع قبل الاستلام (مع عكس السجلات)'],
   ['bank.view', 'المطابقة البنكية', 'عرض المطابقة البنكية ومسيراتها'],
   ['bank.manage', 'المطابقة البنكية', 'استيراد كشوف البنك والمطابقة والترحيل والعكس'],
   ['assets.view', 'الأصول الثابتة', 'عرض بطاقات الأصول وجداول الإهلاك والتقارير'],
@@ -71,7 +74,7 @@ const ROLES: { name: string; nameEn: string; codes: string[] }[] = [
       'reports.view', 'hr.view', 'accounting.view', 'accounting.manage', 'accounting.post',
       'bank.view', 'bank.manage',
       'assets.view', 'assets.manage',
-      'attachments.view', 'attachments.manage', 'crm.view'],
+      'attachments.view', 'attachments.manage', 'crm.view', 'transfer.interbranch.view'],
   },
   {
     name: 'كاشير', nameEn: 'Cashier',
@@ -86,7 +89,8 @@ const ROLES: { name: string; nameEn: string; codes: string[] }[] = [
   {
     name: 'أمين مخزن', nameEn: 'StoreKeeper',
     codes: ['dashboard.view', 'items.view', 'items.manage', 'stock.view', 'stock.manage',
-      'purchases.view', 'purchases.manage', 'attachments.view', 'attachments.manage', 'assets.view'],
+      'purchases.view', 'purchases.manage', 'attachments.view', 'attachments.manage', 'assets.view',
+      'transfer.interbranch.view', 'transfer.interbranch.manage'],
   },
 ];
 

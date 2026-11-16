@@ -355,3 +355,13 @@ body {
 .labels-print-only {
   display: none;
 }
+
+/* E2 — inter-branch transfer voucher (A5-sized block, prints on default paper) */
+.bt-print-only {
+  display: none;
+}
+@media print {
+  .bt-print-only {
+    display: block !important;
+  }
+}

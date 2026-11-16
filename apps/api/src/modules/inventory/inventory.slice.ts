@@ -9,6 +9,7 @@ import { EventsModule } from '../events/events.slice';
 import { StockCountController, StockCountService } from './stock-count.slice';
 import { StockVoucherController, StockVoucherService } from './stock-voucher.slice';
 import { StockTransferController, StockTransferService } from './stock-transfer.slice';
+import { BranchTransferController, BranchTransferService } from './branch-transfer.slice';
 
 export interface StockOperationInput {
   operationType: number;   // 1 transfer, 2 count, 3 adjustment
@@ -315,8 +316,8 @@ export class InventoryController {
 
 @Module({
   imports: [EventsModule],
-  controllers: [InventoryController, StockCountController, StockVoucherController, StockTransferController],
-  providers: [InventoryService, StockCountService, StockVoucherService, StockTransferService],
+  controllers: [InventoryController, StockCountController, StockVoucherController, StockTransferController, BranchTransferController],
+  providers: [InventoryService, StockCountService, StockVoucherService, StockTransferService, BranchTransferService],
   exports: [InventoryService],
 })
 export class InventoryModule {}

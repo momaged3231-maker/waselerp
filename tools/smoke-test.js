@@ -1459,6 +1459,140 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     Math.abs((stockAfterOut - stockAfter) - (-5)) < 0.01,
     `${stockAfter} -> ${stockAfterOut}`);
 
+  // 43. E2 - cross-branch stock transfer
+  {
+    const stamp2 = `E2${Date.now()}`;
+    const branchB = await call('POST', '/admin/branches', { name: `فرع E2 ${stamp2}`, code: stamp2, city: 'القاهرة', isActive: true });
+    const branchBId = Number(branchB?.branchId);
+    check('E2: second branch created', branchBId > 0, JSON.stringify(branchB));
+    const callB = async (method, p, body, tokenOverride) => {
+      const headers = { 'Content-Type': 'application/json', 'x-branch-id': String(branchBId) };
+      headers.Authorization = tokenOverride !== undefined ? (tokenOverride ? `Bearer ${tokenOverride}` : '') : `Bearer ${token}`;
+      const r = await fetch(`${BASE}${p}`, { method, headers, body: body ? JSON.stringify(body) : undefined });
+      const t = await r.text();
+      let d = null; try { d = t ? JSON.parse(t) : null; } catch { d = t; }
+      if (!r.ok) { const e = new Error(`${method} ${p} -> ${r.status} ${JSON.stringify(d)}`); e.status = r.status; e.body = d; throw e; }
+      return d;
+    };
+    const rawB = async (method, p, body, tokenOverride) => {
+      const headers = { 'Content-Type': 'application/json', 'x-branch-id': String(branchBId) };
+      if (tokenOverride !== undefined) { if (tokenOverride) headers.Authorization = `Bearer ${tokenOverride}`; }
+      else headers.Authorization = `Bearer ${token}`;
+      const r = await fetch(`${BASE}${p}`, { method, headers, body: body ? JSON.stringify(body) : undefined });
+      const t = await r.text();
+      let d = null; try { d = t ? JSON.parse(t) : null; } catch { d = t; }
+      return { status: r.status, body: d };
+    };
+    const whB2 = await call('POST', '/catalog/warehouses', { code: stamp2, name: `مخزن E2 ${stamp2}`, branchId: branchBId, isActive: true });
+    check('E2: warehouse created in branch B', Number(whB2?.warehouseId) > 0, JSON.stringify(whB2));
+
+    const noIdem = await raw('POST', '/branch-transfers', {
+      fromWarehouseId: warehouseId, toWarehouseId: Number(whB2.warehouseId), transferDate: daysAgoIso(0),
+    });
+    check('E2: create without clientRequestId refused (400)', noIdem.status === 400, String(noIdem.status));
+
+    const idemKey = `e2-${stamp2}`;
+    const bt = await call('POST', '/branch-transfers', {
+      fromWarehouseId: warehouseId, toWarehouseId: Number(whB2.warehouseId), transferDate: daysAgoIso(0),
+      notes: 'E2 transfer', clientRequestId: idemKey,
+    });
+    check('E2: transfer created (draft)', !!bt?.branchTransferId, JSON.stringify(bt));
+    const btDup = await call('POST', '/branch-transfers', {
+      fromWarehouseId: warehouseId, toWarehouseId: Number(whB2.warehouseId), transferDate: daysAgoIso(0),
+      clientRequestId: idemKey,
+    });
+    check('E2: duplicate clientRequestId returns same document (idempotent)', btDup?.duplicate === true || btDup?.branchTransferId === bt.branchTransferId, JSON.stringify(btDup));
+
+    const btLine = await call('POST', `/branch-transfers/${bt.branchTransferId}/lines`, { itemId: itemB.itemId, unitId: 1, quantity: 5 });
+    check('E2: line added at source average cost', btLine.added === true, JSON.stringify(btLine));
+
+    const balBefore = await call('GET', `/inventory/balances?warehouseId=${warehouseId}`);
+    const qtyBeforeA = Number(balBefore.find((row) => row.itemId === itemB.itemId)?.onHandQty ?? 0);
+
+    const btApprove = await call('POST', `/branch-transfers/${bt.branchTransferId}/approve`, {});
+    check('E2: transfer issued (outbound voucher, journal in source branch)',
+      btApprove.status === 2 && !!btApprove.journalId, JSON.stringify(btApprove));
+    const balAfterApprove = await call('GET', `/inventory/balances?warehouseId=${warehouseId}`);
+    const qtyAfterApprove = Number(balAfterApprove.find((row) => row.itemId === itemB.itemId)?.onHandQty ?? 0);
+    check('E2: stock decreased at source after approve', Math.abs((qtyAfterApprove - qtyBeforeA) - (-5)) < 0.01, `${qtyBeforeA} -> ${qtyAfterApprove}`);
+
+    const cashierLogin2 = await loginAs(`cashier_${stamp}`, testPassword);
+    const btForbidden = await raw('POST', `/branch-transfers/${bt.branchTransferId}/receive`, {}, cashierLogin2.accessToken);
+    check('E2: cashier cannot receive (403)', btForbidden.status === 403, String(btForbidden.status));
+
+    const btReceiveWrongBranch = await raw('POST', `/branch-transfers/${bt.branchTransferId}/receive`, {});
+    check('E2: receive from the source branch refused (403)', btReceiveWrongBranch.status === 403, String(btReceiveWrongBranch.status));
+
+    const btReceive = await rawB('POST', `/branch-transfers/${bt.branchTransferId}/receive`, {});
+    check('E2: transfer received at destination branch (journal in dest branch)',
+      btReceive.status === 201 && btReceive.body?.status === 4, `status=${btReceive.status} ${JSON.stringify(btReceive.body).slice(0, 120)}`);
+    const balB = await rawB('GET', `/inventory/balances?warehouseId=${whB2.warehouseId}`);
+    const qtyB = Number((balB.body ?? []).find((row) => row.itemId === itemB.itemId)?.onHandQty ?? 0);
+    check('E2: stock increased at destination after receive', qtyB >= 5, `qty=${qtyB}`);
+
+    const btReceiveAgain = await rawB('POST', `/branch-transfers/${bt.branchTransferId}/receive`, {});
+    check('E2: duplicate receive refused (400/409)', btReceiveAgain.status === 400 || btReceiveAgain.status === 409, String(btReceiveAgain.status));
+
+    const suspense = await call('GET', '/reports/branch-transfers/suspense');
+    check('E2: inter-branch clearing nets to ZERO company-wide after receive',
+      suspense.company?.match === true && Math.abs(Number(suspense.company.glClearing)) < 0.005,
+      JSON.stringify(suspense));
+
+    const btCancelLate = await raw('POST', `/branch-transfers/${bt.branchTransferId}/cancel`, { reason: 'test' });
+    check('E2: cancel after receipt refused (400)', btCancelLate.status === 400, String(btCancelLate.status));
+
+    // ── accountant is VIEW-ONLY: list works, every mutation is 403 ──
+    const accountantLogin2 = await loginAs(`accountant_${stamp}`, testPassword);
+    const accList = await rawB('GET', '/branch-transfers', undefined, accountantLogin2.accessToken);
+    check('E2: accountant can LIST transfers (transfer.interbranch.view)', accList.status === 200, String(accList.status));
+    const bt3 = await call('POST', '/branch-transfers', {
+      fromWarehouseId: warehouseId, toWarehouseId: Number(whB2.warehouseId), transferDate: daysAgoIso(0),
+      clientRequestId: `e2-perm-${stamp2}`,
+    });
+    const accCreate3 = await raw('POST', '/branch-transfers', {
+      fromWarehouseId: warehouseId, toWarehouseId: Number(whB2.warehouseId), clientRequestId: `e2-perm2-${stamp2}`,
+    }, accountantLogin2.accessToken);
+    check('E2: accountant CANNOT create (403)', accCreate3.status === 403, String(accCreate3.status));
+    const accApprove3 = await raw('POST', `/branch-transfers/${bt3.branchTransferId}/approve`, {}, accountantLogin2.accessToken);
+    check('E2: accountant CANNOT approve (403)', accApprove3.status === 403, String(accApprove3.status));
+    const accReceive3 = await rawB('POST', `/branch-transfers/${bt3.branchTransferId}/receive`, {}, accountantLogin2.accessToken);
+    check('E2: accountant CANNOT receive (403)', accReceive3.status === 403, String(accReceive3.status));
+    const accCancel3 = await raw('POST', `/branch-transfers/${bt3.branchTransferId}/cancel`, { reason: 'x' }, accountantLogin2.accessToken);
+    check('E2: accountant CANNOT cancel (403)', accCancel3.status === 403, String(accCancel3.status));
+
+    // double approve is refused (idempotency by status guard)
+    await call('POST', `/branch-transfers/${bt3.branchTransferId}/lines`, { itemId: itemB.itemId, unitId: 1, quantity: 1 });
+    await call('POST', `/branch-transfers/${bt3.branchTransferId}/approve`, {});
+    const dupApprove = await raw('POST', `/branch-transfers/${bt3.branchTransferId}/approve`, {});
+    check('E2: duplicate approve refused (400)', dupApprove.status === 400, String(dupApprove.status));
+
+    const branchC = await call('POST', '/admin/branches', { name: `فرع E2 C ${stamp2}`, code: `${stamp2}C`, city: 'الإسكندرية', isActive: true });
+    const branchCId = Number(branchC?.branchId);
+    const rawC = async (method, p) => {
+      const r = await fetch(`${BASE}${p}`, { method, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'x-branch-id': String(branchCId) } });
+      const t = await r.text();
+      let d = null; try { d = t ? JSON.parse(t) : null; } catch { d = t; }
+      return { status: r.status, body: d };
+    };
+    const isolated = await rawC('GET', `/branch-transfers/${bt.branchTransferId}`);
+    check('E2: document not visible from an uninvolved branch (404)', isolated.status === 404, String(isolated.status));
+
+    const bt2 = await call('POST', '/branch-transfers', {
+      fromWarehouseId: warehouseId, toWarehouseId: Number(whB2.warehouseId), transferDate: daysAgoIso(0),
+      clientRequestId: `e2-cancel-${stamp2}`,
+    });
+    await call('POST', `/branch-transfers/${bt2.branchTransferId}/lines`, { itemId: itemB.itemId, unitId: 1, quantity: 2 });
+    const balBeforeCancel = await call('GET', `/inventory/balances?warehouseId=${warehouseId}`);
+    const qtyBeforeCancel = Number(balBeforeCancel.find((row) => row.itemId === itemB.itemId)?.onHandQty ?? 0);
+    await call('POST', `/branch-transfers/${bt2.branchTransferId}/approve`, {});
+    const bt2Cancel = await raw('POST', `/branch-transfers/${bt2.branchTransferId}/cancel`, { reason: 'cancel for test' });
+    check('E2: cancel before receipt works (status 5)', bt2Cancel.status === 201 && bt2Cancel.data?.status === 5, `status=${bt2Cancel.status} body=${JSON.stringify(bt2Cancel.data).slice(0, 120)}`);
+    const balAfterCancel = await call('GET', `/inventory/balances?warehouseId=${warehouseId}`);
+    const qtyAfterCancel = Number(balAfterCancel.find((row) => row.itemId === itemB.itemId)?.onHandQty ?? 0);
+    check('E2: stock restored after cancel', Math.abs(qtyAfterCancel - qtyBeforeCancel) < 0.01, `${qtyBeforeCancel} -> ${qtyAfterCancel}`);
+  }
+
+
   // 42. P4.3 — stock transfer indirect (تحويل غير مباشر بين مخازن)
   const whA = warehouseId;
   // The test creates its own second warehouse so it never depends on seed data.

@@ -19,7 +19,8 @@ export class CatalogLookupService {
     );
   }
 
-  async warehouses(branchId?: number, userId?: number) {
+  async warehouses(branchId?: number, userId?: number, scopeBranch?: number) {
+    const effective = scopeBranch ?? branchId ?? null;
     return this.db.query(
       `SELECT w.warehouse_id AS "warehouseId", w.branch_id AS "branchId", b.name AS "branchName",
               w.name, w.code, w.is_default AS "isDefault", w.is_active AS "isActive"
@@ -28,7 +29,7 @@ export class CatalogLookupService {
           AND ($2::int IS NULL OR NOT EXISTS (SELECT 1 FROM user_warehouses u WHERE u.user_id = $2)
                OR w.warehouse_id IN (SELECT warehouse_id FROM user_warehouses WHERE user_id = $2))
         ORDER BY b.name, w.name`,
-      [branchId ?? null, userId ?? null],
+      [effective, userId ?? null],
     );
   }
 
@@ -311,8 +312,11 @@ export class CatalogController {
   branches() { return this.service.branches(); }
 
   @Get('warehouses')
-  warehouses(@CurrentBranch() branchId: number, @CurrentUser() user: AuthUser) {
-    return this.service.warehouses(branchId, user.userId);
+  warehouses(@CurrentBranch() branchId: number, @CurrentUser() user: AuthUser, @Query('branchId') forBranch?: string) {
+    const scope = forBranch ? Number(forBranch) : null;
+    // Only users who may view inter-branch transfers may browse another branch's warehouses
+    const allowed = !!scope && !!user.permissions?.includes('transfer.interbranch.view');
+    return this.service.warehouses(branchId, user.userId, allowed ? scope : undefined);
   }
 
   @Get('units')
