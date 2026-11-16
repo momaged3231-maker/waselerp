@@ -367,20 +367,23 @@ export class BankExpensesService {
       );
       const posted: any[] = [];
       const refused: any[] = [];
+      // Per-occurrence savepoint: one bad occurrence (unique race, missing mapping, posting
+      // failure) must not roll back the whole batch — it is logged refused and the run continues.
       for (const rule of rules) {
         const bankGl = await this.bankGlId(client, Number(rule.bank_account_id), branchId);
         const ruleStart = asIsoDate(rule.start_date)!;
         for (const occIso of occurrences(ruleStart, Number(rule.day_of_month), Number(rule.frequency), asOf)) {
-          const exists = await client.query(
-            `SELECT 1 FROM bank_expense_runs WHERE rule_id = $1::int AND period_key = $2::date`,
-            [rule.rule_id, occIso],
-          );
-          if (exists.rows.length) continue; // already generated — idempotent
-
-          let journalId: number | null = null;
-          let status = 1;
-          let refusalReason: string | null = null;
+          await client.query('SAVEPOINT e3_occurrence');
           try {
+            const exists = await client.query(
+              `SELECT 1 FROM bank_expense_runs WHERE rule_id = $1::int AND period_key = $2::date`,
+              [rule.rule_id, occIso],
+            );
+            if (exists.rows.length) { await client.query('RELEASE SAVEPOINT e3_occurrence'); continue; } // already generated — idempotent
+
+            let journalId: number | null = null;
+            let status = 1;
+            let refusalReason: string | null = null;
             const period = await resolvePeriod(client, branchId, occIso);
             if (period.isClosed) {
               status = 2;
@@ -396,19 +399,27 @@ export class BankExpensesService {
                 ],
               });
             }
+            await client.query(
+              `INSERT INTO bank_expense_runs (rule_id, period_key, status, journal_id, refusal_reason, created_by)
+               VALUES ($1::int, $2::date, $3::smallint, $4::bigint, $5::text, $6::int)`,
+              [rule.rule_id, occIso, status, journalId, refusalReason, user.userId],
+            );
+            await client.query('RELEASE SAVEPOINT e3_occurrence');
+            if (status === 1) {
+              posted.push({ ruleId: rule.rule_id, name: rule.name, periodKey: occIso, journalId, amount: round2(num(rule.amount)) });
+            } else {
+              refused.push({ ruleId: rule.rule_id, name: rule.name, periodKey: occIso, reason: refusalReason });
+            }
           } catch (err: any) {
-            status = 2;
-            refusalReason = err?.message ?? 'فشل الترحيل';
-          }
-          await client.query(
-            `INSERT INTO bank_expense_runs (rule_id, period_key, status, journal_id, refusal_reason, created_by)
-             VALUES ($1::int, $2::date, $3::smallint, $4::bigint, $5::text, $6::int)`,
-            [rule.rule_id, occIso, status, journalId, refusalReason, user.userId],
-          );
-          if (status === 1) {
-            posted.push({ ruleId: rule.rule_id, name: rule.name, periodKey: occIso, journalId, amount: round2(num(rule.amount)) });
-          } else {
-            refused.push({ ruleId: rule.rule_id, name: rule.name, periodKey: occIso, reason: refusalReason });
+            await client.query('ROLLBACK TO SAVEPOINT e3_occurrence');
+            // Log the refusal WITHOUT failing the batch (concurrent runs hit the unique index here).
+            await client.query(
+              `INSERT INTO bank_expense_runs (rule_id, period_key, status, journal_id, refusal_reason, created_by)
+               VALUES ($1::int, $2::date, 2, NULL, $3, $4::int)
+               ON CONFLICT (rule_id, period_key) DO NOTHING`,
+              [rule.rule_id, occIso, err?.message ?? 'فشل الترحيل', user.userId],
+            );
+            refused.push({ ruleId: rule.rule_id, name: rule.name, periodKey: occIso, reason: err?.message ?? 'فشل الترحيل' });
           }
         }
       }
@@ -460,6 +471,27 @@ export class BankExpensesService {
         description: `عكس قيد مصروف بنكي — ${run.name} (${String(run.period_key).slice(0, 10)})`,
         journalType: 6,
       });
+      // Any statement line matched to the reversed journal references a journal whose
+      // effect no longer exists — the books no longer support the match, so reopen it.
+      if (reverseJournalId && run.journal_id) {
+        const { rows: matchedLines } = await client.query(
+          `SELECT DISTINCT l.line_id AS "lineId"
+             FROM bank_statement_lines l
+             JOIN gl_entries e ON e.entry_id = l.matched_entry_id
+            WHERE e.journal_id = $1::bigint AND l.status IN (2, 3, 6)`,
+          [run.journal_id],
+        );
+        for (const ml of matchedLines) {
+          await client.query(
+            `UPDATE bank_statement_lines
+                SET status = 1, matched_entry_id = NULL, matched_journal_id = NULL, match_difference = 0
+              WHERE line_id = $1::bigint`,
+            [ml.lineId],
+          );
+          await this.activity(client, user.userId, branchId, 'bank_expense.unmatch_on_reverse', ml.lineId,
+            `إعادة فتح مطابقة السطر ${ml.lineId} — أُلغي قيد القاعدة #${id} (${run.name})`);
+        }
+      }
       await client.query(
         `UPDATE bank_expense_runs SET status = 3, refusal_reason = NULL WHERE run_id = $1::bigint`,
         [id],

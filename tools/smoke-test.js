@@ -2817,6 +2817,38 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     check('E3: refused occurrence is recorded in the run log', (runsList ?? []).some((r) => r.status === 2), JSON.stringify(runsList));
     await raw('POST', `/accounting/periods/${e3Period.periodId}/reopen`, {});
 
+    // Match-then-reverse: the statement line must REOPEN after the generating journal is reversed
+    const ruleB = await call('POST', '/accounting/bank-expense-rules', {
+      name: `رسوم عكس ${stamp}`, bankAccountId: feeBankId, expenseAccountId: feeAccountId,
+      amount: 888, frequency: 1, dayOfMonth: Number(todayIso.slice(8, 10)), startDate: `${thisMonth}-01`,
+    });
+    check('E3: reversal-scenario rule created', !!ruleB.ruleId, JSON.stringify(ruleB));
+    await call('POST', '/accounting/bank-expense-rules/run', {});
+    const bCsv = [
+      'date,description,reference,amount,movement_type',
+      `${todayIso},رسوم POS,E3-REV2-${stamp},-888,fee`,
+    ].join('\n');
+    const bImp = await call('POST', '/treasury/bank-recon/statements/import', { accountId: feeBankId, csv: bCsv });
+    check('E3: reversal-scenario statement line imported', bImp.created === 1, JSON.stringify(bImp));
+    const bAuto = await call('POST', '/treasury/bank-recon/auto-match', { accountId: feeBankId, from: todayIso, to: todayIso });
+    check('E3: reversal-scenario line auto-matched', bAuto.matched === 1, JSON.stringify(bAuto));
+    const bLines = await call('GET', `/treasury/bank-recon/statements?accountId=${feeBankId}&from=${todayIso}&to=${todayIso}`);
+    const bLine = bLines.find((l) => l.reference === `E3-REV2-${stamp}`);
+    check('E3: line matched to the generating journal before reversal',
+      bLine.status === 2 && !!bLine.matchedJournalId, JSON.stringify(bLine));
+    const bRuns = await call('GET', `/accounting/bank-expense-rules/runs?ruleId=${ruleB.ruleId}&status=1`);
+    await call('POST', `/accounting/bank-expense-rules/runs/${bRuns[0].runId}/reverse`, {});
+    const bAfter = await call('GET', `/treasury/bank-recon/statements?accountId=${feeBankId}&from=${todayIso}&to=${todayIso}`);
+    const bAfterLine = bAfter.find((l) => l.reference === `E3-REV2-${stamp}`);
+    check('E3: reversing the generating journal REOPENS the matched line (status 1)',
+      bAfterLine.status === 1 && !bAfterLine.matchedJournalId && !bAfterLine.matchedEntryId,
+      JSON.stringify(bAfterLine));
+
+    // E3 integrity — matched line survives a journal that legitimately reverses, with no stale pointer
+    check('E3: no statement line remains matched to a reversed journal',
+      (bAfter ?? []).every((l) => l.status !== 2),
+      'all matched lines reopened');
+
     // عكس قيد مولّد
     const runsA = await call('GET', `/accounting/bank-expense-rules/runs?ruleId=${ruleA.ruleId}&status=1`);
     const aRunId = (runsA ?? [])[0]?.runId;
@@ -2840,8 +2872,10 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     const e3Imp = await call('POST', '/treasury/bank-recon/statements/import', { accountId: feeBankId, csv: e3Csv });
     check('E3: matching bank statement line imported', e3Imp.created === 1, JSON.stringify(e3Imp));
     const e3Auto = await call('POST', '/treasury/bank-recon/auto-match', { accountId: feeBankId, from: todayIso, to: todayIso });
+    const e3Lines = await call('GET', `/treasury/bank-recon/statements?accountId=${feeBankId}&from=${todayIso}&to=${todayIso}`);
+    const feeLine = (e3Lines ?? []).find((l) => l.reference === `E3-FEE-${stamp}`);
     check('E3: fee rule journal auto-matches the statement line (no duplicate fee booked)',
-      e3Auto.matched === 1, JSON.stringify(e3Auto));
+      feeLine?.status === 2 && !!feeLine?.matchedJournalId, JSON.stringify(feeLine));
 
     // السلامة العامة — trial balance stays balanced after all E3 operations
     const tbEnd = await call('GET', '/accounting/reports/trial-balance');
