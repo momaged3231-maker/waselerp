@@ -2278,7 +2278,7 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     const j2Entry = await outbound(j2.journalId);
     const j3Entry = await outbound(j3.journalId);
 
-    // Import the statement (6 lines incl. a pending deposit and a bank fee).
+    // Import the statement (7 lines: pending deposit, a fee and an unknown withdrawal included).
     const today = daysAgoIso(0);
     const csv = [
       'date,description,reference,amount,movement_type',
@@ -2288,13 +2288,14 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
       `${today},رسوم بنكية,FEE-E1,-30,fee`,
       `${today},إيداع مجهول,UNKNOWN-E1,77,transfer_in`,
       `${today},إيداع معلق,PENDING-E1,150,pending_deposit`,
+      `${today},سحب مجهول,UNKNOWN-E1-OUT,-45,withdrawal`,
     ].join('\n');
     const imp = await call('POST', '/treasury/bank-recon/statements/import', { accountId: bankId, csv });
-    check('E1: statement imported — 6 lines created', imp.created === 6 && (imp.errors ?? []).length === 0, JSON.stringify(imp));
+    check('E1: statement imported — 7 lines created', imp.created === 7 && (imp.errors ?? []).length === 0, JSON.stringify(imp));
 
     // Double import — nothing is re-created, all rows are reported as duplicates.
     const imp2 = await call('POST', '/treasury/bank-recon/statements/import', { accountId: bankId, csv });
-    check('E1: re-import creates nothing (idempotent)', imp2.created === 0 && (imp2.duplicates ?? []).length === 6, JSON.stringify(imp2));
+    check('E1: re-import creates nothing (idempotent)', imp2.created === 0 && (imp2.duplicates ?? []).length === 7, JSON.stringify(imp2));
 
     const linesResp = await call('GET', `/treasury/bank-recon/statements?accountId=${bankId}&from=${today}&to=${today}`);
     const byRef = (ref) => (linesResp ?? []).find((l) => l.reference === ref);
@@ -2303,8 +2304,9 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     const lPart = byRef('TRX-E1-PART');
     const lFee = byRef('FEE-E1');
     const lUnknown = byRef('UNKNOWN-E1');
+    const lOut = byRef('UNKNOWN-E1-OUT');
     const lPending = byRef('PENDING-E1');
-    check('E1: all imported lines listed', !!lAuto && !!lManual && !!lPart && !!lFee && !!lUnknown && !!lPending);
+    check('E1: all imported lines listed', !!lAuto && !!lManual && !!lPart && !!lFee && !!lUnknown && !!lOut && !!lPending);
 
     // Manual match (line 2 against J2's bank entry).
     const manual = await call('POST', `/treasury/bank-recon/statements/lines/${lManual.lineId}/match`, { entryId: j2Entry.entryId });
@@ -2328,45 +2330,85 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     const timing = await call('POST', `/treasury/bank-recon/statements/lines/${lPending.lineId}/mark-timing`, { kind: 'pending_deposit' });
     check('E1: timing line marked (status 4)', timing.status === 4, JSON.stringify(timing));
 
-    // Create the run with a statement balance consistent with the adjustments (+62).
-    const statementBalance = Math.round((bankNet1 + 62) * 100) / 100;
+    // Bank net movement after posting = −30 (fee) + 77 (unknown in) − 45 (unknown out) + 15 (partial) = +17.
+    const statementBalance = Math.round((bankNet1 + 17) * 100) / 100;
     const run = await call('POST', '/treasury/bank-recon/runs', { accountId: bankId, runDate: today, statementBalance, notes: 'E1 regression' });
-    check('E1: run created with correct variance', Math.abs(run.variance - 62) < 0.01, JSON.stringify(run));
+    check('E1: run created with correct variance', Math.abs(run.variance - 17) < 0.01, JSON.stringify(run));
 
     const posted = await call('POST', `/treasury/bank-recon/runs/${run.runId}/post`, {});
     check('E1: run posted with one adjustment journal', posted.status === 2 && !!posted.journalId, JSON.stringify(posted));
     const adj = posted.adjustments;
     check('E1: bank fee adjustment booked (30)', Math.abs(adj.fees - 30) < 0.01, JSON.stringify(adj));
-    check('E1: unknown deposit adjustment booked (77)', Math.abs(adj.unknownIn - 77) < 0.01, JSON.stringify(adj));
+    check('E1: unknown movements reported for suspense (77 in / 45 out)',
+      Math.abs(adj.unknownIn - 77) < 0.01 && Math.abs(adj.unknownOut - 45) < 0.01, JSON.stringify(adj));
     check('E1: partial difference adjustment booked (+15)', Math.abs(adj.matchDifferenceNet - 15) < 0.01, JSON.stringify(adj));
 
-    // GL moved exactly by the adjustment net (+62) — statement equals GL now.
     const tbAfter = await call('GET', '/accounting/reports/trial-balance');
     const bankNet2 = net(tbAfter, '1102');
     check('E1: GL bank equals statement balance after run', Math.abs(bankNet2 - statementBalance) < 0.01, `GL ${bankNet2} vs statement ${statementBalance}`);
     check('E1: bank fee account debited', Math.abs(net(tbAfter, '5107') - net(tbAfterBooks, '5107') - 30) < 0.01, 'BANK_FEE not debited by 30');
-    check('E1: other income credited (77 + 15)', Math.abs(net(tbAfter, '4104') * -1 - net(tbAfterBooks, '4104') * -1 - 92) < 0.01 || true, 'checked via delta');
+
+    // (1) Unknown deposits must NOT raise revenue — (2) unknown withdrawals must NOT raise expenses.
+    check('E1: unclassified movements NEVER touch OTHER_INCOME',
+      Math.abs(net(tbAfter, '4104') - net(tbAfterBooks, '4104')) < 0.01,
+      `delta ${net(tbAfter, '4104') - net(tbAfterBooks, '4104')}`);
+    check('E1: unclassified movements NEVER touch OTHER_EXPENSE',
+      Math.abs(net(tbAfter, '5106') - net(tbAfterBooks, '5106')) < 0.01,
+      `delta ${net(tbAfter, '5106') - net(tbAfterBooks, '5106')}`);
+
+    // (3) The unclassified movements landed in the BANK_SUSPENSE clearing account.
+    const suspense = await call('GET', '/treasury/bank-recon/suspense?status=1');
+    const openEntries = suspense.entries ?? [];
+    check('E1: three suspense entries were created', openEntries.length === 3, `open=${openEntries.length}`);
+    check('E1: suspense open net is a credit of 47', Math.abs(suspense.netOpen - 47) < 0.01, `netOpen=${suspense.netOpen}`);
+    const depEntry = openEntries.find((e) => Number(e.amount) === 77);
+    check('E1: suspense entry references its statement line', !!depEntry && Number(depEntry.lineId) === Number(lUnknown.lineId), JSON.stringify(depEntry));
+
+    // (6) The partial-match difference is suspense-classified, not P&L.
+    const diffEntry = openEntries.find((e) => Number(e.amount) === 15);
+    check('E1: partial difference is suspense-classified, not P&L',
+      !!diffEntry && Number(diffEntry.direction) === 1, JSON.stringify(diffEntry));
+
+    // (8) Re-posting a posted run is refused.
+    const repost = await raw('POST', `/treasury/bank-recon/runs/${run.runId}/post`, {});
+    check('E1: re-posting a posted run is refused (400)', repost.status === 400, String(repost.status));
 
     // Report integrity: per-run report is consistent.
     const report = await call('GET', `/treasury/bank-recon/runs/${run.runId}/report`);
-    check('E1: run report returned with lines', Array.isArray(report.lines) && report.lines.length >= 6, `lines=${report.lines?.length}`);
+    check('E1: run report returned with lines', Array.isArray(report.lines) && report.lines.length >= 7, `lines=${report.lines?.length}`);
 
-    // Other income increased by 92 (77 unknown deposit + 15 partial difference).
-    const otherIncomeDelta = (tbAfter, tbBefore) =>
-      (Number((tbBefore.lines ?? []).find((l) => l.code === '4104')?.credit ?? 0) - Number((tbBefore.lines ?? []).find((l) => l.code === '4104')?.debit ?? 0))
-      - (Number((tbAfter.lines ?? []).find((l) => l.code === '4104')?.credit ?? 0) - Number((tbAfter.lines ?? []).find((l) => l.code === '4104')?.debit ?? 0));
-    void otherIncomeDelta;
-    const otherIncomeAfter = (tbAfter.lines ?? []).find((l) => l.code === '4104');
-    const otherIncomeBefore = (tbAfterBooks.lines ?? []).find((l) => l.code === '4104');
-    const incomeDelta = (Number(otherIncomeAfter?.credit ?? 0) - Number(otherIncomeBefore?.credit ?? 0))
-      - (Number(otherIncomeAfter?.debit ?? 0) - Number(otherIncomeBefore?.debit ?? 0));
-    check('E1: other income credited by 92 (77 + 15)', Math.abs(incomeDelta - 92) < 0.01, `delta ${incomeDelta}`);
+    // (4) Classifying the unknown deposit posts a correct balanced journal via posting.ts.
+    const classified = await call('POST', `/treasury/bank-recon/suspense/${depEntry.suspenseEntryId}/classify`, { accountId: otherIncomeId, notes: 'تم التحقق — إيداع عميل فعلي' });
+    const classJournal = await call('GET', `/accounting/journals/${classified.classificationJournalId}`);
+    const classDebitTotal = (classJournal.lines ?? []).reduce((s, l) => s + Number(l.debit), 0);
+    const classCreditTotal = (classJournal.lines ?? []).reduce((s, l) => s + Number(l.credit), 0);
+    check('E1: classification journal is balanced via posting.ts',
+      Math.abs(classDebitTotal - classCreditTotal) < 0.01 && classJournal.header.sourceType === 'bank_recon_classification',
+      JSON.stringify({ debit: classDebitTotal, credit: classCreditTotal, source: classJournal.header.sourceType }));
+    const classSuspenseLine = (classJournal.lines ?? []).find((l) => l.accountCode === '2106');
+    check('E1: classification debits the suspense account', !!classSuspenseLine && Math.abs(Number(classSuspenseLine.debit) - 77) < 0.01, JSON.stringify(classSuspenseLine));
+    const tbClassified = await call('GET', '/accounting/reports/trial-balance');
+    const incomeDeltaClassified = net(tbClassified, '4104') - net(tbAfter, '4104');
+    check('E1: OTHER_INCOME rises by exactly 77 only after explicit classification',
+      Math.abs(incomeDeltaClassified + 77) < 0.01, `delta ${incomeDeltaClassified}`);
 
-    // Reverse the run — mirror journal + lines back to unreconciled.
+    // (5) Reversing the classification restores everything exactly.
+    const reversedClass = await call('POST', `/treasury/bank-recon/suspense/${depEntry.suspenseEntryId}/reverse-classification`, {});
+    check('E1: classification reversed (entry open again)', reversedClass.status === 1 && !!reversedClass.reverseJournalId, JSON.stringify(reversedClass));
+    const tbReversedClass = await call('GET', '/accounting/reports/trial-balance');
+    check('E1: reversal restored OTHER_INCOME exactly',
+      Math.abs(net(tbReversedClass, '4104') - net(tbAfter, '4104')) < 0.01,
+      `delta ${net(tbReversedClass, '4104') - net(tbAfter, '4104')}`);
+
+    // Reverse the run — mirror journal + lines back to unreconciled, suspense entries marked reversed.
     const reversed = await call('POST', `/treasury/bank-recon/runs/${run.runId}/reverse`, {});
     check('E1: run reversed (status 3)', reversed.status === 3 && !!reversed.reverseJournalId, JSON.stringify(reversed));
     const tbReversed = await call('GET', '/accounting/reports/trial-balance');
     check('E1: reversal restored the GL bank balance', Math.abs(net(tbReversed, '1102') - bankNet1) < 0.01, `bank ${net(tbReversed, '1102')}`);
+    const suspenseAfterReverse = await call('GET', '/treasury/bank-recon/suspense');
+    check('E1: suspense entries of the reversed run are marked reversed',
+      (suspenseAfterReverse.entries ?? []).every((e) => e.status !== 1),
+      `open=${(suspenseAfterReverse.entries ?? []).filter((e) => e.status === 1).length}`);
 
     // Closed period blocks reconciliation.
     const e1Period = await call('POST', '/accounting/periods', { name: `فترة E1 ${stamp}`, startDate: '2019-01-01', endDate: '2019-01-31' });

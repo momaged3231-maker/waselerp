@@ -20,6 +20,12 @@ type ReconRun = {
   statusName?: string; journalId?: number | null; reverseJournalId?: number | null; notes?: string;
 };
 type ImportResult = { created: number; duplicates: any[]; errors: any[]; skipped: any[] };
+type SuspenseEntry = {
+  suspenseEntryId: number; lineId: number; direction: number; amount: number; status: number;
+  statusName?: string; statementDate: string; description?: string; reference?: string;
+  adjustmentJournalId?: number; classificationJournalId?: number | null;
+};
+type AccountNode = { accountId: number; code: string; name: string; isGroup?: boolean; children?: AccountNode[] };
 
 const STATUS_CLS: Record<number, string> = {
   1: 'bg-amber-100 text-amber-800',
@@ -47,17 +53,26 @@ export default function BankReconPage() {
   const [matchTarget, setMatchTarget] = useState<StatementLine | null>(null);
   const [matchEntryId, setMatchEntryId] = useState('');
   const [report, setReport] = useState<any | null>(null);
+  const [suspense, setSuspense] = useState<SuspenseEntry[]>([]);
+  const [suspenseNet, setSuspenseNet] = useState(0);
+  const [accountTree, setAccountTree] = useState<AccountNode[]>([]);
+  const [classifyTarget, setClassifyTarget] = useState<SuspenseEntry | null>(null);
+  const [classifyAccountId, setClassifyAccountId] = useState<number>(0);
+  const [classifyNotes, setClassifyNotes] = useState('');
 
   const selected = useMemo(() => accounts.find((a) => a.bankAccountId === accountId) ?? null, [accounts, accountId]);
 
   const reload = useCallback(async (acc = accountId) => {
     if (!acc) return;
-    const [stmt, runRows] = await Promise.all([
+    const [stmt, runRows, suspenseRows] = await Promise.all([
       apiFetch<any>(`/treasury/bank-recon/statements?accountId=${acc}`),
       apiFetch<any>(`/treasury/bank-recon/runs?accountId=${acc}`),
+      apiFetch<any>(`/treasury/bank-recon/suspense?status=1`),
     ]);
     setLines(Array.isArray(stmt) ? stmt : []);
     setRuns(Array.isArray(runRows) ? runRows : []);
+    setSuspense(Array.isArray(suspenseRows?.entries) ? suspenseRows.entries : []);
+    setSuspenseNet(Number(suspenseRows?.netOpen ?? 0));
   }, [accountId]);
 
   useEffect(() => {
@@ -68,6 +83,9 @@ export default function BankReconPage() {
         if (list.length && !accountId) setAccountId(list[0].bankAccountId);
       })
       .catch((err) => setError(err?.message ?? 'تعذر تحميل الحسابات البنكية'));
+    apiFetch<any>('/accounting/accounts')
+      .then((tree) => setAccountTree(Array.isArray(tree) ? tree : []))
+      .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -194,6 +212,35 @@ export default function BankReconPage() {
     }
   }
 
+  /** Flattens the chart-of-accounts tree into leaf accounts only (groups excluded). */
+  const flatAccounts = useMemo(() => {
+    const out: { accountId: number; label: string }[] = [];
+    const walk = (nodes: AccountNode[]) => {
+      for (const node of nodes ?? []) {
+        if (!node.isGroup) out.push({ accountId: node.accountId, label: `${node.code} — ${node.name}` });
+        if (node.children?.length) walk(node.children);
+      }
+    };
+    walk(accountTree);
+    return out.sort((a, b) => a.label.localeCompare(b.label));
+  }, [accountTree]);
+
+  async function confirmClassify() {
+    if (!classifyTarget) return;
+    if (!classifyAccountId) { setError('اختر الحساب المراد التصنيف إليه'); return; }
+    try {
+      await apiFetch(`/treasury/bank-recon/suspense/${classifyTarget.suspenseEntryId}/classify`, {
+        method: 'POST', body: { accountId: classifyAccountId, notes: classifyNotes || undefined },
+      });
+      setClassifyTarget(null);
+      setClassifyAccountId(0);
+      setClassifyNotes('');
+      await reload();
+    } catch (err: any) {
+      setError(err?.message ?? 'تعذر التصنيف');
+    }
+  }
+
   const summary = useMemo(() => {
     const unmatchedIn = lines.filter((l) => l.status === 1 && Number(l.amount) > 0).reduce((s, l) => s + Number(l.amount), 0);
     const unmatchedOut = lines.filter((l) => l.status === 1 && Number(l.amount) < 0).reduce((s, l) => s + Math.abs(Number(l.amount)), 0);
@@ -256,6 +303,40 @@ export default function BankReconPage() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Suspense — unclassified bank movements (never posted to P&L before classification) */}
+      <div className="card p-4 mb-4 overflow-x-auto">
+        <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
+          <div>
+            <div className="label">حركات بنكية غير مصنفة (حساب وسيط)</div>
+            <p className="text-[11px] text-slate-500">لا تُثبت في الإيرادات/المصروفات حتى تُصنَّف صراحةً · الرصيد الوسيط المفتوح: <b dir="ltr" className="font-num">{formatMoney(suspenseNet)}</b></p>
+          </div>
+        </div>
+        <table className="table w-full text-sm">
+          <thead>
+            <tr><th>التاريخ</th><th>البيان</th><th>المرجع</th><th>الاتجاه</th><th>القيمة</th><th></th></tr>
+          </thead>
+          <tbody>
+            {suspense.map((entry) => (
+              <tr key={entry.suspenseEntryId}>
+                <td>{formatDate(entry.statementDate)}</td>
+                <td>{entry.description ?? '—'}</td>
+                <td dir="ltr" className="text-xs">{entry.reference ?? '—'}</td>
+                <td className="text-xs">{entry.direction === 1 ? 'إيداع (دائن)' : 'سحب (مدين)'}</td>
+                <td className="font-num" dir="ltr">{formatMoney(entry.amount)}</td>
+                <td>
+                  <button className="btn-primary h-8 px-2 text-xs" onClick={() => { setClassifyTarget(entry); setClassifyAccountId(0); setClassifyNotes(''); }}>
+                    تصنيف
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {!suspense.length && (
+              <tr><td colSpan={6} className="text-center text-slate-400 py-6">لا توجد حركات وسيطة مفتوحة — أي حركة مجهولة تظهر هنا فور استيراد كشف البنك وترحيل المسيرة.</td></tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Statement lines */}
@@ -323,6 +404,25 @@ export default function BankReconPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Classify suspense modal */}
+      {classifyTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setClassifyTarget(null)}>
+          <div className="card p-5 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-bold text-slate-800 mb-1">تصنيف الحركة البنكية</h3>
+            <p className="text-xs text-slate-500 mb-3">{classifyTarget.description ?? ''} — <span dir="ltr">{formatMoney(classifyTarget.amount)}</span> · اختر الحساب الذي تُنسب إليه الحركة، وسيُنشأ قيد مستقل عبر محرك القيد المزدوج.</p>
+            <select className="input w-full mb-3" autoFocus value={classifyAccountId} onChange={(e) => setClassifyAccountId(Number(e.target.value))}>
+              <option value={0}>— اختر الحساب —</option>
+              {flatAccounts.map((a) => <option key={a.accountId} value={a.accountId}>{a.label}</option>)}
+            </select>
+            <input className="input w-full mb-3" placeholder="سبب التصنيف (اختياري)" value={classifyNotes} onChange={(e) => setClassifyNotes(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && confirmClassify()} />
+            <div className="flex gap-2 justify-end">
+              <button className="btn-soft" onClick={() => setClassifyTarget(null)}>إلغاء</button>
+              <button className="btn-primary" onClick={confirmClassify}>تأكيد التصنيف</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Manual match modal */}
       {matchTarget && (

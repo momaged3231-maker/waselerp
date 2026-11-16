@@ -244,12 +244,28 @@ const daysAgo = (days) => { const d = new Date(); d.setDate(d.getDate() - days);
   await call('POST', `/stock-vouchers/${damage.stockVoucherId}/approve`, {});
   console.log('Damage voucher approved');
 
+  // Resolve GL ids by CODE — the seed order shifts ids between releases.
+  const accountsTree = await call('GET', '/accounting/accounts');
+  const findAccount = (nodes, code) => {
+    for (const node of nodes ?? []) {
+      if (node.code === code) return node;
+      const hit = findAccount(node.children, code);
+      if (hit) return hit;
+    }
+    return null;
+  };
+  const glId = (code) => {
+    const found = findAccount(accountsTree, code);
+    if (!found) throw new Error(`GL account ${code} not found`);
+    return Number(found.accountId);
+  };
+
   // Day 4 — مصروفات
   const rent = await call('POST', '/accounting/journals', {
     description: 'إيجار أكتوبر', journalDate: daysAgoIso(4), post: true,
     lines: [
-      { accountId: 47, debit: 8000, description: 'إيجار المحل', partyId: null },
-      { accountId: 15, credit: 8000, description: 'سحب من الخزينة', partyId: null },
+      { accountId: glId('5104'), debit: 8000, description: 'إيجار المحل', partyId: null },
+      { accountId: glId('1101'), credit: 8000, description: 'سحب من الخزينة', partyId: null },
     ],
   });
   console.log('Rent journal:', rent.journalId);
@@ -257,8 +273,8 @@ const daysAgo = (days) => { const d = new Date(); d.setDate(d.getDate() - days);
   const elec = await call('POST', '/accounting/journals', {
     description: 'كهرباء أكتوبر', journalDate: daysAgoIso(4), post: true,
     lines: [
-      { accountId: 48, debit: 1500, description: 'فاتورة كهرباء', partyId: null },
-      { accountId: 15, credit: 1500, description: 'سحب من الخزينة', partyId: null },
+      { accountId: glId('5105'), debit: 1500, description: 'فاتورة كهرباء', partyId: null },
+      { accountId: glId('1101'), credit: 1500, description: 'سحب من الخزينة', partyId: null },
     ],
   });
   console.log('Electric journal:', elec.journalId);
@@ -295,8 +311,8 @@ const daysAgo = (days) => { const d = new Date(); d.setDate(d.getDate() - days);
   const dep = await call('POST', '/accounting/journals', {
     description: 'إيداع من الخزينة إلى البنك', journalDate: daysAgoIso(2), post: true,
     lines: [
-      { accountId: 16, debit: 25000, description: 'إيداع', partyId: null },
-      { accountId: 15, credit: 25000, description: 'سحب من الخزينة', partyId: null },
+      { accountId: glId('1102'), debit: 25000, description: 'إيداع', partyId: null },
+      { accountId: glId('1101'), credit: 25000, description: 'سحب من الخزينة', partyId: null },
     ],
   });
   console.log('Deposit journal:', dep.journalId);

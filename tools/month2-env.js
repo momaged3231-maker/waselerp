@@ -96,15 +96,32 @@ const daysAgo = (days) => { const d = new Date(); d.setDate(d.getDate() - days);
   await call('POST', `/stock-vouchers/${opening.stockVoucherId}/approve`, {});
   console.log('opening stock approved, value:', createdItems.reduce((s, i) => s + i.opening * i.cost, 0));
 
+  // Resolve GL account ids by CODE — never hardcode (seed order can shift between releases).
+  const accountsTree = await call('GET', '/accounting/accounts');
+  const findAccount = (nodes, code) => {
+    for (const node of nodes ?? []) {
+      if (node.code === code) return node;
+      const hit = findAccount(node.children, code);
+      if (hit) return hit;
+    }
+    return null;
+  };
+  const glId = (code) => {
+    const found = findAccount(accountsTree, code);
+    if (!found) throw new Error(`GL account ${code} not found`);
+    return Number(found.accountId);
+  };
+  console.log('gl ids resolved by code');
+
   // Opening journal — Dr 50k cash / 400k bank / 80k AR | Cr 200k AP / 330k capital
   await call('POST', '/accounting/journals', {
     description: 'قيد افتتاحي — شركة مراجعة لحسابات الأشهر', journalDate: daysAgo(29), post: true,
     lines: [
-      { accountId: 15, debit: 50000, description: 'افتتاحي — الخزينة', partyId: null },
-      { accountId: 16, debit: 400000, description: 'افتتاحي — بنك', partyId: null },
-      { accountId: 17, debit: 80000, description: 'افتتاحي — ذمم مدينة', partyId: custNil },
-      { accountId: 27, credit: 200000, description: 'افتتاحي — ذمم دائنة', partyId: supSpeed },
-      { accountId: 33, credit: 330000, description: 'افتتاحي — رأس المال', partyId: null },
+      { accountId: glId('1101'), debit: 50000, description: 'افتتاحي — الخزينة', partyId: null },
+      { accountId: glId('1102'), debit: 400000, description: 'افتتاحي — بنك', partyId: null },
+      { accountId: glId('1103'), debit: 80000, description: 'افتتاحي — ذمم مدينة', partyId: custNil },
+      { accountId: glId('2101'), credit: 200000, description: 'افتتاحي — ذمم دائنة', partyId: supSpeed },
+      { accountId: glId('3101'), credit: 330000, description: 'افتتاحي — رأس المال', partyId: null },
     ],
   });
   console.log('opening journal posted');

@@ -157,6 +157,7 @@ const CHART: {
   { code: '2103', name: 'مصروفات مستحقة', nameEn: 'Accrued Expenses', type: 2, parent: '21' },
   { code: '2104', name: 'قروض قصيرة الأجل', nameEn: 'Short Term Loans', type: 2, parent: '21' },
   { code: '2105', name: 'أوراق دفع', nameEn: 'Notes Payable', type: 2, mapping: 'NOTES_PAYABLE', mappingLabel: 'أوراق دفع', parent: '21' },
+  { code: '2106', name: 'حركات بنكية غير مصنفة', nameEn: 'Bank Suspense (Unclassified)', type: 2, parent: '21', mapping: 'BANK_SUSPENSE', mappingLabel: 'حركات بنكية غير مصنفة — تؤجَّل حتى التصنيف' },
 
   { code: '3', name: 'حقوق الملكية', nameEn: 'Equity', type: 3, group: true },
   { code: '3101', name: 'رأس المال', nameEn: 'Capital', type: 3, parent: '3' },

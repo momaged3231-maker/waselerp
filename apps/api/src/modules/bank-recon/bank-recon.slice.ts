@@ -526,28 +526,38 @@ export class BankReconService {
         [run.bank_account_id, branchId, run.run_date],
       );
 
+      const { rows: suspenseRows } = await client.query(`SELECT a.account_id AS "id" FROM gl_accounts a JOIN gl_mappings m ON m.account_id = a.account_id WHERE m.mapping_key = 'BANK_SUSPENSE' LIMIT 1`);
+      const suspenseId = Number(suspenseRows[0]?.id) || (await requireMapping(client, 'OTHER_EXPENSE', 'مصروفات إدارية')).accountId;
       const { rows: bFee } = await client.query(`SELECT a.account_id AS "id" FROM gl_accounts a JOIN gl_mappings m ON m.account_id = a.account_id WHERE m.mapping_key = 'BANK_FEE' LIMIT 1`);
       const { rows: otherIncome } = await client.query(`SELECT a.account_id AS "id" FROM gl_accounts a JOIN gl_mappings m ON m.account_id = a.account_id WHERE m.mapping_key = 'OTHER_INCOME' LIMIT 1`);
-      const { rows: otherExpense } = await client.query(`SELECT a.account_id AS "id" FROM gl_accounts a JOIN gl_mappings m ON m.account_id = a.account_id WHERE m.mapping_key = 'OTHER_EXPENSE' LIMIT 1`);
       const { rows: arRow } = await client.query(`SELECT a.account_id AS "id" FROM gl_accounts a JOIN gl_mappings m ON m.account_id = a.account_id WHERE m.mapping_key = 'AR' LIMIT 1`);
       const { rows: apRow } = await client.query(`SELECT a.account_id AS "id" FROM gl_accounts a JOIN gl_mappings m ON m.account_id = a.account_id WHERE m.mapping_key = 'AP' LIMIT 1`);
       const bankFeeId = Number(bFee[0]?.id) || (await requireMapping(client, 'OTHER_EXPENSE', 'مصروفات إدارية')).accountId;
       const otherIncomeId = Number(otherIncome[0]?.id) || (await requireMapping(client, 'OTHER_INCOME', 'إيرادات أخرى')).accountId;
-      const otherExpenseId = Number(otherExpense[0]?.id) || (await requireMapping(client, 'OTHER_EXPENSE', 'مصروفات إدارية')).accountId;
       const arId = Number(arRow[0]?.id) || (await requireMapping(client, 'AR', 'ذمم العملاء')).accountId;
       const apId = Number(apRow[0]?.id) || (await requireMapping(client, 'AP', 'ذمم الموردين')).accountId;
 
       // Bucket the adjustments per movement class; each bucket is balanced against the bank.
+      // UNKNOWN movements (and partial-match differences) NEVER hit P&L: they are booked to the
+      // BANK_SUSPENSE clearing account and classified explicitly later (auditable, per line).
       let fees = 0, interestIn = 0, unknownIn = 0, unknownOut = 0, bouncedIn = 0, bouncedOut = 0, diffNet = 0;
       const included: number[] = [];
+      const suspenseDrafts: { lineId: number; direction: number; amount: number; tag: string; kind: string }[] = [];
       for (const line of lines) {
         const amount = Number(line.amount);
         const type = Number(line.movement_type);
         if (TIMING_TYPES.has(type) || Number(line.status) === 5) continue;
         if (Number(line.status) !== 1) {
-          // Matched line with a difference — post only the residual.
-          diffNet = round2(diffNet + toNumber(line.match_difference));
-          included.push(line.line_id);
+          // Matched line with a difference — the residual is unclassified until reviewed.
+          const diff = round2(toNumber(line.match_difference));
+          if (Math.abs(diff) > 0.005) {
+            diffNet = round2(diffNet + diff);
+            included.push(line.line_id);
+            suspenseDrafts.push({
+              lineId: line.line_id, direction: diff > 0 ? 1 : 2, amount: Math.abs(diff),
+              tag: `#L${line.line_id}`, kind: 'فرق مطابقة',
+            });
+          }
           continue;
         }
         included.push(line.line_id);
@@ -556,8 +566,14 @@ export class BankReconService {
           case 4: interestIn += Math.abs(amount); break;
           case 6: bouncedIn += Math.abs(amount); break;
           case 7: bouncedOut += Math.abs(amount); break;
-          case 1: case 5: case 8: unknownIn += amount; break;
-          default: unknownOut += Math.abs(amount); break;
+          case 1: case 5: case 8:
+            unknownIn += amount;
+            suspenseDrafts.push({ lineId: line.line_id, direction: 1, amount: round2(amount), tag: `#L${line.line_id}`, kind: 'إيداع مجهول' });
+            break;
+          default:
+            unknownOut += Math.abs(amount);
+            suspenseDrafts.push({ lineId: line.line_id, direction: 2, amount: round2(Math.abs(amount)), tag: `#L${line.line_id}`, kind: 'سحب مجهول' });
+            break;
         }
       }
 
@@ -570,11 +586,16 @@ export class BankReconService {
       if (interestIn > 0) { push(glId, interestIn, 0, 'تسوية بنكية — فائدة'); push(otherIncomeId, 0, interestIn, 'فوائد بنكية غير مقيدة'); }
       if (bouncedIn > 0) { push(arId, bouncedIn, 0, 'شيك مرتد (وارد) — عكس التحصيل'); push(glId, 0, bouncedIn, 'تسوية بنكية — شيك مرتد'); }
       if (bouncedOut > 0) { push(glId, bouncedOut, 0, 'تسوية بنكية — شيك صادر مرتد'); push(apId, 0, bouncedOut, 'شيك مرتد (صادر) — إحياء الالتزام'); }
-      if (unknownIn > 0) { push(glId, unknownIn, 0, 'إيداع مجهول حسب كشف البنك'); push(otherIncomeId, 0, unknownIn, 'إيداع غير معروف المصدر'); }
-      if (unknownOut > 0) { push(otherExpenseId, unknownOut, 0, 'سحب مجهول حسب كشف البنك'); push(glId, 0, unknownOut, 'تسوية بنكية — سحب مجهول'); }
-      if (Math.abs(diffNet) > 0.005) {
-        if (diffNet < 0) { push(otherExpenseId, -diffNet, 0, 'فروق مطابقة بنكية'); push(glId, 0, -diffNet, 'تسوية بنكية — فرق مطابقة'); }
-        else { push(glId, diffNet, 0, 'تسوية بنكية — فرق مطابقة'); push(otherIncomeId, 0, diffNet, 'فروق مطابقة بنكية'); }
+      // Unclassified movements go through the suspense account, one line pair per statement line.
+      for (const draft of suspenseDrafts) {
+        const desc = `${draft.kind} ${draft.tag}`;
+        if (draft.direction === 1) {
+          push(glId, draft.amount, 0, desc);
+          push(suspenseId, 0, draft.amount, desc);
+        } else {
+          push(suspenseId, draft.amount, 0, desc);
+          push(glId, 0, draft.amount, desc);
+        }
       }
 
       let journalId: number | null = null;
@@ -585,6 +606,27 @@ export class BankReconService {
           sourceType: 'bank_recon', sourceId: id, userId: user.userId, autoBalance: true,
           lines: journalLines,
         });
+      }
+      // Register each suspense leg as a traceable entry linked to its statement line
+      // (description carries a deterministic #L<lineId> tag).
+      if (journalId && suspenseDrafts.length) {
+        const { rows: suspEntries } = await client.query(
+          `SELECT entry_id, description FROM gl_entries WHERE journal_id = $1::bigint AND account_id = $2::int`,
+          [journalId, suspenseId],
+        );
+        for (const entry of suspEntries) {
+          const match = /#L(\d+)/.exec(entry.description ?? '');
+          if (!match) continue;
+          const lineId = Number(match[1]);
+          const draft = suspenseDrafts.find((d) => d.lineId === lineId);
+          if (!draft) continue;
+          await client.query(
+            `INSERT INTO bank_suspense_entries
+               (adjustment_journal_id, suspense_gl_entry_id, bank_statement_line_id, direction, amount)
+             VALUES ($1::bigint, $2::bigint, $3::bigint, $4::smallint, $5::numeric)`,
+            [journalId, entry.entry_id, lineId, draft.direction, draft.amount.toFixed(2)],
+          );
+        }
       }
       for (const lineId of included) {
         await client.query(
@@ -607,6 +649,7 @@ export class BankReconService {
         `ترحيل مسيرة ${run.run_no} — ${journalId ? `قيد تسوية #${journalId}` : 'بلا قيد (صفر فروقات قيدية)'} — ${included.length} سطور مشمولة`);
 
       return { runId: id, status: 2, journalId, adjustedLines: included.length,
+        suspenseEntries: suspenseDrafts.length,
         adjustments: { fees, interestIn, unknownIn, unknownOut, bouncedIn, bouncedOut, matchDifferenceNet: round2(diffNet) } };
     });
   }
@@ -642,7 +685,14 @@ export class BankReconService {
           [row.line_id],
         );
       }
-      await client.query(`DELETE FROM bank_reconciliation_run_lines WHERE run_id = $1::bigint`, [id]);
+      // Keep bank_reconciliation_run_lines as the permanent record of which lines
+      // were part of the reversed run — never delete audit trail.
+      if (run.journal_id) {
+        await client.query(
+          `UPDATE bank_suspense_entries SET status = 3 WHERE adjustment_journal_id = $1::bigint AND status IN (1,2)`,
+          [run.journal_id],
+        );
+      }
       await client.query(
         `UPDATE bank_reconciliation_runs SET status = 3, reverse_journal_id = $2::bigint WHERE run_id = $1::bigint`,
         [id, reverseJournalId],
@@ -716,6 +766,139 @@ export class BankReconService {
         outstandingChecks: round2(lines.filter((l) => Number(l.movement_type) === 11).reduce((s, l) => s + Math.abs(Number(l.amount)), 0)),
       },
     };
+  }
+
+  // ------------------------------------------------------------- suspense
+  /** Open (and classified) suspense entries for the branch — unclassified bank movements. */
+  async listSuspense(branchId: number, query: any) {
+    const status = query?.status != null && query.status !== '' ? Number(query.status) : 0;
+    const entries = await this.db.query<any>(
+      `SELECT s.suspense_entry_id AS "suspenseEntryId", s.bank_statement_line_id AS "lineId",
+              s.direction, s.amount, s.status, s.adjustment_journal_id AS "adjustmentJournalId",
+              s.classification_journal_id AS "classificationJournalId",
+              s.classified_account_id AS "classifiedAccountId", s.classified_at AS "classifiedAt",
+              s.notes, l.statement_date AS "statementDate", l.description, l.reference,
+              a.code AS "suspenseCode", ca.code AS "classifiedCode", ca.name AS "classifiedName"
+         FROM bank_suspense_entries s
+         JOIN bank_statement_lines l ON l.line_id = s.bank_statement_line_id
+         JOIN gl_accounts a ON a.account_id = (
+           SELECT e.account_id FROM gl_entries e WHERE e.entry_id = s.suspense_gl_entry_id
+         )
+         LEFT JOIN gl_accounts ca ON ca.account_id = s.classified_account_id
+        WHERE l.branch_id = $1::int AND ($2::int = 0 OR s.status = $2::int)
+        ORDER BY s.suspense_entry_id DESC LIMIT 200`,
+      [branchId, status],
+    );
+    const openTotals = await this.db.query<{ net: string | null; count: string }>(
+      `SELECT COALESCE(SUM(CASE WHEN s.direction = 1 THEN s.amount ELSE -s.amount END), 0)::numeric net,
+              COUNT(*)::int count
+         FROM bank_suspense_entries s JOIN bank_statement_lines l ON l.line_id = s.bank_statement_line_id
+        WHERE l.branch_id = $1::int AND s.status = 1`,
+      [branchId],
+    );
+    return {
+      entries: entries.map((e) => ({ ...e, statusName: e.status === 1 ? 'مفتوحة' : e.status === 2 ? 'مصنّفة' : 'ملغاة بالعكس' })),
+      openCount: Number(openTotals[0]?.count ?? 0),
+      // Net CREDIT-positive balance of the suspense account (deposit side deposits money in suspense).
+      netOpen: Number(openTotals[0]?.net ?? 0),
+    };
+  }
+
+  /**
+   * Classifies one suspense entry into a REAL account: Dr/Cr suspense ↔ chosen account
+   * through posting.ts, with the entry locked and audited. Reversible via reverse-classification.
+   */
+  async classifySuspense(id: number, dto: any, user: AuthUser, branchId: number) {
+    const accountId = Number(dto?.accountId);
+    if (!accountId) throw new BadRequestException('اختر الحساب المراد التصنيف إليه');
+    const notes = String(dto?.notes ?? '').trim() || null;
+    const classifyDate = asIsoDate(dto?.date) ?? new Date().toISOString().slice(0, 10);
+    return this.db.transaction(async (client) => {
+      const { rows } = await client.query(
+        `SELECT s.*, l.description AS line_description
+           FROM bank_suspense_entries s JOIN bank_statement_lines l ON l.line_id = s.bank_statement_line_id
+          WHERE s.suspense_entry_id = $1::bigint AND l.branch_id = $2::int FOR UPDATE`,
+        [id, branchId],
+      );
+      if (!rows.length) throw new BadRequestException('قيد الوسيط غير موجود');
+      const entry = rows[0];
+      if (Number(entry.status) !== 1) throw new BadRequestException('هذه الحركة مصنّفة أو ملغاة بالفعل');
+      await assertPeriodOpen(client, branchId, classifyDate, 'لا يمكن التصنيف في فترة مقفولة');
+
+      const { rows: acctRows } = await client.query(
+        `SELECT a.account_id, a.code, a.name, a.is_group, a.is_active
+           FROM gl_accounts a WHERE a.account_id = $1::int`,
+        [accountId],
+      );
+      if (!acctRows.length || !acctRows[0].is_active) throw new BadRequestException('الحساب المختار غير موجود أو غير مفعّل');
+      if (acctRows[0].is_group) throw new BadRequestException('لا يمكن التصنيف إلى حساب تجميعي');
+      const suspenseId = Number((await client.query(
+        `SELECT a.account_id FROM gl_accounts a JOIN gl_mappings m ON m.account_id = a.account_id WHERE m.mapping_key = 'BANK_SUSPENSE' LIMIT 1`,
+      )).rows[0]?.account_id);
+      if (accountId === suspenseId) throw new BadRequestException('لا يمكن التصنيف إلى الحساب الوسيط نفسه');
+
+      const amount = Number(entry.amount);
+      const lines = entry.direction === 1
+        ? [
+            { accountId: suspenseId, debit: amount, description: `تصنيف حركة بنكية — ${entry.line_description ?? ''}` },
+            { accountId, credit: amount, description: `تصنيف حركة بنكية — ${entry.line_description ?? ''}` },
+          ]
+        : [
+            { accountId, debit: amount, description: `تصنيف حركة بنكية — ${entry.line_description ?? ''}` },
+            { accountId: suspenseId, credit: amount, description: `تصنيف حركة بنكية — ${entry.line_description ?? ''}` },
+          ];
+      const journalId = await postJournal(client, {
+        branchId, journalType: 6, journalDate: classifyDate,
+        description: `تصنيف حركة بنكية سطر #${entry.bank_statement_line_id}`,
+        sourceType: 'bank_recon_classification', sourceId: id, userId: user.userId, autoBalance: true,
+        lines,
+      });
+      await client.query(
+        `UPDATE bank_suspense_entries
+            SET status = 2, classification_journal_id = $2::bigint, classified_account_id = $3::int,
+                classified_by = $4::int, classified_at = now(), notes = $5::text
+          WHERE suspense_entry_id = $1::bigint`,
+        [id, journalId, accountId, user.userId, notes],
+      );
+      await activity(client, user.userId, branchId, 'bank_recon.suspense_classify', 'bank_recon', id,
+        `تصنيف حركة سطر ${entry.bank_statement_line_id} إلى حساب ${acctRows[0].code} — قيد #${journalId}`);
+      return { suspenseEntryId: id, classificationJournalId: journalId, classifiedAccountId: accountId, amount };
+    });
+  }
+
+  /** Reverses a classification: mirror journal + the suspense entry becomes open again. */
+  async reverseClassification(id: number, dto: any, user: AuthUser, branchId: number) {
+    const reverseDate = asIsoDate(dto?.date) ?? new Date().toISOString().slice(0, 10);
+    return this.db.transaction(async (client) => {
+      const { rows } = await client.query(
+        `SELECT s.*, l.description AS line_description
+           FROM bank_suspense_entries s JOIN bank_statement_lines l ON l.line_id = s.bank_statement_line_id
+          WHERE s.suspense_entry_id = $1::bigint AND l.branch_id = $2::int FOR UPDATE`,
+        [id, branchId],
+      );
+      if (!rows.length) throw new BadRequestException('قيد الوسيط غير موجود');
+      const entry = rows[0];
+      if (Number(entry.status) !== 2) throw new BadRequestException('لا يمكن عكس تصنيف غير مصنّف');
+      await assertPeriodOpen(client, branchId, reverseDate, 'لا يمكن العكس في فترة مقفولة');
+
+      const reverseJournalId = entry.classification_journal_id
+        ? await reverseJournal(client, Number(entry.classification_journal_id), {
+            userId: user.userId, date: reverseDate,
+            description: `عكس تصنيف حركة بنكية سطر #${entry.bank_statement_line_id}`,
+            journalType: 6,
+          })
+        : null;
+      await client.query(
+        `UPDATE bank_suspense_entries
+            SET status = 1, classification_journal_id = NULL, classified_account_id = NULL,
+                classified_by = NULL, classified_at = NULL, notes = NULL
+          WHERE suspense_entry_id = $1::bigint`,
+        [id],
+      );
+      await activity(client, user.userId, branchId, 'bank_recon.suspense_reverse', 'bank_recon', id,
+        `عكس تصنيف حركة سطر ${entry.bank_statement_line_id} — ${reverseJournalId ? `قيد عكسي #${reverseJournalId}` : 'بلا قيد'}`);
+      return { suspenseEntryId: id, status: 1, reverseJournalId };
+    });
   }
 }
 
@@ -803,6 +986,24 @@ export class BankReconController {
   @RequirePermissions('bank.view')
   runReport(@Param('id', ParseIntPipe) id: number, @CurrentBranch() branchId: number) {
     return this.service.runReport(id, branchId);
+  }
+
+  @Get('suspense')
+  @RequirePermissions('bank.view')
+  listSuspense(@Query() query: any, @CurrentBranch() branchId: number) {
+    return this.service.listSuspense(branchId, query);
+  }
+
+  @Post('suspense/:id/classify')
+  @RequirePermissions('bank.manage')
+  classifySuspense(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
+    return this.service.classifySuspense(id, dto, user, branchId);
+  }
+
+  @Post('suspense/:id/reverse-classification')
+  @RequirePermissions('bank.manage')
+  reverseClassification(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
+    return this.service.reverseClassification(id, dto, user, branchId);
   }
 }
 
