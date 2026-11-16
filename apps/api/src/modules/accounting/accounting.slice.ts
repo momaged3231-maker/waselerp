@@ -7,6 +7,8 @@ import { assertDeletionAllowed } from '../../common/delete-guard';
 import { PoolClient } from 'pg';
 import { postJournal, requireMapping, resolveMapping, voidJournal, reverseJournal, JournalLineInput } from '../../common/posting';
 import { asIsoDate } from '../../common/dates';
+import { occurrencesBetween } from '../../common/occurrences';
+import { depreciationForMonth, monthsInRange, monthBounds } from '../../common/depreciation';
 import {
   AuthUser, CurrentBranch, CurrentUser, RequirePermissions,
 } from '../../common/security';
@@ -934,7 +936,13 @@ export class AccountingService {
     return { periodId: Number(row.period_id), name };
   }
 
-  /** Closes a period: blocks any later posting dated inside it. */
+  /**
+   * MANUAL accounting lock (legacy). Marks the period closed WITHOUT any checklist,
+   * journal or RETAINED_EARNINGS transfer — it exists so back-office flows (and the
+   * regression suite) can freeze a period's ledger. It is NOT the monthly closing;
+   * the monthly closing is `closeMonth` (pre-close checklist + balanced journal).
+   * Audited like every other state change.
+   */
   async closePeriod(id: number, user: AuthUser) {
     const row = await this.db.one<any>(
       'SELECT period_id, name, is_closed FROM periods WHERE period_id = $1::int',
@@ -946,15 +954,28 @@ export class AccountingService {
       `UPDATE periods SET is_closed = true, closed_at = now(), closed_by = $2 WHERE period_id = $1::int`,
       [id, user.userId],
     );
-    return { periodId: id, isClosed: true };
+    await this.db.query(
+      `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
+       SELECT $2::int, p.branch_id, 'period.manual_lock', 'period', p.period_id, $3
+         FROM periods p WHERE p.period_id = $1::int`,
+      [id, user.userId, `قفل يدوي بلا أثر محاسبي «${row.name}» — الإقفال الآلي الشهري هو المرجع المحاسبي`],
+    );
+    return { periodId: id, isClosed: true, warning: 'قفل يدوي بلا ترحيل محاسبي — استخدم الإقفال الشهري الآلي للإقفال المحاسبي الكامل' };
   }
 
+  /** MANUAL unlock (legacy) — paired with `closePeriod`. Audited. No accounting effect. */
   async reopenPeriod(id: number, user: AuthUser) {
-    const row = await this.db.one<any>('SELECT period_id, is_closed FROM periods WHERE period_id = $1::int', [id]);
+    const row = await this.db.one<any>('SELECT period_id, name, is_closed FROM periods WHERE period_id = $1::int', [id]);
     if (!row) throw new BadRequestException('الفترة غير موجودة');
     await this.db.query(
       'UPDATE periods SET is_closed = false, closed_at = NULL, closed_by = NULL WHERE period_id = $1::int',
       [id],
+    );
+    await this.db.query(
+      `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
+       SELECT $2::int, p.branch_id, 'period.manual_unlock', 'period', p.period_id, $3
+         FROM periods p WHERE p.period_id = $1::int`,
+      [id, user.userId, `فتح يدوي للفترة «${row.name}» — بلا أثر محاسبي`],
     );
     return { periodId: id, isClosed: false };
   }
@@ -963,11 +984,10 @@ export class AccountingService {
   //  E6 — Automated period closing
   // ------------------------------------------------------------------ //
 
-  private async periodByIdForBranch(client: PoolClient, id: number, branchId: number) {
-    const { rows } = await client.query(
-      `SELECT * FROM periods WHERE period_id = $1::int AND branch_id = $2::int`,
-      [id, branchId],
-    );
+  private async periodByIdForBranch(client: PoolClient, id: number, branchId: number, forUpdate = false) {
+    const select = forUpdate ? 'SELECT * FROM periods WHERE period_id = $1::int AND branch_id = $2::int FOR UPDATE'
+      : 'SELECT * FROM periods WHERE period_id = $1::int AND branch_id = $2::int';
+    const { rows } = await client.query(select, [id, branchId]);
     if (!rows.length) throw new BadRequestException('الفترة غير موجودة في هذا الفرع');
     return rows[0];
   }
@@ -1098,6 +1118,91 @@ export class AccountingService {
         `سطور غير مطابقة: ${unmatched} — أدخل bypassReason لإقفال الفترة بتجاهلها`);
     }
 
+    // 7) E3 — every due bank-expense occurrence in the period has a posted run.
+    // Active rules only (`is_active = false` is an explicit opt-out); a suspended
+    // rule stops being due ON its suspension date (earlier occurrences stay due).
+    // A closed accounting period for the occurrence is NOT an excuse: an
+    // occurrence refused because its period was locked stays due and blocks this close.
+    {
+      const { rows: rules } = await client.query(
+        `SELECT rule_id, name, frequency, day_of_month, start_date, end_date, is_active, suspended_at
+           FROM bank_expense_rules
+          WHERE branch_id = $1::int`,
+        [branchId],
+      );
+      const missing: string[] = [];
+      for (const rule of rules) {
+        if (!rule.is_active) continue;
+        const ruleStart = asIsoDate(rule.start_date)!;
+        const ruleEnd = asIsoDate(rule.end_date);
+        const upper = ruleEnd && ruleEnd < to ? ruleEnd : to;
+        const suspended = rule.suspended_at ? asIsoDate(rule.suspended_at) : null;
+        for (const occ of occurrencesBetween(ruleStart, Number(rule.day_of_month), Number(rule.frequency), from, upper)) {
+          if (suspended && occ >= suspended) continue; // suspended before this occurrence — not due
+          const hit = await client.query(
+            `SELECT 1 FROM bank_expense_runs WHERE rule_id = $1::int AND period_key = $2::date AND status = 1`,
+            [rule.rule_id, occ],
+          );
+          if (!hit.rows.length) missing.push(`${rule.name} — ${occ}`);
+        }
+      }
+      const label = 'كل استحقاقات الرسوم البنكية (E3) في الفترة مقيّدة';
+      if (missing.length === 0) {
+        await record('e3_bank_expense_due', label, 2, null);
+      } else if (bypassReason) {
+        await record('e3_bank_expense_due', label, 4,
+          `تجاوز ${missing.length} استحقاقًا غير مولّد بقرار مصرّح: ${bypassReason} (${missing.slice(0, 6).join('؛ ')}${missing.length > 6 ? ' …' : ''})`);
+      } else {
+        await record('e3_bank_expense_due', label, 3,
+          `استحقاقات لم يولّد لها E3 — شغّل "توليد الرسوم البنكية" أولًا: ${missing.slice(0, 8).join('؛ ')}${missing.length > 8 ? ` … (+${missing.length - 8})` : ''}`);
+      }
+    }
+
+    // 8) E5 — every due depreciation month overlapping the period has been posted.
+    // Due = in-service (status 1, the population E5 can post), computable amount
+    // > 0 for that month, no asset_depreciation_lines row. Fully-depreciated
+    // assets (remaining = 0) and assets entering service after the month are not
+    // due. Assets of status 3/4/5 (disposed/written-off) cannot be posted by E5,
+    // so they do not block the close — the asset register may then show a book
+    // value mismatch vs GL; post depreciation BEFORE disposing to avoid it.
+    {
+      const months = monthsInRange(from, to);
+      const missing: string[] = [];
+      const { rows: assets } = await client.query(
+        `SELECT a.* FROM fixed_assets a
+          WHERE a.branch_id = $1::int AND a.status = 1 AND a.in_service_date <= $2::date`,
+        [branchId, to],
+      );
+      for (const monthDate of months) {
+        const { last } = monthBounds(monthDate.slice(0, 7));
+        for (const asset of assets) {
+          if (asIsoDate(asset.in_service_date)! > last) continue; // not in service this month
+          const accRow = await client.query<{ acc: string | null }>(
+            `SELECT COALESCE(SUM(depreciation_amount), 0)::numeric acc FROM asset_depreciation_lines
+              WHERE asset_id = $1::int AND period_month < $2::date`,
+            [asset.asset_id, monthDate],
+          );
+          const amount = depreciationForMonth(asset, monthDate, Number(accRow.rows[0]?.acc ?? 0));
+          if (!(amount > 0)) continue; // residual reached / fully consumed / stub day 0
+          const hit = await client.query(
+            `SELECT 1 FROM asset_depreciation_lines WHERE asset_id = $1::int AND period_month = $2::date`,
+            [asset.asset_id, monthDate],
+          );
+          if (!hit.rows.length) missing.push(`${asset.asset_code} «${asset.name}» — ${monthDate.slice(0, 7)} بمبلغ ${amount.toFixed(2)}`);
+        }
+      }
+      const label = 'كل استحقاقات الإهلاك (E5) في الفترة مقيّدة';
+      if (missing.length === 0) {
+        await record('e5_depreciation_due', label, 2, null);
+      } else if (bypassReason) {
+        await record('e5_depreciation_due', label, 4,
+          `تجاوز ${missing.length} شهر إهلاك غير مسجّل بقرار مصرّح: ${bypassReason} (${missing.slice(0, 6).join('؛ ')}${missing.length > 6 ? ' …' : ''})`);
+      } else {
+        await record('e5_depreciation_due', label, 3,
+          `إهلاك مستحق غير مسجّل — شغّل "تشغيل الإهلاك" أولًا: ${missing.slice(0, 8).join('؛ ')}${missing.length > 8 ? ` … (+${missing.length - 8})` : ''}`);
+      }
+    }
+
     const failed = results.filter((c) => c.status === 3).length;
     return {
       periodId: period.period_id, name: period.name, from, to,
@@ -1125,7 +1230,9 @@ export class AccountingService {
   async closeMonth(id: number, dto: any, user: AuthUser, branchId: number) {
     const bypassReason = String(dto?.bypassReason ?? '').trim() || null;
     return this.db.transaction(async (client) => {
-      const period = await this.periodByIdForBranch(client, id, branchId);
+      // FOR UPDATE: a concurrent close/reopen of the SAME period must wait for us —
+      // exactly one request wins; the loser re-reads the row and refuses.
+      const period = await this.periodByIdForBranch(client, id, branchId, true);
       if (period.is_closed) {
         throw new BadRequestException(`الفترة «${period.name}» مقفلة بالفعل — لا يمكن إقفالها مرة أخرى`);
       }
@@ -1166,13 +1273,20 @@ export class AccountingService {
         });
       }
 
-      await client.query(
+      // Atomic compare-and-swap: only the transaction that flips is_closed=false→true
+      // may record the closing — if another one already won, 0 rows come back and the
+      // whole transaction (including the closing journal) rolls back.
+      const updated = await client.query(
         `UPDATE periods
             SET is_closed = true, closed_at = now(), closed_by = $2::int,
                 closing_entry_id = $3::bigint, net_income = $4::numeric
-          WHERE period_id = $1::int`,
+          WHERE period_id = $1::int AND is_closed = false
+          RETURNING period_id`,
         [period.period_id, user.userId, journalId, netProfit.toFixed(2)],
       );
+      if (updated.rows.length !== 1) {
+        throw new BadRequestException('تعذر إقفال الفترة — تغيرت حالتها أثناء التنفيذ، أعد المحاولة');
+      }
       await client.query(
         `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
          VALUES ($1::int,$2::int,'period.close','period',$3::bigint,$4)`,
@@ -1196,16 +1310,22 @@ export class AccountingService {
     const reason = String(dto?.reason ?? '').trim();
     if (!reason) throw new BadRequestException('سبب العكس إلزامي — اذكر سبب إعادة فتح الفترة');
     return this.db.transaction(async (client) => {
-      const period = await this.periodByIdForBranch(client, id, branchId);
+      // FOR UPDATE — two concurrent reversals of the same period must serialize;
+      // the loser sees is_closed=false and is refused.
+      const period = await this.periodByIdForBranch(client, id, branchId, true);
       if (!period.is_closed) throw new BadRequestException(`الفترة «${period.name}» ليست مقفلة`);
       const entryId = period.closing_entry_id ? Number(period.closing_entry_id) : null;
+      const reverseDate = asIsoDate(period.end_date) ?? asIsoDate(new Date().toISOString().slice(0, 10))!;
+      // Reopen FIRST: the mirror journal must be dated INSIDE the period it reverses.
+      // A reversal dated outside the period leaves the period's window without the
+      // mirror, and a re-close would drop the period result out of RETAINED_EARNINGS.
+      await client.query(
+        `UPDATE periods SET is_closed = false, closed_at = NULL, closed_by = NULL,
+                closing_entry_id = NULL, net_income = NULL
+          WHERE period_id = $1::int`,
+        [period.period_id],
+      );
       if (!entryId) {
-        await client.query(
-          `UPDATE periods SET is_closed = false, closed_at = NULL, closed_by = NULL,
-                  closing_entry_id = NULL, net_income = NULL
-            WHERE period_id = $1::int`,
-          [period.period_id],
-        );
         await client.query(
           `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
            VALUES ($1::int,$2::int,'period.reverse_close','period',$3::bigint,$4)`,
@@ -1213,18 +1333,11 @@ export class AccountingService {
         );
         return { periodId: period.period_id, isClosed: false, reverseJournalId: null, reason };
       }
-      const reverseDate = asIsoDate(new Date().toISOString().slice(0, 10))!;
       const reverseJournalId = await reverseJournal(client, entryId, {
         userId: user.userId, date: reverseDate,
         description: `عكس إقفال «${period.name}» — ${reason}`,
         journalType: 6,
       });
-      await client.query(
-        `UPDATE periods SET is_closed = false, closed_at = NULL, closed_by = NULL,
-                closing_entry_id = NULL, net_income = NULL
-          WHERE period_id = $1::int`,
-        [period.period_id],
-      );
       await client.query(
         `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
          VALUES ($1::int,$2::int,'period.reverse_close','period',$3::bigint,$4)`,

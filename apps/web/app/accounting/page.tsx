@@ -57,18 +57,6 @@ export default function AccountingAccountsPage() {
     }
   }
 
-  async function togglePeriod(id: number, close: boolean) {
-    setError('');
-    setMessage('');
-    try {
-      await apiFetch(`/accounting/periods/${id}/${close ? 'close' : 'reopen'}`, { method: 'POST' });
-      setMessage(close ? 'تم إقفال الفترة' : 'تم فتح الفترة');
-      await load();
-    } catch (e: any) {
-      setError(e.message);
-    }
-  }
-
   async function removeAccount(node: Account) {
     setError('');
     setMessage('');
@@ -197,12 +185,7 @@ export default function AccountingAccountsPage() {
                       </td>
                       <td>
                         {canClose && (
-                          <button
-                            className="btn-soft text-xs"
-                            onClick={() => togglePeriod(row.periodId, !row.isClosed)}
-                          >
-                            {row.isClosed ? 'فتح' : 'إقفال'}
-                          </button>
+                          <a href="/accounting/periods" className="btn-soft text-xs">الإقفال الشهري</a>
                         )}
                       </td>
                     </tr>

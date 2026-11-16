@@ -44,9 +44,12 @@ analysis/strings/
 # ---- embedded postgres (PGlite) local data ----
 tools/pg/pglite/data/
 tools/pg/pglite-month2/
+tools/pg/pglite-e6rev/
 tools/pg/pglite/*.log
 
 # ---- Vercel metadata ----
 .vercel/
 .vercel
 .env*
+
+smoke-e6rev.out

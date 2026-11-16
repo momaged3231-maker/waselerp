@@ -6,6 +6,7 @@ import { DatabaseService } from '../../common/database/database.service';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
 import { postJournal, requireMapping, resolvePeriod, reverseJournal } from '../../common/posting';
 import { asIsoDate } from '../../common/dates';
+import { depreciationForMonth, monthBounds, monthsBetween } from '../../common/depreciation';
 
 /**
  * E5 — Fixed Assets & Depreciation.
@@ -28,28 +29,7 @@ import { asIsoDate } from '../../common/dates';
  */
 
 const round2 = (v: number) => Math.round((Number(v) + Number.EPSILON) * 100) / 100;
-const round6 = (v: number) => Math.round((Number(v) + Number.EPSILON) * 1e6) / 1e6;
 const num = (v: any) => (Number.isFinite(Number(v)) ? Number(v) : 0);
-
-const MONTH_RE = /^(\d{4})-(\d{2})$/;
-function monthBounds(periodMonth: string): { first: string; last: string; days: number; monthDate: string } {
-  const m = MONTH_RE.exec(String(periodMonth ?? ''));
-  if (!m) throw new BadRequestException('صيغة الشهر غير صحيحة (YYYY-MM)');
-  const y = Number(m[1]);
-  const mo = Number(m[2]);
-  if (mo < 1 || mo > 12) throw new BadRequestException('الشهر غير صحيح');
-  const first = `${m[1]}-${m[2]}-01`;
-  const last = new Date(Date.UTC(y, mo, 0)).toISOString().slice(0, 10);
-  const days = new Date(Date.UTC(y, mo, 0)).getUTCDate();
-  return { first, last, days, monthDate: first };
-}
-
-function monthsBetween(fromMonth: string, toMonth: string): number {
-  const a = MONTH_RE.exec(fromMonth);
-  const b = MONTH_RE.exec(toMonth);
-  if (!a || !b) return 0;
-  return (Number(b[1]) - Number(a[1])) * 12 + (Number(b[2]) - Number(a[2]));
-}
 
 const STATUS: Record<number, string> = { 1: 'قيد الاستخدام', 2: 'متوقف', 3: 'مُباع', 4: 'مستبعد', 5: 'منعدم/هالك' };
 const METHOD: Record<number, string> = { 1: 'خط مستقيم', 2: 'رصيد متناقص' };
@@ -342,44 +322,10 @@ export class FixedAssetsService {
     });
   }
 
-  /** Pure calculation — kept deterministic and free of side effects.
-   *  `priorAccumulated` must be the accumulated depreciation BEFORE this month. */
+  /** Delegates to the shared deterministic calculator in common/depreciation.ts
+   *  (same math the E6 pre-close gate uses to decide what is due). */
   depreciationForMonth(asset: any, monthDate: string, priorAccumulated: number): number {
-    const cost = num(asset.cost);
-    const residual = num(asset.residual_value);
-    const depreciable = cost - residual;
-    if (!(depreciable > 0)) return 0;
-    const prior = num(priorAccumulated);
-    const method = Number(asset.depreciation_method ?? 1);
-    const life = Number(asset.useful_life_months);
-    const inServiceMonth = asIsoDate(asset.in_service_date)?.slice(0, 7);
-    const periodMonth = monthDate.slice(0, 7);
-    if (!inServiceMonth) return 0;
-    const monthsElapsed = monthsBetween(inServiceMonth, periodMonth);
-    if (monthsElapsed < 0) return 0;
-
-    // Days in service during the in-service month (full month from that month onward).
-    const day = Number(asIsoDate(asset.in_service_date)!.slice(8, 10));
-    const { days } = monthBounds(periodMonth);
-    const daysInService = monthsElapsed === 0 ? days - day + 1 : days;
-    const monthFraction = round6(daysInService / days);
-
-    let base: number;
-    if (method === 2) {
-      const rate = Number(asset.depreciation_rate_pct);
-      if (!(rate > 0)) return 0;
-      // Final month of the useful life settles the full remainder down to residual,
-      // so the register always lands exactly on residual value at end of life.
-      if (monthsElapsed >= Number(asset.useful_life_months) - 1) {
-        return round2(Math.max(0, Math.min(cost - prior, depreciable - prior)));
-      }
-      base = (cost - prior) * (rate / 100 / 12) * (monthsElapsed === 0 ? monthFraction : 1);
-    } else {
-      const monthly = depreciable / life;
-      base = monthly * (monthsElapsed === 0 ? monthFraction : 1);
-    }
-    const remaining = depreciable - prior;
-    return round2(Math.min(Math.max(base, 0), remaining));
+    return depreciationForMonth(asset, monthDate, priorAccumulated);
   }
 
   // --------------------------------------------------------------- disposal
