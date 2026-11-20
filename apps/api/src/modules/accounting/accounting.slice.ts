@@ -622,10 +622,11 @@ export class AccountingService {
         });
       }
 
+      const voucherAction = voucherType === 1 ? 'voucher.receipt' : 'voucher.payment';
       await client.query(
         `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1,$2,'gl.voucher.create','voucher',$3,$4)`,
-        [user.userId, branchId, String(voucherId),
+         VALUES ($1,$2,$3,$4,$5,$6)`,
+        [user.userId, branchId, voucherAction, 'voucher', String(voucherId),
           `${voucherType === 1 ? 'قبض' : 'صرف'} ${amount} - ${party.rows[0]?.name ?? ''}`],
       );
 

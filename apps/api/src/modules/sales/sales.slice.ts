@@ -93,6 +93,16 @@ const TYPE_MOVE: Record<number, MoveType> = {
 
 const TYPE_PREFIX: Record<number, string> = { 1: 'S', 2: 'P', 3: 'SR', 4: 'PR', 5: 'GR', 6: 'CN' };
 
+/** GAP-01 Part A — typed audit action for posted invoices (one action per financial type). */
+const INVOICE_POST_ACTION: Record<number, string> = {
+  1: 'invoice.post.sale',
+  2: 'invoice.post.purchase',
+  3: 'invoice.post.return_sale',
+  4: 'invoice.post.return_purchase',
+  5: 'invoice.post.gift_return',
+  6: 'invoice.post.credit_note',
+};
+
 /** Money is rounded to two decimals — the ledger has no room for fractions of a piastre. */
 const round2 = (value: number) => Math.round((Number(value) + Number.EPSILON) * 100) / 100;
 const round6 = (value: number) => Math.round((Number(value) + Number.EPSILON) * 1e6) / 1e6;
@@ -1313,7 +1323,7 @@ export class SalesService {
       await client.query(
         `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
          VALUES ($1,$2,$3,$4,$5,$6)`,
-        [user.userId, effectiveBranch, 'invoice.post', 'invoice', String(invoiceId), `رقم ${invoiceNo}`],
+        [user.userId, effectiveBranch, INVOICE_POST_ACTION[invoiceType] ?? 'invoice.post', 'invoice', String(invoiceId), `رقم ${invoiceNo}`],
       );
 
       this.live.publish({
