@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
-import { apiFetch, formatDate, formatMoney } from '@/lib/api';
+import { apiFetch, formatMoney } from '@/lib/api';
+import { formatDateWithRecordedTime, useDisplayTimezone } from '@/lib/time';
 import { useSession } from '@/lib/session';
 
 type Tab = 'quotations' | 'orders' | 'shipments';
@@ -19,6 +20,7 @@ const SHIPMENT_STATUS: Record<number, string> = {
 
 export default function DocumentsPage() {
   const { can } = useSession();
+  const timeZone = useDisplayTimezone();
   const [tab, setTab] = useState<Tab>('quotations');
   const [rows, setRows] = useState<any[]>([]);
   const [parties, setParties] = useState<any[]>([]);
@@ -182,7 +184,7 @@ export default function DocumentsPage() {
                     className="cursor-pointer hover:bg-brand-50/40"
                     onClick={() => open(row.orderId ?? row.quotationId)}>
                     <td className="font-mono text-xs">{row.orderNo ?? row.quotationNo}</td>
-                    <td className="text-xs">{formatDate(row.orderDate ?? row.quotationDate)}</td>
+                    <td className="text-xs whitespace-nowrap">{formatDateWithRecordedTime(row.orderDate ?? row.quotationDate, row.createdAt, timeZone)}</td>
                     <td className="text-xs">{row.partyName ?? '—'}</td>
                     <td className="font-bold">{formatMoney(row.totalAmount)}</td>
                     <td>
@@ -212,7 +214,7 @@ export default function DocumentsPage() {
                 <div className="font-bold">{selected.header.orderNo ?? selected.header.quotationNo}</div>
                 <div className="text-slate-500">{selected.header.partyName ?? '—'}</div>
                 <div className="text-xs text-slate-400">
-                  {formatDate(selected.header.orderDate ?? selected.header.quotationDate)}
+                  {formatDateWithRecordedTime(selected.header.orderDate ?? selected.header.quotationDate, selected.header.createdAt, timeZone)}
                 </div>
                 <div className="font-extrabold text-lg mt-2">{formatMoney(selected.header.totalAmount)}</div>
 

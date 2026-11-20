@@ -29,10 +29,16 @@ const PERMISSIONS: [string, string, string][] = [
   ['parties.ledger', 'العملاء والموردين', 'كشوف الحسابات'],
   ['sales.view', 'المبيعات', 'عرض فواتير المبيعات'],
   ['sales.manage', 'المبيعات', 'إنشاء وتعديل فواتير المبيعات'],
+  ['sales.approve_over_credit', 'المبيعات', 'اعتماد تجاوز حد الائتمان (مع سبب إلزامي)'],
   ['sales.giveaway', 'المبيعات', 'منح أصناف مجانًا (هدايا)'],
   ['pos.operate', 'نقطة البيع', 'تشغيل نقطة البيع'],
   ['purchases.view', 'المشتريات', 'عرض فواتير المشتريات'],
   ['purchases.manage', 'المشتريات', 'إنشاء وتعديل فواتير المشتريات'],
+  ['purchases.receive', 'المشتريات', 'استلام بضاعة (GRN) — إنشاء محضر استلام'],
+  ['purchases.approve_po', 'المشتريات', 'اعتماد/قبول أمر شراء'],  // TODO: pending owner decision — who approves PO? (BranchManager role doesn't exist). Currently: Administrator only. See Addendum v1.2 D-15 correction.
+  ['purchases.approve_payment', 'المشتريات', 'صرف دفعات للموردين (سند صرف)'],
+  ['purchases.approve_exception', 'المشتريات', 'تجاوز تجاوز الكمية/السعر (مع سبب إلزامي)'],
+  ['purchases.returns', 'المشتريات', 'مرتجعات مشتريات ومطالبات'],
   ['stock.view', 'المخزون', 'عرض المخزون'],
   ['stock.manage', 'المخزون', 'التحويلات والجرد والتسوية'],
   ['cash.view', 'الخزينة', 'عرض الخزينة'],
@@ -48,6 +54,8 @@ const PERMISSIONS: [string, string, string][] = [
   ['accounting.close', 'المحاسبة', 'إقفال الفترات المحاسبية وفتحها'],
   ['accounting.close_override', 'المحاسبة', 'تجاوز فحوص الإقفال E3 وE5 بقرار موثق (صلاحية مستقلة)'],
   ['accounting.backpost', 'المحاسبة', 'ترحيل قيود إلى فترة مقفلة/مقفولة إداريًا بتصريح واستثناء موثق'],
+  ['accounting.approve_budget', 'المحاسبة', 'اعتماد الموازنات (مع سبب إلزامي عند اعتماد المُنشئ لموازنته)'],
+  ['accounting.close_budget', 'المحاسبة', 'إغلاق الموازنات المعتمدة'],
   ['periods.admin', 'الإعدادات', 'قفل وفتح الفترة إداريًا دون أثر محاسبي (إداري)'],
   ['transfer.interbranch.view', 'المخزون', 'عرض التحويلات بين الفروع (سندات صادرة/مستلمة)'],
   ['transfer.interbranch.manage', 'المخزون', 'إنشاء واعتماد واستلام التحويلات بين الفروع'],
@@ -58,6 +66,8 @@ const PERMISSIONS: [string, string, string][] = [
   ['assets.manage', 'الأصول الثابتة', 'تسجيل أصول والإهلاك واستبعاد الأصول'],
   ['attachments.view', 'المرفقات', 'عرض المرفقات'],
   ['attachments.manage', 'المرفقات', 'إضافة وحذف المرفقات'],
+  ['admin.manage_attachments', 'الإدارة', 'إدارة سياسات المرفقات'],
+  ['admin.restore_backup', 'الإدارة', 'استعادة النسخ الاحتياطية'],
   ['maintenance.view', 'الصيانة', 'عرض أذون الصيانة والتقارير'],
   ['reports.manage', 'التقارير', 'إدارة تقارير مخصصة'],
   ['crm.view', 'إدارة العملاء CRM', 'عرض العملاء المحتملين والتذاكر'],
@@ -70,8 +80,9 @@ const ROLES: { name: string; nameEn: string; codes: string[] }[] = [
   {
     name: 'محاسب', nameEn: 'Accountant',
     codes: ['dashboard.view', 'items.view', 'parties.view', 'parties.manage', 'parties.ledger',
-      'sales.view', 'purchases.view', 'purchases.manage', 'stock.view', 'cash.view', 'cash.manage',
+      'sales.view', 'sales.approve_over_credit', 'purchases.view', 'purchases.manage', 'purchases.approve_payment', 'purchases.approve_exception', 'stock.view', 'cash.view', 'cash.manage',
       'reports.view', 'hr.view', 'accounting.view', 'accounting.manage', 'accounting.post',
+      'accounting.approve_budget', 'accounting.close_budget',
       'bank.view', 'bank.manage',
       'assets.view', 'assets.manage',
       'attachments.view', 'attachments.manage', 'crm.view', 'transfer.interbranch.view'],
@@ -89,7 +100,7 @@ const ROLES: { name: string; nameEn: string; codes: string[] }[] = [
   {
     name: 'أمين مخزن', nameEn: 'StoreKeeper',
     codes: ['dashboard.view', 'items.view', 'items.manage', 'stock.view', 'stock.manage',
-      'purchases.view', 'purchases.manage', 'attachments.view', 'attachments.manage', 'assets.view',
+      'purchases.view', 'purchases.manage', 'purchases.receive', 'purchases.approve_po', 'attachments.view', 'attachments.manage', 'assets.view',
       'transfer.interbranch.view', 'transfer.interbranch.manage'],
   },
 ];
@@ -147,28 +158,32 @@ function hashPassword(password: string) {
 const CHART: {
   code: string; name: string; nameEn: string; type: number; group?: boolean;
   normal?: number; parent?: string; mapping?: string; mappingLabel?: string;
+  is_control?: boolean;
 }[] = [
   { code: '1', name: 'الأصول', nameEn: 'Assets', type: 1, group: true },
   { code: '11', name: 'الأصول المتداولة', nameEn: 'Current Assets', type: 1, group: true, parent: '1' },
   { code: '1101', name: 'النقدية بالصندوق', nameEn: 'Cash on Hand', type: 1, mapping: 'CASH', mappingLabel: 'النقدية بالصندوق', parent: '11' },
   { code: '1102', name: 'النقدية بالبنك', nameEn: 'Cash at Bank', type: 1, mapping: 'BANK', mappingLabel: 'النقدية بالبنك', parent: '11' },
-  { code: '1103', name: 'ذمم العملاء (مدينون)', nameEn: 'Accounts Receivable', type: 1, mapping: 'AR', mappingLabel: 'ذمم العملاء', parent: '11' },
-  { code: '1104', name: 'المخزون', nameEn: 'Inventory', type: 1, mapping: 'INVENTORY', mappingLabel: 'المخزون', parent: '11' },
-  { code: '1105', name: 'ضريبة القيمة المضافة (مدخلات)', nameEn: 'VAT Input', type: 1, mapping: 'VAT_INPUT', mappingLabel: 'ضريبة القيمة المضافة (مدخلات)', parent: '11' },
+  { code: '1103', name: 'ذمم العملاء (مدينون)', nameEn: 'Accounts Receivable', type: 1, mapping: 'AR', mappingLabel: 'ذمم العملاء', parent: '11', is_control: true },
+  { code: '1104', name: 'المخزون', nameEn: 'Inventory', type: 1, mapping: 'INVENTORY', mappingLabel: 'المخزون', parent: '11', is_control: true },
+  { code: '1105', name: 'ضريبة القيمة المضافة (مدخلات)', nameEn: 'VAT Input', type: 1, mapping: 'VAT_INPUT', mappingLabel: 'ضريبة القيمة المضافة (مدخلات)', parent: '11', is_control: true },
   { code: '1106', name: 'مصروفات مدفوعة مقدماً', nameEn: 'Prepaid Expenses', type: 1, parent: '11' },
   { code: '1107', name: 'أوراق قبض', nameEn: 'Notes Receivable', type: 1, mapping: 'NOTES_RECEIVABLE', mappingLabel: 'أوراق قبض', parent: '11' },
+  { code: '1109', name: 'دفعات مقدمة للموردين', nameEn: 'Supplier Advances', type: 1, mapping: 'SUPPLIER_ADVANCES', mappingLabel: 'دفعات مقدمة للموردين', parent: '11' },
+  { code: '1110', name: 'مخزون في الطريق', nameEn: 'Inventory in Transit', type: 1, mapping: 'INVENTORY_IN_TRANSIT', mappingLabel: 'مخزون في الطريق', parent: '11' },
   { code: '12', name: 'الأصول الثابتة', nameEn: 'Fixed Assets', type: 1, group: true, parent: '1' },
   { code: '1201', name: 'أثاث وتجهيزات', nameEn: 'Furniture & Fixtures', type: 1, parent: '12', mapping: 'FIXED_ASSET', mappingLabel: 'الأصول الثابتة' },
   { code: '1202', name: 'مجمع إهلاك الأصول الثابتة', nameEn: 'Accumulated Depreciation', type: 1, normal: 2, parent: '12', mapping: 'ACCUMULATED_DEP', mappingLabel: 'مجمع إهلاك الأصول' },
 
   { code: '2', name: 'الخصوم', nameEn: 'Liabilities', type: 2, group: true },
   { code: '21', name: 'الخصوم المتداولة', nameEn: 'Current Liabilities', type: 2, group: true, parent: '2' },
-  { code: '2101', name: 'ذمم الموردين (دائنون)', nameEn: 'Accounts Payable', type: 2, mapping: 'AP', mappingLabel: 'ذمم الموردين', parent: '21' },
-  { code: '2102', name: 'ضريبة القيمة المضافة (مخرجات)', nameEn: 'VAT Output', type: 2, mapping: 'VAT_OUTPUT', mappingLabel: 'ضريبة القيمة المضافة (مخرجات)', parent: '21' },
+  { code: '2101', name: 'ذمم الموردين (دائنون)', nameEn: 'Accounts Payable', type: 2, mapping: 'AP', mappingLabel: 'ذمم الموردين', parent: '21', is_control: true },
+  { code: '2102', name: 'ضريبة القيمة المضافة (مخرجات)', nameEn: 'VAT Output', type: 2, mapping: 'VAT_OUTPUT', mappingLabel: 'ضريبة القيمة المضافة (مخرجات)', parent: '21', is_control: true },
   { code: '2103', name: 'مصروفات مستحقة', nameEn: 'Accrued Expenses', type: 2, parent: '21' },
   { code: '2104', name: 'قروض قصيرة الأجل', nameEn: 'Short Term Loans', type: 2, parent: '21' },
   { code: '2105', name: 'أوراق دفع', nameEn: 'Notes Payable', type: 2, mapping: 'NOTES_PAYABLE', mappingLabel: 'أوراق دفع', parent: '21' },
   { code: '2106', name: 'حركات بنكية غير مصنفة', nameEn: 'Bank Suspense (Unclassified)', type: 2, parent: '21', mapping: 'BANK_SUSPENSE', mappingLabel: 'حركات بنكية غير مصنفة — تؤجَّل حتى التصنيف' },
+  { code: '2107', name: 'GRNI — بضاعة مستلمة غير مفوترة', nameEn: 'Goods Received Not Invoiced', type: 2, mapping: 'GRNI', mappingLabel: 'بضاعة مستلمة غير مفوترة', parent: '21', is_control: true },
 
   { code: '3', name: 'حقوق الملكية', nameEn: 'Equity', type: 3, group: true },
   { code: '3101', name: 'رأس المال', nameEn: 'Capital', type: 3, parent: '3' },
@@ -182,9 +197,10 @@ const CHART: {
   { code: '4104', name: 'إيرادات أخرى', nameEn: 'Other Income', type: 4, mapping: 'OTHER_INCOME', mappingLabel: 'إيرادات أخرى', parent: '4' },
   { code: '4105', name: 'إيرادات التوصيل', nameEn: 'Delivery Revenue', type: 4, mapping: 'DELIVERY_FEE', mappingLabel: 'إيرادات التوصيل', parent: '4' },
   { code: '4106', name: 'إيرادات الخدمة', nameEn: 'Service Charge', type: 4, mapping: 'SERVICE_CHARGE', mappingLabel: 'إيرادات الخدمة', parent: '4' },
+  { code: '4107', name: 'خصومات وغرامات', nameEn: 'Discounts & Penalties', type: 5, normal: 1, parent: '4' }, // TD-33 — must exist on fresh deploy
 
   { code: '5', name: 'المصروفات', nameEn: 'Expenses', type: 5, group: true },
-  { code: '5101', name: 'تكلفة المبيعات', nameEn: 'Cost of Sales', type: 5, mapping: 'COGS', mappingLabel: 'تكلفة المبيعات', parent: '5' },
+  { code: '5101', name: 'تكلفة المبيعات', nameEn: 'Cost of Sales', type: 5, mapping: 'COGS', mappingLabel: 'تكلفة المبيعات', parent: '5', is_control: true },
   { code: '5102', name: 'مردودات المشتريات', nameEn: 'Purchase Returns', type: 5, mapping: 'PURCHASE_RETURNS', mappingLabel: 'مردودات المشتريات', parent: '5' },
   { code: '5103', name: 'الرواتب والأجور', nameEn: 'Salaries & Wages', type: 5, mapping: 'SALARY_EXPENSE', mappingLabel: 'الرواتب والأجور', parent: '5' },
   { code: '5104', name: 'إيجارات', nameEn: 'Rent', type: 5, parent: '5' },
@@ -197,6 +213,7 @@ const CHART: {
   { code: '5111', name: 'فروقات الجرد', nameEn: 'Inventory Variance', type: 5, parent: '5', mapping: 'INVENTORY_VARIANCE', mappingLabel: 'فروقات الجرد' },
   { code: '5112', name: 'تالف وهادر', nameEn: 'Damage & Wastage', type: 5, parent: '5', mapping: 'DAMAGE_EXPENSE', mappingLabel: 'تالف وهادر' },
   { code: '5113', name: 'إضافات مخزون', nameEn: 'Inventory Additions', type: 5, parent: '5', mapping: 'INVENTORY_ADDITION', mappingLabel: 'إضافات مخزون' },
+  { code: '5114', name: 'فروق أسعار الشراء', nameEn: 'Purchase Price Variance', type: 5, mapping: 'PPV', mappingLabel: 'فروق أسعار الشراء', parent: '5' },
 ];
 
 const CURRENCIES: [string, string, string, boolean, number][] = [
@@ -221,18 +238,19 @@ async function seedChartOfAccounts(client: Client) {
     const parentId = row.parent ? ids.get(row.parent) ?? null : null;
     const result = await client.query<{ account_id: number }>(
       `INSERT INTO gl_accounts
-         (code, name, name_en, account_type, parent_id, is_group, is_active, normal_side, currency_code)
-       VALUES ($1,$2,$3,$4,$5,$6,true,$7,'EGP')
+         (code, name, name_en, account_type, parent_id, is_group, is_active, normal_side, currency_code, is_control)
+        VALUES ($1,$2,$3,$4,$5,$6,true,$7,'EGP',$8)
        ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name, name_en = EXCLUDED.name_en,
          account_type = EXCLUDED.account_type, parent_id = EXCLUDED.parent_id,
-         is_group = EXCLUDED.is_group, normal_side = EXCLUDED.normal_side
-       RETURNING account_id`,
+          is_group = EXCLUDED.is_group, normal_side = EXCLUDED.normal_side,
+          is_control = EXCLUDED.is_control
+         RETURNING account_id`,
       [row.code, row.name, row.nameEn, row.type, parentId, !!row.group,
-        row.normal ?? (row.type === 1 || row.type === 5 ? 1 : 2)],
-    );
-    ids.set(row.code, Number(result.rows[0].account_id));
-  }
-
+        row.normal ?? (row.type === 1 || row.type === 5 ? 1 : 2),
+        !!row.is_control],
+     );
+     ids.set(row.code, Number(result.rows[0].account_id));
+   }
   for (const row of CHART) {
     if (!row.mapping) continue;
     await client.query(

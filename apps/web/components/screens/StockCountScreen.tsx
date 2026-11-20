@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { apiFetch, formatDate, formatMoney } from '@/lib/api';
+import { apiFetch, formatMoney } from '@/lib/api';
+import { formatDateWithRecordedTime, useDisplayTimezone } from '@/lib/time';
 import { useSession } from '@/lib/session';
 import DeleteButton from '@/components/DeleteButton';
 
@@ -11,6 +12,7 @@ const STATUS: Record<number, string> = {
 
 export default function StockCountScreen() {
   const { can } = useSession();
+  const timeZone = useDisplayTimezone();
   const [rows, setRows] = useState<any[]>([]);
   const [warehouses, setWarehouses] = useState<any[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
@@ -315,14 +317,14 @@ export default function StockCountScreen() {
             <div className="table-wrap">
               <table className="table">
                 <thead>
-                  <tr><th>الرقم</th><th>التاريخ</th><th>المخزن</th><th>الموظف</th><th>الأصناف</th><th>الفارق</th><th>الحالة</th></tr>
+                  <tr><th>الرقم</th><th>التاريخ والوقت</th><th>المخزن</th><th>الموظف</th><th>الأصناف</th><th>الفارق</th><th>الحالة</th></tr>
                 </thead>
                 <tbody>
                   {rows.map((row) => (
                     <tr key={row.stockCountId} className="cursor-pointer hover:bg-brand-50/40"
                       onClick={() => open(row.stockCountId)}>
                       <td className="font-mono text-xs">{row.countNo}</td>
-                      <td className="text-xs">{formatDate(row.countDate)}</td>
+                      <td className="text-xs whitespace-nowrap">{formatDateWithRecordedTime(row.countDate, row.createdAt, timeZone)}</td>
                       <td className="text-xs">{row.warehouseName}</td>
                       <td className="text-xs">{row.employeeName}</td>
                       <td className="text-xs">{row.lineCount}</td>

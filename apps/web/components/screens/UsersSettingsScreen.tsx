@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { apiFetch, formatDate } from '@/lib/api';
+import { apiFetch } from '@/lib/api';
+import { formatDateTime, useDisplayTimezone } from '@/lib/time';
 
 /** Users management — create users, assign roles, restrict warehouse/cash-account visibility (P7). */
 export default function UsersSettingsScreen() {
+  const timeZone = useDisplayTimezone();
   const [users, setUsers] = useState<any[]>([]);
   const [roles, setRoles] = useState<any[]>([]);
   const [error, setError] = useState('');
@@ -99,7 +101,7 @@ export default function UsersSettingsScreen() {
                     <td className="font-mono text-xs">{user.userName}</td>
                     <td className="font-semibold">{user.fullName}</td>
                     <td>{(user.roles ?? []).map((r: string) => <span key={r} className="badge bg-brand-50 text-brand-700 ml-1">{r}</span>)}</td>
-                    <td>{user.lastLoginAt ? formatDate(user.lastLoginAt) : '—'}</td>
+                    <td className="whitespace-nowrap">{user.lastLoginAt ? formatDateTime(user.lastLoginAt, timeZone, true) : '—'}</td>
                     <td>
                       <span className={`badge ${user.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
                         {user.isActive ? 'نشط' : 'موقوف'}

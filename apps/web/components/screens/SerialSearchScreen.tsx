@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { apiFetch, formatDate, formatMoney } from '@/lib/api';
+import { apiFetch, formatMoney } from '@/lib/api';
+import { formatDocumentDateTime, useDisplayTimezone } from '@/lib/time';
 import { MOVE_LABELS } from '@/lib/stock';
 
 /** «بحث الأرقام المسلسلة للقطع» — serial-number ledger lookup across purchases, sales, transfers and returns. */
 export default function SerialSearchScreen() {
+  const timeZone = useDisplayTimezone();
   const [query, setQuery] = useState('');
   const [rows, setRows] = useState<any[]>([]);
   const [searched, setSearched] = useState(false);
@@ -55,7 +57,7 @@ export default function SerialSearchScreen() {
             <tbody>
               {rows.map((row) => (
                 <tr key={row.movementId}>
-                  <td>{formatDate(row.moveDate)}</td>
+                  <td className="whitespace-nowrap">{formatDocumentDateTime(row.moveDate, undefined, timeZone)}</td>
                   <td className="font-semibold">{row.itemName} <span className="font-mono text-[10px] text-slate-400">{row.itemCode}</span></td>
                   <td className="font-mono text-xs" dir="ltr">{row.serialNo ?? '—'}</td>
                   <td>

@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { apiFetch, formatDate } from '@/lib/api';
+import { apiFetch } from '@/lib/api';
+import { formatDateTime, useDisplayTimezone } from '@/lib/time';
 import PrintAgentPanel from '@/components/screens/PrintAgentPanel';
 
 /** «إعدادات السيرفر» — print agent (per device) + read-only server diagnostics. */
 export default function ServerSettingsScreen() {
+  const timeZone = useDisplayTimezone();
   const [info, setInfo] = useState<any>(null);
   const [error, setError] = useState('');
 
@@ -28,7 +30,7 @@ export default function ServerSettingsScreen() {
     ['الأطراف (عملاء/موردين)', String(info.parties ?? '—')],
     ['الفواتير', String(info.invoices ?? '—')],
     ['زمن تشغيل السيرفر', `${Math.floor(Number(info.uptimeSeconds ?? 0) / 60)} دقيقة`],
-    ['وقت السيرفر', info.serverTime ? formatDate(info.serverTime) : '—'],
+    ['وقت السيرفر', info.serverTime ? formatDateTime(info.serverTime, timeZone, true) : '—'],
   ] : [];
 
   return (

@@ -8,7 +8,16 @@
     "start": "node dist/main.js",
     "start:dev": "nest start --watch",
     "db:migrate": "node ../../tools/pg/run-sql.js wasel ../../db/schema.postgres.sql",
-    "db:seed": "node dist/cli/seed.js"
+    "db:seed": "node dist/cli/seed.js",
+    "test:purchases": "ts-node --transpile-only -P tests/tsconfig.json tests/purchases/purchase-receipt.test.ts",
+    "test:purchases-invoice": "ts-node --transpile-only -P tests/tsconfig.json tests/purchases/purchase-invoice.test.ts",
+    "test:purchases-match": "ts-node --transpile-only -P tests/tsconfig.json tests/purchases/purchase-match.test.ts",
+    "test:purchases-statement": "ts-node --transpile-only -P tests/tsconfig.json tests/purchases/supplier-statement.test.ts",
+    "test:credit-limit": "ts-node --transpile-only -P tests/tsconfig.json tests/purchases/credit-limit.test.ts",
+    "test:sales-return": "ts-node --transpile-only -P tests/tsconfig.json tests/purchases/sales-return.test.ts",
+    "test:sales-return-extra": "ts-node --transpile-only -P tests/tsconfig.json tests/purchases/sales-return-extra.test.ts",
+    "test:sales-credit-note": "ts-node --transpile-only -P tests/tsconfig.json tests/purchases/sales-credit-note.test.ts",
+    "test:sales-integration": "ts-node --transpile-only -P tests/tsconfig.json tests/purchases/sales-integration.test.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.15",

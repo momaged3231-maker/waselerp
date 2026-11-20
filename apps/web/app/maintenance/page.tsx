@@ -5,6 +5,7 @@ import AppShell from '@/components/AppShell';
 import DeleteButton from '@/components/DeleteButton';
 import AttachmentsPanel from '@/components/AttachmentsPanel';
 import { apiFetch, formatMoney } from '@/lib/api';
+import { formatDateTime, useDisplayTimezone } from '@/lib/time';
 import { useSession } from '@/lib/session';
 
 type Ticket = any;
@@ -35,6 +36,7 @@ const emptyForm = () => ({
 
 export default function MaintenancePage() {
   const { session, can } = useSession();
+  const timeZone = useDisplayTimezone();
   const canManage = can('maintenance.manage');
   const [tab, setTab] = useState<Tab>('new');
 
@@ -518,7 +520,7 @@ export default function MaintenancePage() {
                       <td className="font-mono text-xs">{t.ticketNo}</td>
                       <td className="font-semibold">{t.customerName}<div className="text-[11px] text-slate-400" dir="ltr">{t.phone}</div></td>
                       <td>{t.productName} {t.modelName}</td>
-                      <td className="text-xs">{new Date(t.receivedAt).toLocaleDateString('ar-EG')}</td>
+                      <td className="text-xs whitespace-nowrap">{formatDateTime(t.receivedAt, timeZone, true)}</td>
                       <td>{formatMoney(t.actualCost ?? t.estimatedCost)}</td>
                       <td>{formatMoney(t.totalPaid)}</td>
                       <td className="font-bold">{formatMoney(Math.max(0, Number(t.actualCost ?? t.estimatedCost ?? 0) - Number(t.totalPaid ?? 0)))}</td>

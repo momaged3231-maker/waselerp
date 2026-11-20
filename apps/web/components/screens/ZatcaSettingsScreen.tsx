@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { apiFetch, formatDate } from '@/lib/api';
+import { apiFetch } from '@/lib/api';
+import { formatDateTime, useDisplayTimezone } from '@/lib/time';
 
 function ZatcaList() {
+  const timeZone = useDisplayTimezone();
   const [rows, setRows] = useState<any[]>([]);
   useEffect(() => {
     apiFetch('/zatca/invoices').then(setRows).catch(() => {});
@@ -34,7 +36,7 @@ function ZatcaList() {
                   {labels[row.status] ?? row.status}
                 </span>
               </td>
-              <td>{formatDate(row.createdAt)}</td>
+              <td className="whitespace-nowrap">{formatDateTime(row.createdAt, timeZone, true)}</td>
             </tr>
           ))}
         </tbody>

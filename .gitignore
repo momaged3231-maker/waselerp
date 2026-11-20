@@ -43,6 +43,9 @@ analysis/strings/
 
 # ---- embedded postgres (PGlite) local data ----
 tools/pg/pglite/data/
+tools/pg/pglite/data.*/
+tools/pg/pglite/data.bak*/
+tools/pg/pglite/smoke-parser/
 tools/pg/pglite-month2/
 tools/pg/pglite-month4/
 tools/pg/pglite-costfix/
@@ -55,3 +58,6 @@ tools/pg/pglite/*.log
 .env*
 
 smoke-e6rev.out
+
+# ---- local one-off scripts with secrets ----
+apps/api/apply-p5c.js

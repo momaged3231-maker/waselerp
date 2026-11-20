@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import AttachmentsPanel from '@/components/AttachmentsPanel';
 import { apiFetch, formatDate, formatMoney } from '@/lib/api';
+import { formatDateTime, useDisplayTimezone } from '@/lib/time';
 import { useSession } from '@/lib/session';
 import DeleteButton from '@/components/DeleteButton';
 
@@ -22,6 +23,7 @@ const PRIORITY = { 1: 'منخفضة', 2: 'متوسطة', 3: 'عالية' } as Re
 
 export default function CrmPage() {
   const { can } = useSession();
+  const timeZone = useDisplayTimezone();
   const canManage = can('crm.manage');
   const [tab, setTab] = useState<'leads' | 'tickets' | 'sources'>('leads');
   const [summary, setSummary] = useState<any>(null);
@@ -260,7 +262,7 @@ export default function CrmPage() {
                           <div className="flex justify-between"><span className="font-medium">{ACT_TYPES[a.activityType]||'نشاط'}: {a.subject}</span>
                             {canManage && <div className="flex items-center gap-2"><button className="text-xs text-blue-700" onClick={()=>toggleActivity(a.activityId,!a.isDone)}>{a.isDone?'إلغاء':'تم'}</button><DeleteButton screenKey="crmActivities" confirmText="حذف هذا النشاط؟" onDelete={() => removeActivity(a.activityId)} /></div>}
                           </div>
-                          {a.dueAt && <div className="text-xs text-slate-500">موعد: {formatDate(a.dueAt)}</div>}
+                          {a.dueAt && <div className="text-xs text-slate-500">موعد: {formatDateTime(a.dueAt, timeZone, true)}</div>}
                           {a.notes && <div className="text-xs mt-1">{a.notes}</div>}
                         </div>
                       ))}
@@ -304,7 +306,7 @@ export default function CrmPage() {
                       <td>{TICKET_STATUS[t.status]||t.status}</td>
                       <td>{PRIORITY[t.priority]||t.priority}</td>
                       <td>{t.leadName ? `عميل محتمل: ${t.leadName}` : t.partyName ? `عميل: ${t.partyName}` : '-'}</td>
-                      <td>{formatDate(t.createdAt)}</td>
+                      <td className="whitespace-nowrap">{formatDateTime(t.createdAt, timeZone, true)}</td>
                       <td>
                         {canManage && (
                           <select className="input text-xs w-32" value={t.status} onChange={(e)=>updateTicketStatus(t.ticketId, Number(e.target.value))}>

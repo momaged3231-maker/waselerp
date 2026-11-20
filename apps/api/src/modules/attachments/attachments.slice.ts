@@ -1,10 +1,9 @@
 import {
-  Body, Controller, Delete, Get, Injectable, Module, Param, ParseIntPipe, Post, Query,
+  Body, Controller, Delete, Get, HttpException, HttpStatus, Injectable, Module, Param, ParseIntPipe, Post, Query,
   BadRequestException,
 } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
 import { assertDeletionAllowed } from '../../common/delete-guard';
-import { getSetting } from '../../common/settings';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
 
 /**
@@ -34,22 +33,25 @@ function isAllowedFile(fileName: string, mimeType: string | null): boolean {
   return false;
 }
 
-function clampInt(value: string | null, min: number, max: number, fallback: number): number {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return fallback;
-  return Math.min(max, Math.max(min, Math.trunc(n)));
-}
-
 @Injectable()
 export class AttachmentsService {
   constructor(private readonly db: DatabaseService) {}
 
   async limits() {
-    return this.db.transaction(async (client) => {
-      const maxKb = clampInt(await getSetting(client, 'AttachmentMaxKb'), 64, 20480, 5120);
-      const maxPerEntity = clampInt(await getSetting(client, 'AttachmentMaxPerEntity'), 1, 100, 20);
-      return { maxKb, maxPerEntity, allowedTypes: ALLOWED_LABEL, entityTypes: Object.keys(ENTITIES) };
-    });
+    const policies = await this.db.query<any>(
+      `SELECT entity_type AS "entityType", max_size_mb AS "maxSizeMb", max_count_per_entity AS "maxCountPerEntity"
+         FROM attachment_policies ORDER BY entity_type`,
+    );
+    const invoice = policies.find((p: any) => p.entityType === 'invoice') ?? policies[0];
+    const maxSizeMb = Number(invoice?.maxSizeMb ?? 5);
+    const maxCount = Number(invoice?.maxCountPerEntity ?? 10);
+    return {
+      maxKb: maxSizeMb * 1024,
+      maxPerEntity: maxCount,
+      allowedTypes: ALLOWED_LABEL,
+      entityTypes: Object.keys(ENTITIES),
+      policies,
+    };
   }
 
   async list(params: { branchId: number; entityType: string; entityId: number }) {
@@ -114,20 +116,25 @@ export class AttachmentsService {
     }
 
     return this.db.transaction(async (client) => {
-      // Policies: size + count per entity, from configurable app_settings.
-      const maxKb = clampInt(await getSetting(client, 'AttachmentMaxKb'), 64, 20480, 5120);
-      const maxBytes = maxKb * 1024;
+      // GAP-08: per-entity policies (size in MB, count) — configurable via /admin/attachment-policies.
+      const policyRow = await client.query<any>(
+        `SELECT max_size_mb AS "maxSizeMb", max_count_per_entity AS "maxCountPerEntity"
+           FROM attachment_policies WHERE entity_type = $1::text`,
+        [entityType],
+      );
+      const maxSizeMb = Number(policyRow.rows[0]?.maxSizeMb ?? 5);
+      const maxCount = Number(policyRow.rows[0]?.maxCountPerEntity ?? 10);
+      const maxBytes = maxSizeMb * 1024 * 1024;
       if (!buffer.length || buffer.length > maxBytes) {
-        throw new BadRequestException(`حجم الملف غير صالح (الحد ${maxKb} كيلوبايت)`);
+        throw new HttpException(`حجم الملف يتجاوز الحد (${maxSizeMb} MB)`, HttpStatus.PAYLOAD_TOO_LARGE);
       }
-      const maxPerEntity = clampInt(await getSetting(client, 'AttachmentMaxPerEntity'), 1, 100, 20);
       const countRow = await client.query<any>(
         `SELECT count(*)::int AS count FROM attachments
           WHERE branch_id = $1::int AND entity_type = $2::text AND entity_id = $3::bigint`,
         [branchId, entityType, entityId],
       );
-      if (Number(countRow.rows[0]?.count ?? 0) >= maxPerEntity) {
-        throw new BadRequestException(`وصلت الحد الأقصى (${maxPerEntity} مرفقًا) لهذا الكيان — احذف مرفقًا أولًا`);
+      if (Number(countRow.rows[0]?.count ?? 0) >= maxCount) {
+        throw new BadRequestException(`عدد المرفقات تجاوز الحد (${maxCount})`);
       }
 
       // The target row must exist in this branch (items are global — no branch filter).

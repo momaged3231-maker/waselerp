@@ -270,6 +270,53 @@ export class AdminService {
     );
   }
 
+  // ---------------- attachment policies (GAP-08) ---------------- //
+  async attachmentPolicies() {
+    return this.db.query(
+      `SELECT entity_type AS "entityType", max_size_mb AS "maxSizeMb", max_count_per_entity AS "maxCountPerEntity",
+              updated_by AS "updatedBy", updated_at AS "updatedAt"
+         FROM attachment_policies ORDER BY entity_type`,
+    );
+  }
+
+  async updateAttachmentPolicy(entityType: string, body: any, actor: AuthUser) {
+    const type = String(entityType ?? '').trim();
+    const maxSizeMb = Math.trunc(Number(body?.maxSizeMb ?? body?.max_size_mb));
+    const maxCount = Math.trunc(Number(body?.maxCountPerEntity ?? body?.max_count_per_entity));
+    if (!type) throw new BadRequestException('نوع الكيان مطلوب');
+    if (!Number.isFinite(maxSizeMb) || maxSizeMb < 1 || maxSizeMb > 100) {
+      throw new BadRequestException('الحد الأقصى للحجم يجب أن يكون بين 1 و100 ميجابايت');
+    }
+    if (!Number.isFinite(maxCount) || maxCount < 1) {
+      throw new BadRequestException('الحد الأقصى لعدد المرفقات يجب أن يكون 1 على الأقل');
+    }
+    return this.db.transaction(async (client) => {
+      const exists = await client.query<any>(
+        'SELECT 1 FROM attachment_policies WHERE entity_type = $1::text',
+        [type],
+      );
+      if (!exists.rows.length) throw new BadRequestException('نوع الكيان غير معروف في سياسات المرفقات');
+      await client.query(
+        `UPDATE attachment_policies
+            SET max_size_mb = $2::int, max_count_per_entity = $3::int, updated_by = $4::int, updated_at = now()
+          WHERE entity_type = $1::text`,
+        [type, maxSizeMb, maxCount, actor.userId],
+      );
+      await client.query(
+        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
+         VALUES ($1::int, NULL, 'attachment_policy.update', 'attachment_policy', $2::text, $3::text)`,
+        [actor.userId, type, `تحديث سياسة المرفقات (${type}): الحجم ${maxSizeMb}MB، العدد ${maxCount}`],
+      );
+      const row = await client.query<any>(
+        `SELECT entity_type AS "entityType", max_size_mb AS "maxSizeMb", max_count_per_entity AS "maxCountPerEntity",
+                updated_by AS "updatedBy", updated_at AS "updatedAt"
+           FROM attachment_policies WHERE entity_type = $1::text`,
+        [type],
+      );
+      return row.rows[0];
+    });
+  }
+
   /** Read-only diagnostics for the support team — Tools → «بيانات الدعم الفني». */
   async supportInfo() {
     const dbInfo = await this.db.one<any>(
@@ -410,6 +457,22 @@ export class AdminController {
   @Get('support-info')
   supportInfo() {
     return this.service.supportInfo();
+  }
+
+  @RequirePermissions('admin.manage_attachments')
+  @Get('attachment-policies')
+  attachmentPolicies() {
+    return this.service.attachmentPolicies();
+  }
+
+  @RequirePermissions('admin.manage_attachments')
+  @Put('attachment-policies/:entityType')
+  updateAttachmentPolicy(
+    @Param('entityType') entityType: string,
+    @Body() body: any,
+    @CurrentUser() actor: AuthUser,
+  ) {
+    return this.service.updateAttachmentPolicy(entityType, body, actor);
   }
 
   @RequireAnyPermission('settings.manage', 'users.manage')

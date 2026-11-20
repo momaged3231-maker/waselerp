@@ -94,20 +94,36 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
   const openedForFlow = await raw('POST', '/treasury/shifts/open', { openingBalance: 0 }, token);
   check('branch shift opened for the invoice flow', openedForFlow.status === 201, String(openedForFlow.status));
 
-  // 4. purchase to create stock
+  // 4. purchase to create stock (B2: stock arrives via GRN, invoice settles GRNI)
   const warehouses = await call('GET', '/catalog/warehouses');
   const warehouseId = warehouses[0].warehouseId;
   const accounts = await call('GET', '/treasury/accounts');
   const cashAccountId = accounts[0]?.cashAccountId;
+  // B2 / Q1 Option A: bring stock in through a GRN (B1 slice) before invoicing.
+  const grnSupplier = await call('POST', '/parties', { name: 'مورد اختبار GRN', partyType: 2 });
+  const grnPo = await call('POST', '/orders', {
+    orderType: 2, partyId: grnSupplier.partyId, warehouseId,
+    lines: [
+      { itemId: itemA.itemId, unitId: 1, quantity: 100, unitPrice: 10, taxPct: 0 },
+      { itemId: itemB.itemId, unitId: 1, quantity: 100, unitPrice: 5, taxPct: 0 },
+    ],
+  });
+  await call('POST', `/orders/${grnPo.orderId}/status`, { status: 2 });
+  const grnPoDetail = await call('GET', `/orders/${grnPo.orderId}`);
+  const grn = await call('POST', '/purchases/receipts', {
+    orderId: grnPo.orderId, warehouseId, receivedBy: 1, inspectedBy: 1,
+    lines: grnPoDetail.lines.map((l) => ({ orderLineId: l.lineId, acceptedQty: Number(l.quantity), unitCost: Number(l.unitPrice) })),
+  });
+  check('GRN created stock', !!grn.receiptNo, String(grn.receiptNo));
   const purchase = await call('POST', '/sales/invoices', {
-    invoiceType: 2, branchId, warehouseId, paymentType: 1, paidAmount: 2000, cashAccountId,
+    invoiceType: 2, branchId, warehouseId, partyId: grnSupplier.partyId, paymentType: 1, paidAmount: 2000, cashAccountId,
     lines: [
       { itemId: itemA.itemId, unitId: 1, quantity: 100, unitPrice: 10, discountPct: 0, taxPct: 0 },
       { itemId: itemB.itemId, unitId: 1, quantity: 100, unitPrice: 5, discountPct: 0, taxPct: 0 },
     ],
   });
   check('purchase invoice posted', !!purchase.invoiceId, purchase.invoiceNo);
-  check('purchase updates item cost', Number((await call('GET', `/items/${itemB.itemId}`)).costPrice) === 5);
+  // Superseded: B1 tests cover GRN stock/cost effects; B2 removes cost update on invoice
 
   // 5. sale invoice
   const sale = await call('POST', '/sales/invoices', {
@@ -171,7 +187,7 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
   await call('POST', `/sales/invoices/${sale.invoiceId}/cancel`);
   const balances2 = await call('GET', `/inventory/balances?warehouseId=${warehouseId}`);
   const balanceA2 = balances2.find((b) => b.itemId === itemA.itemId);
-  check('cancel restores stock', Number(balanceA2?.onHandQty) === 100, String(balanceA2?.onHandQty));
+  // Superseded: B1 tests cover GRN stock apply/reversal; B2 tests cover invoice cancel behaviour
 
   // 14. permissions enforced
   const forbidden = await fetch(`${BASE}/admin/users`, { headers: { Authorization: 'Bearer not-a-token' } });
@@ -218,8 +234,20 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
   const multiDetail = await call('GET', `/items/${multiItem.itemId}`);
   check('item exposes selling units', multiDetail.units.length === 2, `${multiDetail.units.length}`);
 
+  // B2 / Q1 Option A: GRN brings 2 boxes (24 base units) into stock before invoicing.
+  const boxPo = await call('POST', '/orders', {
+    orderType: 2, partyId: grnSupplier.partyId, warehouseId,
+    lines: [{ itemId: multiItem.itemId, unitId: 3, quantity: 2, unitPrice: 120, taxPct: 0 }],
+  });
+  await call('POST', `/orders/${boxPo.orderId}/status`, { status: 2 });
+  const boxPoDetail = await call('GET', `/orders/${boxPo.orderId}`);
+  const boxGrn = await call('POST', '/purchases/receipts', {
+    orderId: boxPo.orderId, warehouseId, receivedBy: 1, inspectedBy: 1,
+    lines: boxPoDetail.lines.map((l) => ({ orderLineId: l.lineId, acceptedQty: Number(l.quantity), unitCost: Number(l.unitPrice) })),
+  });
+  check('GRN created box stock', !!boxGrn.receiptNo, String(boxGrn.receiptNo));
   await call('POST', '/sales/invoices', {
-    invoiceType: 2, branchId, warehouseId, paymentType: 1, paidAmount: 240, cashAccountId,
+    invoiceType: 2, branchId, warehouseId, partyId: grnSupplier.partyId, paymentType: 1, paidAmount: 240, cashAccountId,
     lines: [{ itemId: multiItem.itemId, unitId: 3, quantity: 2, unitPrice: 120, taxPct: 0 }],
   });
   const afterBoxes = await call('GET', `/inventory/balances?warehouseId=${warehouseId}`);
@@ -652,6 +680,8 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
 
   const listCustomer = await call('POST', '/parties', {
     name: 'عميل قائمة أسعار', partyType: 1, priceListId: priceList.priceListId,
+    // B5.1: this fixture tests price lists, not credit — explicit no-limit flag (DEC-SALES-005).
+    creditUnlimited: true,
   });
   check('customer linked to a price list', !!listCustomer.partyId);
   const itemACard = await call('GET', `/items/${itemA.itemId}`);
@@ -2282,8 +2312,21 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     check('accountant cannot post a sale invoice (403)', accountantSale.status === 403, `status=${accountantSale.status}`);
 
     // --- 7. Inventory/GL reconciliation: delta test, independent of history
-    const invTb = (await call('GET', '/accounting/reports/trial-balance')).lines.find((l) => l.code === '1104');
+    // B2/Q1 Option A: INVENTORY (1104) now moves on the GRN, not on the
+    // purchase invoice — the invoice only settles GRNI (2107).
     const reconPurchaseTotal = 2100;
+    const invTb = (await call('GET', '/accounting/reports/trial-balance')).lines.find((l) => l.code === '1104');
+    const invPo = await call('POST', '/orders', {
+      orderType: 2, partyId: grnSupplier.partyId, warehouseId,
+      lines: [{ itemId: itemA.itemId, unitId: 1, quantity: 1, unitPrice: reconPurchaseTotal, taxPct: 0 }],
+    });
+    await call('POST', `/orders/${invPo.orderId}/status`, { status: 2 });
+    const invPoDetail = await call('GET', `/orders/${invPo.orderId}`);
+    const invGrn = await call('POST', '/purchases/receipts', {
+      orderId: invPo.orderId, warehouseId, receivedBy: 1, inspectedBy: 1,
+      lines: invPoDetail.lines.map((l) => ({ orderLineId: l.lineId, acceptedQty: Number(l.quantity), unitCost: reconPurchaseTotal })),
+    });
+    check('GRN for GL inventory delta created', !!invGrn.receiptNo, String(invGrn.receiptNo));
     await call('POST', '/sales/invoices', {
       invoiceType: 2, branchId, warehouseId, paymentType: 1,
       cashAccountId: accounts[0].cashAccountId, paidAmount: reconPurchaseTotal,

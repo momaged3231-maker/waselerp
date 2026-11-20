@@ -1,7 +1,8 @@
 import {
-  Body, Controller, Delete, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Query,
-  BadRequestException, ForbiddenException,
+  Body, Controller, Delete, Get, Injectable, Module, Param, ParseIntPipe, Patch, Post, Put, Query,
+  BadRequestException, ForbiddenException, Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { DatabaseService } from '../../common/database/database.service';
 import { assertDeletionAllowed } from '../../common/delete-guard';
 import { PoolClient } from 'pg';
@@ -17,6 +18,9 @@ import {
 export const ACCOUNT_TYPE = {
   ASSET: 1, LIABILITY: 2, EQUITY: 3, REVENUE: 4, EXPENSE: 5,
 } as const;
+
+/** Two-decimal money rounding (budgets are stored as numeric(18,2)). */
+const round2 = (n: number): number => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
 
 export interface JournalLineDto {
   accountId: number;
@@ -342,6 +346,10 @@ export class AccountingService {
         })),
         userId: user.userId,
         post: dto.post !== false,
+        currencyCode: dto.currencyCode ? String(dto.currencyCode).trim().toUpperCase() : undefined,
+        exchangeRate: dto.exchangeRate === undefined || dto.exchangeRate === null || dto.exchangeRate === ''
+          ? undefined
+          : Number(dto.exchangeRate),
         backpostReason: backpostReason || null,
       });
       await client.query(
@@ -410,7 +418,7 @@ export class AccountingService {
   async listVouchers(params: { branchId: number; type?: number; partyId?: number; from?: string; to?: string; limit: number }) {
     return this.db.query<any>(
       `SELECT v.voucher_id AS "voucherId", v.voucher_no AS "voucherNo", v.voucher_type AS "voucherType",
-              v.voucher_date AS "voucherDate", v.amount, v.description, v.status,
+              v.voucher_date AS "voucherDate", v.created_at AS "createdAt", v.amount, v.description, v.status,
               v.payment_method AS "paymentMethod", p.name AS "partyName", p.party_id AS "partyId",
               c.name AS "cashAccountName", c.cash_account_id AS "cashAccountId",
               j.journal_no AS "journalNo", j.journal_id AS "journalId", u.full_name AS "createdBy",
@@ -448,6 +456,17 @@ export class AccountingService {
     if (![1, 2].includes(voucherType)) throw new BadRequestException('نوع السند غير صحيح');
     const cashAccountId = Number(dto.cashAccountId);
     if (!cashAccountId) throw new BadRequestException('حدد حساب الخزينة');
+    // GAP-06: idempotency key (null/undefined/empty => no dedupe).
+    const clientRequestId = String(dto.clientRequestId ?? '').trim() || null;
+    // Fast path: retry after committed request — short-circuit before side effects.
+    if (clientRequestId) {
+      const existing = await this.db.one<any>(
+        `SELECT voucher_id AS "voucherId", voucher_no AS "voucherNo", journal_id AS "journalId"
+           FROM vouchers WHERE client_request_id = $1`,
+        [clientRequestId],
+      );
+      if (existing) return { ...existing, duplicate: true };
+    }
 
     const allocations: { invoiceId: number; amount: number }[] = [];
     for (const allocation of Array.isArray(dto.allocations) ? dto.allocations : []) {
@@ -460,7 +479,8 @@ export class AccountingService {
       throw new BadRequestException('مجموع التخصيصات أكبر من مبلغ السند');
     }
 
-    return this.db.transaction(async (client) => {
+    try {
+      return await this.db.transaction(async (client) => {
       const account = await client.query<any>(
         'SELECT cash_account_id, branch_id, gl_account_id, name FROM cash_accounts WHERE cash_account_id = $1::int',
         [cashAccountId],
@@ -514,11 +534,11 @@ export class AccountingService {
       const inserted = await client.query<{ voucher_id: number }>(
         `INSERT INTO vouchers
            (voucher_no, voucher_type, voucher_date, branch_id, party_id, cash_account_id,
-            payment_method, amount, description, journal_id, status, created_by)
-         VALUES ($1,$2, COALESCE($3::date, CURRENT_DATE), $4,$5,$6,$7,$8,$9,$10,1,$11)
+            payment_method, amount, description, journal_id, status, created_by, client_request_id)
+         VALUES ($1,$2, COALESCE($3::date, CURRENT_DATE), $4,$5,$6,$7,$8,$9,$10,1,$11,$12)
          RETURNING voucher_id`,
         [voucherNo, voucherType, dto.voucherDate ?? null, branchId, partyId, cashAccountId,
-          Number(dto.paymentMethod ?? 1), amount, dto.description ?? null, journalId, user.userId],
+          Number(dto.paymentMethod ?? 1), amount, dto.description ?? null, journalId, user.userId, clientRequestId],
       );
 
       // Mirror into the treasury so the drawer balance stays correct.
@@ -610,7 +630,19 @@ export class AccountingService {
       );
 
       return { voucherId, voucherNo, journalId, allocated: settled };
-    });
+      });
+    } catch (err: any) {
+      // GAP-06: atomic idempotency — UNIQUE (ux_vouchers_client_request) aborts tx.
+      if (clientRequestId && err?.code === '23505' && String(err?.constraint ?? '') === 'ux_vouchers_client_request') {
+        const existing = await this.db.one<any>(
+          `SELECT voucher_id AS "voucherId", voucher_no AS "voucherNo", journal_id AS "journalId"
+             FROM vouchers WHERE client_request_id = $1`,
+          [clientRequestId],
+        );
+        if (existing) return { ...existing, duplicate: true };
+      }
+      throw err;
+    }
   }
 
   /** Cancels a voucher: voids the journal and reverses the treasury movement. */
@@ -1891,16 +1923,19 @@ export class AccountingService {
 
   async balanceSheet(params: { branchId: number; asOf?: string }) {
     const rows = await this.accountBalances({ ...params, from: undefined, to: params.asOf });
-    // Balances are shown on their normal side: assets and expenses on the debit
-    // side, liabilities, equity and revenue on the credit side.
+    // Presentation follows the *account type's* natural side, not each account's
+    // `normal_side`. A contra account (e.g. accumulated depreciation 1202, an
+    // ASSET that grows on the credit side) must show as a negative amount inside
+    // its section; flipping it by `normal_side` added it back as a positive asset
+    // and broke A = L + E + profit by exactly twice its balance.
     const pick = (type: number) => rows
       .filter((row: any) => Number(row.accountType) === type)
       .map((row: any) => {
         const net = Number(row.debit) - Number(row.credit);
-        const isDebitNormal = Number(row.normalSide) === 1;
+        const debitNatural = type === ACCOUNT_TYPE.ASSET || type === ACCOUNT_TYPE.EXPENSE;
         return {
           accountId: Number(row.accountId), code: row.code, name: row.name,
-          amount: Math.round((isDebitNormal ? net : -net) * 100) / 100,
+          amount: Math.round((debitNatural ? net : -net) * 100) / 100,
         };
       })
       .filter((row: any) => row.amount !== 0);
@@ -2047,6 +2082,429 @@ export class AccountingService {
       from: params.from ?? null,
       to: params.to ?? null,
     };
+  }
+
+  // ------------------------------------------------------------------ //
+  //  GL-10 — Budgets (v1: base currency, revenue + expense only)
+  // ------------------------------------------------------------------ //
+  private async baseCurrency(client: PoolClient, requested?: string | null): Promise<string> {
+    const row = await client.query<{ currency_code: string }>(
+      `SELECT currency_code FROM currencies WHERE is_base = true ORDER BY currency_code LIMIT 1`,
+    );
+    const base = row.rows[0]?.currency_code ?? 'EGP';
+    const wanted = String(requested ?? base).trim().toUpperCase();
+    if (wanted !== String(base).toUpperCase()) {
+      throw new BadRequestException('الموازنات بالعملة الأجنبية غير مدعومة في v1');
+    }
+    return base;
+  }
+
+  /**
+   * Budget lines are revenue (type 4) or expense (type 5) only, on postable
+   * (non-group) accounts, month 1..12, non-negative, with no duplicate key.
+   */
+  private async validateBudgetLines(client: PoolClient, lines: any[]) {
+    if (!Array.isArray(lines) || !lines.length) {
+      throw new BadRequestException('الموازنة تحتاج بندًا واحدًا على الأقل');
+    }
+    const accountIds = [...new Set(lines.map((l) => Number(l.accountId)))];
+    if (accountIds.some((id) => !Number.isInteger(id) || id <= 0)) {
+      throw new BadRequestException('بند الموازنة بلا حساب صحيح');
+    }
+    const accounts = await client.query<any>(
+      `SELECT account_id, code, account_type, is_group FROM gl_accounts WHERE account_id = ANY($1::int[])`,
+      [accountIds],
+    );
+    const byId = new Map(accounts.rows.map((r: any) => [Number(r.account_id), r]));
+
+    const ccIds = [...new Set(
+      lines.map((l) => (l.costCenterId == null || l.costCenterId === '' ? null : Number(l.costCenterId)))
+        .filter((v): v is number => v != null),
+    )];
+    if (ccIds.length) {
+      const cc = await client.query<any>(
+        `SELECT cost_center_id FROM cost_centers WHERE cost_center_id = ANY($1::int[])`, [ccIds],
+      );
+      const found = new Set(cc.rows.map((r: any) => Number(r.cost_center_id)));
+      const missing = ccIds.filter((id) => !found.has(Number(id)));
+      if (missing.length) throw new BadRequestException(`مركز تكلفة غير موجود: ${missing.join(', ')}`);
+    }
+
+    const seen = new Set<string>();
+    const clean: { accountId: number; costCenterId: number | null; periodMonth: number; plannedAmount: number }[] = [];
+    for (const line of lines) {
+      const accountId = Number(line.accountId);
+      const account = byId.get(accountId);
+      if (!account) throw new BadRequestException(`الحساب ${accountId} غير موجود`);
+      if (Number(account.account_type) !== ACCOUNT_TYPE.REVENUE && Number(account.account_type) !== ACCOUNT_TYPE.EXPENSE) {
+        throw new BadRequestException(`الحساب ${account.code}: الموازنات مسموحة للإيرادات والمصروفات فقط`);
+      }
+      if (account.is_group) {
+        throw new BadRequestException(`الحساب ${account.code} تجميعي — اختر حسابًا قابلًا للترحيل`);
+      }
+      const periodMonth = Number(line.periodMonth);
+      if (!Number.isInteger(periodMonth) || periodMonth < 1 || periodMonth > 12) {
+        throw new BadRequestException('شهر الموازنة يجب أن يكون بين 1 و12');
+      }
+      const plannedAmount = Number(line.plannedAmount ?? 0);
+      if (!Number.isFinite(plannedAmount) || plannedAmount < 0) {
+        throw new BadRequestException('المبلغ المخطط لا يمكن أن يكون سالبًا');
+      }
+      const costCenterId = line.costCenterId == null || line.costCenterId === '' ? null : Number(line.costCenterId);
+      const key = `${accountId}|${costCenterId ?? 'N'}|${periodMonth}`;
+      if (seen.has(key)) {
+        throw new BadRequestException(`بند مكرر: الحساب ${account.code} — شهر ${periodMonth}`);
+      }
+      seen.add(key);
+      clean.push({ accountId, costCenterId, periodMonth, plannedAmount: round2(plannedAmount) });
+    }
+    return clean;
+  }
+
+  private async insertBudgetLines(client: PoolClient, budgetId: number, lines: any[]) {
+    for (const line of lines) {
+      await client.query(
+        `INSERT INTO budget_lines (budget_id, account_id, cost_center_id, period_month, planned_amount)
+         VALUES ($1::bigint,$2::int,$3::int,$4::smallint,$5::numeric)`,
+        [budgetId, line.accountId, line.costCenterId, line.periodMonth, line.plannedAmount],
+      );
+    }
+  }
+
+  async listBudgets(params: { branchId: number; year?: number; status?: number }) {
+    return this.db.query<any>(
+      `SELECT b.budget_id AS "budgetId", b.branch_id AS "branchId", b.year, b.name, b.status,
+              b.currency_code AS "currencyCode",
+              b.created_by AS "createdBy", cu.full_name AS "createdByName",
+              b.approved_by AS "approvedBy", au.full_name AS "approvedByName",
+              b.approved_at AS "approvedAt",
+              b.same_user_approval_reason AS "sameUserApprovalReason",
+              b.closed_by AS "closedBy", b.closed_at AS "closedAt",
+              b.supersedes_id AS "supersedesId", b.superseded_by AS "supersededBy",
+              (SELECT COALESCE(SUM(planned_amount), 0) FROM budget_lines WHERE budget_id = b.budget_id) AS "plannedTotal"
+         FROM budgets b
+         LEFT JOIN users cu ON cu.user_id = b.created_by
+         LEFT JOIN users au ON au.user_id = b.approved_by
+        WHERE b.branch_id = $1::int
+          AND ($2::int = 0 OR b.year = $2::int)
+          AND ($3::int = 0 OR b.status = $3::int)
+        ORDER BY b.year DESC, b.budget_id DESC`,
+      [params.branchId, params.year ?? 0, params.status ?? 0],
+    );
+  }
+
+  async getBudget(id: number) {
+    const header = await this.db.query<any>(
+      `SELECT b.budget_id AS "budgetId", b.branch_id AS "branchId", b.year, b.name, b.status,
+              b.currency_code AS "currencyCode", b.notes,
+              b.created_by AS "createdBy", cu.full_name AS "createdByName",
+              b.approved_by AS "approvedBy", au.full_name AS "approvedByName",
+              b.approved_at AS "approvedAt",
+              b.same_user_approval_reason AS "sameUserApprovalReason",
+              b.closed_by AS "closedBy", b.closed_at AS "closedAt",
+              b.supersedes_id AS "supersedesId", b.superseded_by AS "supersededBy",
+              b.created_at AS "createdAt"
+         FROM budgets b
+         LEFT JOIN users cu ON cu.user_id = b.created_by
+         LEFT JOIN users au ON au.user_id = b.approved_by
+        WHERE b.budget_id = $1::bigint`,
+      [id],
+    );
+    if (!header.length) throw new BadRequestException('الموازنة غير موجودة');
+    const lines = await this.db.query<any>(
+      `SELECT bl.line_id AS "lineId", bl.account_id AS "accountId",
+              a.code AS "accountCode", a.name AS "accountName",
+              a.account_type AS "accountType",
+              bl.cost_center_id AS "costCenterId", cc.name AS "costCenterName",
+              bl.period_month AS "periodMonth", bl.planned_amount AS "plannedAmount"
+         FROM budget_lines bl
+         JOIN gl_accounts a ON a.account_id = bl.account_id
+         LEFT JOIN cost_centers cc ON cc.cost_center_id = bl.cost_center_id
+        WHERE bl.budget_id = $1::bigint
+        ORDER BY bl.period_month, a.code, bl.cost_center_id NULLS FIRST`,
+      [id],
+    );
+    const plannedTotal = round2(lines.reduce((sum: number, l: any) => sum + Number(l.plannedAmount), 0));
+    return { ...header[0], lines, plannedTotal };
+  }
+
+  async createBudget(dto: any, user: AuthUser, branchId: number) {
+    return this.db.transaction(async (client) => {
+      const name = String(dto.name ?? '').trim();
+      if (!name) throw new BadRequestException('اسم الموازنة مطلوب');
+      const year = Number(dto.year);
+      if (!Number.isInteger(year) || year < 2020 || year > 2100) {
+        throw new BadRequestException('سنة الموازنة يجب أن تكون بين 2020 و2100');
+      }
+      const currency = await this.baseCurrency(client, dto.currencyCode);
+      const lines = await this.validateBudgetLines(client, dto.lines);
+      const dup = await client.query<any>(
+        `SELECT 1 FROM budgets WHERE branch_id = $1::int AND year = $2::int AND name = $3::text`,
+        [branchId, year, name],
+      );
+      if (dup.rows.length) throw new BadRequestException('توجد موازنة بنفس الاسم لنفس الفرع والسنة');
+      const ins = await client.query<{ budget_id: number }>(
+        `INSERT INTO budgets (branch_id, year, name, status, currency_code, created_by, notes)
+         VALUES ($1::int,$2::int,$3::text,1,$4::text,$5::int,$6::text)
+         RETURNING budget_id`,
+        [branchId, year, name, currency, user.userId, dto.notes ?? null],
+      );
+      const budgetId = Number(ins.rows[0].budget_id);
+      await this.insertBudgetLines(client, budgetId, lines);
+      await client.query(
+        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
+         VALUES ($1::int,$2::int,'budget.create','budget',$3::bigint,$4)`,
+        [user.userId, branchId, budgetId, `إنشاء موازنة ${year} — ${name} (${lines.length} بندًا)`],
+      );
+      return { budgetId, status: 1, lines: lines.length };
+    });
+  }
+
+  async updateBudget(id: number, dto: any, user: AuthUser, branchId: number) {
+    return this.db.transaction(async (client) => {
+      const cur = await client.query<any>(
+        `SELECT budget_id, status, created_by FROM budgets
+          WHERE budget_id = $1::bigint AND branch_id = $2::int FOR UPDATE`,
+        [id, branchId],
+      );
+      if (!cur.rows.length) throw new BadRequestException('الموازنة غير موجودة');
+      const status = Number(cur.rows[0].status);
+      if (status === 2) throw new BadRequestException('لا يمكن تعديل موازنة معتمدة، استخدم revise');
+      if (status !== 1) throw new BadRequestException('لا يمكن تعديل موازنة مغلقة أو مستبدلة');
+
+      if (dto.name !== undefined) {
+        const name = String(dto.name).trim();
+        if (!name) throw new BadRequestException('اسم الموازنة مطلوب');
+        const dup = await client.query<any>(
+          `SELECT 1 FROM budgets WHERE branch_id = $1::int AND year = (SELECT year FROM budgets WHERE budget_id = $2::bigint)
+             AND name = $3::text AND budget_id <> $2::bigint`,
+          [branchId, id, name],
+        );
+        if (dup.rows.length) throw new BadRequestException('توجد موازنة بنفس الاسم لنفس الفرع والسنة');
+        await client.query(`UPDATE budgets SET name = $2::text WHERE budget_id = $1::bigint`, [id, name]);
+      }
+      if (dto.notes !== undefined) {
+        await client.query(`UPDATE budgets SET notes = $2::text WHERE budget_id = $1::bigint`, [id, dto.notes ?? null]);
+      }
+      if (dto.lines !== undefined) {
+        const lines = await this.validateBudgetLines(client, dto.lines);
+        await client.query('DELETE FROM budget_lines WHERE budget_id = $1::bigint', [id]);
+        await this.insertBudgetLines(client, id, lines);
+      }
+      await client.query(
+        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
+         VALUES ($1::int,$2::int,'budget.update','budget',$3::bigint,$4)`,
+        [user.userId, branchId, id, 'تعديل موازنة مسودة'],
+      );
+      return { budgetId: id, status };
+    });
+  }
+
+  async approveBudget(id: number, dto: any, user: AuthUser, branchId: number) {
+    return this.db.transaction(async (client) => {
+      const cur = await client.query<any>(
+        `SELECT budget_id, status, created_by FROM budgets
+          WHERE budget_id = $1::bigint AND branch_id = $2::int FOR UPDATE`,
+        [id, branchId],
+      );
+      if (!cur.rows.length) throw new BadRequestException('الموازنة غير موجودة');
+      if (Number(cur.rows[0].status) !== 1) {
+        throw new BadRequestException('يمكن اعتماد الموازنة في حالة المسودة فقط');
+      }
+      const createdBy = Number(cur.rows[0].created_by);
+      const reason = String(dto?.sameUserApprovalReason ?? '').trim();
+      if (createdBy === user.userId && !reason) {
+        throw new BadRequestException('اعتماد المُنشئ لموازنته يتطلب سببًا إلزاميًا (sameUserApprovalReason)');
+      }
+      const lineCount = await client.query<{ c: number }>(
+        `SELECT count(*)::int AS c FROM budget_lines WHERE budget_id = $1::bigint`, [id],
+      );
+      if (!Number(lineCount.rows[0].c)) throw new BadRequestException('لا يمكن اعتماد موازنة بلا بنود');
+
+      await client.query(
+        `UPDATE budgets
+            SET status = 2, approved_by = $2::int, approved_at = now(),
+                same_user_approval_reason = $3::text
+          WHERE budget_id = $1::bigint`,
+        [id, user.userId, createdBy === user.userId ? reason : (reason || null)],
+      );
+      await client.query(
+        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
+         VALUES ($1::int,$2::int,'budget.approve','budget',$3::bigint,$4)`,
+        [user.userId, branchId, id,
+          createdBy === user.userId ? `اعتماد ذاتي — ${reason}` : 'اعتماد موازنة'],
+      );
+      return {
+        budgetId: id, status: 2, approvedBy: user.userId, createdBy,
+        sameUserApprovalReason: createdBy === user.userId ? reason : null,
+      };
+    });
+  }
+
+  async closeBudget(id: number, dto: any, user: AuthUser, branchId: number) {
+    return this.db.transaction(async (client) => {
+      const cur = await client.query<any>(
+        `SELECT budget_id, status FROM budgets
+          WHERE budget_id = $1::bigint AND branch_id = $2::int FOR UPDATE`,
+        [id, branchId],
+      );
+      if (!cur.rows.length) throw new BadRequestException('الموازنة غير موجودة');
+      if (Number(cur.rows[0].status) !== 2) {
+        throw new BadRequestException('يمكن إغلاق موازنة معتمدة فقط');
+      }
+      await client.query(
+        `UPDATE budgets SET status = 3, closed_by = $2::int, closed_at = now()
+          WHERE budget_id = $1::bigint`,
+        [id, user.userId],
+      );
+      await client.query(
+        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
+         VALUES ($1::int,$2::int,'budget.close','budget',$3::bigint,$4)`,
+        [user.userId, branchId, id, dto?.reason ? `إغلاق موازنة — ${String(dto.reason).trim()}` : 'إغلاق موازنة'],
+      );
+      return { budgetId: id, status: 3 };
+    });
+  }
+
+  /** Approved budgets are never edited in place: a revision is a new draft. */
+  async reviseBudget(id: number, dto: any, user: AuthUser, branchId: number) {
+    return this.db.transaction(async (client) => {
+      const cur = await client.query<any>(
+        `SELECT * FROM budgets WHERE budget_id = $1::bigint AND branch_id = $2::int FOR UPDATE`,
+        [id, branchId],
+      );
+      if (!cur.rows.length) throw new BadRequestException('الموازنة غير موجودة');
+      const old = cur.rows[0];
+      if (Number(old.status) !== 2) throw new BadRequestException('يمكن مراجعة موازنة معتمدة فقط');
+      if (old.superseded_by) throw new BadRequestException('الموازنة مستبدلة بالفعل');
+
+      const baseName = String(old.name).replace(/ \(إصدار \d+\)$/, '');
+      const chain = await client.query<{ c: number }>(
+        `SELECT count(*)::int AS c FROM budgets
+          WHERE branch_id = $1::int AND year = $2::int
+            AND (name = $3::text OR name LIKE $3::text || ' (إصدار %')`,
+        [old.branch_id, old.year, baseName],
+      );
+      const requested = String(dto?.name ?? '').trim();
+      const name = requested || `${baseName} (إصدار ${Number(chain.rows[0].c) + 1})`;
+
+      const ins = await client.query<{ budget_id: number }>(
+        `INSERT INTO budgets
+           (branch_id, year, name, status, currency_code, created_by, notes, supersedes_id)
+         VALUES ($1::int,$2::int,$3::text,1,$4::text,$5::int,$6::text,$7::bigint)
+         RETURNING budget_id`,
+        [old.branch_id, old.year, name, old.currency_code, user.userId,
+          dto?.notes ?? old.notes ?? null, id],
+      );
+      const newId = Number(ins.rows[0].budget_id);
+
+      if (Array.isArray(dto?.lines) && dto.lines.length) {
+        const lines = await this.validateBudgetLines(client, dto.lines);
+        await this.insertBudgetLines(client, newId, lines);
+      } else {
+        await client.query(
+          `INSERT INTO budget_lines (budget_id, account_id, cost_center_id, period_month, planned_amount)
+           SELECT $2::bigint, account_id, cost_center_id, period_month, planned_amount
+             FROM budget_lines WHERE budget_id = $1::bigint`,
+          [id, newId],
+        );
+      }
+      await client.query(
+        `UPDATE budgets SET status = 4, superseded_by = $2::bigint WHERE budget_id = $1::bigint`,
+        [id, newId],
+      );
+      await client.query(
+        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
+         VALUES ($1::int,$2::int,'budget.revise','budget',$3::bigint,$4)`,
+        [user.userId, branchId, newId, `مراجعة موازنة — يستبدل #${id}`],
+      );
+      return { budgetId: newId, supersedesId: id, supersededStatus: 4 };
+    });
+  }
+
+  async budgetVsActual(params: { budgetId: number; branchId: number; month?: number }) {
+    const header = await this.db.query<any>(
+      `SELECT budget_id AS "budgetId", branch_id AS "branchId", year, name, status,
+              currency_code AS "currencyCode"
+         FROM budgets WHERE budget_id = $1::bigint`,
+      [params.budgetId],
+    );
+    if (!header.length) throw new BadRequestException('الموازنة غير موجودة');
+    const budget = header[0];
+    if (Number(budget.branchId) !== Number(params.branchId)) {
+      throw new BadRequestException('الموازنة تتبع فرعًا آخر');
+    }
+    const rows = await this.db.query<any>(
+      `SELECT v.line_id AS "lineId", v.account_id AS "accountId",
+              v.account_code AS "accountCode", v.account_name AS "accountName",
+              v.account_type AS "accountType",
+              v.cost_center_id AS "costCenterId", cc.name AS "costCenterName",
+              v.period_month AS "periodMonth",
+              v.planned_amount AS "plannedAmount", v.actual_amount AS "actualAmount"
+         FROM v_budget_actual v
+         LEFT JOIN cost_centers cc ON cc.cost_center_id = v.cost_center_id
+        WHERE v.budget_id = $1::bigint
+          AND ($2::int = 0 OR v.period_month = $2::int)
+        ORDER BY v.period_month, v.account_code, v.cost_center_id NULLS FIRST`,
+      [params.budgetId, params.month ?? 0],
+    );
+    const lines = rows.map((r: any) => {
+      const plannedAmount = round2(Number(r.plannedAmount));
+      const actualAmount = round2(Number(r.actualAmount));
+      const variance = round2(plannedAmount - actualAmount);
+      return {
+        ...r,
+        plannedAmount,
+        actualAmount,
+        variance,
+        variancePct: plannedAmount ? round2((variance / plannedAmount) * 100) : null,
+        overBudget: variance < -0.005,
+      };
+    });
+    const sum = (rows2: any[], key: 'plannedAmount' | 'actualAmount') =>
+      round2(rows2.reduce((s: number, l: any) => s + l[key], 0));
+    const allocated = lines.filter((l: any) => l.costCenterId != null);
+    const unallocated = lines.filter((l: any) => l.costCenterId == null);
+    const totals = {
+      planned: sum(lines, 'plannedAmount'),
+      actual: sum(lines, 'actualAmount'),
+    };
+    (totals as any).variance = round2(totals.planned - totals.actual);
+    (totals as any).overBudgetLines = lines.filter((l: any) => l.overBudget).length;
+    return {
+      budget,
+      month: params.month ?? null,
+      lines,
+      totals,
+      allocated: { lines: allocated.length, planned: sum(allocated, 'plannedAmount'), actual: sum(allocated, 'actualAmount') },
+      unallocated: { lines: unallocated.length, planned: sum(unallocated, 'plannedAmount'), actual: sum(unallocated, 'actualAmount') },
+    };
+  }
+
+  /** Warning-only over-budget report. Never blocks posting. */
+  async budgetAlerts(params: { branchId: number; year: number; month?: number }) {
+    const rows = await this.db.query<any>(
+      `SELECT b.budget_id AS "budgetId", b.name AS "budgetName", b.status, b.year,
+              v.period_month AS "periodMonth",
+              v.account_id AS "accountId", v.account_code AS "accountCode",
+              v.account_name AS "accountName",
+              v.cost_center_id AS "costCenterId", cc.name AS "costCenterName",
+              v.planned_amount AS "plannedAmount", v.actual_amount AS "actualAmount"
+         FROM v_budget_actual v
+         JOIN budgets b ON b.budget_id = v.budget_id
+         LEFT JOIN cost_centers cc ON cc.cost_center_id = v.cost_center_id
+        WHERE b.branch_id = $1::int AND b.year = $2::int
+          AND b.status IN (2, 3)
+          AND ($3::int = 0 OR v.period_month = $3::int)
+          AND v.actual_amount > v.planned_amount + 0.005
+        ORDER BY v.period_month, v.account_code`,
+      [params.branchId, params.year, params.month ?? 0],
+    );
+    return rows.map((r: any) => {
+      const plannedAmount = round2(Number(r.plannedAmount));
+      const actualAmount = round2(Number(r.actualAmount));
+      return { ...r, plannedAmount, actualAmount, excess: round2(actualAmount - plannedAmount) };
+    });
   }
 }
 
@@ -2211,8 +2669,15 @@ export class AccountingController {
 
   @RequirePermissions('accounting.manage')
   @Post('vouchers')
-  createVoucher(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.createVoucher(dto, user, branchId);
+  async createVoucher(
+    @Body() dto: any,
+    @CurrentUser() user: AuthUser,
+    @CurrentBranch() branchId: number,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.service.createVoucher(dto, user, branchId);
+    if (result?.duplicate) res.status(200);
+    return result;
   }
 
   @RequirePermissions('accounting.post')
@@ -2393,6 +2858,108 @@ export class AccountingController {
     @CurrentBranch() branchId: number,
   ) {
     return this.service.costCenterReport({ branchId, from, to });
+  }
+
+  // ---- GL-10 budgets ------------------------------------------------ //
+  @RequirePermissions('accounting.view')
+  @Get('budgets')
+  listBudgets(
+    @Query('year') year: string,
+    @Query('status') status: string,
+    @CurrentBranch() branchId: number,
+  ) {
+    return this.service.listBudgets({
+      branchId,
+      year: year ? Number(year) : undefined,
+      status: status ? Number(status) : undefined,
+    });
+  }
+
+  @RequirePermissions('accounting.view')
+  @Get('budgets/:id')
+  getBudget(@Param('id', ParseIntPipe) id: number) {
+    return this.service.getBudget(id);
+  }
+
+  @RequirePermissions('accounting.manage')
+  @Post('budgets')
+  createBudget(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
+    return this.service.createBudget(dto ?? {}, user, branchId);
+  }
+
+  @RequirePermissions('accounting.manage')
+  @Patch('budgets/:id')
+  updateBudget(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
+    return this.service.updateBudget(id, dto ?? {}, user, branchId);
+  }
+
+  @RequirePermissions('accounting.approve_budget')
+  @Post('budgets/:id/approve')
+  approveBudget(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
+    return this.service.approveBudget(id, dto ?? {}, user, branchId);
+  }
+
+  @RequirePermissions('accounting.close_budget')
+  @Post('budgets/:id/close')
+  closeBudget(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
+    return this.service.closeBudget(id, dto ?? {}, user, branchId);
+  }
+
+  @RequirePermissions('accounting.manage')
+  @Post('budgets/:id/revise')
+  reviseBudget(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
+    return this.service.reviseBudget(id, dto ?? {}, user, branchId);
+  }
+
+  @RequirePermissions('accounting.view')
+  @Get('reports/budget-vs-actual')
+  async budgetVsActual(
+    @Query('budget_id') budgetId: string,
+    @Query('month') month: string,
+    @Query('format') format: string,
+    @CurrentBranch() branchId: number,
+  ) {
+    const report = await this.service.budgetVsActual({
+      budgetId: Number(budgetId),
+      branchId,
+      month: month ? Number(month) : undefined,
+    });
+    if (String(format).toLowerCase() === 'csv') {
+      const cell = (v: any) => {
+        const s = v == null ? '' : String(v);
+        return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      };
+      const header = ['الشهر', 'الكود', 'الحساب', 'النوع', 'مركز التكلفة', 'المخطط', 'الفعلي', 'الفرق', 'النسبة %', 'تجاوز'];
+      const typeName = (t: number) => (Number(t) === 4 ? 'إيراد' : 'مصروف');
+      const rows = report.lines.map((l: any) => [
+        l.periodMonth, l.accountCode, l.accountName, typeName(l.accountType),
+        l.costCenterName ?? 'غير موزّع', l.plannedAmount, l.actualAmount, l.variance,
+        l.variancePct ?? '', l.overBudget ? 'نعم' : 'لا',
+      ]);
+      const totalsRow = ['', '', 'الإجمالي', '', '', report.totals.planned, report.totals.actual,
+        (report.totals as any).variance, '', (report.totals as any).overBudgetLines];
+      const csv = [header, ...rows, totalsRow].map((r) => r.map(cell).join(',')).join('\r\n');
+      return {
+        fileName: `budget-vs-actual-${report.budget.budgetId}.csv`,
+        mimeType: 'text/csv; charset=utf-8',
+        base64: Buffer.from('\uFEFF' + csv, 'utf-8').toString('base64'),
+      };
+    }
+    return report;
+  }
+
+  @RequirePermissions('accounting.view')
+  @Get('reports/budget-alerts')
+  budgetAlerts(
+    @Query('year') year: string,
+    @Query('month') month: string,
+    @CurrentBranch() branchId: number,
+  ) {
+    return this.service.budgetAlerts({
+      branchId,
+      year: year ? Number(year) : new Date().getFullYear(),
+      month: month ? Number(month) : undefined,
+    });
   }
 }
 

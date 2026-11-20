@@ -57,6 +57,13 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    key: 'purchases',
+    label: 'المشتريات',
+    items: [
+      { href: '/purchases/supplier-statement', label: 'كشف حساب مورد', icon: IconUsers, permission: 'purchases.view' },
+    ],
+  },
+  {
     key: 'inventory',
     label: 'المخازن',
     items: [

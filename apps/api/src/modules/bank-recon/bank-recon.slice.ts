@@ -714,7 +714,8 @@ export class BankReconService {
     const accountId = query?.accountId ? Number(query.accountId) : 0;
     return this.db.query<any>(
       `SELECT r.run_id AS "runId", r.run_no AS "runNo", r.bank_account_id AS "bankAccountId",
-              a.name AS "bankAccountName", r.run_date AS "runDate", r.book_balance AS "bookBalance",
+              a.name AS "bankAccountName", r.run_date AS "runDate", r.created_at AS "createdAt",
+              r.book_balance AS "bookBalance",
               r.statement_balance AS "statementBalance", r.variance,
               r.matched_count AS "matchedCount", r.unmatched_count AS "unmatchedCount",
               r.status, r.journal_id AS "journalId", r.reverse_journal_id AS "reverseJournalId",

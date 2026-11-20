@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import AccountingNav from '@/components/AccountingNav';
 import { apiFetch, formatDate, formatMoney } from '@/lib/api';
+import { formatDateWithRecordedTime, formatDateTime, useDisplayTimezone } from '@/lib/time';
 
 type BankAccount = {
   bankAccountId: number; name: string; bankName?: string; accountNo?: string;
@@ -15,7 +16,7 @@ type StatementLine = {
   status: number; statusName?: string; matchDifference?: number; matchedJournalId?: number | null;
 };
 type ReconRun = {
-  runId: number; runNo: string; runDate: string; bookBalance: number; statementBalance: number;
+  runId: number; runNo: string; runDate: string; createdAt?: string; bookBalance: number; statementBalance: number;
   variance: number; matchedCount: number; unmatchedCount: number; status: number;
   statusName?: string; journalId?: number | null; reverseJournalId?: number | null; notes?: string;
 };
@@ -41,6 +42,7 @@ const CSV_TEMPLATE = `date,description,reference,amount,movement_type
 2026-11-02,رسوم بنكية,FEE-001,-25,fee`;
 
 export default function BankReconPage() {
+  const timeZone = useDisplayTimezone();
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [accountId, setAccountId] = useState<number>(0);
   const [lines, setLines] = useState<StatementLine[]>([]);
@@ -265,7 +267,7 @@ export default function BankReconPage() {
           </select>
         </div>
         {selected?.reconciledBalance != null && (
-          <div className="text-sm text-slate-600">آخر رصيد مطابَق: <b>{formatMoney(selected.reconciledBalance)}</b>{selected.lastReconciledAt ? ` · ${formatDate(selected.lastReconciledAt)}` : ''}</div>
+          <div className="text-sm text-slate-600">آخر رصيد مطابَق: <b>{formatMoney(selected.reconciledBalance)}</b>{selected.lastReconciledAt ? ` · ${formatDateTime(selected.lastReconciledAt, timeZone, true)}` : ''}</div>
         )}
         <div className="flex gap-2 mr-auto">
           <button className="btn-soft" onClick={autoMatch} disabled={busy || !accountId}>مطابقة تلقائية</button>
@@ -384,7 +386,7 @@ export default function BankReconPage() {
             {runs.map((run) => (
               <tr key={run.runId}>
                 <td dir="ltr">{run.runNo}</td>
-                <td>{formatDate(run.runDate)}</td>
+                <td className="whitespace-nowrap">{formatDateWithRecordedTime(run.runDate, run.createdAt, timeZone)}</td>
                 <td className="font-num" dir="ltr">{formatMoney(run.bookBalance)}</td>
                 <td className="font-num" dir="ltr">{formatMoney(run.statementBalance)}</td>
                 <td className="font-num" dir="ltr">{formatMoney(run.variance)}</td>

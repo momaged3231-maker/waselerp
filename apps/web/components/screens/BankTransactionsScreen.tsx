@@ -1,22 +1,24 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { apiFetch, formatDate, formatMoney } from '@/lib/api';
+import { apiFetch, formatMoney } from '@/lib/api';
+import { formatDocumentDateTime, formatStampForExport, localTodayIso, useDisplayTimezone } from '@/lib/time';
 import { useSession } from '@/lib/session';
 import { downloadCsv } from '@/lib/export';
 
 /** Tools → «المعاملات البنكية» — per-account statement with running balance + new entry form. */
 export default function BankTransactionsScreen() {
   const { can } = useSession();
+  const timeZone = useDisplayTimezone();
   const canManage = can('cash.manage');
 
   const [accounts, setAccounts] = useState<any[]>([]);
   const [accountId, setAccountId] = useState('');
-  const [from, setFrom] = useState(() => new Date().toISOString().slice(0, 8) + '01');
-  const [to, setTo] = useState(() => new Date().toISOString().slice(0, 10));
+  const [from, setFrom] = useState(() => localTodayIso().slice(0, 8) + '01');
+  const [to, setTo] = useState(() => localTodayIso());
   const [statement, setStatement] = useState<any>(null);
   const [categories, setCategories] = useState<any[]>([]);
-  const [form, setForm] = useState({ direction: 1, amount: '', transactionDate: new Date().toISOString().slice(0, 10), categoryId: '', description: '' });
+  const [form, setForm] = useState({ direction: 1, amount: '', transactionDate: localTodayIso(), categoryId: '', description: '' });
   const [error, setError] = useState('');
 
   async function loadStatement() {
@@ -62,7 +64,7 @@ export default function BankTransactionsScreen() {
   function exportCsv() {
     if (!statement) return;
     downloadCsv(`wasel-bank-${accountId}`, statement.items.map((row: any) => ({
-      'التاريخ': String(row.transactionDate).slice(0, 10), 'البيان': row.description ?? '', 'الطرف': row.partyName ?? '',
+      'التاريخ': formatStampForExport(row.transactionDate, row.createdAt, timeZone), 'البيان': row.description ?? '', 'الطرف': row.partyName ?? '',
       'وارد': Number(row.direction) === 1 ? Number(row.amount) : 0, 'صادر': Number(row.direction) === 2 ? Number(row.amount) : 0,
       'الرصيد': Number(row.balance), 'الفئة': row.categoryName ?? '',
     })));
@@ -132,11 +134,11 @@ export default function BankTransactionsScreen() {
             <div className="card-title"><span>الحركات ({(statement.items ?? []).length})</span></div>
             <div className="table-wrap">
               <table className="table">
-                <thead><tr><th>التاريخ</th><th>البيان</th><th>الطرف</th><th>وارد</th><th>صادر</th><th>الرصيد</th></tr></thead>
+                <thead><tr><th>التاريخ والوقت</th><th>البيان</th><th>الطرف</th><th>وارد</th><th>صادر</th><th>الرصيد</th></tr></thead>
                 <tbody>
                   {(statement.items ?? []).map((row: any) => (
                     <tr key={row.transactionId}>
-                      <td>{formatDate(row.transactionDate)}</td>
+                      <td className="whitespace-nowrap">{formatDocumentDateTime(row.transactionDate, row.createdAt, timeZone)}</td>
                       <td>{row.description ?? '—'}{row.categoryName ? <span className="text-[10px] text-slate-400 mr-1">· {row.categoryName}</span> : null}</td>
                       <td className="text-slate-500">{row.partyName ?? '—'}</td>
                       <td className="text-emerald-700">{Number(row.direction) === 1 ? formatMoney(row.amount) : '—'}</td>

@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import AccountingNav from '@/components/AccountingNav';
-import { apiFetch, formatDate, formatMoney } from '@/lib/api';
+import { apiFetch, formatMoney } from '@/lib/api';
+import { formatDateTime, useDisplayTimezone } from '@/lib/time';
 
 type Rule = {
   ruleId: number; name: string; description?: string; bankAccountId: number; bankAccountName?: string;
@@ -20,6 +21,7 @@ type RunEntry = {
 const FREQS: [number, string][] = [[1, 'شهري'], [2, 'ربع سنوي'], [3, 'نصف سنوي'], [4, 'سنوي']];
 
 export default function BankExpensesPage() {
+  const timeZone = useDisplayTimezone();
   const [rules, setRules] = useState<Rule[]>([]);
   const [runs, setRuns] = useState<RunEntry[]>([]);
   const [accounts, setAccounts] = useState<any[]>([]);
@@ -290,7 +292,7 @@ export default function BankExpensesPage() {
                 <td dir="ltr">{String(r.periodKey).slice(0, 10)}</td>
                 <td>{r.statusName}</td>
                 <td dir="ltr">{r.journalId ? `#${r.journalId}` : '—'}</td>
-                <td className="text-slate-400">{formatDate(r.runAt)}</td>
+                <td className="text-slate-400 whitespace-nowrap">{formatDateTime(r.runAt, timeZone, true)}</td>
               </tr>
             ))}
             {!runs.length && <tr><td colSpan={5} className="text-center text-slate-400 py-4">لم تتولّد أي قيود بعد</td></tr>}

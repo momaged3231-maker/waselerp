@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { apiFetch, formatDate, formatMoney } from '@/lib/api';
+import { apiFetch, formatMoney } from '@/lib/api';
+import { formatDateWithRecordedTime, formatDateTime, useDisplayTimezone } from '@/lib/time';
 import { useSession } from '@/lib/session';
 import DeleteButton from '@/components/DeleteButton';
 
@@ -20,6 +21,7 @@ const badgeFor = (status: number) =>
 
 export default function BranchTransferScreen() {
   const { session, can } = useSession();
+  const timeZone = useDisplayTimezone();
   const activeBranch = Number(session?.activeBranchId ?? 0);
 
   const canView = can('transfer.interbranch.view');
@@ -322,7 +324,7 @@ export default function BranchTransferScreen() {
               <div className="px-4 pb-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-xs text-slate-600">
                 <div><div className="text-slate-400">من</div><div className="font-semibold">{selected.fromBranchName} ← {selected.fromWarehouseName}</div></div>
                 <div><div className="text-slate-400">إلى</div><div className="font-semibold">{selected.toBranchName} ← {selected.toWarehouseName}</div></div>
-                <div><div className="text-slate-400">التاريخ</div><div>{formatDate(selected.transferDate)}</div></div>
+                <div><div className="text-slate-400">التاريخ والوقت</div><div>{formatDateWithRecordedTime(selected.transferDate, selected.createdAt, timeZone)}</div></div>
                 <div><div className="text-slate-400">القيمة الإجمالية</div><div className="font-bold font-num">{formatMoney(selected.totalValue)}</div></div>
                 {selected.outboundVoucherId && <div><div className="text-slate-400">حرد صادر</div><div className="font-mono">#{selected.outboundVoucherId}</div></div>}
                 {selected.inboundVoucherId && <div><div className="text-slate-400">حرد وارد</div><div className="font-mono">#{selected.inboundVoucherId}</div></div>}
@@ -385,7 +387,7 @@ export default function BranchTransferScreen() {
                 <button className="btn-soft text-rose-600 border-rose-200" onClick={cancel}>إلغاء وإعادة للمصدر</button>
               )}
               {status === 4 && <span className="text-xs text-emerald-700">مكتمل — لا يمكن تعديله أو إلغاؤه من هذه الشاشة (العكس بعد الاستلام يتطلب مستند عكس متكامل — خارج النسخة الحالية)</span>}
-              {status === 5 && <span className="text-xs text-rose-600">ملغي{selected.cancelReason ? ` — ${selected.cancelReason}` : ''}{selected.cancelledAt ? ` (${formatDate(selected.cancelledAt)})` : ''}</span>}
+              {status === 5 && <span className="text-xs text-rose-600">ملغي{selected.cancelReason ? ` — ${selected.cancelReason}` : ''}{selected.cancelledAt ? ` (${formatDateTime(selected.cancelledAt, timeZone, true)})` : ''}</span>}
               {status === 2 && isSource && !canManage && <span className="text-xs text-slate-400">الاعتماد من فرع المصدر فقط — بدّل الفرع من القائمة العلوية</span>}
               {status === 2 && isDest && !canManage && <span className="text-xs text-slate-400">الاستلام من فرع الوجهة فقط</span>}
             </div>
@@ -426,7 +428,7 @@ export default function BranchTransferScreen() {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 8 }}>
                 <div>الرقم: <b className="font-mono">{selected.transferNo}</b></div>
-                <div>التاريخ: <b>{formatDate(selected.transferDate)}</b></div>
+                <div>التاريخ والوقت: <b>{formatDateWithRecordedTime(selected.transferDate, selected.createdAt, timeZone)}</b></div>
                 <div>الحالة: <b>{STATUS[status]}</b></div>
               </div>
               <div style={{ display: 'flex', gap: 12, fontSize: 11, marginBottom: 8 }}>

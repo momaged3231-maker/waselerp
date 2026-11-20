@@ -1,11 +1,13 @@
 import {
   Body, Controller, ForbiddenException, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Query,
-  BadRequestException,
+  BadRequestException, Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { PoolClient } from 'pg';
 import { DatabaseService } from '../../common/database/database.service';
 import { applyMovement, getWarehouseCost, toBaseUnits, MoveType } from '../../common/stock';
 import { getBooleanSetting } from '../../common/settings';
+import { asIsoDate, todayIso } from '../../common/dates';
 import { postInvoiceJournal, reverseJournal, resolveMapping } from '../../common/posting';
 import { resolvePrices, asRunner } from '../../common/pricing';
 import {
@@ -28,6 +30,12 @@ export interface CartLineInput {
   isGift?: boolean;
   /** Modifier (extra) attached to another line of the same invoice. */
   parentLineIndex?: number;
+  /** B5.2 — original sale line id this return line refers to (per-line qty budget). */
+  parentLineId?: number;
+  /** B5.3 — damaged portion of a sales return (rest goes back to sellable stock). */
+  damagedQty?: number;
+  /** B5.4 — pre-tax settlement amount of a credit note on the referenced line. */
+  settleAmount?: number;
   /** The modifier this line belongs to (for the maximum quantity check). */
   modifierId?: number;
 }
@@ -46,7 +54,10 @@ export interface InvoiceInput {
   warehouseId: number;
   partyId?: number;
   repId?: number;
+  /** Document timestamp (date + clock). Displayed on the invoice/receipt. */
   invoiceDate?: string;
+  /** Accounting/business date (`YYYY-MM-DD`); defaults to the date part of invoiceDate. */
+  businessDate?: string;
   paymentType: number;     // 1 cash, 2 credit, 3 mixed
   cashAccountId?: number;
   paidAmount?: number;
@@ -66,6 +77,10 @@ export interface InvoiceInput {
   driverPhone?: string;
   tableRef?: string;
   parentInvoiceId?: number;
+  /** B2/D-18: optional GRN receipt lines to match against this purchase invoice. */
+  receiptLinks?: { receiptLineId: number; qty: number }[];
+  /** B5.1: optional credit-limit override (requires sales.approve_over_credit + reason). */
+  creditOverrideReason?: string;
   lines: CartLineInput[];
   notes?: string;
   clientRequestId?: string;
@@ -73,12 +88,14 @@ export interface InvoiceInput {
 
 const TYPE_MOVE: Record<number, MoveType> = {
   1: 'sales', 2: 'purchase', 3: 'salesReturn', 4: 'purchaseReturn',
+  5: 'adjustment', // B5.3 gift/sample return — stock in, zero value
 };
 
-const TYPE_PREFIX: Record<number, string> = { 1: 'S', 2: 'P', 3: 'SR', 4: 'PR' };
+const TYPE_PREFIX: Record<number, string> = { 1: 'S', 2: 'P', 3: 'SR', 4: 'PR', 5: 'GR', 6: 'CN' };
 
 /** Money is rounded to two decimals — the ledger has no room for fractions of a piastre. */
 const round2 = (value: number) => Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+const round6 = (value: number) => Math.round((Number(value) + Number.EPSILON) * 1e6) / 1e6;
 
 @Injectable()
 export class SalesService {
@@ -214,9 +231,13 @@ export class SalesService {
     if (!dto.lines?.length) throw new BadRequestException('لا توجد أصناف في الفاتورة');
 
     let invoiceType = Number(dto.invoiceType ?? 1);
-    if (![1, 2, 3, 4].includes(invoiceType)) throw new BadRequestException('نوع الفاتورة غير صحيح');
+    if (![1, 2, 3, 4, 5, 6].includes(invoiceType)) throw new BadRequestException('نوع الفاتورة غير صحيح');
     let isPurchase = invoiceType === 2 || invoiceType === 4;
     let isReturn = invoiceType === 3 || invoiceType === 4;
+    // B5.3 — type 5 = gift/sample return.
+    const isGiftReturn = invoiceType === 5;
+    // B5.4 — type 6 = sales credit note: financial-only (no stock / COGS / cash).
+    const isCreditNote = invoiceType === 6;
 
     // Editing an invoice: the permission follows the invoice that is edited.
     if (editOf) {
@@ -240,6 +261,14 @@ export class SalesService {
       if (!line.itemId || !line.unitId) throw new BadRequestException('بيانات الصنف غير كاملة');
       if (!(Number(line.quantity) > 0)) throw new BadRequestException('الكمية يجب أن تكون أكبر من صفر');
     }
+    // B5.3 — a gift/sample return is a stock adjustment and MUST carry a memo reason.
+    if (isGiftReturn && !(dto.notes ?? '').trim()) {
+      throw new BadRequestException('سبب تسوية الهدية إلزامي');
+    }
+    // B5.4 — a credit note is a reason-bearing financial document.
+    if (isCreditNote && !(dto.notes ?? '').trim()) {
+      throw new BadRequestException('سبب إشعار الدائن إلزامي');
+    }
 
     // Server-side discount cap (the POS cap alone can be bypassed by calling the API directly).
     const maxDiscount = Number(user.maxDiscountPct ?? 0);
@@ -254,12 +283,20 @@ export class SalesService {
       }
     }
 
-    if (dto.clientRequestId) {
-      const existing = await this.db.one<{ invoice_id: number }>(
-        'SELECT invoice_id FROM invoices WHERE client_request_id = $1',
-        [dto.clientRequestId],
+    // GAP-06: idempotency key (null/undefined/empty => no dedupe).
+    // Fast path: retry after committed request — short-circuit before validations
+    // that depend on state mutated by the original (stock/credit/balances).
+    // Race path: catch UNIQUE 23505 on insert remains the authoritative guard.
+    const clientRequestId = String(dto.clientRequestId ?? '').trim() || null;
+    if (clientRequestId) {
+      const existing = await this.db.one<any>(
+        `SELECT invoice_id AS "invoiceId", invoice_no AS "invoiceNo", total_amount AS "totalAmount",
+                paid_amount AS "paidAmount", (total_amount - paid_amount) AS "remaining",
+                parent_invoice_id AS "parentInvoiceId"
+           FROM invoices WHERE client_request_id = $1`,
+        [clientRequestId],
       );
-      if (existing) return { invoiceId: Number(existing.invoice_id), duplicate: true };
+      if (existing) return { ...existing, duplicate: true };
     }
 
     const effectiveBranch = dto.branchId ?? branchId;
@@ -269,7 +306,8 @@ export class SalesService {
       throw new ForbiddenException('هذا الفرع غير مسموح لك');
     }
 
-    return this.db.transaction(async (client) => {
+    try {
+      return await this.db.transaction(async (client) => {
       // Sales rep may be mandatory (settings: RequireRepOnSale) — sales types only.
       if (!isPurchase && !dto.repId) {
         const repRequired = await getBooleanSetting(client, 'RequireRepOnSale', false);
@@ -388,7 +426,7 @@ export class SalesService {
         method: number; amount: number; cashAccountId: number;
         referenceNo: string | null; notes: string | null;
       }[] = [];
-      for (const payment of Array.isArray(dto.payments) ? dto.payments : []) {
+      for (const payment of (!isCreditNote && Array.isArray(dto.payments)) ? dto.payments : []) {
         const amount = Number(payment.amount ?? 0);
         if (!(amount > 0)) continue;
         const accountId = payment.cashAccountId ? Number(payment.cashAccountId) : cashAccountId;
@@ -413,28 +451,60 @@ export class SalesService {
       // ---- original invoice for returns ----------------------------------
       let parent: any = null;
       let partyId = dto.partyId ? Number(dto.partyId) : undefined;
-      if (isReturn) {
-        if (!dto.parentInvoiceId) throw new BadRequestException('الفاتورة الأصلية مطلوبة للمرتجع');
+      if (isReturn || isCreditNote) {
+        if (!dto.parentInvoiceId) {
+          throw new BadRequestException(isCreditNote
+            ? 'الفاتورة الأصلية مطلوبة لإشعار الدائن'
+            : 'الفاتورة الأصلية مطلوبة للمرتجع');
+        }
         const parentResult = await client.query<any>(
-          'SELECT * FROM invoices WHERE invoice_id = $1',
+          'SELECT * FROM invoices WHERE invoice_id = $1 FOR UPDATE',
           [dto.parentInvoiceId],
         );
         parent = parentResult.rows[0];
         if (!parent) throw new BadRequestException('الفاتورة الأصلية غير موجودة');
-        if (Number(parent.status) === 3) throw new BadRequestException('لا يمكن إرجاع فاتورة ملغاة');
-        const expectedParentType = invoiceType === 3 ? 1 : 2;
+        if (Number(parent.status) === 3) {
+          throw new BadRequestException(isCreditNote
+            ? 'لا يمكن إصدار إشعار دائن لفاتورة ملغاة'
+            : 'لا يمكن إرجاع فاتورة ملغاة');
+        }
+        if (Number(parent.status) !== 2 || (isCreditNote && !parent.gl_journal_id)) {
+          throw new BadRequestException(isCreditNote
+            ? 'الفاتورة الأصلية غير مرحّلة محاسبيًا — لا يمكن إصدار إشعار دائن'
+            : 'الفاتورة الأصلية معلّقة أو غير معتمدة — لا يمكن إرجاعها');
+        }
+        if (isReturn) {
+          // B5.2a — the PERIOD OF THE PARENT document must be open, not the return's date.
+          const parentPeriod = await client.query<{ is_closed: boolean; name: string | null }>(
+            `SELECT is_closed, name FROM periods
+              WHERE branch_id=$1 AND start_date <= $2::date
+                AND (end_date IS NULL OR end_date >= $2::date)
+              ORDER BY (end_date IS NULL) ASC, start_date DESC LIMIT 1`,
+            [effectiveBranch, parent.invoice_date],
+          );
+          if (parentPeriod.rows.length && parentPeriod.rows[0].is_closed) {
+            throw new BadRequestException(`الفاتورة الأصلية في فترة مقفولة «${parentPeriod.rows[0].name}» — لا يمكن إرجاعها`);
+          }
+        }
+        const expectedParentType = isCreditNote ? 1 : invoiceType === 3 ? 1 : 2;
         if (Number(parent.invoice_type) !== expectedParentType) {
-          throw new BadRequestException('نوع الفاتورة الأصلية لا يطابق نوع المرتجع');
+          throw new BadRequestException(isCreditNote
+            ? 'إشعار الدائن يجب أن يرتبط بفاتورة مبيعات'
+            : 'نوع الفاتورة الأصلية لا يطابق نوع المرتجع');
         }
         if (Number(parent.branch_id) !== Number(effectiveBranch)) {
           throw new BadRequestException('الفاتورة الأصلية تخص فرعًا آخر');
         }
         const parentParty = parent.party_id ? Number(parent.party_id) : undefined;
         if ((partyId ?? 0) !== (parentParty ?? 0)) {
-          throw new BadRequestException('طرف المرتجع يجب أن يطابق طرف الفاتورة الأصلية');
+          throw new BadRequestException(isCreditNote
+            ? 'عميل إشعار الدائن يجب أن يطابق عميل الفاتورة الأصلية'
+            : 'طرف المرتجع يجب أن يطابق طرف الفاتورة الأصلية');
         }
         partyId = parentParty;
       }
+      // B5.3 — gift/sample returns are anonymous: no party, no AR.
+      if (isGiftReturn) partyId = undefined;
 
       // ---- party validation + credit limit -------------------------------
       let creditLimit = 0;
@@ -461,8 +531,12 @@ export class SalesService {
       if (invoiceType !== 1) repId = undefined;
 
       // ---- period + items ------------------------------------------------
-      // Period must cover *this invoice's* date — a closed cover-period blocks the document.
-      const invoiceDateStr = dto.invoiceDate ?? new Date().toISOString().slice(0, 10);
+      // The accounting date stays a business date even when the document carries a clock.
+      // POS sends both invoiceDate (full timestamp for display) and businessDate (period/journal).
+      const businessDate = asIsoDate(dto.businessDate)
+        ?? asIsoDate(dto.invoiceDate)
+        ?? asIsoDate(editedInvoice?.invoice_date)
+        ?? todayIso();
       const period = await client.query<{ period_id: number; is_closed: boolean; name: string | null }>(
         `SELECT period_id, is_closed, name FROM periods
           WHERE branch_id = $1
@@ -470,7 +544,7 @@ export class SalesService {
             AND (end_date IS NULL OR end_date >= $2::date)
           ORDER BY (end_date IS NULL) ASC, start_date DESC
           LIMIT 1`,
-        [effectiveBranch, invoiceDateStr],
+        [effectiveBranch, businessDate],
       );
       const periodId = period.rows.length ? Number(period.rows[0].period_id) : null;
       if (period.rows.length && period.rows[0].is_closed) {
@@ -485,29 +559,72 @@ export class SalesService {
       );
       const itemMap = new Map(items.rows.map((r: any) => [Number(r.item_id), r]));
 
-      // ---- return quantity + cost map from the original invoice ----------
-      const parentLines = new Map<string, { unitCost: number; remaining: number }>();
+      // ---- B5.2b/c/d — per-line return budget + price/tax snapshot + original cost
+      const parentLines = new Map<string, {
+        lineId: number; itemId: number; unitId: number;
+        unitPrice: number; taxPct: number; unitCost: number; remaining: number;
+      }>();
       if (isReturn && parent) {
         const rows = await client.query<any>(
-          `SELECT l.item_id, l.unit_id, l.quantity, l.unit_cost,
-                  COALESCE((SELECT SUM(rl.quantity)
-                              FROM invoice_lines rl
-                              JOIN invoices ri ON ri.invoice_id = rl.invoice_id
-                             WHERE ri.parent_invoice_id = $1 AND ri.status <> 3
-                               AND rl.item_id = l.item_id AND rl.unit_id = l.unit_id), 0) AS returned_qty
+          `SELECT l.invoice_line_id, l.item_id, l.unit_id, l.quantity, l.unit_price, l.tax_pct, l.unit_cost,
+                  GREATEST(
+                    COALESCE((SELECT SUM(rl.quantity) FROM invoice_lines rl
+                               JOIN invoices ri ON ri.invoice_id = rl.invoice_id
+                              WHERE rl.returned_from_line_id = l.invoice_line_id AND ri.status <> 3), 0),
+                    COALESCE((SELECT SUM(rl.quantity) FROM invoice_lines rl
+                               JOIN invoices ri ON ri.invoice_id = rl.invoice_id
+                              WHERE ri.parent_invoice_id = $1 AND ri.status <> 3
+                                AND rl.item_id = l.item_id AND rl.unit_id = l.unit_id), 0)
+                  ) AS returned_qty
              FROM invoice_lines l
             WHERE l.invoice_id = $1`,
           [dto.parentInvoiceId],
         );
         for (const row of rows.rows) {
-          parentLines.set(`${row.item_id}:${row.unit_id}`, {
-            unitCost: Number(row.unit_cost),
-            remaining: Number(row.quantity) - Number(row.returned_qty),
-          });
+          const entry = {
+            lineId: Number(row.invoice_line_id), itemId: Number(row.item_id), unitId: Number(row.unit_id),
+            unitPrice: Number(row.unit_price), taxPct: Number(row.tax_pct ?? 0),
+            unitCost: Number(row.unit_cost), remaining: Number(row.quantity) - Number(row.returned_qty),
+          };
+          parentLines.set(`${row.item_id}:${row.unit_id}`, entry);
+          parentLines.set(`line:${entry.lineId}`, entry);
         }
       }
 
-      let subTotal = 0, discountTotal = 0, taxTotal = 0, lineTotalSum = 0, costTotal = 0;
+      // ---- B5.4 — per-line FINANCIAL budget for credit notes ----------------
+      // Locks the original lines so two concurrent partial notes cannot both
+      // spend the same balance. Returns already consumed part of the line.
+      if (isCreditNote && parent) {
+        const rows = await client.query<any>(
+          `SELECT l.invoice_line_id, l.item_id, l.unit_id, l.unit_price, l.tax_pct,
+                  (l.line_total - l.tax_amount) AS original_net,
+                  COALESCE((SELECT SUM(rl.line_total - rl.tax_amount)
+                              FROM invoice_lines rl
+                              JOIN invoices ri ON ri.invoice_id = rl.invoice_id
+                             WHERE rl.returned_from_line_id = l.invoice_line_id
+                               AND ri.status <> 3), 0) AS returned_net,
+                  COALESCE((SELECT SUM(rl.line_total - rl.tax_amount)
+                              FROM invoice_lines rl
+                              JOIN invoices ri ON ri.invoice_id = rl.invoice_id
+                             WHERE rl.cn_parent_line_id = l.invoice_line_id
+                               AND ri.invoice_type = 6 AND ri.status <> 3), 0) AS cn_net
+             FROM invoice_lines l
+            WHERE l.invoice_id = $1
+            FOR UPDATE OF l`,
+          [dto.parentInvoiceId],
+        );
+        for (const row of rows.rows) {
+          const entry = {
+            lineId: Number(row.invoice_line_id), itemId: Number(row.item_id), unitId: Number(row.unit_id),
+            unitPrice: Number(row.unit_price), taxPct: Number(row.tax_pct ?? 0),
+            unitCost: 0,
+            remaining: round2(Number(row.original_net) - Number(row.returned_net) - Number(row.cn_net)),
+          };
+          parentLines.set(`line:${entry.lineId}`, entry);
+        }
+      }
+
+      let subTotal = 0, discountTotal = 0, taxTotal = 0, lineTotalSum = 0, costTotal = 0, damagedCostTotal = 0;
       const computed: any[] = [];
 
       // Prices of the customer's list are used when the line carries no price.
@@ -550,7 +667,8 @@ export class SalesService {
         const item = itemMap.get(Number(line.itemId));
         if (!item) throw new BadRequestException(`الصنف رقم ${line.itemId} غير موجود`);
 
-        const quantity = Number(line.quantity);
+        let quantity = Number(line.quantity);
+        if (isCreditNote) quantity = 1; // credit notes are monetary, not quantity-based
         const listPrice = listPrices.get(Number(line.itemId));
         const resolvedPrice = listPrice?.price ?? item.sell_price ?? 0;
 
@@ -572,6 +690,8 @@ export class SalesService {
         // A giveaway is free for the customer but still leaves the stock, so
         // the company carries its cost. Only a manager may hand one out.
         let unitPrice = Number(line.unitPrice ?? 0);
+        let returnParentLine: any = null;
+        let cnParentLine: any = null;
         let isGift = false;
         if (line.isGift) {
           if (!user.permissions.includes('sales.giveaway')) {
@@ -585,13 +705,54 @@ export class SalesService {
         } else if (line.unitPrice === undefined || line.unitPrice === null) {
           unitPrice = Number(resolvedPrice);
         }
+        // B5.2c — a return line is a snapshot of the ORIGINAL line: price and VAT
+        // are never taken from the current price list or from user input.
+        if (isReturn) {
+          const rkey = `${item.item_id}:${line.unitId}`;
+          returnParentLine = line.parentLineId
+            ? parentLines.get(`line:${Number(line.parentLineId)}`)
+            : parentLines.get(rkey);
+          if (!returnParentLine) {
+            throw new BadRequestException('الصنف أو وحدة القياس غير موجودة في الفاتورة الأصلية');
+          }
+          if (line.unitPrice !== undefined && line.unitPrice !== null
+              && Math.abs(Number(line.unitPrice) - Number(returnParentLine.unitPrice)) > 0.000001) {
+            throw new BadRequestException('لا يمكن تعديل سعر سطر المرتجع — يُؤخذ من الفاتورة الأصلية');
+          }
+          unitPrice = round2(Number(returnParentLine.unitPrice));
+        }
+        // B5.4 — credit note settles an exact pre-tax amount on one original line.
+        if (isCreditNote) {
+          if (!line.parentLineId) {
+            throw new BadRequestException('إشعار الدائن يحتاج إلى سطر الفاتورة الأصلية');
+          }
+          cnParentLine = parentLines.get(`line:${Number(line.parentLineId)}`);
+          if (!cnParentLine) {
+            throw new BadRequestException('السطر المشار إليه غير موجود في الفاتورة الأصلية');
+          }
+          const settleAmount = Number(line.settleAmount);
+          if (!(settleAmount > 0)) throw new BadRequestException('قيمة التسوية يجب أن تكون أكبر من صفر');
+          if (line.taxPct !== undefined && line.taxPct !== null
+              && Math.abs(Number(line.taxPct) - Number(cnParentLine.taxPct)) > 0.000001) {
+            throw new BadRequestException('لا يمكن تعديل نسبة الضريبة — تُنسخ من الفاتورة الأصلية');
+          }
+          if (settleAmount > cnParentLine.remaining + 0.005) {
+            throw new BadRequestException(`تجاوز إشعار الدائن الرصيد المتاح للسطر (المتبقي = ${cnParentLine.remaining})`);
+          }
+          cnParentLine.remaining = round2(cnParentLine.remaining - settleAmount);
+          unitPrice = round2(settleAmount);
+        }
+        if (isGiftReturn) unitPrice = 0;
         if (!isGift && !isModifier && listPrice && listPrice.minPrice > 0 && unitPrice > 0 && unitPrice < listPrice.minPrice) {
           throw new BadRequestException(
             `سعر الصنف «${item.name}» أقل من الحد الأدنى المسموح به في قائمة الأسعار`,
           );
         }
-        const discountPct = isGift ? 0 : Number(line.discountPct ?? 0);
-        const taxPct = isGift ? 0 : Number(line.taxPct ?? item.vat_pct ?? 0);
+        const discountPct = isGift || isCreditNote ? 0 : Number(line.discountPct ?? 0);
+        let taxPct = isGift ? 0 : Number(line.taxPct ?? item.vat_pct ?? 0);
+        if (isReturn && returnParentLine) taxPct = round2(Number(returnParentLine.taxPct ?? 0));
+        if (isGiftReturn) taxPct = 0;
+        if (isCreditNote && cnParentLine) taxPct = round2(Number(cnParentLine.taxPct ?? 0));
 
         const gross = round2(quantity * unitPrice);
         const discountAmount = round2(gross * (discountPct / 100));
@@ -602,8 +763,34 @@ export class SalesService {
         const baseQty = await toBaseUnits(client, Number(item.item_id), Number(line.unitId), quantity);
         const key = `${item.item_id}:${line.unitId}`;
 
+        // B5.3 — split a return into sellable + damaged portions (base units).
+        let damagedQty = 0, damagedBaseQty = 0, goodBaseQty = baseQty;
+        if (isReturn) {
+          damagedQty = Number(line.damagedQty ?? 0);
+          if (!(damagedQty >= 0)) throw new BadRequestException('كمية التلف غير صحيحة');
+          if (damagedQty > quantity + 0.000001) {
+            throw new BadRequestException('كمية التلف لا يمكن أن تتجاوز الكمية المرتجعة');
+          }
+          if (damagedQty > 0) {
+            damagedBaseQty = await toBaseUnits(client, Number(item.item_id), Number(line.unitId), damagedQty);
+          }
+          if (damagedBaseQty > baseQty + 0.000001) {
+            throw new BadRequestException('كمية التلف لا يمكن أن تتجاوز الكمية المرتجعة');
+          }
+          goodBaseQty = Math.max(0, baseQty - damagedBaseQty);
+        }
+
         let baseUnitCost = 0;
-        if (invoiceType === 2) {
+        if (isCreditNote) {
+          // B5.4 — financial only: no inventory valuation and no COGS effect.
+          baseUnitCost = 0;
+        } else if (isGiftReturn) {
+          // B5.3 review fix — a returned gift re-enters stock at its receipt
+          // (current warehouse) cost; the matching GL is Dr 1104 / Cr 5115.
+          // Revenue / VAT / AR remain untouched (total stays 0).
+          baseUnitCost = await getWarehouseCost(client, Number(item.item_id), Number(dto.warehouseId));
+          if (!(baseUnitCost > 0)) baseUnitCost = Number(item.cost_price ?? 0);
+        } else if (invoiceType === 2) {
           // Purchase: the price on the line becomes the new weighted-average cost.
           baseUnitCost = baseQty > 0 ? net / baseQty : 0;
         } else if (invoiceType === 1) {
@@ -611,19 +798,26 @@ export class SalesService {
           baseUnitCost = await getWarehouseCost(client, Number(item.item_id), Number(dto.warehouseId));
           if (!(baseUnitCost > 0)) baseUnitCost = Number(item.cost_price ?? 0);
         } else {
-          const entry = parentLines.get(key);
-          if (!entry) {
-            throw new BadRequestException('الصنف أو وحدة القياس غير موجودة في الفاتورة الأصلية');
-          }
+          const entry = returnParentLine;
           if (quantity > entry.remaining + 0.000001) {
-            throw new BadRequestException(`الكمية المرتجعة أكبر من المتاح (${entry.remaining})`);
+            throw new BadRequestException(`الكمية المرتجعة أكبر من المتاح للإرجاع (المتبقي = ${entry.remaining})`);
           }
           entry.remaining -= quantity;
-          // Parent line cost is per selling unit; convert it to a base-unit cost.
-          baseUnitCost = quantity > 0 && baseQty > 0 ? (entry.unitCost * quantity) / baseQty : 0;
+          // B5.2d — cost comes from the ORIGINAL outbound stock movement of the
+          // parent invoice, never from the current warehouse average.
+          const orig = await client.query<{ unit_cost: string }>(
+            `SELECT unit_cost FROM stock_movements
+              WHERE reference_type=1 AND reference_id=$1::bigint
+                AND item_id=$2::int AND unit_id=$3::int AND move_type=2
+              ORDER BY stock_movement_id LIMIT 1`,
+            [parent.invoice_id, item.item_id, item.base_unit_id],
+          );
+          if (!orig.rows.length) {
+            throw new BadRequestException('لا يمكن إرجاع سطر بلا حركة مخزون أصلية');
+          }
+          baseUnitCost = Number(orig.rows[0].unit_cost);
           if (!(baseUnitCost > 0)) {
-            baseUnitCost = await getWarehouseCost(client, Number(item.item_id), Number(dto.warehouseId));
-            if (!(baseUnitCost > 0)) baseUnitCost = Number(item.cost_price ?? 0);
+            throw new BadRequestException('لا يمكن إرجاع سطر بلا تكلفة مخزون أصلية');
           }
         }
 
@@ -637,6 +831,7 @@ export class SalesService {
         taxTotal = round2(taxTotal + taxAmount);
         lineTotalSum = round2(lineTotalSum + lineTotal);
         costTotal = round2(costTotal + lineCost);
+        damagedCostTotal = round2(damagedCostTotal + round2(damagedBaseQty * baseUnitCost));
 
         computed.push({
           lineNumber: index + 1,
@@ -659,6 +854,11 @@ export class SalesService {
             ? `-- ${line.notes ?? modifierRow?.name ?? ''}`.trim()
             : line.notes ?? null,
           parentLineIndex: isModifier ? Number(line.parentLineIndex) : undefined,
+          returnedFromLineId: isReturn && returnParentLine ? Number(returnParentLine.lineId) : null,
+          cnParentLineId: isCreditNote && cnParentLine ? Number(cnParentLine.lineId) : null,
+          damagedQty,
+          damagedBaseQty,
+          goodBaseQty,
           isModifier,
           trackQuantity: item.track_quantity,
         });
@@ -780,12 +980,47 @@ export class SalesService {
         });
       }
 
-      // ---- credit limit (credit sales only) ------------------------------
-      if (invoiceType === 1 && partyId && remaining > 0 && creditLimit > 0) {
-        if (partyBalance + remaining > creditLimit + 0.005) {
-          throw new BadRequestException(
-            `تجاوز حد الائتمان للعميل (المتاح ${(creditLimit - partyBalance).toFixed(2)})`,
-          );
+      // ---- B5.1 credit limit + overdue gate (credit sales only) ------------
+      // DEC-SALES-001/005/006/008: 0/NULL limit = block (unless credit_unlimited);
+      // exposure from v_customer_exposure (ledger + uncollected PDC, no GL change TD-37);
+      // overdue + over-limit = absolute block; over-limit alone = permission override.
+      let pendingCreditOverride: { exposure: number; limit: number; excess: number; reason: string } | null = null;
+      if (invoiceType === 1 && partyId && remaining > 0) {
+        const exp = await client.query<any>(
+          'SELECT credit_limit, credit_unlimited, grace_days, exposure, ledger_balance, uncollected_pdc FROM v_customer_exposure WHERE party_id=$1::int',
+          [partyId],
+        );
+        const e = exp.rows[0] ?? { credit_limit: creditLimit, credit_unlimited: false, grace_days: 0, exposure: partyBalance, ledger_balance: partyBalance, uncollected_pdc: 0 };
+        const limit = Number(e.credit_limit ?? 0);
+        const exposure = Number(e.exposure ?? partyBalance);
+        const isUnlimited = e.credit_unlimited === true;
+
+        if (!isUnlimited) {
+          if (!(limit > 0)) {
+            throw new BadRequestException('حد الائتمان غير محدد لهذا العميل — لا يمكن البيع الآجل');
+          }
+          if (exposure + remaining > limit + 0.005) {
+            // DEC-SALES-006: overdue is a FACT (today > due_date, aging only);
+            // hard block is POLICY (today > due_date + grace_days). Only the
+            // latter triggers the absolute block; within grace → override path.
+            const od = await client.query<{ c: number }>(
+              `SELECT COUNT(*)::int c FROM v_invoice_overdue
+                WHERE party_id=$1::int AND invoice_type=1 AND remaining > 0
+                  AND is_hard_block = true`,
+              [partyId],
+            );
+            const isHardBlock = Number(od.rows[0]?.c ?? 0) > 0;
+            const excess = round2(exposure + remaining - limit);
+            if (isHardBlock) {
+              throw new ForbiddenException('العميل متأخر بعد فترة السماح ومتجاوز لحد الائتمان — يجب السداد أولًا (حظر مطلق)');
+            }
+            if (!user.permissions?.includes('sales.approve_over_credit')) {
+              throw new ForbiddenException('تجاوز حد الائتمان يتطلب صلاحية sales.approve_over_credit — أو سداد جزء من الرصيد');
+            }
+            const reason = String(dto.creditOverrideReason ?? '').trim();
+            if (!reason) throw new BadRequestException('سبب اعتماد تجاوز حد الائتمان إلزامي');
+            pendingCreditOverride = { exposure: round2(exposure), limit, excess, reason };
+          }
         }
       }
 
@@ -838,13 +1073,112 @@ export class SalesService {
           dto.invoiceDate ?? null, periodId, dto.paymentType ?? 1,
           subTotal, discountTotal + headerDiscount, Number(dto.discountPct ?? 0), taxTotal, totalAmount, paidAmount,
           costTotal, profit, cashAccountId, user.userId, user.userId, dto.notes ?? null,
-          dto.clientRequestId ?? null, dto.parentInvoiceId ?? null,
+          clientRequestId, dto.parentInvoiceId ?? null,
           couponRow?.code ?? null,
           Number(dto.orderType ?? 1), dto.deliveryAddress ?? null, deliveryFee, serviceCharge,
           dto.driverName ?? null, dto.driverPhone ?? null, dto.tableRef ?? null, repId ?? null,
         ],
       );
       const invoiceId = Number(invoice.rows[0].invoice_id);
+
+      // B5.1 — persist the approved credit-limit override (decision taken pre-insert).
+      if (pendingCreditOverride && partyId) {
+        await client.query(
+          `INSERT INTO sales_credit_overrides
+             (invoice_id, party_id, branch_id, exposure, credit_limit, excess, was_overdue, overridden_by, reason)
+           VALUES ($1::bigint,$2::int,$3::int,$4::numeric,$5::numeric,$6::numeric,$7,$8::int,$9)`,
+          [invoiceId, partyId, effectiveBranch, pendingCreditOverride.exposure, pendingCreditOverride.limit,
+           pendingCreditOverride.excess, false, user.userId, pendingCreditOverride.reason],
+        );
+      }
+
+      // ---- B2 / D-18: GRN matching for purchase invoices ----------------
+      // Explicit receipt_links win; otherwise FIFO over open GRN lines for the
+      // same item. grnProvisional = Σ(link.qty × receipt_line.unit_cost).
+      // purchase_invoice_links records every link (partial/multiple supported).
+      let grnProvisional = 0;
+      if (invoiceType === 2) {
+        const links = Array.isArray(dto.receiptLinks) ? dto.receiptLinks : [];
+        if (links.length) {
+          for (const link of links) {
+            const receiptLineId = Number((link as any).receiptLineId ?? (link as any).receipt_line_id ?? 0);
+            const qty = round6(Number(link.qty ?? 0));
+            if (!receiptLineId || !(qty > 0)) throw new BadRequestException('بيانات ربط الاستلام غير صحيحة');
+            const rl = await client.query<any>(
+              `SELECT prl.receipt_id, prl.item_id, prl.accepted_qty, prl.unit_cost,
+                      pr.branch_id, pr.party_id, pr.status
+                 FROM purchase_receipt_lines prl
+                 JOIN purchase_receipts pr ON pr.receipt_id = prl.receipt_id
+                WHERE prl.line_id = $1::bigint FOR UPDATE`,
+              [receiptLineId],
+            );
+            if (!rl.rows.length) throw new BadRequestException('سطر محضر الاستلام غير موجود');
+            const row = rl.rows[0];
+            if (Number(row.branch_id) !== Number(effectiveBranch)) {
+              throw new BadRequestException('سطر الاستلام يخص فرعًا آخر');
+            }
+            if (Number(row.status) === 5) throw new BadRequestException('محضر الاستلام ملغي');
+            const already = await client.query<{ used: number }>(
+              `SELECT COALESCE(SUM(invoiced_qty), 0) AS used
+                 FROM purchase_invoice_links
+                WHERE receipt_line_id = $1::bigint AND voided_at IS NULL`,
+              [receiptLineId],
+            );
+            if (Number(already.rows[0].used) + qty > Number(row.accepted_qty) + 1e-6) {
+              if (!user.permissions.includes('purchases.approve_exception')) {
+                throw new BadRequestException(
+                  `الكمية المطلوبة ربطها (${qty}) تتجاوز المقبول في محضر الاستلام (${row.accepted_qty})`,
+                );
+              }
+              // With exception permission the excess is recorded unmatched (escalated).
+            }
+            const matchQty = Math.min(qty, Number(row.accepted_qty) - Number(already.rows[0].used));
+            if (matchQty > 0) {
+              await client.query(
+                `INSERT INTO purchase_invoice_links
+                   (invoice_id, receipt_id, receipt_line_id, item_id, invoiced_qty)
+                 VALUES ($1::bigint,$2::bigint,$3::bigint,$4::int,$5::numeric)
+                 ON CONFLICT (invoice_id, receipt_id, receipt_line_id, item_id)
+                 DO UPDATE SET invoiced_qty = EXCLUDED.invoiced_qty`,
+                [invoiceId, row.receipt_id, receiptLineId, row.item_id, matchQty],
+              );
+              grnProvisional = round2(grnProvisional + round2(matchQty * Number(row.unit_cost)));
+            }
+          }
+        } else {
+          // FIFO: oldest open GRN line per invoice item, same branch + supplier.
+          for (const line of computed) {
+            const open = await client.query<any>(
+              `SELECT prl.line_id, prl.receipt_id, prl.item_id, prl.unit_cost,
+                      prl.accepted_qty - COALESCE((SELECT SUM(pil.invoiced_qty) FROM purchase_invoice_links pil
+                        WHERE pil.receipt_line_id = prl.line_id AND pil.voided_at IS NULL), 0) AS open_qty
+                 FROM purchase_receipt_lines prl
+                 JOIN purchase_receipts pr ON pr.receipt_id = prl.receipt_id
+                WHERE prl.item_id = $1::int AND pr.branch_id = $2::int
+                  AND ($3::int = 0 OR pr.party_id = $3::int)
+                  AND pr.status <> 5 AND prl.accepted_qty > 0
+                ORDER BY pr.receipt_date, prl.receipt_id, prl.line_no`,
+              [line.itemId, effectiveBranch, partyId ?? 0],
+            );
+            let need = round6(line.baseQty);
+            for (const r of open.rows) {
+              if (need <= 1e-6) break;
+              const take = Math.min(need, round6(Number(r.open_qty)));
+              if (take <= 1e-6) continue;
+              await client.query(
+                `INSERT INTO purchase_invoice_links
+                   (invoice_id, receipt_id, receipt_line_id, item_id, invoiced_qty)
+                 VALUES ($1::bigint,$2::bigint,$3::bigint,$4::int,$5::numeric)
+                 ON CONFLICT (invoice_id, receipt_id, receipt_line_id, item_id)
+                 DO UPDATE SET invoiced_qty = EXCLUDED.invoiced_qty`,
+                [invoiceId, r.receipt_id, r.line_id, r.item_id, take],
+              );
+              grnProvisional = round2(grnProvisional + round2(take * Number(r.unit_cost)));
+              need = round6(need - take);
+            }
+          }
+        }
+      }
 
       const insertedLineIds: number[] = [];
       for (const line of computed) {
@@ -855,20 +1189,22 @@ export class SalesService {
           `INSERT INTO invoice_lines
              (invoice_id, line_number, item_id, unit_id, quantity, unit_price, discount_pct, discount_amount,
               tax_pct, tax_amount, line_total, unit_cost, serial_no, expiry_date, notes,
-              parent_line_id, is_modifier)
+              parent_line_id, is_modifier, returned_from_line_id, damaged_qty, cn_parent_line_id)
            VALUES ($1::bigint,$2::int,$3::int,$4::int,$5::numeric,$6::numeric,$7::numeric,$8::numeric,
                    $9::numeric,$10::numeric,$11::numeric,$12::numeric,$13::text,$14::date,$15::text,
-                   $16::bigint,$17::boolean)
+                   $16::bigint,$17::boolean,$18::bigint,$19::numeric,$20::bigint)
            RETURNING invoice_line_id`,
           [
             invoiceId, line.lineNumber, line.itemId, line.unitId, line.quantity, line.unitPrice, line.discountPct,
             line.discountAmount, line.taxPct, line.taxAmount, line.lineTotal, line.unitCost, line.serialNo,
-            line.expiryDate, line.notes, parentLineId, !!line.isModifier,
+            line.expiryDate, line.notes, parentLineId, !!line.isModifier, line.returnedFromLineId ?? null, line.damagedQty ?? 0, line.cnParentLineId ?? null,
           ],
         );
         insertedLineIds.push(Number(insertedLine.rows[0].invoice_line_id));
 
-        if (line.trackQuantity) {
+        // B2 — purchase invoices do NOT move stock. Stock is added only by the
+        // GRN slice (B1). The invoice settles GRNI + posts PPV via the journal.
+        if (line.trackQuantity && invoiceType !== 2 && !isCreditNote) {
           await applyMovement(client, {
             branchId: effectiveBranch,
             warehouseId: dto.warehouseId,
@@ -876,12 +1212,13 @@ export class SalesService {
             unitId: line.unitId,
             baseUnitId: line.baseUnitId,
             moveType: TYPE_MOVE[invoiceType] ?? 'sales',
-            quantity: line.baseQty,
+            quantity: isReturn ? line.goodBaseQty : line.baseQty,
             unitCost: line.baseUnitCost,
             referenceType: 1,
             referenceId: invoiceId,
             referenceNo: invoiceNo,
             periodId,
+            preserveAvgCost: isReturn,
             serialNo: line.serialNo,
             expiryDate: line.expiryDate,
             userId: user.userId,
@@ -955,8 +1292,10 @@ export class SalesService {
         deliveryFee,
         serviceCharge,
         costTotal,
+        damagedCost: isReturn ? damagedCostTotal : 0,
+        grnProvisional: invoiceType === 2 ? grnProvisional : 0,
         userId: user.userId,
-        journalDate: dto.invoiceDate ?? undefined,
+        journalDate: businessDate,
       });
       if (journalId) {
         await client.query('UPDATE invoices SET gl_journal_id = $2::bigint WHERE invoice_id = $1::bigint',
@@ -987,6 +1326,21 @@ export class SalesService {
 
       return { invoiceId, invoiceNo, totalAmount, paidAmount, remaining, parentInvoiceId: dto.parentInvoiceId ?? null };
     });
+    } catch (err: any) {
+      // GAP-06: atomic idempotency — on concurrent duplicate insert the UNIQUE
+      // index aborts the tx; re-read the original and return duplicate (200).
+      if (clientRequestId && err?.code === '23505' && String(err?.constraint ?? '') === 'ux_invoices_client_request') {
+        const existing = await this.db.one<any>(
+          `SELECT invoice_id AS "invoiceId", invoice_no AS "invoiceNo", total_amount AS "totalAmount",
+                  paid_amount AS "paidAmount", (total_amount - paid_amount) AS "remaining",
+                  parent_invoice_id AS "parentInvoiceId"
+             FROM invoices WHERE client_request_id = $1`,
+          [clientRequestId],
+        );
+        if (existing) return { ...existing, duplicate: true };
+      }
+      throw err;
+    }
   }
 
   /** Looks up a coupon and rejects the ones that cannot be used. */
@@ -1059,7 +1413,17 @@ export class SalesService {
     );
     const reverseType: Record<number, MoveType> = { 1: 'salesReturn', 2: 'purchaseReturn', 3: 'sales', 4: 'purchase' };
 
+    // Backward-compat (B2/Q2): detect whether the original invoice applied stock.
+    // stock_movements has no `source_type`; use reference_type=1 + original reference_no.
+    const stockApplied = await client.query<{ c: number }>(
+      `SELECT COUNT(*)::int AS c FROM stock_movements
+        WHERE reference_type = 1 AND reference_id = $1::bigint AND reference_no = $2::text`,
+      [invoiceId, invoice.invoice_no],
+    );
+    const shouldReverseStock = Number(stockApplied.rows[0].c) > 0;
+
     for (const line of lines.rows) {
+      if (!shouldReverseStock) break;
       const quantity = Number(line.quantity);
       const baseQty = await toBaseUnits(client, Number(line.item_id), Number(line.unit_id), quantity);
       const lineCost = Number(line.unit_cost) * quantity;
@@ -1138,7 +1502,7 @@ export class SalesService {
   private allowedTypes(user: AuthUser): number[] {
     const types: number[] = [];
     if (user.permissions.includes('sales.view') || user.permissions.includes('pos.operate')) {
-      types.push(1, 3);
+      types.push(1, 3, 6); // 6 = B5.4 sales credit note
     }
     if (user.permissions.includes('purchases.view') || user.permissions.includes('purchases.manage')) {
       types.push(2, 4);
@@ -1185,6 +1549,7 @@ export class SalesService {
       `SELECT i.invoice_id AS "invoiceId", i.invoice_no AS "invoiceNo", i.invoice_type AS "invoiceType",
               i.branch_id AS "branchId", b.name AS "branchName", i.warehouse_id AS "warehouseId",
               w.name AS "warehouseName", i.party_id AS "partyId", p.name AS "partyName", i.invoice_date AS "invoiceDate",
+              i.created_at AS "createdAt",
               i.payment_type AS "paymentType", i.sub_total AS "subTotal", i.discount_amount AS "discountAmount",
               i.tax_amount AS "taxAmount", i.total_amount AS "totalAmount", i.paid_amount AS "paidAmount",
               (i.total_amount - i.paid_amount) AS remaining,
@@ -1209,7 +1574,8 @@ export class SalesService {
     const header = await this.db.one<any>(
       `SELECT i.invoice_id AS "invoiceId", i.invoice_no AS "invoiceNo", i.invoice_type AS "invoiceType",
               i.branch_id AS "branchId", b.name AS "branchName", i.warehouse_id AS "warehouseId", w.name AS "warehouseName",
-              i.party_id AS "partyId", p.name AS "partyName", i.invoice_date AS "invoiceDate", i.due_date AS "dueDate",
+              i.party_id AS "partyId", p.name AS "partyName", i.invoice_date AS "invoiceDate",
+              i.created_at AS "createdAt", i.due_date AS "dueDate",
               i.payment_type AS "paymentType", i.sub_total AS "subTotal", i.discount_amount AS "discountAmount",
               i.tax_amount AS "taxAmount", i.total_amount AS "totalAmount", i.paid_amount AS "paidAmount",
               i.cost_total AS "costTotal", i.profit_amount AS "profitAmount", i.status, i.notes,
@@ -1265,7 +1631,7 @@ export class SalesService {
   }
 
   /** Cancels an invoice and reverses its stock, ledger and cash effects with new entries. */
-  async cancel(id: number, user: AuthUser, expectedTypes?: number[]) {
+  async cancel(id: number, user: AuthUser, expectedTypes?: number[], cancelReason?: string) {
     return this.db.transaction(async (client) => {
       const invoice = await client.query<any>('SELECT * FROM invoices WHERE invoice_id = $1 FOR UPDATE', [id]);
       if (!invoice.rows.length) throw new BadRequestException('الفاتورة غير موجودة');
@@ -1292,7 +1658,16 @@ export class SalesService {
       const lines = await client.query<any>('SELECT * FROM invoice_lines WHERE invoice_id = $1', [id]);
       const reverseType: Record<number, MoveType> = { 1: 'salesReturn', 2: 'purchaseReturn', 3: 'sales', 4: 'purchase' };
 
+      // Backward-compat (B2/Q2): only reverse stock if the original invoice applied it.
+      const stockApplied = await client.query<{ c: number }>(
+        `SELECT COUNT(*)::int AS c FROM stock_movements
+          WHERE reference_type = 1 AND reference_id = $1::bigint AND reference_no = $2::text`,
+        [id, header.invoice_no],
+      );
+      const shouldReverseStock = Number(stockApplied.rows[0].c) > 0;
+
       for (const line of lines.rows) {
+        if (!shouldReverseStock) break;
         const quantity = Number(line.quantity);
         const baseQty = await toBaseUnits(client, Number(line.item_id), Number(line.unit_id), quantity);
         const lineCost = Number(line.unit_cost) * quantity;
@@ -1343,6 +1718,16 @@ export class SalesService {
         [id],
       );
 
+      // B2-12: a post-B2 purchase invoice voids its GRN links (audit trail kept),
+      // reopening GRNI via the mirror journal below. Old invoices have no links.
+      if (invoiceType === 2) {
+        await client.query(
+          `UPDATE purchase_invoice_links SET voided_at = now()
+            WHERE invoice_id = $1::bigint AND voided_at IS NULL`,
+          [id],
+        );
+      }
+
       // Reverse the general ledger journal with a mirror entry; the original
       // journal stays untouched for the audit trail.
       if (header.gl_journal_id) {
@@ -1361,10 +1746,79 @@ export class SalesService {
       await client.query(
         `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
          VALUES ($1,$2,'invoice.cancel','invoice',$3,$4)`,
-        [user.userId, header.branch_id, String(id), `إلغاء فاتورة ${header.invoice_no}`],
+        [user.userId, header.branch_id, String(id), `إلغاء فاتورة ${header.invoice_no}${cancelReason ? ` — ${cancelReason}` : ''}`],
       );
       return { invoiceId: id, cancelled: true };
     });
+  }
+
+  /** B5.1d — list credit-limit overrides for a month. */
+  async creditOverrides(month: string) {
+    return this.db.query<any>(
+      `SELECT o.override_id, o.invoice_id, p.name AS party_name, o.party_id, o.exposure,
+              o.credit_limit, o.excess, o.was_overdue, u.full_name AS overridden_by,
+              o.reason, o.created_at
+         FROM sales_credit_overrides o
+         JOIN parties p ON p.party_id = o.party_id
+         LEFT JOIN users u ON u.user_id = o.overridden_by
+        WHERE to_char(o.created_at, 'YYYY-MM') = $1
+        ORDER BY o.created_at DESC`,
+      [month],
+    );
+  }
+
+  /** B5.2i — sales-returns report rows. */
+  async returnsReport(from?: string, to?: string, partyId?: number, itemId?: number) {
+    return this.db.query<any>(
+      `SELECT r.invoice_id AS return_invoice_id, r.invoice_no AS return_no,
+              r.invoice_date::date AS return_date, pi.invoice_no AS parent_invoice_no,
+              pty.name AS party_name, i.code AS item_code, i.name AS item_name,
+              l.quantity AS return_qty, l.unit_price, l.line_total AS value,
+              l.damaged_qty AS damaged_qty,
+              round(l.damaged_qty * l.unit_cost, 2) AS damaged_value,
+              CASE WHEN r.invoice_type = 5 THEN 'gift_return' ELSE 'sale_return' END AS doc_type,
+              r.notes AS reason, l.returned_from_line_id AS parent_line_id,
+              r.total_amount AS return_total, r.status
+         FROM invoices r
+         JOIN invoice_lines l ON l.invoice_id = r.invoice_id
+         LEFT JOIN invoices pi ON pi.invoice_id = r.parent_invoice_id
+         LEFT JOIN parties pty ON pty.party_id = r.party_id
+         LEFT JOIN items i ON i.item_id = l.item_id
+        WHERE r.invoice_type IN (3, 5)
+          AND ($1::date IS NULL OR r.invoice_date::date >= $1::date)
+          AND ($2::date IS NULL OR r.invoice_date::date <= $2::date)
+          AND ($3::int IS NULL OR r.party_id = $3::int)
+          AND ($4::int IS NULL OR EXISTS (
+                SELECT 1 FROM invoice_lines q
+                 WHERE q.invoice_id = r.invoice_id AND q.item_id = $4::int))
+        ORDER BY r.invoice_date DESC, r.invoice_no, l.line_number`,
+      [from ?? null, to ?? null, partyId ?? null, itemId ?? null],
+    );
+  }
+
+  /** B5.4 — sales credit notes report (JSON + CSV via controller). */
+  async creditNotesReport(from?: string, to?: string, partyId?: number, invoiceId?: number) {
+    return this.db.query<any>(
+      `SELECT cn.invoice_id AS credit_note_id, cn.invoice_no AS credit_note_no,
+              cn.invoice_date::date AS credit_note_date, pi.invoice_no AS parent_invoice_no,
+              p.name AS party_name, b.name AS branch_name,
+              cn.sub_total AS settlement_amount, cn.tax_amount AS tax_amount,
+              cn.total_amount AS total_amount, cn.notes AS reason,
+              cn.status, u.full_name AS user_name,
+              (cn.gl_journal_id IS NOT NULL) AS posted
+         FROM invoices cn
+         LEFT JOIN invoices pi ON pi.invoice_id = cn.parent_invoice_id
+         LEFT JOIN parties p ON p.party_id = cn.party_id
+         LEFT JOIN branches b ON b.branch_id = cn.branch_id
+         LEFT JOIN users u ON u.user_id = cn.created_by
+        WHERE cn.invoice_type = 6
+          AND ($1::date IS NULL OR cn.invoice_date::date >= $1::date)
+          AND ($2::date IS NULL OR cn.invoice_date::date <= $2::date)
+          AND ($3::int IS NULL OR cn.party_id = $3::int)
+          AND ($4::bigint IS NULL OR cn.parent_invoice_id = $4::bigint)
+        ORDER BY cn.invoice_date DESC, cn.invoice_no`,
+      [from ?? null, to ?? null, partyId ?? null, invoiceId ?? null],
+    );
   }
 }
 
@@ -1415,8 +1869,15 @@ export class SalesController {
 
   @RequireAnyPermission('sales.manage', 'purchases.manage', 'pos.operate')
   @Post('invoices')
-  create(@Body() dto: InvoiceInput, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.create(dto, user, branchId);
+  async create(
+    @Body() dto: InvoiceInput,
+    @CurrentUser() user: AuthUser,
+    @CurrentBranch() branchId: number,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.service.create(dto, user, branchId);
+    if (result?.duplicate) res.status(200);
+    return result;
   }
 
   /** Edits a posted invoice: the old version is reversed and written again. */
@@ -1435,6 +1896,86 @@ export class SalesController {
   @Post('invoices/:id/cancel')
   cancel(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
     return this.service.cancel(id, user, [1, 3]);
+  }
+
+  /** B5.1d — monthly credit-limit override report (JSON + CSV). */
+  @RequireAnyPermission('sales.view', 'sales.manage')
+  @Get('reports/credit-overrides')
+  async creditOverrides(
+    @Query('month') month: string,
+    @Query('format') format: string,
+  ) {
+    const m = /^\d{4}-\d{2}$/.test(month) ? month : new Date().toISOString().slice(0, 7);
+    const rows = await this.service.creditOverrides(m);
+    if (String(format).toLowerCase() === 'csv') {
+      const cell = (v: any) => { const s = v == null ? '' : String(v); return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+      const lines = [['تاريخ', 'العميل', 'الفاتورة', 'التعرّض', 'الحد', 'التجاوز', 'متأخر', 'اعتمد بواسطة', 'السبب']];
+      for (const r of rows) lines.push([String(r.created_at).slice(0,10), r.party_name, r.invoice_id, r.exposure, r.credit_limit, r.excess, r.was_overdue ? 'نعم' : 'لا', r.overridden_by, r.reason]);
+      const csv = lines.map((l) => l.map(cell).join(',')).join('\r\n') + '\r\n';
+      return { fileName: `credit-overrides-${m}.csv`, mimeType: 'text/csv; charset=utf-8', base64: Buffer.from('\uFEFF' + csv, 'utf-8').toString('base64') };
+    }
+    return { month: m, items: rows };
+  }
+
+  @RequireAnyPermission('sales.view', 'sales.manage')
+  @Get('reports/returns')
+  async returnsReport(
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('party_id') partyId?: string,
+    @Query('item_id') itemId?: string,
+    @Query('format') format?: string,
+  ) {
+    const rows = await this.service.returnsReport(
+      from, to, partyId ? Number(partyId) : undefined, itemId ? Number(itemId) : undefined,
+    );
+    if (String(format).toLowerCase() === 'csv') {
+      const cell = (v: any) => { const s = v == null ? '' : String(v); return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+      const lines = [['نوع المستند', 'تاريخ المرتجع', 'رقم المرتجع', 'الفاتورة الأصلية', 'العميل', 'الصنف', 'الكمية', 'السعر', 'القيمة', 'الكمية التالفة', 'قيمة التلف', 'السبب']];
+      for (const r of rows) lines.push([r.doc_type, r.return_date, r.return_no, r.parent_invoice_no, r.party_name, r.item_name, r.return_qty, r.unit_price, r.value, r.damaged_qty, r.damaged_value, r.reason]);
+      const csv = lines.map((l) => l.map(cell).join(',')).join('\r\n') + '\r\n';
+      return { fileName: 'sales-returns.csv', mimeType: 'text/csv; charset=utf-8', base64: Buffer.from('\uFEFF' + csv, 'utf-8').toString('base64') };
+    }
+    return { items: rows };
+  }
+
+  @RequireAnyPermission('sales.manage', 'pos.operate')
+  @Post('credit-notes')
+  createCreditNote(@Body() dto: InvoiceInput, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
+    return this.service.create({ ...dto, invoiceType: 6 }, user, branchId);
+  }
+
+  @RequireAnyPermission('sales.manage')
+  @Post('credit-notes/:id/cancel')
+  cancelCreditNote(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { reason?: string },
+    @CurrentUser() user: AuthUser,
+  ) {
+    if (!(body?.reason ?? '').trim()) throw new BadRequestException('سبب إلغاء إشعار الدائن إلزامي');
+    return this.service.cancel(id, user, [6], body.reason!.trim());
+  }
+
+  @RequireAnyPermission('sales.view', 'sales.manage')
+  @Get('reports/credit-notes')
+  async creditNotesReport(
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('party_id') partyId?: string,
+    @Query('invoice_id') invoiceId?: string,
+    @Query('format') format?: string,
+  ) {
+    const rows = await this.service.creditNotesReport(
+      from, to, partyId ? Number(partyId) : undefined, invoiceId ? Number(invoiceId) : undefined,
+    );
+    if (String(format).toLowerCase() === 'csv') {
+      const cell = (v: any) => { const s = v == null ? '' : String(v); return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+      const lines = [['رقم إشعار الدائن', 'الفاتورة الأصلية', 'العميل', 'الفرع', 'التاريخ', 'قيمة التسوية', 'الضريبة', 'الإجمالي', 'السبب', 'الحالة', 'المستخدم', 'مرحّل']];
+      for (const r of rows) lines.push([r.credit_note_no, r.parent_invoice_no, r.party_name, r.branch_name, r.credit_note_date, r.settlement_amount, r.tax_amount, r.total_amount, r.reason, r.status, r.user_name, r.posted ? 'نعم' : 'لا']);
+      const csv = lines.map((l) => l.map(cell).join(',')).join('\r\n') + '\r\n';
+      return { fileName: 'sales-credit-notes.csv', mimeType: 'text/csv; charset=utf-8', base64: Buffer.from('\uFEFF' + csv, 'utf-8').toString('base64') };
+    }
+    return { items: rows };
   }
 }
 
@@ -1477,12 +2018,19 @@ export class PurchasesController {
 
   @RequireAnyPermission('purchases.manage')
   @Post('invoices')
-  create(@Body() dto: InvoiceInput, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
+  async create(
+    @Body() dto: InvoiceInput,
+    @CurrentUser() user: AuthUser,
+    @CurrentBranch() branchId: number,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const invoiceType = Number(dto.invoiceType ?? 2);
     if (invoiceType !== 2 && invoiceType !== 4) {
       throw new BadRequestException('فواتير المشتريات تقبل النوع 2 (شراء) أو 4 (مرتجع شراء) فقط');
     }
-    return this.service.create({ ...dto, invoiceType }, user, branchId);
+    const result = await this.service.create({ ...dto, invoiceType }, user, branchId);
+    if (result?.duplicate) res.status(200);
+    return result;
   }
 
   @RequireAnyPermission('purchases.manage')

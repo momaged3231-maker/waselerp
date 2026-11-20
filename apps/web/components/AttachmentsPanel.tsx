@@ -14,7 +14,7 @@ function formatSize(bytes: number): string {
 
 function formatDateTime(value: string): string {
   try {
-    return new Date(value).toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' });
+    return new Date(value).toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'medium' });
   } catch {
     return value;
   }

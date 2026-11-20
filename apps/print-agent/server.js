@@ -39,6 +39,22 @@ const saveConfig = (config) => {
   fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2), 'utf8');
 };
 
+/**
+ * Receipt timestamp: the document's own clock with seconds. Rows written
+ * before the clock was captured stored a bare date (00:00:00Z) — fall back to
+ * the recording time so the receipt never prints a fake midnight.
+ */
+const receiptStamp = (header = {}) => {
+  let date = new Date(header.invoiceDate ?? header.createdAt ?? Date.now());
+  const isBareDate = date.getUTCHours() === 0 && date.getUTCMinutes() === 0
+    && date.getUTCSeconds() === 0 && date.getUTCMilliseconds() === 0;
+  if (isBareDate && header.createdAt) date = new Date(header.createdAt);
+  return date.toLocaleString('ar-EG-u-nu-latn', {
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
+  });
+};
+
 // ------------------------------------------------------------------ //
 // ESC/POS helpers
 // ------------------------------------------------------------------ //
@@ -105,7 +121,7 @@ function buildReceiptBytes(receipt, width = 42) {
 
   const header = receipt.header ?? {};
   chunks.push(line(`فاتورة: ${header.invoiceNo ?? ''}`, { width }));
-  chunks.push(line(`التاريخ: ${new Date(header.invoiceDate ?? Date.now()).toLocaleString('ar-EG')}`, { width }));
+  chunks.push(line(`التاريخ: ${receiptStamp(header)}`, { width }));
   if (showParty && header.partyName) chunks.push(line(`العميل: ${header.partyName}`, { width }));
   if (showBranch && header.branchName) chunks.push(line(`الفرع: ${header.branchName}`, { width }));
   chunks.push(line('-'.repeat(width), { width }));
@@ -150,7 +166,7 @@ function buildKitchenTicketBytes(order, width = 42) {
     chunks.push(cmd.codePage(cp));
   }
   chunks.push(cmd.spacing(24));
-  const stamp = new Date().toLocaleString('ar-EG', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
+  const stamp = new Date().toLocaleString('ar-EG-u-nu-latn', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', hourCycle: 'h23' });
   const showPrices = order.showPrices === true;
 
   chunks.push(line('تذكرة مطبخ', { align: 'center', width, bold: true, double: true }));
@@ -217,7 +233,10 @@ function buildTestBytes(width = 42) {
   chunks.push(cmd.spacing(24));
   chunks.push(line('WaselERP', { align: 'center', width, bold: true, double: true }));
   chunks.push(line('اختبار طباعة', { align: 'center', width, bold: true }));
-  chunks.push(line(new Date().toLocaleString('ar-EG'), { align: 'center', width }));
+  chunks.push(line(new Date().toLocaleString('ar-EG-u-nu-latn', {
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
+  }), { align: 'center', width }));
   chunks.push(line('-'.repeat(width), { width }));
   chunks.push(line('إذا ظهر هذا النص فالطابعة تعمل بشكل صحيح', { align: 'center', width }));
   chunks.push(line('-'.repeat(width), { width }));

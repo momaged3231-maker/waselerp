@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
-import { apiFetch, formatDate, formatMoney } from '@/lib/api';
+import { apiFetch, formatMoney } from '@/lib/api';
+import { formatDocumentDateTime, formatDateTime, useDisplayTimezone } from '@/lib/time';
 
 const ACCOUNT_TYPE: Record<number, string> = {
   1: 'درج نقدي', 2: 'حساب بنكي', 3: 'بطاقة', 4: 'محفظة إلكترونية',
 };
 
 export default function TreasuryPage() {
+  const timeZone = useDisplayTimezone();
   const [accounts, setAccounts] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -118,11 +120,11 @@ export default function TreasuryPage() {
             <div className="card-title"><span>آخر الحركات</span></div>
             <div className="table-wrap">
               <table className="table">
-                <thead><tr><th>التاريخ</th><th>النوع</th><th>الحساب</th><th>البيان</th><th>المبلغ</th></tr></thead>
+                <thead><tr><th>التاريخ والوقت</th><th>النوع</th><th>الحساب</th><th>البيان</th><th>المبلغ</th></tr></thead>
                 <tbody>
                   {transactions.map((row) => (
                     <tr key={row.transactionId}>
-                      <td>{formatDate(row.transactionDate)}</td>
+                      <td className="whitespace-nowrap">{formatDocumentDateTime(row.transactionDate, row.createdAt, timeZone)}</td>
                       <td>
                         <span className={`badge ${row.direction === 1 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
                           {row.direction === 1 ? 'إيداع' : 'سحب'}
@@ -150,7 +152,7 @@ export default function TreasuryPage() {
                     <tr key={row.shiftId}>
                       <td className="font-semibold">#{row.shiftNo} · {row.cashAccountName}</td>
                       <td>{row.cashierName}</td>
-                      <td>{formatDate(row.openedAt)}</td>
+                      <td className="whitespace-nowrap">{formatDateTime(row.openedAt, timeZone, true)}</td>
                       <td>{formatMoney(row.expectedCash)}</td>
                       <td>{row.countedCash === null ? '—' : formatMoney(row.countedCash)}</td>
                       <td className={`font-bold ${Number(row.difference) < 0 ? 'text-rose-600' : Number(row.difference) > 0 ? 'text-emerald-700' : 'text-slate-500'}`}>
@@ -179,7 +181,7 @@ export default function TreasuryPage() {
                   <div className="font-semibold text-emerald-800">
                     وردية #{currentShift.shiftNo} مفتوحة · {currentShift.cashAccountName}
                   </div>
-                  <div className="text-xs text-emerald-700">بدأت {formatDate(currentShift.openedAt)}</div>
+                  <div className="text-xs text-emerald-700">بدأت {formatDateTime(currentShift.openedAt, timeZone, true)}</div>
                   <div className="text-xs text-emerald-700">
                     داخل {formatMoney(currentShift.cashIn)} · خارج {formatMoney(currentShift.cashOut)}
                   </div>

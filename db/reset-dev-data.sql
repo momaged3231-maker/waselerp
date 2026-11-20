@@ -5,6 +5,22 @@
    Deletes in dependency order so foreign keys never fail.
    Run with:  node tools/pg/run-sql.js wasel db/reset-dev-data.sql          */
 
+-- Phase-2 purchases / B5.1 slices (added 2026-11-17/18) — must go before
+-- their parents (order_lines, invoices, vouchers, parties, gl_journals).
+DELETE FROM sales_credit_overrides;
+DELETE FROM purchase_invoice_links;
+DELETE FROM purchase_receipt_lines;
+DELETE FROM purchase_rejections;
+DELETE FROM supplier_claims;
+DELETE FROM purchase_match_overrides;
+DELETE FROM purchase_receipts;
+DELETE FROM supplier_payment_allocations;
+DELETE FROM supplier_advances;
+
+-- E2 branch transfers (reference stock vouchers / items / parties)
+DELETE FROM branch_transfer_lines;
+DELETE FROM branch_transfers;
+
 -- maintenance / workshop
 DELETE FROM maintenance_ticket_parts;
 DELETE FROM maintenance_tickets;
@@ -93,3 +109,4 @@ DELETE FROM parties;
 
 DELETE FROM activity_log;
 UPDATE number_sequences SET last_number = 0;
+UPDATE document_sequences SET last_seq = 0;

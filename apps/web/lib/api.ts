@@ -128,8 +128,31 @@ export function formatMoney(value: number | string | null | undefined, currency 
   return `${number.toLocaleString('ar-EG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
 }
 
-export function formatDate(value: string | Date | null | undefined): string {
+/**
+ * Formats a calendar date. A `YYYY-MM-DD` value is rendered literally (no
+ * timezone shift); an instant is rendered in `timeZone` or the device zone.
+ */
+export function formatDate(value: string | Date | null | undefined, timeZone?: string): string {
   if (!value) return '';
+  if (typeof value === 'string') {
+    const text = value.trim();
+    const pure = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
+    if (pure) {
+      return new Intl.DateTimeFormat('ar-EG', {
+        timeZone: 'UTC', year: 'numeric', month: '2-digit', day: '2-digit',
+      }).format(new Date(Date.UTC(Number(pure[1]), Number(pure[2]) - 1, Number(pure[3]))));
+    }
+  }
   const date = typeof value === 'string' ? new Date(value) : value;
-  return date.toLocaleDateString('ar-EG', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  if (Number.isNaN(date.getTime())) return '';
+  try {
+    return new Intl.DateTimeFormat('ar-EG', {
+      ...(timeZone && timeZone.trim() ? { timeZone } : {}),
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(date);
+  } catch {
+    return date.toLocaleDateString('ar-EG');
+  }
 }

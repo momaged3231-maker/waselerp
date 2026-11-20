@@ -1,12 +1,14 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { apiFetch, formatDate, formatMoney } from '@/lib/api';
+import { apiFetch, formatMoney } from '@/lib/api';
+import { formatDocumentDateTime, useDisplayTimezone } from '@/lib/time';
 import { downloadCsv } from '@/lib/export';
 import { MOVE_LABELS } from '@/lib/stock';
 
 /** «تقرير أرصدة المخازن وحركة الأصناف» — per-warehouse stock totals + item movement ledger. */
 export default function StockReportScreen() {
+  const timeZone = useDisplayTimezone();
   const [balances, setBalances] = useState<any[]>([]);
   const [movements, setMovements] = useState<any[]>([]);
   const [warehouses, setWarehouses] = useState<any[]>([]);
@@ -82,7 +84,7 @@ export default function StockReportScreen() {
       flat.push({ 'القسم': 'أرصدة المخازن', 'المخزن': row.warehouseName, 'الفرع': row.branchName, 'أصناف برصيد': row.lines, 'قيمة المخزون': Number(row.value.toFixed(2)), 'التاريخ': '', 'الصنف': '', 'الحركة': '', 'الكمية': '', 'المرجع': '' });
     }
     for (const row of movements) {
-      flat.push({ 'القسم': 'حركة الأصناف', 'المخزن': row.warehouseName, 'الفرع': '', 'أصناف برصيد': '', 'قيمة المخزون': '', 'التاريخ': row.moveDate ? String(row.moveDate).slice(0, 10) : '', 'الصنف': row.itemName, 'الحركة': MOVE_LABELS[row.moveType] ?? row.moveType, 'الكمية': Number(row.quantity), 'المرجع': row.referenceNo ?? '' });
+      flat.push({ 'القسم': 'حركة الأصناف', 'المخزن': row.warehouseName, 'الفرع': '', 'أصناف برصيد': '', 'قيمة المخزون': '', 'التاريخ': row.moveDate ? String(row.moveDate).replace('T', ' ').slice(0, 19) : '', 'الصنف': row.itemName, 'الحركة': MOVE_LABELS[row.moveType] ?? row.moveType, 'الكمية': Number(row.quantity), 'المرجع': row.referenceNo ?? '' });
     }
     downloadCsv('wasel-stock-report', flat);
   }
@@ -157,7 +159,7 @@ export default function StockReportScreen() {
             <tbody>
               {movements.map((row) => (
                 <tr key={row.movementId}>
-                  <td>{formatDate(row.moveDate)}</td>
+                  <td className="whitespace-nowrap">{formatDocumentDateTime(row.moveDate, undefined, timeZone)}</td>
                   <td className="font-semibold">{row.itemName}</td>
                   <td>
                     <span className={`badge ${Number(row.quantity) >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>

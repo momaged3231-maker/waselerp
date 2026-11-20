@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { apiFetch, formatDate, formatMoney } from '@/lib/api';
+import { apiFetch, formatMoney } from '@/lib/api';
+import { formatDocumentDateTime, useDisplayTimezone } from '@/lib/time';
 
 export default function InventoryScreen() {
+  const timeZone = useDisplayTimezone();
   const [tab, setTab] = useState<'balances' | 'alerts' | 'movements' | 'operations'>('balances');
   const [balances, setBalances] = useState<any[]>([]);
   const [alerts, setAlerts] = useState<any[]>([]);
@@ -112,11 +114,11 @@ export default function InventoryScreen() {
           <div className="card-title"><span>حركات المخزون</span></div>
           <div className="table-wrap">
             <table className="table">
-              <thead><tr><th>التاريخ</th><th>الصنف</th><th>النوع</th><th>الكمية</th><th>التكلفة</th><th>المرجع</th><th>المخزن</th></tr></thead>
+              <thead><tr><th>التاريخ والوقت</th><th>الصنف</th><th>النوع</th><th>الكمية</th><th>التكلفة</th><th>المرجع</th><th>المخزن</th></tr></thead>
               <tbody>
                 {movements.map((row) => (
                   <tr key={row.movementId}>
-                    <td>{formatDate(row.moveDate)}</td>
+                    <td className="whitespace-nowrap">{formatDocumentDateTime(row.moveDate, undefined, timeZone)}</td>
                     <td className="font-semibold">{row.itemName}</td>
                     <td>
                       <span className={`badge ${Number(row.quantity) >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
@@ -141,13 +143,13 @@ export default function InventoryScreen() {
           <div className="card-title"><span>عمليات التحويل والجرد</span></div>
           <div className="table-wrap">
             <table className="table">
-              <thead><tr><th>الرقم</th><th>النوع</th><th>التاريخ</th><th>من</th><th>إلى</th><th>عدد الأصناف</th><th>المستخدم</th></tr></thead>
+              <thead><tr><th>الرقم</th><th>النوع</th><th>التاريخ والوقت</th><th>من</th><th>إلى</th><th>عدد الأصناف</th><th>المستخدم</th></tr></thead>
               <tbody>
                 {operations.map((row) => (
                   <tr key={row.operationId}>
                     <td className="font-mono text-xs">{row.operationNo}</td>
                     <td>{row.operationType === 1 ? 'تحويل' : row.operationType === 2 ? 'جرد' : 'تسوية'}</td>
-                    <td>{formatDate(row.operationDate)}</td>
+                    <td className="whitespace-nowrap">{formatDocumentDateTime(row.operationDate, undefined, timeZone)}</td>
                     <td>{row.fromWarehouse ?? '—'}</td>
                     <td>{row.toWarehouse ?? '—'}</td>
                     <td>{row.lineCount}</td>

@@ -40,6 +40,8 @@ export interface MovementInput {
   userId?: number | null;
   /** Optional cache of the item's base unit to avoid an extra query. */
   baseUnitId?: number;
+  /** B5.2 — sales returns restore the ORIGINAL cost without revaluing the warehouse average. */
+  preserveAvgCost?: boolean;
 }
 
 /** Returns the item's base unit, or throws when the item does not exist. */
@@ -163,12 +165,12 @@ export async function applyMovement(client: PoolClient, input: MovementInput): P
      ON CONFLICT (item_id, warehouse_id, unit_id) DO UPDATE SET
        on_hand_qty = item_warehouse_qty.on_hand_qty + $4,
        avg_cost = CASE
-                   WHEN $4 > 0 AND $5 > 0
+                   WHEN $4 > 0 AND $5 > 0 AND $6::boolean
                    THEN ((item_warehouse_qty.on_hand_qty * item_warehouse_qty.avg_cost) + ($4 * $5))
                         / NULLIF(item_warehouse_qty.on_hand_qty + $4, 0)
                    ELSE item_warehouse_qty.avg_cost END,
        last_move_at = now()`,
-    [input.itemId, input.warehouseId, baseUnitId, signed, input.unitCost],
+    [input.itemId, input.warehouseId, baseUnitId, signed, input.unitCost, input.preserveAvgCost !== true],
   );
 
   // Keep the item's headline cost aligned with the latest purchase / opening cost.

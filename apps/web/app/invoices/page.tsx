@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import AttachmentsPanel from '@/components/AttachmentsPanel';
-import { apiFetch, formatDate, formatMoney } from '@/lib/api';
+import { apiFetch, formatMoney } from '@/lib/api';
+import { formatDocumentDateTime, useDisplayTimezone } from '@/lib/time';
 
 const TYPES = [
   { value: 0, label: 'الكل' },
@@ -26,6 +27,7 @@ export default function InvoicesPage() {
   const [editError, setEditError] = useState('');
   const [zatca, setZatca] = useState<any>(null);
   const [zatcaMessage, setZatcaMessage] = useState('');
+  const timeZone = useDisplayTimezone();
 
   async function load() {
     const query = new URLSearchParams({ type: String(type), pageSize: '100' });
@@ -142,7 +144,7 @@ export default function InvoicesPage() {
           <table className="table">
             <thead>
               <tr>
-                <th>رقم الفاتورة</th><th>النوع</th><th>التاريخ</th><th>العميل</th>
+                <th>رقم الفاتورة</th><th>النوع</th><th>التاريخ والوقت</th><th>العميل</th>
                 <th>الفرع</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th />
               </tr>
             </thead>
@@ -155,7 +157,7 @@ export default function InvoicesPage() {
                       {TYPES.find((t) => t.value === row.invoiceType)?.label}
                     </span>
                   </td>
-                  <td>{formatDate(row.invoiceDate)}</td>
+                  <td className="whitespace-nowrap">{formatDocumentDateTime(row.invoiceDate, row.createdAt, timeZone)}</td>
                   <td>{row.partyName ?? 'عميل نقدي'}</td>
                   <td className="text-slate-500">{row.branchName}</td>
                   <td className="font-bold">{formatMoney(row.totalAmount)}</td>
@@ -179,7 +181,7 @@ export default function InvoicesPage() {
               <div>
                 <div className="font-extrabold text-lg">{detail.header.invoiceNo}</div>
                 <div className="text-xs text-slate-500">
-                  {formatDate(detail.header.invoiceDate)} · {detail.header.partyName ?? 'عميل نقدي'} · {detail.header.branchName}
+                  {formatDocumentDateTime(detail.header.invoiceDate, detail.header.createdAt, timeZone)} · {detail.header.partyName ?? 'عميل نقدي'} · {detail.header.branchName}
                 </div>
               </div>
               <div className="flex items-center gap-2">

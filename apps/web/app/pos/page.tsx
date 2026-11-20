@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import AppShell from '@/components/AppShell';
 import { apiFetch, formatMoney } from '@/lib/api';
+import { formatDateTime, useDisplayTimezone } from '@/lib/time';
 import { useSession } from '@/lib/session';
 import { useLiveEvents } from '@/lib/live';
 import { isNetworkError, offlineQueue, useOfflineQueue } from '@/lib/offline';
@@ -21,8 +22,26 @@ type Line = {
   factor: number; units: ItemUnit[]; isGift?: boolean; discountAmount?: number;
 };
 
+/** Today as `YYYY-MM-DD` in the device timezone (not UTC). */
+function localToday(): string {
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
+/** Chosen business date + the current clock (local) as an ISO instant. */
+function invoiceTimestamp(dateOnly: string): string {
+  const now = new Date();
+  const [year, month, day] = (dateOnly || localToday()).split('-').map(Number);
+  return new Date(
+    year, (month || 1) - 1, day || 1,
+    now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds(),
+  ).toISOString();
+}
+
 export default function PosPage() {
   const { session, can } = useSession();
+  const timeZone = useDisplayTimezone();
   const [search, setSearch] = useState('');
   const [results, setResults] = useState<any[]>([]);
   const [categoryFilter, setCategoryFilter] = useState<number>(0);
@@ -75,7 +94,7 @@ export default function PosPage() {
   const [bulkValue, setBulkValue] = useState('');
   const [lastInvoiceNo, setLastInvoiceNo] = useState('');
   const [draftAvailable, setDraftAvailable] = useState(false);
-  const [invoiceDate, setInvoiceDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [invoiceDate, setInvoiceDate] = useState(() => localToday());
   const [refreshKey, setRefreshKey] = useState(0);
   const [discountModes, setDiscountModes] = useState<Record<number, 'pct' | 'amount'>>({});
 
@@ -579,7 +598,8 @@ export default function PosPage() {
       driverPhone: orderType === 2 ? driverPhone : undefined,
       discountPct,
       discountAmount: 0,
-      invoiceDate: invoiceDate || undefined,
+      invoiceDate: invoiceTimestamp(invoiceDate),
+      businessDate: invoiceDate || localToday(),
       repId: repId ?? undefined,
       couponCode: couponCode.trim() || undefined,
       clientRequestId,
@@ -774,8 +794,8 @@ export default function PosPage() {
             onChange={(e) => setInvoiceDate(e.target.value)}
             aria-label="تاريخ الفاتورة"
           />
-          {invoiceDate !== new Date().toISOString().slice(0, 10) && (
-            <button className="text-brand-600 underline text-[11px]" onClick={() => setInvoiceDate(new Date().toISOString().slice(0, 10))}>
+          {invoiceDate !== localToday() && (
+            <button className="text-brand-600 underline text-[11px]" onClick={() => setInvoiceDate(localToday())}>
               اليوم
             </button>
           )}
@@ -1410,7 +1430,7 @@ export default function PosPage() {
               {printContext?.taxNumber && <div className="text-[11px] text-slate-500">الرقم الضريبي: <span dir="ltr">{printContext.taxNumber}</span></div>}
               <div className="text-xs text-slate-500 mt-1">فاتورة مبيعات</div>
               <div className="text-xs text-slate-500">{receipt.header.invoiceNo}</div>
-              <div className="text-xs text-slate-500">{new Date(receipt.header.invoiceDate).toLocaleString('ar-EG')}</div>
+              <div className="text-xs text-slate-500">{formatDateTime(receipt.header.invoiceDate, timeZone, true)}</div>
               {printContext?.receiptShowPartyName !== false && receipt.header.partyName && (
                 <div className="text-xs text-slate-600 font-semibold">العميل: {receipt.header.partyName}</div>
               )}

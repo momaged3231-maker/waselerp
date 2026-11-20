@@ -1,13 +1,15 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { apiFetch, formatDate } from '@/lib/api';
+import { apiFetch } from '@/lib/api';
+import { formatDateTime, useDisplayTimezone } from '@/lib/time';
 
 /**
  * Tools → «سجل عمليات المستخدمين»
  * Filterable operations log: who / when / what / free-text search + CSV export.
  */
 export default function AuditScreen() {
+  const timeZone = useDisplayTimezone();
   const [rows, setRows] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [filters, setFilters] = useState({ userId: '', from: '', to: '', action: '', search: '', limit: 200 });
@@ -49,7 +51,7 @@ export default function AuditScreen() {
     };
     const lines = [header.join(',')]
       .concat(rows.map((row) => [
-        formatDate(row.createdAt), row.userName ?? '', row.branchName ?? '', row.action ?? '',
+        formatDateTime(row.createdAt, timeZone, true), row.userName ?? '', row.branchName ?? '', row.action ?? '',
         `${row.entity ?? ''} #${row.entityId ?? ''}`, row.details ?? '',
       ].map(escape).join(',')));
     const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
@@ -90,7 +92,7 @@ export default function AuditScreen() {
             <tbody>
               {rows.map((row) => (
                 <tr key={row.activityLogId}>
-                  <td className="text-xs">{formatDate(row.createdAt)}</td>
+                  <td className="text-xs whitespace-nowrap">{formatDateTime(row.createdAt, timeZone, true)}</td>
                   <td className="font-semibold">{row.userName ?? '—'}</td>
                   <td className="text-slate-500">{row.branchName ?? '—'}</td>
                   <td><span className="badge bg-slate-100 text-slate-600">{row.action}</span></td>

@@ -3,12 +3,13 @@
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import AccountingNav from '@/components/AccountingNav';
-import { apiFetch, formatDate, formatMoney } from '@/lib/api';
+import { apiFetch, formatMoney } from '@/lib/api';
+import { formatDateWithRecordedTime, useDisplayTimezone } from '@/lib/time';
 import { useSession } from '@/lib/session';
 import DeleteButton from '@/components/DeleteButton';
 
 type Line = {
-  accountId: number; debit: number; credit: number; description?: string;
+  accountId: number; debit: number; credit: number; description?: string; costCenterId?: number;
 };
 
 const TYPE_LABEL: Record<number, string> = {
@@ -21,6 +22,7 @@ const FREQUENCY: Record<number, string> = {
 
 export default function JournalsPage() {
   const { can } = useSession();
+  const timeZone = useDisplayTimezone();
   const [tab, setTab] = useState<'journals' | 'recurring'>('journals');
   const [journals, setJournals] = useState<any[]>([]);
   const [accounts, setAccounts] = useState<any[]>([]);
@@ -34,6 +36,10 @@ export default function JournalsPage() {
   const [showForm, setShowForm] = useState(false);
   const [description, setDescription] = useState('');
   const [journalDate, setJournalDate] = useState('');
+  const [costCenters, setCostCenters] = useState<any[]>([]);
+  const [currencies, setCurrencies] = useState<any[]>([]);
+  const [currencyCode, setCurrencyCode] = useState('EGP');
+  const [exchangeRate, setExchangeRate] = useState<number>(1);
   const [lines, setLines] = useState<Line[]>([
     { accountId: 0, debit: 0, credit: 0, description: '' },
     { accountId: 0, debit: 0, credit: 0, description: '' },
@@ -67,6 +73,8 @@ export default function JournalsPage() {
     apiFetch<any[]>('/accounting/accounts')
       .then((rows) => setAccounts(flatten(rows)))
       .catch(() => {});
+    apiFetch<any[]>('/accounting/cost-centers').then(setCostCenters).catch(() => {});
+    apiFetch<any[]>('/accounting/currencies').then(setCurrencies).catch(() => {});
   }, []);
 
   async function open(id: number) {
@@ -86,6 +94,8 @@ export default function JournalsPage() {
         body: {
           description,
           journalDate: journalDate || undefined,
+          currencyCode: currencyCode !== 'EGP' ? currencyCode : undefined,
+          exchangeRate: currencyCode !== 'EGP' ? Number(exchangeRate) || 1 : undefined,
           lines: lines
             .filter((line) => line.accountId && (Number(line.debit) > 0 || Number(line.credit) > 0))
             .map((line) => ({
@@ -93,11 +103,14 @@ export default function JournalsPage() {
               debit: Number(line.debit) || 0,
               credit: Number(line.credit) || 0,
               description: line.description || undefined,
+              costCenterId: line.costCenterId || undefined,
             })),
         },
       });
       setShowForm(false);
       setDescription('');
+      setCurrencyCode('EGP');
+      setExchangeRate(1);
       setLines([
         { accountId: 0, debit: 0, credit: 0, description: '' },
         { accountId: 0, debit: 0, credit: 0, description: '' },
@@ -327,7 +340,7 @@ export default function JournalsPage() {
       {showForm && (
         <div className="card p-4 mb-4 space-y-3">
           <div className="font-bold">قيد يومي جديد</div>
-          <div className="grid sm:grid-cols-3 gap-3">
+          <div className="grid sm:grid-cols-4 gap-3">
             <div>
               <label className="label">البيان</label>
               <input className="input" value={description} onChange={(e) => setDescription(e.target.value)} />
@@ -336,11 +349,34 @@ export default function JournalsPage() {
               <label className="label">التاريخ</label>
               <input className="input" type="date" value={journalDate} onChange={(e) => setJournalDate(e.target.value)} />
             </div>
+            <div>
+              <label className="label">العملة</label>
+              <select className="input" value={currencyCode} onChange={(e) => setCurrencyCode(e.target.value)}>
+                <option value="EGP">EGP — الجنيه المصري</option>
+                {currencies.filter((c) => c.currencyCode !== 'EGP').map((c) => (
+                  <option key={c.currencyCode} value={c.currencyCode}>
+                    {c.currencyCode} — {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="label">سعر الصرف</label>
+              <input
+                className="input" type="number" step="0.0001" min="0.0001"
+                value={exchangeRate}
+                disabled={currencyCode === 'EGP'}
+                onChange={(e) => setExchangeRate(Number(e.target.value) || 1)}
+              />
+              {currencyCode !== 'EGP' && (
+                <div className="text-[11px] text-slate-500 mt-1">المبالغ بالجنيه ÷ سعر الصرف = المبلغ بالعملة</div>
+              )}
+            </div>
           </div>
 
           <div className="table-wrap">
             <table className="table">
-              <thead><tr><th>الحساب</th><th>مدين</th><th>دائن</th><th>البيان</th><th></th></tr></thead>
+              <thead><tr><th>الحساب</th><th>مدين</th><th>دائن</th><th>مركز التكلفة</th><th>البيان</th><th></th></tr></thead>
               <tbody>
                 {lines.map((line, index) => (
                   <tr key={index}>
@@ -371,6 +407,20 @@ export default function JournalsPage() {
                         value={line.credit || ''}
                         onChange={(e) => setLines((rows) => rows.map((r, i) => i === index ? { ...r, credit: Number(e.target.value) || 0, debit: 0 } : r))}
                       />
+                    </td>
+                    <td>
+                      <select
+                        className="input py-1 text-xs"
+                        value={line.costCenterId ?? 0}
+                        onChange={(e) => setLines((rows) => rows.map((r, i) => i === index ? { ...r, costCenterId: Number(e.target.value) || undefined } : r))}
+                      >
+                        <option value={0}>— بلا —</option>
+                        {costCenters.map((cc) => (
+                          <option key={cc.costCenterId} value={cc.costCenterId}>
+                            {cc.code} — {cc.name}
+                          </option>
+                        ))}
+                      </select>
                     </td>
                     <td>
                       <input
@@ -409,12 +459,12 @@ export default function JournalsPage() {
           <div className="card-title"><span>سجل القيود</span></div>
           <div className="table-wrap">
             <table className="table">
-              <thead><tr><th>رقم القيد</th><th>التاريخ</th><th>النوع</th><th>البيان</th><th>المبلغ</th><th>الحالة</th></tr></thead>
+              <thead><tr><th>رقم القيد</th><th>التاريخ والوقت</th><th>النوع</th><th>البيان</th><th>المبلغ</th><th>الحالة</th></tr></thead>
               <tbody>
                 {journals.map((row) => (
                   <tr key={row.journalId} className="cursor-pointer hover:bg-brand-50/40" onClick={() => open(row.journalId)}>
                     <td className="font-mono text-xs">{row.journalNo}</td>
-                    <td className="text-xs">{formatDate(row.journalDate)}</td>
+                    <td className="text-xs whitespace-nowrap">{formatDateWithRecordedTime(row.journalDate, row.createdAt, timeZone)}</td>
                     <td className="text-xs">{TYPE_LABEL[row.journalType] ?? row.journalType}</td>
                     <td className="text-xs">{row.description ?? '—'}</td>
                     <td className="font-bold">{formatMoney(row.totalDebit)}</td>
@@ -440,7 +490,7 @@ export default function JournalsPage() {
                 <div className="font-bold">{selected.header.journalNo}</div>
                 <div className="text-slate-500">{selected.header.description}</div>
                 <div className="text-xs text-slate-400">
-                  {formatDate(selected.header.journalDate)} · {selected.header.createdBy ?? '—'}
+                  {formatDateWithRecordedTime(selected.header.journalDate, selected.header.createdAt, timeZone)} · {selected.header.createdBy ?? '—'}
                 </div>
                 {canPost && selected.header.status === 2 && (
                   <button className="btn-soft text-xs mt-2" onClick={() => voidJournal(selected.header.journalId)}>

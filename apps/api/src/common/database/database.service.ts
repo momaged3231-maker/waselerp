@@ -7,6 +7,13 @@ import { Pool, PoolClient, QueryResultRow, types } from 'pg';
 // fits in a JS number, so they are parsed as numbers everywhere.
 types.setTypeParser(20, (value: string) => Number(value));
 
+// `date` columns keep their calendar form (`YYYY-MM-DD`). node-pg would turn
+// them into a JS Date at the *server's* local midnight, and JSON then
+// serialises that instant (`2026-11-17T22:00:00.000Z` for 18 Nov in Cairo) —
+// every client outside the server zone would render the previous day. A
+// calendar date has no instant, so it is passed through untouched.
+types.setTypeParser(1082, (value: string) => value);
+
 export type QueryParam = unknown;
 
 @Injectable()

@@ -1,12 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { apiFetch, formatDate, formatMoney } from '@/lib/api';
+import { apiFetch, formatMoney } from '@/lib/api';
+import { formatDateWithRecordedTime, formatStampForExport, useDisplayTimezone } from '@/lib/time';
 import { downloadCsv } from '@/lib/export';
 import { VOUCHER_STATUS_LABELS, VOUCHER_TYPE_LABELS } from '@/lib/stock';
 
 /** «تقرير أذونات المخازن» — stock vouchers list with status/type/warehouse/date filters and totals. */
 export default function VouchersReportScreen() {
+  const timeZone = useDisplayTimezone();
   const [rows, setRows] = useState<any[]>([]);
   const [warehouses, setWarehouses] = useState<any[]>([]);
   const [filters, setFilters] = useState({ status: 0, type: 0, warehouseId: 0, from: '', to: '', search: '' });
@@ -43,7 +45,7 @@ export default function VouchersReportScreen() {
 
   function exportCsv() {
     downloadCsv('wasel-stock-vouchers-report', rows.map((row) => ({
-      'الرقم': row.voucherNo, 'التاريخ': row.voucherDate ? String(row.voucherDate).slice(0, 10) : '',
+      'الرقم': row.voucherNo, 'التاريخ': formatStampForExport(row.voucherDate, row.createdAt, timeZone),
       'النوع': VOUCHER_TYPE_LABELS[Number(row.voucherType)] ?? row.voucherType, 'المخزن': row.warehouseName,
       'عدد الأصناف': Number(row.lineCount ?? 0), 'الحالة': VOUCHER_STATUS_LABELS[Number(row.status)] ?? row.status,
       'أنشأها': row.createdBy ?? '', 'القيد المحاسبي': row.glJournalId ? `#${row.glJournalId}` : '—',
@@ -102,12 +104,12 @@ export default function VouchersReportScreen() {
         <div className="card-title"><span>الأذون ({rows.length})</span></div>
         <div className="table-wrap">
           <table className="table">
-            <thead><tr><th>الرقم</th><th>التاريخ</th><th>النوع</th><th>المخزن</th><th>عدد الأصناف</th><th>الحالة</th><th>أنشأها</th><th>القيد المحاسبي</th></tr></thead>
+            <thead><tr><th>الرقم</th><th>التاريخ والوقت</th><th>النوع</th><th>المخزن</th><th>عدد الأصناف</th><th>الحالة</th><th>أنشأها</th><th>القيد المحاسبي</th></tr></thead>
             <tbody>
               {rows.map((row) => (
                 <tr key={row.stockVoucherId}>
                   <td className="font-mono text-xs">{row.voucherNo}</td>
-                  <td>{formatDate(row.voucherDate)}</td>
+                  <td className="whitespace-nowrap">{formatDateWithRecordedTime(row.voucherDate, row.createdAt, timeZone)}</td>
                   <td>{VOUCHER_TYPE_LABELS[Number(row.voucherType)] ?? row.voucherType}</td>
                   <td>{row.warehouseName}</td>
                   <td>{row.lineCount}</td>

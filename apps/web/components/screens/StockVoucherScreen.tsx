@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { apiFetch, formatDate, formatMoney } from '@/lib/api';
+import { apiFetch, formatMoney } from '@/lib/api';
+import { formatDateWithRecordedTime, useDisplayTimezone } from '@/lib/time';
 import { useSession } from '@/lib/session';
 import DeleteButton from '@/components/DeleteButton';
 
@@ -10,6 +11,7 @@ const STATUS: Record<number, string> = { 1: 'مسودة', 2: 'معتمد', 3: '�
 
 export default function StockVoucherScreen() {
   const { can } = useSession();
+  const timeZone = useDisplayTimezone();
   const [rows, setRows] = useState<any[]>([]);
   const [warehouses, setWarehouses] = useState<any[]>([]);
   const [items, setItems] = useState<any[]>([]);
@@ -313,7 +315,7 @@ export default function StockVoucherScreen() {
                     <tr key={row.stockVoucherId} className="cursor-pointer hover:bg-brand-50/40"
                       onClick={() => open(row.stockVoucherId)}>
                       <td className="font-mono text-xs">{row.voucherNo}</td>
-                      <td className="text-xs">{formatDate(row.voucherDate)}</td>
+                      <td className="text-xs whitespace-nowrap">{formatDateWithRecordedTime(row.voucherDate, row.createdAt, timeZone)}</td>
                       <td className="text-xs">{TYPE[row.voucherType]}</td>
                       <td className="text-xs">{row.warehouseName}</td>
                       <td className="text-xs">{row.lineCount}</td>

@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { apiFetch, formatDate, formatMoney } from '@/lib/api';
+import { apiFetch, formatMoney } from '@/lib/api';
+import { formatDateWithRecordedTime, useDisplayTimezone } from '@/lib/time';
 import { useSession } from '@/lib/session';
 import DeleteButton from '@/components/DeleteButton';
 
@@ -11,6 +12,7 @@ const STATUS: Record<number, string> = {
 
 export default function StockTransferScreen() {
   const { can } = useSession();
+  const timeZone = useDisplayTimezone();
   const [rows, setRows] = useState<any[]>([]);
   const [warehouses, setWarehouses] = useState<any[]>([]);
   const [items, setItems] = useState<any[]>([]);
@@ -353,7 +355,7 @@ export default function StockTransferScreen() {
                     <tr key={row.stockTransferId} className="cursor-pointer hover:bg-brand-50/40"
                       onClick={() => open(row.stockTransferId)}>
                       <td className="font-mono text-xs">{row.transferNo}</td>
-                      <td className="text-xs">{formatDate(row.transferDate)}</td>
+                      <td className="text-xs whitespace-nowrap">{formatDateWithRecordedTime(row.transferDate, row.createdAt, timeZone)}</td>
                       <td className="text-xs">{row.fromWarehouseName}</td>
                       <td className="text-xs">{row.toWarehouseName}</td>
                       <td className="text-xs">{row.lineCount}</td>

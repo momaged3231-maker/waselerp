@@ -67,6 +67,7 @@ export class TreasuryService {
     );
     const rows = await this.db.query<any>(
       `SELECT t.cash_transaction_id AS "transactionId", t.transaction_date AS "transactionDate",
+              t.created_at AS "createdAt",
               t.direction, t.amount, t.description, t.party_id AS "partyId", p.name AS "partyName",
               t.invoice_id AS "invoiceId", cat.name AS "categoryName"
          FROM cash_transactions t
@@ -207,7 +208,8 @@ export class TreasuryService {
 
   async transactions(params: { accountId?: number; branchId: number; from?: string; to?: string; limit: number }) {
     return this.db.query(
-      `SELECT t.cash_transaction_id AS "transactionId", t.transaction_date AS "transactionDate", t.direction,
+      `SELECT t.cash_transaction_id AS "transactionId", t.transaction_date AS "transactionDate",
+              t.created_at AS "createdAt", t.direction,
               t.amount, t.description, c.name AS "cashAccountName", cat.name AS "categoryName",
               p.name AS "partyName", i.invoice_no AS "referenceNo", u.full_name AS "createdBy",
               t.shift_id AS "shiftId"
@@ -540,6 +542,7 @@ export class TreasuryService {
 
     const rows = await this.db.query(
       `SELECT t.cash_transaction_id AS "transactionId", t.transaction_date AS "transactionDate",
+              t.created_at AS "createdAt",
               t.direction, t.amount, t.description, i.invoice_no AS "referenceNo"
          FROM cash_transactions t
          LEFT JOIN invoices i ON i.invoice_id = t.invoice_id

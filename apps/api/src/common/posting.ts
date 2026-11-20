@@ -180,6 +180,73 @@ export async function postJournal(client: PoolClient, input: JournalInput): Prom
   const lines = (input.lines ?? []).filter((line) => line.accountId && Number.isFinite(Number(line.accountId)));
   if (lines.length < 2) throw new BadRequestException('القيد المحاسبي يحتاج سطرين على الأقل');
 
+  // Control account protection (D-17, Option A): reject manual entries on control accounts.
+  // Allowlist approach: only automated source types may post to control accounts.
+  // Default-deny: any new source type is rejected until explicitly added.
+  const AUTOMATED_SOURCES = new Set([
+    'asset_depreciation', 'asset_disposal', 'bank_expense', 'bank_recon',
+    'bank_recon_classification', 'branch_transfer', 'branch_transfer_cancel',
+    'cash', 'cash_transaction', 'cash_transfer', 'check', 'check_collect',
+    'check_reversal', 'employee_advance', 'fixed_asset', 'installment',
+    'invoice', 'maintenance_ticket', 'opening_balance', 'period_close',
+    'recurring', 'reversal', 'salary_pay', 'salary_payment', 'shift',
+    'stock_count', 'stock_transfer', 'stock_voucher', 'voucher', 'year_closing',
+    // Phase-2 purchases — added in P3.3 before B1/B3/B4 build
+    'grn', 'purchase_invoice', 'supplier_payment',
+    // B5.2 — sales returns post to control accounts (AR / VAT / INVENTORY / COGS)
+    'sale_return',
+    // B5.3 — gift/sample returns reinstate inventory against GIFT_EXPENSE
+    'gift_return',
+    // B5.4 — credit notes: contra-revenue + VAT output / AR (no stock, no COGS)
+    'sales_credit_note',
+  ]);
+  const accountIds = [...new Set(lines.map((l) => Number(l.accountId)))];
+  const { rows: acctRows } = await client.query<{ account_id: number; is_control: boolean; code: string; name: string; require_cost_center: boolean }>(
+    `SELECT account_id, is_control, code, name, require_cost_center FROM gl_accounts WHERE account_id = ANY($1::int[])`,
+    [accountIds],
+  );
+  const controlAcct = acctRows.find((r) => r.is_control);
+  if (controlAcct && !AUTOMATED_SOURCES.has(input.sourceType ?? '')) {
+    throw new BadRequestException(
+      `لا يمكن إنشاء قيد يدوي على حساب تحكّمي: ${controlAcct.name} (${controlAcct.code})`,
+    );
+  }
+
+  // `require_cost_center` is a real policy flag, not decoration: an account that
+  // demands a cost centre rejects any line posted without one.
+  const requiresCc = new Map(
+    acctRows.filter((r) => r.require_cost_center).map((r) => [Number(r.account_id), r]),
+  );
+  if (requiresCc.size) {
+    for (const line of lines) {
+      const account = requiresCc.get(Number(line.accountId));
+      if (account && !line.costCenterId) {
+        throw new BadRequestException(
+          `الحساب ${account.name} (${account.code}) يتطلب مركز تكلفة على كل سطر`,
+        );
+      }
+    }
+  }
+
+  // Foreign-currency journals: amounts stay in the base currency (debit/credit),
+  // the rate converts them back to the document currency for `foreign_amount`.
+  const currencyCode = String(input.currencyCode ?? 'EGP').trim().toUpperCase() || 'EGP';
+  let exchangeRate = input.exchangeRate === undefined || input.exchangeRate === null
+    ? NaN
+    : Number(input.exchangeRate);
+  if (currencyCode !== 'EGP') {
+    const { rows: currencyRows } = await client.query<{ currency_code: string; rate: string }>(
+      'SELECT currency_code, rate::text AS rate FROM currencies WHERE UPPER(currency_code) = $1::text',
+      [currencyCode],
+    );
+    if (!currencyRows.length) throw new BadRequestException(`العملة ${currencyCode} غير معرّفة في شاشة العملات`);
+    // No explicit rate → fall back to the rate maintained in the currencies screen.
+    if (!Number.isFinite(exchangeRate) || exchangeRate <= 0) {
+      exchangeRate = Number(currencyRows[0].rate);
+    }
+  }
+  if (!Number.isFinite(exchangeRate) || exchangeRate <= 0) exchangeRate = 1;
+
   let totalDebit = 0;
   let totalCredit = 0;
   const normalised = lines.map((line, index) => {
@@ -233,13 +300,13 @@ export async function postJournal(client: PoolClient, input: JournalInput): Prom
       journalNo, journalDate, input.journalType ?? 1, input.branchId, periodId,
       input.description ?? null, input.post === false ? 1 : 2,
       input.sourceType ?? null, input.sourceId ?? null,
-      input.currencyCode ?? 'EGP', input.exchangeRate ?? 1,
-      totalDebit, totalCredit, input.userId ?? null,
+      currencyCode, exchangeRate, totalDebit, totalCredit, input.userId ?? null,
     ],
   );
   const journalId = Number(header.rows[0].journal_id);
 
   for (const line of normalised) {
+    const baseAmount = line.debit || line.credit;
     await client.query(
       `INSERT INTO gl_entries
          (journal_id, line_no, account_id, debit, credit, description, cost_center_id,
@@ -249,8 +316,8 @@ export async function postJournal(client: PoolClient, input: JournalInput): Prom
       [
         journalId, line.lineNo, line.accountId, line.debit, line.credit,
         line.description ?? null, line.costCenterId ?? null, line.partyId ?? null,
-        input.branchId, input.currencyCode ?? 'EGP', line.debit || line.credit,
-        input.exchangeRate ?? 1,
+        input.branchId, currencyCode, round2(baseAmount / exchangeRate),
+        exchangeRate,
       ],
     );
   }
@@ -334,6 +401,13 @@ export interface InvoicePostingInput {
   serviceCharge?: number;
   /** Goods value at cost (used for COGS / inventory). */
   costTotal: number;
+  /** B5.3 — damaged portion of a sales return at original cost (Dr 5112 instead of Inventory). */
+  damagedCost?: number;
+  /**
+   * Value of GRN lines matched to this purchase invoice (Σ link.qty × receipt_line.unit_cost).
+   * When 0 (no prior GRN), GRNI is debited with the full invoice net (invoice-first path).
+   */
+  grnProvisional?: number;
   userId?: number | null;
   journalDate?: string;
 }
@@ -373,16 +447,18 @@ export async function postInvoiceJournal(
   const isPurchase = input.invoiceType === 2;
   const isSalesReturn = input.invoiceType === 3;
   const isPurchaseReturn = input.invoiceType === 4;
-  if (!isSale && !isPurchase && !isSalesReturn && !isPurchaseReturn) return null;
+  const isGiftReturn = input.invoiceType === 5;
+  const isCreditNote = input.invoiceType === 6;
+  if (!isSale && !isPurchase && !isSalesReturn && !isPurchaseReturn && !isGiftReturn && !isCreditNote) return null;
 
   // Accounts per document type. A return is the exact mirror of its origin.
   const salesKey = isSale ? 'SALES' : 'SALES_RETURNS';
-  const vatKey = isSale || isSalesReturn ? 'VAT_OUTPUT' : 'VAT_INPUT';
+  const vatKey = isSale || isSalesReturn || isCreditNote ? 'VAT_OUTPUT' : 'VAT_INPUT';
   const costKey = isSale || isSalesReturn ? 'COGS' : null;
-  const receivableKey = isSale || isSalesReturn ? 'AR' : 'AP';
+  const receivableKey = isSale || isSalesReturn || isCreditNote ? 'AR' : 'AP';
   const discountKey = isSale || isSalesReturn ? 'DISCOUNT' : 'PURCHASE_DISCOUNT';
 
-  const [sales, vat, receivable, discount, stock, cost, cash] = await Promise.all([
+  const [sales, vat, receivable, discount, stock, cost, cash, grni, ppv, damage, giftExpense, allowance] = await Promise.all([
     isSale || isSalesReturn
       ? requireMapping(client, salesKey, 'المبيعات')
       : Promise.resolve(null),
@@ -392,6 +468,11 @@ export async function postInvoiceJournal(
     requireMapping(client, 'INVENTORY', 'المخزون'),
     costKey ? requireMapping(client, costKey, 'تكلفة المبيعات') : Promise.resolve(null),
     cashAccountGlId(client, input.cashAccountId),
+    isPurchase ? requireMapping(client, 'GRNI', 'بضاعة مستلمة غير مفوترة') : Promise.resolve(null),
+    isPurchase ? requireMapping(client, 'PPV', 'فروق أسعار الشراء') : Promise.resolve(null),
+    isSalesReturn ? requireMapping(client, 'DAMAGE_EXPENSE', 'تالف وهادر') : Promise.resolve(null),
+    isGiftReturn ? requireMapping(client, 'GIFT_EXPENSE', 'هدايا وعينات') : Promise.resolve(null),
+    isCreditNote ? requireMapping(client, 'SALES_ALLOWANCES', 'مخصصات المبيعات') : Promise.resolve(null),
   ]);
 
   const debit: JournalLineInput[] = [];
@@ -439,7 +520,18 @@ export async function postInvoiceJournal(
     pushDebit(input.costTotal, cost.accountId, 'تكلفة المبيعات');
     pushCredit(input.costTotal, stock.accountId, 'خروج مخزون');
   } else if (isPurchase) {
-    pushDebit(input.costTotal, stock.accountId, 'دخول مخزون');
+    // B2 — purchase invoice posts to GRNI (not INVENTORY). No stock movement here;
+    // stock is added only by the GRN slice (B1).
+    //  grnProvisional = Σ(link.qty × receipt_line.unit_cost), the matched GRN value.
+    //  When 0 (no matched GRN), the full invoice net debits GRNI (invoice-first path).
+    //  PPV = invoice net − matched GRN value (Dr if >0, Cr if <0).
+    const invoiceNet = input.costTotal;
+    const matched = Number(input.grnProvisional ?? 0);
+    const grniDebit = matched > 0 ? matched : invoiceNet;
+    const ppvAmount = round2(invoiceNet - grniDebit);
+    pushDebit(grniDebit, grni.accountId, 'GRNI — فاتورة شراء', input.partyId);
+    if (ppvAmount > 0.005) pushDebit(ppvAmount, ppv.accountId, 'فروق أسعار الشراء');
+    else if (ppvAmount < -0.005) pushCredit(-ppvAmount, ppv.accountId, 'فروق أسعار الشراء (دائن)');
     pushDebit(input.taxTotal, vat.accountId, 'ضريبة القيمة المضافة (مدخلات)');
     pushCredit(Number(input.headerDiscount ?? 0), discount.accountId, 'خصم الموردين');
     for (const payment of paymentLines) {
@@ -455,8 +547,25 @@ export async function postInvoiceJournal(
     pushCredit(input.discountTotal, discount.accountId, 'عكس خصم مسموح به');
     pushDebit(input.grossSales, sales.accountId, 'مردودات المبيعات');
     pushDebit(input.taxTotal, vat.accountId, 'عكس ضريبة القيمة المضافة (مخرجات)');
-    pushDebit(input.costTotal, stock.accountId, 'دخول مخزون');
+    // B5.3 — only the GOOD portion re-enters sellable inventory; the damaged
+    // portion is expensed to 5112, while COGS is reversed for the full quantity.
+    const damagedCost = Math.min(Number(input.damagedCost ?? 0), Number(input.costTotal));
+    pushDebit(round2(Number(input.costTotal) - damagedCost), stock.accountId, 'دخول مخزون');
+    if (damagedCost > 0.005 && damage) pushDebit(round2(damagedCost), damage.accountId, 'تلف مرتجع مبيعات');
     pushCredit(input.costTotal, cost.accountId, 'عكس تكلفة المبيعات');
+  } else if (isCreditNote) {
+    // B5.4 — financial-only settlement: contra-revenue + VAT output / AR.
+    // No inventory movement, no COGS, no cash.
+    pushDebit(input.grossSales, allowance.accountId, 'مخصص مبيعات — إشعار دائن');
+    if (Number(input.taxTotal) > 0.005) {
+      pushDebit(input.taxTotal, vat.accountId, 'عكس ضريبة القيمة المضافة (مخرجات)');
+    }
+    pushCredit(input.remaining, receivable.accountId, 'ذمم عملاء — إشعار دائن', input.partyId);
+  } else if (isGiftReturn) {
+    // B5.3 review fix — reinstate the returned gift at its receipt cost so the
+    // subsidiary inventory value and GL account 1104 stay aligned. No AR/VAT/revenue.
+    pushDebit(input.costTotal, stock.accountId, 'استلام هدية عائدة');
+    if (giftExpense) pushCredit(input.costTotal, giftExpense.accountId, 'عكس هدية عائدة');
   } else {
     // Purchase return: mirror image of a purchase.
     for (const payment of paymentLines) {
@@ -474,9 +583,9 @@ export async function postInvoiceJournal(
   return postJournal(client, {
     branchId: input.branchId,
     journalDate: input.journalDate,
-    journalType: isSale || input.invoiceType === 3 ? 2 : 3,
+    journalType: isSale || isSalesReturn || isCreditNote ? 2 : 3,
     description: `فاتورة ${input.invoiceNo}`,
-    sourceType: 'invoice',
+    sourceType: isCreditNote ? 'sales_credit_note' : isGiftReturn ? 'gift_return' : isSalesReturn ? 'sale_return' : isPurchase ? 'purchase_invoice' : 'invoice',
     sourceId: input.invoiceId,
     lines,
     userId: input.userId,

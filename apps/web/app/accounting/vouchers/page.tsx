@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import AccountingNav from '@/components/AccountingNav';
-import { apiFetch, formatDate, formatMoney } from '@/lib/api';
+import { apiFetch, formatMoney } from '@/lib/api';
+import { formatDateWithRecordedTime, formatDateOnly, useDisplayTimezone } from '@/lib/time';
 import { useSession } from '@/lib/session';
 
 const METHOD_LABEL: Record<number, string> = {
@@ -15,6 +16,7 @@ const CHECK_STATUS: Record<number, string> = {
 
 export default function VouchersPage() {
   const { can } = useSession();
+  const timeZone = useDisplayTimezone();
   const [tab, setTab] = useState<'vouchers' | 'checks'>('vouchers');
   const [vouchers, setVouchers] = useState<any[]>([]);
   const [checks, setChecks] = useState<any[]>([]);
@@ -253,13 +255,13 @@ export default function VouchersPage() {
             <div className="card-title"><span>سجل السندات</span></div>
             <div className="table-wrap">
               <table className="table">
-                <thead><tr><th>رقم السند</th><th>النوع</th><th>التاريخ</th><th>الطرف</th><th>المبلغ</th><th>مخصَّص</th><th>الحالة</th><th></th></tr></thead>
+                <thead><tr><th>رقم السند</th><th>النوع</th><th>التاريخ والوقت</th><th>الطرف</th><th>المبلغ</th><th>مخصَّص</th><th>الحالة</th><th></th></tr></thead>
                 <tbody>
                   {vouchers.map((row) => (
                     <tr key={row.voucherId}>
                       <td className="font-mono text-xs">{row.voucherNo}</td>
                       <td className="text-xs">{row.voucherType === 1 ? 'قبض' : 'صرف'}</td>
-                      <td className="text-xs">{formatDate(row.voucherDate)}</td>
+                      <td className="text-xs whitespace-nowrap">{formatDateWithRecordedTime(row.voucherDate, row.createdAt, timeZone)}</td>
                       <td className="text-xs">{row.partyName ?? '—'}</td>
                       <td className="font-bold">{formatMoney(row.amount)}</td>
                       <td className="text-xs">
@@ -351,7 +353,7 @@ export default function VouchersPage() {
                       <td className="text-xs">{row.direction === 1 ? 'مستلم' : 'صادر'}</td>
                       <td className="text-xs">{row.bankName ?? '—'}</td>
                       <td className="font-bold">{formatMoney(row.amount)}</td>
-                      <td className="text-xs">{row.dueDate ? formatDate(row.dueDate) : '—'}</td>
+                      <td className="text-xs">{row.dueDate ? formatDateOnly(row.dueDate, timeZone) : '—'}</td>
                       <td>
                         <span className={`badge ${row.status === 1 ? 'bg-amber-50 text-amber-700' : row.status === 2 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
                           {CHECK_STATUS[row.status] ?? row.status}

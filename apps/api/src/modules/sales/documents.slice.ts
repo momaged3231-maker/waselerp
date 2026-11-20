@@ -63,7 +63,7 @@ export class DocumentsService {
   async quotation(id: number) {
     const header = await this.db.one<any>(
       `SELECT q.quotation_id AS "quotationId", q.quotation_no AS "quotationNo",
-              q.quotation_date AS "quotationDate", q.valid_until AS "validUntil",
+              q.quotation_date AS "quotationDate", q.created_at AS "createdAt", q.valid_until AS "validUntil",
               q.branch_id AS "branchId", q.party_id AS "partyId", p.name AS "partyName",
               q.price_list_id AS "priceListId", q.warehouse_id AS "warehouseId",
               q.status, q.subtotal AS "subTotal", q.discount_amount AS "discountAmount",
@@ -257,7 +257,7 @@ export class DocumentsService {
     const like = `%${search}%`;
     return this.db.query<any>(
       `SELECT o.order_id AS "orderId", o.order_no AS "orderNo", o.order_date AS "orderDate",
-              o.expected_date AS "expectedDate", o.party_id AS "partyId", p.name AS "partyName",
+              o.created_at AS "createdAt", o.expected_date AS "expectedDate", o.party_id AS "partyId", p.name AS "partyName",
               o.order_type AS "orderType", o.status, o.subtotal AS "subTotal",
               o.discount_amount AS "discountAmount", o.tax_amount AS "taxAmount",
               o.total_amount AS "totalAmount", o.notes, o.converted_invoice_id AS "convertedInvoiceId",
@@ -282,7 +282,7 @@ export class DocumentsService {
   async order(id: number) {
     const header = await this.db.one<any>(
       `SELECT o.order_id AS "orderId", o.order_no AS "orderNo", o.order_date AS "orderDate",
-              o.expected_date AS "expectedDate", o.branch_id AS "branchId",
+              o.created_at AS "createdAt", o.expected_date AS "expectedDate", o.branch_id AS "branchId",
               o.party_id AS "partyId", p.name AS "partyName", o.warehouse_id AS "warehouseId",
               o.order_type AS "orderType", o.status, o.subtotal AS "subTotal",
               o.discount_amount AS "discountAmount", o.tax_amount AS "taxAmount",

@@ -840,6 +840,7 @@ CREATE TABLE IF NOT EXISTS gl_accounts (
     parent_id     integer REFERENCES gl_accounts(account_id),
     is_group      boolean NOT NULL DEFAULT false,
     is_active     boolean NOT NULL DEFAULT true,
+    is_control    boolean NOT NULL DEFAULT false,
     -- 1 debit, 2 credit (the side the balance normally sits on)
     normal_side   smallint NOT NULL DEFAULT 1,
     currency_code varchar(10) NOT NULL DEFAULT 'EGP',

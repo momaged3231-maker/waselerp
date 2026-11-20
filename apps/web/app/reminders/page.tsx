@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
-import { apiFetch, formatDate } from '@/lib/api';
+import { apiFetch } from '@/lib/api';
+import { formatDateTime, useDisplayTimezone } from '@/lib/time';
 import { useSession } from '@/lib/session';
 import DeleteButton from '@/components/DeleteButton';
 
@@ -19,6 +20,7 @@ interface Reminder {
 
 export default function RemindersPage() {
   const { can } = useSession();
+  const timeZone = useDisplayTimezone();
   const [rows, setRows] = useState<Reminder[]>([]);
   const [upcoming, setUpcoming] = useState<Reminder[]>([]);
   const [error, setError] = useState('');
@@ -83,7 +85,7 @@ export default function RemindersPage() {
             <ul className="space-y-1">
               {upcoming.map((r) => (
                 <li key={r.reminderId} className="flex justify-between items-center text-sm">
-                  <span>{r.title} — {formatDate(r.remindAt)}</span>
+                  <span>{r.title} — {formatDateTime(r.remindAt, timeZone, true)}</span>
                   <button className="text-blue-600 text-xs" onClick={() => toggleDone(r)}>تم</button>
                 </li>
               ))}
@@ -122,7 +124,7 @@ export default function RemindersPage() {
             {rows.map((r) => (
               <tr key={r.reminderId} className="border-t">
                 <td className="p-2">{r.title}</td>
-                <td className="p-2">{formatDate(r.remindAt)}</td>
+                <td className="p-2 whitespace-nowrap">{formatDateTime(r.remindAt, timeZone, true)}</td>
                 <td className="p-2">{r.isDone ? '✅ منجز' : '⏳ معلق'}</td>
                 <td className="p-2 flex gap-1">
                   <button className="text-blue-600 text-xs" onClick={() => toggleDone(r)}>{r.isDone ? 'إلغاء' : 'تم'}</button>

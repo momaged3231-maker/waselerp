@@ -16,6 +16,8 @@ export interface PartyDto {
   address?: string;
   taxNumber?: string;
   creditLimit?: number;
+  /** B5.1 — explicit no-credit-limit flag (DEC-SALES-005); 0/NULL limit means block. */
+  creditUnlimited?: boolean;
   discountPct?: number;
   isActive?: boolean;
   notes?: string;
@@ -41,7 +43,7 @@ export class PartiesService {
     const items = await this.db.query(
       `SELECT p.party_id AS "partyId", p.code, p.name, p.name_en AS "nameEn", p.party_type AS "partyType",
               p.phone, p.mobile, p.address, p.tax_number AS "taxNumber",
-              p.credit_limit AS "creditLimit", p.discount_pct AS "discountPct", p.is_active AS "isActive",
+              p.credit_limit AS "creditLimit", p.credit_unlimited AS "creditUnlimited", p.discount_pct AS "discountPct", p.is_active AS "isActive",
               p.price_list_id AS "priceListId", pl.name AS "priceListName",
               p.customer_group_id AS "customerGroupId", cg.name AS "customerGroupName",
               p.classification_id AS "classificationId", cc.name AS "classificationName",
@@ -65,7 +67,7 @@ export class PartiesService {
     const row = await this.db.one(
       `SELECT p.party_id AS "partyId", p.code, p.name, p.name_en AS "nameEn", p.party_type AS "partyType",
               p.phone, p.mobile, p.address, p.tax_number AS "taxNumber", p.city, p.area,
-              p.credit_limit AS "creditLimit", p.discount_pct AS "discountPct", p.is_active AS "isActive",
+              p.credit_limit AS "creditLimit", p.credit_unlimited AS "creditUnlimited", p.discount_pct AS "discountPct", p.is_active AS "isActive",
               p.price_list_id AS "priceListId", pl.name AS "priceListName",
               p.customer_group_id AS "customerGroupId", cg.name AS "customerGroupName",
               p.classification_id AS "classificationId", cc.name AS "classificationName",
@@ -96,12 +98,12 @@ export class PartiesService {
   async create(dto: PartyDto, user: AuthUser) {
     const row = await this.db.one(
       `INSERT INTO parties (code, name, name_en, party_type, branch_id, address, phone, mobile, tax_number,
-                            credit_limit, discount_pct, is_active, notes, price_list_id, customer_group_id, classification_id, sales_rep_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17) RETURNING party_id`,
+                            credit_limit, credit_unlimited, discount_pct, is_active, notes, price_list_id, customer_group_id, classification_id, sales_rep_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING party_id`,
       [
         dto.code ?? null, dto.name, dto.nameEn ?? null, dto.partyType, user.defaultBranchId,
         dto.address ?? null, dto.phone ?? null, dto.mobile ?? null, dto.taxNumber ?? null,
-        dto.creditLimit ?? 0, dto.discountPct ?? 0, dto.isActive ?? true, dto.notes ?? null,
+        dto.creditLimit ?? 0, dto.creditUnlimited ?? false, dto.discountPct ?? 0, dto.isActive ?? true, dto.notes ?? null,
         dto.priceListId ? Number(dto.priceListId) : null,
         dto.customerGroupId ? Number(dto.customerGroupId) : null,
         dto.classificationId ? Number(dto.classificationId) : null,
@@ -114,13 +116,13 @@ export class PartiesService {
   async update(id: number, dto: PartyDto) {
     await this.db.query(
       `UPDATE parties SET code=$2, name=$3, name_en=$4, party_type=$5, address=$6, phone=$7, mobile=$8,
-              tax_number=$9, credit_limit=$10, discount_pct=$11, is_active=$12, notes=$13,
-              price_list_id=$14, customer_group_id=$15, classification_id=$16, sales_rep_id=$17, version = version + 1
+              tax_number=$9, credit_limit=$10, credit_unlimited=$11, discount_pct=$12, is_active=$13, notes=$14,
+              price_list_id=$15, customer_group_id=$16, classification_id=$17, sales_rep_id=$18, version = version + 1
         WHERE party_id=$1`,
       [
         id, dto.code ?? null, dto.name, dto.nameEn ?? null, dto.partyType, dto.address ?? null,
         dto.phone ?? null, dto.mobile ?? null, dto.taxNumber ?? null, dto.creditLimit ?? 0,
-        dto.discountPct ?? 0, dto.isActive ?? true, dto.notes ?? null,
+        dto.creditUnlimited ?? false, dto.discountPct ?? 0, dto.isActive ?? true, dto.notes ?? null,
         dto.priceListId === undefined ? null : (dto.priceListId ? Number(dto.priceListId) : null),
         dto.customerGroupId === undefined ? null : (dto.customerGroupId ? Number(dto.customerGroupId) : null),
         dto.classificationId === undefined ? null : (dto.classificationId ? Number(dto.classificationId) : null),

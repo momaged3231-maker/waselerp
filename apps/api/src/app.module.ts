@@ -35,6 +35,9 @@ import { ChecksModule } from './modules/checks/checks.slice';
 import { PrintProfilesModule } from './modules/settings/print-profiles.slice';
 import { DeleteTogglesModule } from './modules/settings/delete-toggles.slice';
 import { PrintAgentsModule } from './modules/print-agents/print-agents.slice';
+import { PurchaseReceiptModule } from './modules/purchases/purchase-receipt.slice';
+import { PurchaseMatchModule } from './modules/purchases/purchase-match.slice';
+import { SupplierStatementModule } from './modules/purchases/supplier-statement.slice';
 
 @Module({
   imports: [
@@ -80,6 +83,9 @@ import { PrintAgentsModule } from './modules/print-agents/print-agents.slice';
     PrintProfilesModule,
     DeleteTogglesModule,
     PrintAgentsModule,
+    PurchaseReceiptModule,
+    PurchaseMatchModule,
+    SupplierStatementModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
