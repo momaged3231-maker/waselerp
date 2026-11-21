@@ -1,10 +1,11 @@
 import {
   Body, Controller, Delete, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Query,
-  BadRequestException,
+  BadRequestException, Req,
 } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
 import { assertDeletionAllowed } from '../../common/delete-guard';
 import { PoolClient } from 'pg';
+import { Request } from 'express';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
 import { SalesService } from './sales.slice';
 
@@ -765,7 +766,7 @@ export class PosService {
   }
 
   /** Closes a table order by turning it into a sales invoice. */
-  async closeTableOrder(id: number, dto: any, user: AuthUser, branchId: number) {
+  async closeTableOrder(id: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     await this.assertRestaurantsEnabled();
     const order = await this.tableOrder(id);
     if (Number(order.header.invoiceId)) {
@@ -811,7 +812,7 @@ export class PosService {
         discountPct: Number(line.discountPct),
         taxPct: Number(line.taxPct),
       })),
-    } as any, user, branchId);
+    } as any, user, branchId, ip);
 
     await this.db.query(
       'UPDATE table_orders SET status = 4, invoice_id = $2::bigint WHERE table_order_id = $1::bigint',
@@ -956,8 +957,9 @@ export class PosController {
   @RequirePermissions('pos.operate')
   @Post('table-orders/:id/close')
   closeTableOrder(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser,
-    @CurrentBranch() branchId: number) {
-    return this.service.closeTableOrder(id, dto ?? {}, user, branchId);
+    @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.closeTableOrder(id, dto ?? {}, user, branchId, ip);
   }
 
   @RequirePermissions('pos.operate')

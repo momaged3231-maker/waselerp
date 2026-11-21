@@ -1,12 +1,13 @@
 import {
   Body, Controller, Delete, Get, Injectable, Module, Param, ParseIntPipe, Patch, Post, Put, Query,
-  BadRequestException, ForbiddenException, Res,
+  BadRequestException, ForbiddenException, Req, Res,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { DatabaseService } from '../../common/database/database.service';
 import { assertDeletionAllowed } from '../../common/delete-guard';
 import { PoolClient } from 'pg';
 import { postJournal, requireMapping, resolveMapping, voidJournal, reverseJournal, JournalLineInput } from '../../common/posting';
+import { logActivity } from '../../common/audit';
 import { asIsoDate } from '../../common/dates';
 import { occurrencesBetween } from '../../common/occurrences';
 import { depreciationForMonth, monthsInRange, monthBounds } from '../../common/depreciation';
@@ -315,7 +316,7 @@ export class AccountingService {
   }
 
   /** Creates a manual journal (draft or posted). */
-  async createJournal(dto: any, user: AuthUser, branchId: number) {
+  async createJournal(dto: any, user: AuthUser, branchId: number, ip: string) {
     const lines: JournalLineDto[] = Array.isArray(dto.lines) ? dto.lines : [];
     if (lines.length < 2) throw new BadRequestException('أضف سطرين على الأقل للقيد');
     // EXPLICIT EXCEPTION: backpost into a closed/locked period. Requires the dedicated
@@ -352,11 +353,15 @@ export class AccountingService {
           : Number(dto.exchangeRate),
         backpostReason: backpostReason || null,
       });
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1,$2,'gl.journal.create','gl_journal',$3,$4)`,
-        [user.userId, branchId, String(journalId), dto.description ?? 'قيد يدوي'],
-      );
+      await logActivity(client, {
+        userId: user.userId,
+        branchId,
+        action: 'gl.journal.create',
+        entity: 'gl_journal',
+        entityId: String(journalId),
+        details: dto.description ?? 'قيد يدوي',
+        ip,
+      });
       return { journalId };
     });
   }
@@ -449,7 +454,7 @@ export class AccountingService {
    * `allocations` settles the voucher against specific open invoices
    * (the invoices keep their own remaining amount up to date).
    */
-  async createVoucher(dto: any, user: AuthUser, branchId: number) {
+  async createVoucher(dto: any, user: AuthUser, branchId: number, ip: string) {
     const amount = Number(dto.amount);
     if (!(amount > 0)) throw new BadRequestException('المبلغ يجب أن يكون أكبر من صفر');
     const voucherType = Number(dto.voucherType ?? 1);
@@ -623,12 +628,15 @@ export class AccountingService {
       }
 
       const voucherAction = voucherType === 1 ? 'voucher.receipt' : 'voucher.payment';
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1,$2,$3,$4,$5,$6)`,
-        [user.userId, branchId, voucherAction, 'voucher', String(voucherId),
-          `${voucherType === 1 ? 'قبض' : 'صرف'} ${amount} - ${party.rows[0]?.name ?? ''}`],
-      );
+      await logActivity(client, {
+        userId: user.userId,
+        branchId,
+        action: voucherAction,
+        entity: 'voucher',
+        entityId: String(voucherId),
+        details: `${voucherType === 1 ? 'قبض' : 'صرف'} ${amount} - ${party.rows[0]?.name ?? ''}`,
+        ip,
+      });
 
       return { voucherId, voucherNo, journalId, allocated: settled };
       });
@@ -2615,8 +2623,9 @@ export class AccountingController {
 
   @RequirePermissions('accounting.manage')
   @Post('journals')
-  createJournal(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.createJournal(dto, user, branchId);
+  createJournal(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.createJournal(dto, user, branchId, ip);
   }
 
   @RequirePermissions('accounting.post')
@@ -2675,8 +2684,10 @@ export class AccountingController {
     @CurrentUser() user: AuthUser,
     @CurrentBranch() branchId: number,
     @Res({ passthrough: true }) res: Response,
+    @Req() req: Request,
   ) {
-    const result = await this.service.createVoucher(dto, user, branchId);
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    const result = await this.service.createVoucher(dto, user, branchId, ip);
     if (result?.duplicate) res.status(200);
     return result;
   }

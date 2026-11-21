@@ -1,8 +1,11 @@
 import {
   Body, Controller, Get, Injectable, Module, Param, ParseIntPipe, Post, Query, BadRequestException,
+  Req,
 } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
 import { applyMovement, getWarehouseCost, toBaseUnits, MoveType } from '../../common/stock';
+import { logActivity } from '../../common/audit';
+import { Request } from 'express';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
 import { LiveEventsService } from '../events/live-events.service';
 import { EventsModule } from '../events/events.slice';
@@ -148,7 +151,7 @@ export class InventoryService {
   }
 
   /** Transfer between warehouses, stock count, or manual adjustment. */
-  async createOperation(dto: StockOperationInput, user: AuthUser, branchId: number) {
+  async createOperation(dto: StockOperationInput, user: AuthUser, branchId: number, ip: string) {
     if (!dto.lines?.length) throw new BadRequestException('لا توجد أصناف في العملية');
     if (dto.operationType === 1 && (!dto.fromWarehouseId || !dto.toWarehouseId)) {
       throw new BadRequestException('حدد المخزن المرسل والمستقبل');
@@ -218,11 +221,15 @@ export class InventoryService {
         }
       }
 
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1,$2,'stock.operation','stock_operation',$3,$4)`,
-        [user.userId, branchId, String(operationId), `عملية مخزون ${operationNo}`],
-      );
+      await logActivity(client, {
+        userId: user.userId,
+        branchId,
+        action: 'stock.operation',
+        entity: 'stock_operation',
+        entityId: String(operationId),
+        details: `عملية مخزون ${operationNo}`,
+        ip,
+      });
 
       this.live.publish({
         type: 'stock.changed',
@@ -291,8 +298,9 @@ export class InventoryController {
 
   @RequirePermissions('stock.manage')
   @Post('operations')
-  createOperation(@Body() dto: StockOperationInput, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.createOperation(dto, user, branchId);
+  createOperation(@Body() dto: StockOperationInput, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.createOperation(dto, user, branchId, ip);
   }
 
   @RequirePermissions('stock.view')

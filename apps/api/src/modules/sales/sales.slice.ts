@@ -1,14 +1,15 @@
 import {
   Body, Controller, ForbiddenException, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Query,
-  BadRequestException, Res,
+  BadRequestException, Req, Res,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import { PoolClient } from 'pg';
 import { DatabaseService } from '../../common/database/database.service';
 import { applyMovement, getWarehouseCost, toBaseUnits, MoveType } from '../../common/stock';
 import { getBooleanSetting } from '../../common/settings';
 import { asIsoDate, todayIso } from '../../common/dates';
 import { postInvoiceJournal, reverseJournal, resolveMapping } from '../../common/posting';
+import { logActivity } from '../../common/audit';
 import { resolvePrices, asRunner } from '../../common/pricing';
 import {
   AuthUser, CurrentBranch, CurrentUser, RequireAnyPermission, RequirePermissions,
@@ -237,7 +238,7 @@ export class SalesService {
     );
   }
 
-  async create(dto: InvoiceInput, user: AuthUser, branchId: number, editOf?: number) {
+  async create(dto: InvoiceInput, user: AuthUser, branchId: number, ip: string, editOf?: number) {
     if (!dto.lines?.length) throw new BadRequestException('لا توجد أصناف في الفاتورة');
 
     let invoiceType = Number(dto.invoiceType ?? 1);
@@ -393,7 +394,7 @@ export class SalesService {
       // Editing an invoice: undo the previous version before writing the new
       // one, so the stock, the ledger and the journal end up consistent.
       const editedInvoice = editOf
-        ? await this.reverseForEdit(client, editOf, user)
+        ? await this.reverseForEdit(client, editOf, user, ip)
         : null;
       if (editedInvoice) {
         // The type of an invoice never changes while editing it.
@@ -1320,11 +1321,15 @@ export class SalesService {
         );
       }
 
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1,$2,$3,$4,$5,$6)`,
-        [user.userId, effectiveBranch, INVOICE_POST_ACTION[invoiceType] ?? 'invoice.post', 'invoice', String(invoiceId), `رقم ${invoiceNo}`],
-      );
+      await logActivity(client, {
+        userId: user.userId,
+        branchId: effectiveBranch,
+        action: INVOICE_POST_ACTION[invoiceType] ?? 'invoice.post',
+        entity: 'invoice',
+        entityId: String(invoiceId),
+        details: `رقم ${invoiceNo}`,
+        ip,
+      });
 
       this.live.publish({
         type: 'invoice.posted',
@@ -1382,7 +1387,7 @@ export class SalesService {
    * The original movements stay in the ledger as reversals (audit friendly)
    * and the invoice is then written again with the new data.
    */
-  private async reverseForEdit(client: PoolClient, invoiceId: number, user: AuthUser) {
+  private async reverseForEdit(client: PoolClient, invoiceId: number, user: AuthUser, ip: string) {
     const header = await client.query<any>(
       'SELECT * FROM invoices WHERE invoice_id = $1::bigint FOR UPDATE',
       [invoiceId],
@@ -1499,11 +1504,15 @@ export class SalesService {
       });
     }
 
-    await client.query(
-      `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-       VALUES ($1,$2,'invoice.edit','invoice',$3,$4)`,
-      [user.userId, Number(invoice.branch_id), String(invoiceId), `تعديل فاتورة ${invoice.invoice_no}`],
-    );
+    await logActivity(client, {
+      userId: user.userId,
+      branchId: Number(invoice.branch_id),
+      action: 'invoice.edit',
+      entity: 'invoice',
+      entityId: String(invoiceId),
+      details: `تعديل فاتورة ${invoice.invoice_no}`,
+      ip,
+    });
 
     return invoice;
   }
@@ -1641,7 +1650,7 @@ export class SalesService {
   }
 
   /** Cancels an invoice and reverses its stock, ledger and cash effects with new entries. */
-  async cancel(id: number, user: AuthUser, expectedTypes?: number[], cancelReason?: string) {
+  async cancel(id: number, user: AuthUser, expectedTypes: number[], ip: string, cancelReason?: string) {
     return this.db.transaction(async (client) => {
       const invoice = await client.query<any>('SELECT * FROM invoices WHERE invoice_id = $1 FOR UPDATE', [id]);
       if (!invoice.rows.length) throw new BadRequestException('الفاتورة غير موجودة');
@@ -1753,11 +1762,15 @@ export class SalesService {
         }
       }
 
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1,$2,'invoice.cancel','invoice',$3,$4)`,
-        [user.userId, header.branch_id, String(id), `إلغاء فاتورة ${header.invoice_no}${cancelReason ? ` — ${cancelReason}` : ''}`],
-      );
+      await logActivity(client, {
+        userId: user.userId,
+        branchId: header.branch_id,
+        action: 'invoice.cancel',
+        entity: 'invoice',
+        entityId: String(id),
+        details: `إلغاء فاتورة ${header.invoice_no}${cancelReason ? ` — ${cancelReason}` : ''}`,
+        ip,
+      });
       return { invoiceId: id, cancelled: true };
     });
   }
@@ -1884,8 +1897,10 @@ export class SalesController {
     @CurrentUser() user: AuthUser,
     @CurrentBranch() branchId: number,
     @Res({ passthrough: true }) res: Response,
+    @Req() req: Request,
   ) {
-    const result = await this.service.create(dto, user, branchId);
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    const result = await this.service.create(dto, user, branchId, ip);
     if (result?.duplicate) res.status(200);
     return result;
   }
@@ -1898,14 +1913,17 @@ export class SalesController {
     @Body() dto: InvoiceInput,
     @CurrentUser() user: AuthUser,
     @CurrentBranch() branchId: number,
+    @Req() req: Request,
   ) {
-    return this.service.create({ ...dto, invoiceType: dto.invoiceType ?? 1 }, user, branchId, id);
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.create({ ...dto, invoiceType: dto.invoiceType ?? 1 }, user, branchId, ip, id);
   }
 
   @RequireAnyPermission('sales.manage', 'purchases.manage')
   @Post('invoices/:id/cancel')
-  cancel(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
-    return this.service.cancel(id, user, [1, 3]);
+  cancel(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.cancel(id, user, [1, 3], ip);
   }
 
   /** B5.1d — monthly credit-limit override report (JSON + CSV). */
@@ -1951,8 +1969,9 @@ export class SalesController {
 
   @RequireAnyPermission('sales.manage', 'pos.operate')
   @Post('credit-notes')
-  createCreditNote(@Body() dto: InvoiceInput, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.create({ ...dto, invoiceType: 6 }, user, branchId);
+  createCreditNote(@Body() dto: InvoiceInput, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.create({ ...dto, invoiceType: 6 }, user, branchId, ip);
   }
 
   @RequireAnyPermission('sales.manage')
@@ -1961,9 +1980,11 @@ export class SalesController {
     @Param('id', ParseIntPipe) id: number,
     @Body() body: { reason?: string },
     @CurrentUser() user: AuthUser,
+    @Req() req: Request,
   ) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
     if (!(body?.reason ?? '').trim()) throw new BadRequestException('سبب إلغاء إشعار الدائن إلزامي');
-    return this.service.cancel(id, user, [6], body.reason!.trim());
+    return this.service.cancel(id, user, [6], body.reason!.trim(), ip);
   }
 
   @RequireAnyPermission('sales.view', 'sales.manage')
@@ -2033,20 +2054,23 @@ export class PurchasesController {
     @CurrentUser() user: AuthUser,
     @CurrentBranch() branchId: number,
     @Res({ passthrough: true }) res: Response,
+    @Req() req: Request,
   ) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
     const invoiceType = Number(dto.invoiceType ?? 2);
     if (invoiceType !== 2 && invoiceType !== 4) {
       throw new BadRequestException('فواتير المشتريات تقبل النوع 2 (شراء) أو 4 (مرتجع شراء) فقط');
     }
-    const result = await this.service.create({ ...dto, invoiceType }, user, branchId);
+    const result = await this.service.create({ ...dto, invoiceType }, user, branchId, ip);
     if (result?.duplicate) res.status(200);
     return result;
   }
 
   @RequireAnyPermission('purchases.manage')
   @Post('invoices/:id/cancel')
-  cancel(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
-    return this.service.cancel(id, user, [2, 4]);
+  cancel(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.cancel(id, user, [2, 4], ip);
   }
 }
 

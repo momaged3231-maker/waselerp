@@ -1,13 +1,14 @@
 import {
   BadRequestException, Body, Controller, Get, Injectable, Module,
-  Param, ParseIntPipe, Post, Query, ForbiddenException, Res,
+  Param, ParseIntPipe, Post, Query, ForbiddenException, Req, Res,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import { PoolClient } from 'pg';
 import { DatabaseService } from '../../common/database/database.service';
 import { applyMovement, toBaseUnits } from '../../common/stock';
 import { assertPeriodOpen, postJournal, resolveMapping, reverseJournal } from '../../common/posting';
 import { asIsoDate } from '../../common/dates';
+import { logActivity } from '../../common/audit';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
 
 const round2 = (v: number) => Math.round((Number(v) + Number.EPSILON) * 100) / 100;
@@ -114,7 +115,7 @@ export class PurchaseReceiptService {
   /**
    * Creates and posts a GRN from a purchase order. All writes in ONE transaction.
    */
-  async create(dto: any, user: AuthUser, branchId: number) {
+  async create(dto: any, user: AuthUser, branchId: number, ip: string) {
     const orderId = Number(dto.orderId ?? 0);
     if (!orderId) throw new BadRequestException('أمر الشراء مطلوب');
     const warehouseId = Number(dto.warehouseId ?? 0);
@@ -343,11 +344,15 @@ export class PurchaseReceiptService {
         'UPDATE purchase_receipts SET posting_status = 2, gl_journal_id = $2::bigint WHERE receipt_id = $1::bigint',
         [receiptId, journalId],
       );
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int,$2::int,'purchases.grn.create','purchase_receipt',$3::bigint,$4)`,
-        [user.userId, branchId, receiptId, `استلام ${receiptNo} — قيمة ${totalValue}`],
-      );
+      await logActivity(client, {
+        userId: user.userId,
+        branchId,
+        action: 'purchases.grn.create',
+        entity: 'purchase_receipt',
+        entityId: String(receiptId),
+        details: `استلام ${receiptNo} — قيمة ${totalValue}`,
+        ip,
+      });
 
       return { receiptId, receiptNo, postingStatus: 2, journalId, totalValue, lineCount: prepared.length };
       });
@@ -367,7 +372,7 @@ export class PurchaseReceiptService {
   }
 
   /** Reverses a posted GRN: mirror journal + reverse stock movements + status=reversed. */
-  async reverse(id: number, user: AuthUser, branchId: number) {
+  async reverse(id: number, user: AuthUser, branchId: number, ip: string) {
     return this.db.transaction(async (client) => {
       const r = await client.query<any>(
         'SELECT * FROM purchase_receipts WHERE receipt_id = $1::bigint FOR UPDATE',
@@ -420,11 +425,15 @@ export class PurchaseReceiptService {
         'UPDATE purchase_receipts SET posting_status = 3 WHERE receipt_id = $1::bigint',
         [id],
       );
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int,$2::int,'purchases.grn.reverse','purchase_receipt',$3::bigint,$4)`,
-        [user.userId, branchId, id, `عكس محضر استلام ${receipt.receipt_no}`],
-      );
+      await logActivity(client, {
+        userId: user.userId,
+        branchId,
+        action: 'purchases.grn.reverse',
+        entity: 'purchase_receipt',
+        entityId: String(id),
+        details: `عكس محضر استلام ${receipt.receipt_no}`,
+        ip,
+      });
       return { receiptId: id, postingStatus: 3, reversed: true };
     });
   }
@@ -469,16 +478,19 @@ export class PurchaseReceiptController {
     @CurrentUser() user: AuthUser,
     @CurrentBranch() branchId: number,
     @Res({ passthrough: true }) res: Response,
+    @Req() req: Request,
   ) {
-    const result = await this.service.create(dto, user, branchId);
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    const result = await this.service.create(dto, user, branchId, ip);
     if (result?.duplicate) res.status(200);
     return result;
   }
 
   @RequirePermissions('purchases.receive')
   @Post(':id/reverse')
-  reverse(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.reverse(id, user, branchId);
+  reverse(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.reverse(id, user, branchId, ip);
   }
 }
 

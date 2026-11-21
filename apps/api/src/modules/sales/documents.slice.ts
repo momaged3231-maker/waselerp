@@ -1,12 +1,13 @@
 import {
   Body, Controller, Get, Injectable, Param, ParseIntPipe, Post, Put, Query,
-  BadRequestException, ForbiddenException,
+  BadRequestException, ForbiddenException, Req,
 } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
 import { PoolClient } from 'pg';
 import { toBaseUnits } from '../../common/stock';
 import { resolvePrices, asRunner } from '../../common/pricing';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
+import { Request } from 'express';
 import { SalesService } from './sales.slice';
 
 /**
@@ -204,7 +205,7 @@ export class DocumentsService {
   }
 
   /** Turns a quotation into a sales invoice. */
-  async convertQuotation(id: number, dto: any, user: AuthUser, branchId: number) {
+  async convertQuotation(id: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     const quotation = await this.quotation(id);
     if (Number(quotation.header.convertedInvoiceId)) {
       throw new BadRequestException('عرض السعر محوَّل لفاتورة بالفعل');
@@ -238,7 +239,7 @@ export class DocumentsService {
         discountPct: Number(line.discountPct),
         taxPct: Number(line.taxPct),
       })),
-    } as any, user, branchId);
+    } as any, user, branchId, ip);
 
     await this.db.query(
       `UPDATE quotations SET status = 5, converted_invoice_id = $2::bigint WHERE quotation_id = $1::bigint`,
@@ -479,7 +480,7 @@ export class DocumentsService {
   }
 
   /** Turns a sales or purchase order into an invoice. */
-  async convertOrder(id: number, dto: any, user: AuthUser, branchId: number) {
+  async convertOrder(id: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     const order = await this.order(id);
     if (Number(order.header.convertedInvoiceId)) {
       throw new BadRequestException('الأمر محوَّل لفاتورة بالفعل');
@@ -518,7 +519,7 @@ export class DocumentsService {
         discountPct: Number(line.discountPct),
         taxPct: Number(line.taxPct),
       })),
-    } as any, user, branchId);
+    } as any, user, branchId, ip);
 
     await this.db.transaction(async (client) => {
       for (const line of lines) {
@@ -730,8 +731,9 @@ export class QuotationsController {
   @RequirePermissions('sales.manage')
   @Post(':id/convert')
   convert(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser,
-    @CurrentBranch() branchId: number) {
-    return this.service.convertQuotation(id, dto ?? {}, user, branchId);
+    @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.convertQuotation(id, dto ?? {}, user, branchId, ip);
   }
 }
 
@@ -787,7 +789,8 @@ export class OrdersController {
   @RequirePermissions('sales.manage')
   @Post(':id/convert')
   convert(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser,
-    @CurrentBranch() branchId: number) {
-    return this.service.convertOrder(id, dto ?? {}, user, branchId);
+    @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.convertOrder(id, dto ?? {}, user, branchId, ip);
   }
 }

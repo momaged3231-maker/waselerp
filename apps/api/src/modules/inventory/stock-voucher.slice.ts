@@ -1,13 +1,15 @@
 import {
   Body, Controller, Delete, Get, Injectable, Param, ParseIntPipe, Post, Put, Query,
-  BadRequestException,
+  BadRequestException, Req,
 } from '@nestjs/common';
 import { PoolClient } from 'pg';
+import { Request } from 'express';
 import { DatabaseService } from '../../common/database/database.service';
 import { assertDeletionAllowed } from '../../common/delete-guard';
 import { applyMovement, getWarehouseCost, toBaseUnits } from '../../common/stock';
 import { postJournal, resolveMapping } from '../../common/posting';
 import { asIsoDate } from '../../common/dates';
+import { logActivity } from '../../common/audit';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
 
 /** Money is rounded to two decimals; quantities to six. */
@@ -299,7 +301,7 @@ export class StockVoucherService {
   /**
    * Approves the voucher: applies stock movements and posts an accounting entry.
    */
-  async approve(id: number, user: AuthUser) {
+  async approve(id: number, user: AuthUser, ip: string) {
     return this.db.transaction(async (client) => {
       const header = await client.query<any>(
         'SELECT * FROM stock_vouchers WHERE stock_voucher_id = $1::bigint FOR UPDATE',
@@ -397,12 +399,15 @@ export class StockVoucherService {
         [id, user.userId, journalId],
       );
 
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int,$2::int,'stock.voucher.approve','stock_voucher',$3::bigint,$4)`,
-        [user.userId, Number(voucher.branch_id), id,
-          `اعتماد أذن مخزن ${voucher.voucher_no} (${TYPE_LABEL[voucherType]})`],
-      );
+      await logActivity(client, {
+        userId: user.userId,
+        branchId: Number(voucher.branch_id),
+        action: 'stock.voucher.approve',
+        entity: 'stock_voucher',
+        entityId: String(id),
+        details: `اعتماد أذن مخزن ${voucher.voucher_no} (${TYPE_LABEL[voucherType]})`,
+        ip,
+      });
 
       return { stockVoucherId: id, status: 2, totalValue: netValue, journalId };
     });
@@ -503,8 +508,9 @@ export class StockVoucherController {
 
   @RequirePermissions('stock.manage')
   @Post(':id/approve')
-  approve(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
-    return this.service.approve(id, user);
+  approve(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.approve(id, user, ip);
   }
 
   @RequirePermissions('stock.manage')
