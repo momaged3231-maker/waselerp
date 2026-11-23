@@ -1321,15 +1321,21 @@ export class SalesService {
         );
       }
 
-      await logActivity(client, {
-        userId: user.userId,
-        branchId: effectiveBranch,
-        action: INVOICE_POST_ACTION[invoiceType] ?? 'invoice.post',
-        entity: 'invoice',
-        entityId: String(invoiceId),
-        details: `رقم ${invoiceNo}`,
-        ip,
-      });
+      // GAP-01 Part C — an edit re-writes the invoice through this same method,
+      // but the edit is already attributed by `invoice.edit` in reverseForEdit.
+      // Logging `invoice.post.*` again would create a SECOND row for the same
+      // invoice_id (C8: post=2, total=3) — only log the original posting.
+      if (!editOf) {
+        await logActivity(client, {
+          userId: user.userId,
+          branchId: effectiveBranch,
+          action: INVOICE_POST_ACTION[invoiceType] ?? 'invoice.post',
+          entity: 'invoice',
+          entityId: String(invoiceId),
+          details: `رقم ${invoiceNo}`,
+          ip,
+        });
+      }
 
       this.live.publish({
         type: 'invoice.posted',
