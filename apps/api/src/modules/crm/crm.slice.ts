@@ -1,7 +1,9 @@
-import { BadRequestException, Body, Controller, Delete, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Query, Req } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
 import { assertDeletionAllowed, countReferencingRows } from '../../common/delete-guard';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
+import { Request } from 'express';
+import { logActivity } from '../../common/audit';
 
 const STAGES: Record<number, string> = { 1: 'جديد', 2: 'تم التواصل', 3: 'مؤهل', 4: 'عرض سعر', 5: 'مكسوب', 6: 'خاسر' };
 
@@ -114,23 +116,52 @@ export class CrmService {
     );
   }
 
-  async updateLead(id: number, dto: any, branchId: number) {
-    const existing = await this.db.one<any>('SELECT lead_id FROM crm_leads WHERE lead_id=$1::int AND branch_id=$2::int', [id, branchId]);
-    if (!existing) throw new BadRequestException('العميل المحتمل غير موجود');
-    return this.db.one<any>(
-      `UPDATE crm_leads SET
-         name = COALESCE($3::text,name), company = $4::text, phone = $5::text, email = $6::text,
-         source_id = $7::int, stage = COALESCE($8::int,stage), expected_value = COALESCE($9::numeric,expected_value),
-         assigned_to = $10::int, notes = $11::text, updated_at = now(),
-         lost_reason = CASE WHEN $13::boolean THEN $12::text ELSE lost_reason END
-       WHERE lead_id = $1::int AND branch_id = $2::int
-       RETURNING lead_id AS "leadId", name, stage`,
-      [id, branchId, dto.name?.trim() || null, dto.company ?? null, dto.phone ?? null, dto.email ?? null,
-       dto.sourceId ? Number(dto.sourceId) : null, dto.stage != null ? Number(dto.stage) : null,
-       dto.expectedValue != null ? Number(dto.expectedValue) : null,
-       dto.assignedTo ? Number(dto.assignedTo) : null, dto.notes ?? null, dto.lostReason ?? null,
-       dto.lostReason !== undefined],
-    );
+  async updateLead(id: number, dto: any, branchId: number, user: AuthUser, ip: string) {
+    return this.db.transaction(async (client) => {
+      const found = await client.query<any>(
+        'SELECT lead_id, stage, lost_reason FROM crm_leads WHERE lead_id=$1::int AND branch_id=$2::int', [id, branchId]);
+      const existing = found.rows[0];
+      if (!existing) throw new BadRequestException('العميل المحتمل غير موجود');
+      const oldStage = Number(existing.stage);
+      const targetStage = dto.stage != null ? Number(dto.stage) : oldStage;
+      const oldReason = String(existing.lost_reason ?? '');
+      const hasReasonKey = dto.lostReason !== undefined;
+      const newReason = hasReasonKey ? (dto.lostReason == null ? null : String(dto.lostReason).trim() || null)
+        : (String(dto.lostReason ?? '').trim() || null);
+      // GAP-02 — a lost reason cannot be cleared while the lead stays lost.
+      if (oldStage === 6 && hasReasonKey && dto.lostReason === null) {
+        throw new BadRequestException('لا يمكن مسح سبب الخسارة — غيّر المرحلة أولًا');
+      }
+      const effectiveReason = hasReasonKey ? newReason : (oldReason || null);
+      if (targetStage === 6 && !(effectiveReason && effectiveReason.length)) {
+        throw new BadRequestException('سبب الخسارة إلزامي عند الإغلاق كخاسر');
+      }
+      const writeReason = targetStage === 6 && hasReasonKey;
+      const updated = (await client.query<any>(
+        `UPDATE crm_leads SET
+           name = COALESCE($3::text,name), company = $4::text, phone = $5::text, email = $6::text,
+           source_id = $7::int, stage = COALESCE($8::int,stage), expected_value = COALESCE($9::numeric,expected_value),
+           assigned_to = $10::int, notes = $11::text, updated_at = now(),
+           lost_reason = CASE WHEN $13::boolean THEN $12::text ELSE lost_reason END
+         WHERE lead_id = $1::int AND branch_id = $2::int
+         RETURNING lead_id AS "leadId", name, stage`,
+        [id, branchId, dto.name?.trim() || null, dto.company ?? null, dto.phone ?? null, dto.email ?? null,
+         dto.sourceId ? Number(dto.sourceId) : null, dto.stage != null ? Number(dto.stage) : null,
+         dto.expectedValue != null ? Number(dto.expectedValue) : null,
+         dto.assignedTo ? Number(dto.assignedTo) : null, dto.notes ?? null, effectiveReason, writeReason])).rows[0];
+      // GAP-02 — audit every meaningful stage/reason transition.
+      if (targetStage === 6 && oldStage !== 6) {
+        await logActivity(client, { userId: user.userId, branchId, action: 'crm.lead.lost',
+          entity: 'crm_lead', entityId: String(id), details: `أُغلق كخاسر — ${effectiveReason}`, ip });
+      } else if (oldStage === 6 && hasReasonKey && newReason && newReason !== oldReason) {
+        await logActivity(client, { userId: user.userId, branchId, action: 'crm.lead.lost_reason.edit',
+          entity: 'crm_lead', entityId: String(id), details: `${oldReason} ← ${newReason}`, ip });
+      } else if (oldStage !== targetStage && oldStage === 6) {
+        await logActivity(client, { userId: user.userId, branchId, action: 'crm.lead.stage.change',
+          entity: 'crm_lead', entityId: String(id), details: `${oldStage} ← ${targetStage}`, ip });
+      }
+      return updated;
+    });
   }
 
   async deleteLead(id: number, branchId: number) {
@@ -236,21 +267,25 @@ export class CrmService {
   }
 
   // --- Summary ---
-  async summary(branchId: number) {
+  async summary(branchId: number, from?: string, to?: string) {
+    const w: string[] = ['branch_id=$1::int'];
+    const args: any[] = [branchId];
+    if (from) { args.push(from); w.push(`created_at >= $${args.length}::date`); }
+    if (to) { args.push(to); w.push(`created_at < ($${args.length}::date + 1)`); }
     const byStage = await this.db.query<any>(
       `SELECT stage, count(*)::int AS count, COALESCE(sum(expected_value),0)::numeric AS value
-         FROM crm_leads WHERE branch_id=$1::int GROUP BY stage ORDER BY stage`,
-      [branchId],
-    );
+         FROM crm_leads WHERE ${w.join(' AND ')} GROUP BY stage ORDER BY stage`, args);
+    const won = Number((byStage as any[]).find((r: any) => Number(r.stage) === 5)?.count ?? 0);
+    const lost = Number((byStage as any[]).find((r: any) => Number(r.stage) === 6)?.count ?? 0);
+    const decided = won + lost;
+    const winRate = { won, lost, decided, percentage: decided ? Math.round((won / decided) * 100) : null };
     const openTickets = await this.db.one<{ c: number }>(
-      `SELECT count(*)::int AS c FROM crm_tickets WHERE branch_id=$1::int AND status IN (1,2)`, [branchId],
-    );
+      `SELECT count(*)::int AS c FROM crm_tickets WHERE branch_id=$1::int AND status IN (1,2)`, [branchId]);
     const dueActivities = await this.db.one<{ c: number }>(
       `SELECT count(*)::int AS c FROM crm_activities a JOIN crm_leads l ON l.lead_id=a.lead_id
         WHERE l.branch_id=$1::int AND a.is_done=false AND a.due_at IS NOT NULL AND a.due_at <= now() + interval '7 days'`,
-      [branchId],
-    );
-    return { byStage, openTickets: openTickets?.c ?? 0, dueActivities: dueActivities?.c ?? 0 };
+      [branchId]);
+    return { byStage, openTickets: openTickets?.c ?? 0, dueActivities: dueActivities?.c ?? 0, winRate };
   }
 }
 
@@ -258,7 +293,7 @@ export class CrmService {
 export class CrmController {
   constructor(private readonly svc: CrmService) {}
 
-  @RequirePermissions('crm.view') @Get('summary') summary(@CurrentBranch() b: number) { return this.svc.summary(b); }
+  @RequirePermissions('crm.view') @Get('summary') summary(@CurrentBranch() b: number, @Query('from') from?: string, @Query('to') to?: string) { return this.svc.summary(b, from, to); }
 
   @RequirePermissions('crm.view') @Get('sources') sources() { return this.svc.listSources(); }
   @RequirePermissions('crm.manage') @Post('sources') createSource(@Body() body: any) { return this.svc.createSource(body); }
@@ -279,7 +314,7 @@ export class CrmController {
   }
   @RequirePermissions('crm.view') @Get('leads/:id') lead(@Param('id', ParseIntPipe) id: number, @CurrentBranch() b: number) { return this.svc.getLead(id, b); }
   @RequirePermissions('crm.manage') @Post('leads') createLead(@Body() body: any, @CurrentBranch() b: number, @CurrentUser() u: AuthUser) { return this.svc.createLead(body, b, u); }
-  @RequirePermissions('crm.manage') @Put('leads/:id') updateLead(@Param('id', ParseIntPipe) id: number, @Body() body: any, @CurrentBranch() b: number) { return this.svc.updateLead(id, body, b); }
+  @RequirePermissions('crm.manage') @Put('leads/:id') updateLead(@Param('id', ParseIntPipe) id: number, @Body() body: any, @CurrentBranch() b: number, @CurrentUser() u: AuthUser, @Req() req: Request) { const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown'; return this.svc.updateLead(id, body, b, u, ip); }
   @RequirePermissions('crm.manage') @Delete('leads/:id') deleteLead(@Param('id', ParseIntPipe) id: number, @CurrentBranch() b: number) { return this.svc.deleteLead(id, b); }
   @RequirePermissions('crm.manage') @Post('leads/:id/convert') convertLead(@Param('id', ParseIntPipe) id: number, @CurrentBranch() b: number, @CurrentUser() u: AuthUser) { return this.svc.convertLead(id, b, u); }
 

@@ -444,6 +444,7 @@ No issue. E2 signed off.
 | TD-56 | **عالي — محاسبة (أُصلح في GAP-03): «COGS on maintenance tickets conditionally posted on payment.»** `deliverTicket()` كان يقيّد `Dr COGS / Cr INVENTORY` داخل `if (paid > 0)` → تذكرة بلا دفع تستهلك مخزونًا بلا قيد. **الإصلاح:** القيد عند `partsCost > 0` مستقلًا عن التحصيل (GAP03-08a/08b). | GAP-03 | **High** | maintenance.slice.ts |
 | TD-57 | **منخفض — هندسة (لا تغطية): «`max_charge` dead field.»** عمود مخزَّن بلا أي استخدام/تحقق في الكود؛ `estimated_cost` هو التقدير الفعلي. **الإصلاح المستقبلي:** تطبيقه كسقف أو إزالته. | GAP-03 | Low | maintenance_tickets |
 | TD-58 | **منخفض — قابلية تقرير (لا تغطية): «Expired-warranty override not distinguishable in `activity_log.action`.»** تجاوز المدة وتحصيل الضمان يستخدمان نفس الـaction `maintenance.warranty_charge_override`؛ المميّز في `details` فقط. **الإصلاح:** action منفصل أو `override_kind` عند الحاجة لتقرير مؤرخ. لا يعطّل GAP-03. | GAP-03 | Low | maintenance.slice.ts |
+| TD-59 | **منخفض — تحليل (لا تغطية): «CRM: no `closed_at` timestamp — win rate by close-date not possible; cohort-based (`created_at`) only.»** `GET /crm/summary?from=&to=` يفلتر على `created_at`. **الإصلاح:** عمود `closed_at` + backfill عند الحاجة. لا يعطّل GAP-02. | GAP-02 | Low | crm_leads |
 
 ---
 
