@@ -1,8 +1,9 @@
 import {
-  BadRequestException, Body, Controller, Delete, Get, Injectable, Module, NotFoundException,
+  BadRequestException, Body, Controller, Delete, ForbiddenException, Get, Injectable, Module, NotFoundException,
   Param, ParseIntPipe, Post, Put, Query,
 } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
+import { PoolClient } from 'pg';
 import { assertDeletionAllowed } from '../../common/delete-guard';
 import { applyMovement, getWarehouseCost } from '../../common/stock';
 import {
@@ -373,6 +374,49 @@ export class MaintenanceService {
     return { ...ticket, parts };
   }
 
+  /**
+   * GAP-03 — warranty is a documented financial policy, not a free tag:
+   * mandatory reference + dates; no customer charge unless an entitled user
+   * supplies a reason (audited); expiry needs a separate override.
+   */
+  private assertWarrantyPolicy(p: {
+    isWarranty: boolean; ref: string | null; startDate: string | null; endDate: string | null;
+    charged: boolean; reason: string | null; actualCost?: number; paidAmount?: number; user: AuthUser;
+  }): void {
+    if (!p.isWarranty) return;
+    if (!(p.ref ?? '').trim()) throw new BadRequestException('مرجع الضمان إلزامي عند تفعيل الضمان');
+    if (!p.startDate) throw new BadRequestException('تاريخ بداية الضمان إلزامي');
+    if (!p.endDate) throw new BadRequestException('تاريخ نهاية الضمان إلزامي');
+    if (p.endDate < p.startDate) throw new BadRequestException('تاريخ نهاية الضمان قبل تاريخ البداية');
+    const reason = (p.reason ?? '').trim();
+    if (p.charged) {
+      if (!p.user.permissions.includes('maintenance.charge_warranty')) {
+        throw new ForbiddenException('تحصيل تذكرة ضمان يتطلب صلاحية maintenance.charge_warranty');
+      }
+      if (!reason) throw new BadRequestException('سبب تحصيل تذكرة الضمان إلزامي');
+    } else if ((Number(p.actualCost ?? 0) > 0) || (Number(p.paidAmount ?? 0) > 0)) {
+      throw new BadRequestException('لا يمكن تحصيل تذكرة ضمان — استخدم maintenance.charge_warranty');
+    }
+    const today = new Date().toISOString().slice(0, 10);
+    if (p.endDate < today) {
+      if (!p.user.permissions.includes('maintenance.warranty_override')) {
+        throw new ForbiddenException('قبول ضمان بعد انتهاء المدة يتطلب صلاحية maintenance.warranty_override');
+      }
+      if (!reason) throw new BadRequestException('سبب قبول ضمان بعد انتهاء المدة إلزامي');
+    }
+  }
+
+  /** GAP-03 — audit a warranty override inside the caller's transaction. */
+  private async auditWarranty(
+    client: PoolClient, action: string, branchId: number, ticketId: number, details: string, user: AuthUser,
+  ): Promise<void> {
+    await client.query(
+      `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details, ip_address)
+       VALUES ($1::int,$2::int,$3::text,$4::text,$5::text,$6::text,$7::text)`,
+      [user.userId, branchId, action, 'maintenance_ticket', String(ticketId), details, 'policy'],
+    );
+  }
+
   private async validateTicketInput(dto: any) {
     const customerName = String(dto?.customerName ?? '').trim();
     const phone = String(dto?.phone ?? '').replace(/\D/g, '');
@@ -400,6 +444,35 @@ export class MaintenanceService {
     const cashAccountId = dto?.cashAccountId ? Number(dto.cashAccountId) : null;
     if (paid > 0 && !cashAccountId) throw new BadRequestException('اختر الخزينة لتسجيل المقدم');
 
+    // GAP-03 Part A/B — warranty fields + optional product/model default duration.
+    const isWarranty = dto?.isWarranty === true || String(dto?.isWarranty) === 'true';
+    const warrantyRef = String(dto?.warrantyRef ?? '').trim() || null;
+    let warrantyStart = dto?.warrantyStartDate ? String(dto.warrantyStartDate).slice(0, 10) : null;
+    let warrantyEnd = dto?.warrantyEndDate ? String(dto.warrantyEndDate).slice(0, 10) : null;
+    const warrantyCharged = dto?.warrantyCharged === true || String(dto?.warrantyCharged) === 'true';
+    const warrantyReason = String(dto?.warrantyChargeReason ?? dto?.warrantyOverrideReason ?? '').trim() || null;
+    if (isWarranty && (!warrantyStart || !warrantyEnd)) {
+      const def = await this.db.one<{ days: number | null; start: string | null; end: string | null }>(
+        `SELECT COALESCE(m.warranty_duration_days, p.warranty_duration_days)::int AS days,
+                t.warranty_start_date::text AS start, t.warranty_end_date::text AS end
+           FROM maintenance_models m
+           JOIN maintenance_products p ON p.product_id = m.product_id
+           LEFT JOIN maintenance_tickets t ON t.ticket_id = $3::bigint
+          WHERE m.model_id = $1::int AND m.product_id = $2::int`,
+        [input.modelId, input.productId, 0],
+      );
+      if (warrantyStart && !warrantyEnd && def?.days) {
+        const d = new Date(warrantyStart + 'T00:00:00Z');
+        d.setUTCDate(d.getUTCDate() + Number(def.days));
+        warrantyEnd = d.toISOString().slice(0, 10);
+      }
+    }
+    this.assertWarrantyPolicy({
+      isWarranty, ref: warrantyRef, startDate: warrantyStart, endDate: warrantyEnd,
+      charged: warrantyCharged, reason: warrantyReason, actualCost: Number(dto?.actualCost ?? 0),
+      paidAmount: paid, user,
+    });
+
     return this.db.transaction(async (client) => {
       const branch = await client.query(
         'SELECT code FROM branches WHERE branch_id = $1::int',
@@ -413,11 +486,12 @@ export class MaintenanceService {
            (branch_id, branch_cash_account_id, ticket_no, customer_name, phone, phone2, product_id, model_id,
             serial_no, item_color, accessories, product_condition, customer_notes, max_charge,
             expected_delivery, estimated_cost, total_paid, advance_amount, created_by,
-            is_warranty, warranty_ref)
+            is_warranty, warranty_ref, warranty_start_date, warranty_end_date,
+             warranty_charged, warranty_charge_reason)
          VALUES ($1::int, $2::int, $3::text, $4::text, $5::text, $6::text, $7::int, $8::int,
                  $9::text, $10::text, $11::jsonb, $12::text, $13::text, $14::numeric,
                  $15::date, $16::numeric, $17::numeric, $17::numeric, $18::int,
-                 $19::boolean, $20::text)
+                 $19::boolean, $20::text, $21::date, $22::date, $23::boolean, $24::text)
          RETURNING ticket_id`,
         [
           branchId, cashAccountId, ticketNo, input.customerName, input.phone, input.phone2,
@@ -431,11 +505,14 @@ export class MaintenanceService {
           Number(dto?.estimatedCost ?? 0),
           paid,
           user.userId,
-          dto?.isWarranty === true || String(dto?.isWarranty) === 'true',
-          String(dto?.warrantyRef ?? '').trim() || null,
+          isWarranty, warrantyRef, warrantyStart, warrantyEnd, warrantyCharged, warrantyReason,
         ],
       );
       const ticketId = Number(result.rows[0].ticket_id);
+      if (isWarranty && warrantyCharged) {
+        await this.auditWarranty(client, 'maintenance.warranty_charge_override', branchId, ticketId,
+          `تحصيل تذكرة ضمان — ${warrantyReason}`, user);
+      }
 
       if (paid > 0) {
         const journalId = await this.postMaintenanceCash(client, {
@@ -465,6 +542,17 @@ export class MaintenanceService {
       );
       if (!current.rows.length) throw new NotFoundException('الإذن غير موجود');
       const ticket = current.rows[0];
+
+      // GAP-03 — merge current warranty state with the request and enforce policy.
+      const mw = {
+        isWarranty: dto?.isWarranty === undefined ? !!ticket.is_warranty : (dto.isWarranty === true || String(dto.isWarranty) === 'true'),
+        ref: dto?.warrantyRef === undefined ? ticket.warranty_ref : (String(dto.warrantyRef ?? '').trim() || null),
+        startDate: dto?.warrantyStartDate === undefined ? ticket.warranty_start_date : (dto.warrantyStartDate ? String(dto.warrantyStartDate).slice(0, 10) : null),
+        endDate: dto?.warrantyEndDate === undefined ? ticket.warranty_end_date : (dto.warrantyEndDate ? String(dto.warrantyEndDate).slice(0, 10) : null),
+        charged: dto?.warrantyCharged === undefined ? !!ticket.warranty_charged : (dto.warrantyCharged === true || String(dto.warrantyCharged) === 'true'),
+        reason: String(dto?.warrantyChargeReason ?? dto?.warrantyOverrideReason ?? ticket.warranty_charge_reason ?? '').trim() || null,
+      };
+      this.assertWarrantyPolicy({ ...mw, actualCost: Number(dto?.actualCost ?? ticket.actual_cost ?? 0), paidAmount: paid, user });
       this.assertTicketBranch(ticket, branchId);
       if (Number(ticket.delivery_status) === 1 && !user.permissions.includes('users.manage')) {
         throw new BadRequestException('عفوا، لا يجوز تعديل إذن تم تسليمه مسبقًا');
@@ -494,7 +582,9 @@ export class MaintenanceService {
             advance_amount = $16::numeric, advance_journal_id = $17::bigint,
             advance_posted = $19::boolean,
             total_paid = total_paid + $18::numeric,
-            is_warranty = COALESCE($20::boolean, is_warranty), warranty_ref = $21::text
+            is_warranty = COALESCE($20::boolean, is_warranty), warranty_ref = $21::text,
+            warranty_start_date = $22::date, warranty_end_date = $23::date,
+            warranty_charged = $24::boolean, warranty_charge_reason = $25::text
           WHERE ticket_id = $1::bigint`,
         [
           id, cashAccountId, input.customerName, input.phone, input.phone2, input.productId, input.modelId,
@@ -503,10 +593,14 @@ export class MaintenanceService {
           String(dto?.customerNotes ?? '').trim() || null, Number(dto?.maxCharge ?? 0),
           dto?.expectedDelivery ? String(dto.expectedDelivery) : null,
           Number(dto?.estimatedCost ?? 0), paid, advanceJournalId, diff, paid > 0,
-          dto?.isWarranty === undefined ? null : dto?.isWarranty === true || String(dto?.isWarranty) === 'true',
-          String(dto?.warrantyRef ?? '').trim() || null,
+          mw.isWarranty, mw.ref, mw.startDate, mw.endDate, mw.charged, mw.reason,
         ],
       );
+      if (mw.isWarranty && mw.charged) {
+        await this.auditWarranty(client, 'maintenance.warranty_charge_override', branchId, id,
+          `تحصيل تذكرة ضمان — ${mw.reason}`, user);
+      }
+
       return { updated: true };
     });
   }
@@ -555,6 +649,13 @@ export class MaintenanceService {
         throw new BadRequestException('الجهاز مسلّم بالفعل — يلزم صلاحية خاصة لتعديل الفحص بعد التسليم');
       }
       const ticket = current.rows[0];
+      // GAP-03 — a warranty ticket cannot carry a customer charge at inspection.
+      this.assertWarrantyPolicy({
+        isWarranty: !!ticket.is_warranty, ref: ticket.warranty_ref,
+        startDate: ticket.warranty_start_date, endDate: ticket.warranty_end_date,
+        charged: !!ticket.warranty_charged, reason: ticket.warranty_charge_reason,
+        actualCost: Number(dto?.actualCost ?? 0), paidAmount: 0, user,
+      });
 
       const warehouseId = await this.defaultWarehouseId(client, branchId);
 
@@ -656,6 +757,13 @@ export class MaintenanceService {
       );
       if (!current.rows.length) throw new NotFoundException('الإذن غير موجود');
       const ticket = current.rows[0];
+      // GAP-03 — no customer collection on a warranty ticket without override.
+      this.assertWarrantyPolicy({
+        isWarranty: !!ticket.is_warranty, ref: ticket.warranty_ref,
+        startDate: ticket.warranty_start_date, endDate: ticket.warranty_end_date,
+        charged: !!ticket.warranty_charged, reason: ticket.warranty_charge_reason,
+        actualCost: Number(ticket.actual_cost ?? 0), paidAmount: paid, user,
+      });
       this.assertTicketBranch(ticket, branchId);
       if (Number(ticket.delivery_status) === 1 && !user.permissions.includes('users.manage')) {
         throw new BadRequestException('عفوا، الإذن مسلّم ومقفل');
@@ -678,28 +786,29 @@ export class MaintenanceService {
         });
       }
 
-      // Cost of the consumed parts at purchase cost (perpetual inventory).
-      if (paid > 0) {
-        const partsCostRows = await client.query(
-          `SELECT COALESCE(SUM(quantity * unit_cost), 0) AS cost FROM maintenance_ticket_parts WHERE ticket_id = $1::bigint`,
-          [id],
-        );
-        const partsCost = Number(partsCostRows.rows[0]?.cost ?? 0);
-        if (partsCost > 0.004) {
-          const cogs = await requireMapping(client, 'COGS', 'تكلفة المبيعات');
-          const inventory = await requireMapping(client, 'INVENTORY', 'المخزون');
-          const today = new Date().toISOString().slice(0, 10);
-          await assertPeriodOpen(client, branchId, today);
-          await postJournal(client, {
-            branchId, journalDate: today, journalType: 2,
-            description: `تكلفة قطع صيانة — ${ticket.ticket_no}`,
-            sourceType: 'maintenance_ticket', sourceId: id, userId: user.userId,
-            lines: [
-              { accountId: cogs.accountId, debit: partsCost, credit: 0, description: 'قطع غيار صيانة' },
-              { accountId: inventory.accountId, debit: 0, credit: partsCost, description: 'خروج مخزون' },
-            ],
-          });
-        }
+      // GAP-03 Part C — TD-56: COGS of consumed parts is INDEPENDENT of
+      // collection. A warranty ticket (paid=0) still consumes stock, so the
+      // journal must be posted whenever partsCost > 0 — otherwise inventory
+      // drops with no financial trace. Only the cash journal stays conditional.
+      const partsCostRows = await client.query(
+        `SELECT COALESCE(SUM(quantity * unit_cost), 0) AS cost FROM maintenance_ticket_parts WHERE ticket_id = $1::bigint`,
+        [id],
+      );
+      const partsCost = Number(partsCostRows.rows[0]?.cost ?? 0);
+      if (partsCost > 0.004) {
+        const cogs = await requireMapping(client, 'COGS', 'تكلفة المبيعات');
+        const inventory = await requireMapping(client, 'INVENTORY', 'المخزون');
+        const today = new Date().toISOString().slice(0, 10);
+        await assertPeriodOpen(client, branchId, today);
+        await postJournal(client, {
+          branchId, journalDate: today, journalType: 2,
+          description: `تكلفة قطع صيانة — ${ticket.ticket_no}`,
+          sourceType: 'maintenance_ticket', sourceId: id, userId: user.userId,
+          lines: [
+            { accountId: cogs.accountId, debit: partsCost, credit: 0, description: 'قطع غيار صيانة' },
+            { accountId: inventory.accountId, debit: 0, credit: partsCost, description: 'خروج مخزون' },
+          ],
+        });
       }
 
       await client.query(
@@ -761,7 +870,39 @@ export class MaintenanceService {
 
     return { items: rows, totals: { ...totals, profit: totals.total - totals.partsCost } };
   }
+  /** GAP-03 — warranty report: counts, COGS and the audited overrides. */
+  async warrantyReport(params: { branchId: number; from?: string; to?: string }) {
+    const w: string[] = ['t.is_warranty = true', 't.branch_id = $1::int'];
+    const args: any[] = [params.branchId];
+    if (params.from) { args.push(params.from); w.push(`t.received_at >= $${args.length}::date`); }
+    if (params.to) { args.push(params.to); w.push(`t.received_at < ($${args.length}::date + 1)`); }
+    const rows = await this.db.query<any>(
+      `SELECT t.ticket_id AS "ticketId", t.ticket_no AS "ticketNo", t.received_at AS "receivedAt",
+              t.warranty_ref AS "warrantyRef", t.warranty_start_date AS "warrantyStartDate",
+              t.warranty_end_date AS "warrantyEndDate", t.warranty_charged AS "warrantyCharged",
+              t.warranty_charge_reason AS "warrantyChargeReason",
+              COALESCE(t.actual_cost, t.estimated_cost) AS "chargeAmount",
+              COALESCE((SELECT SUM(p.quantity * p.unit_cost) FROM maintenance_ticket_parts p
+                         WHERE p.ticket_id = t.ticket_id), 0) AS "partsCost"
+         FROM maintenance_tickets t
+        WHERE ${w.join(' AND ')}
+        ORDER BY t.received_at DESC`, args);
+    const items = rows;
+    const charged = items.filter((r: any) => r.warrantyCharged);
+    return {
+      count: items.length,
+      chargedCount: charged.length,
+      unchargedCount: items.length - charged.length,
+      totalCogs: items.reduce((s: number, r: any) => s + Number(r.partsCost ?? 0), 0),
+      overrides: charged.map((r: any) => ({
+        ticketId: r.ticketId, ticketNo: r.ticketNo, reason: r.warrantyChargeReason,
+        cogs: Number(r.partsCost ?? 0),
+      })),
+      items,
+    };
+  }
 }
+
 
 @Controller('maintenance')
 export class MaintenanceController {
@@ -960,6 +1101,12 @@ export class MaintenanceController {
       customer: query?.customer,
       warranty: query?.warranty === '1',
     });
+  }
+
+  @RequirePermissions('maintenance.view')
+  @Get('reports/warranty')
+  warrantyReport(@Query() query: any, @CurrentBranch() branchId: number) {
+    return this.service.warrantyReport({ branchId, from: query?.from, to: query?.to });
   }
 }
 

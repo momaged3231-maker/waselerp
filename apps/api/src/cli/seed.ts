@@ -73,6 +73,8 @@ const PERMISSIONS: [string, string, string][] = [
   ['crm.view', 'إدارة العملاء CRM', 'عرض العملاء المحتملين والتذاكر'],
   ['crm.manage', 'إدارة العملاء CRM', 'إدارة العملاء المحتملين والأنشطة والتذاكر'],
   ['maintenance.manage', 'الصيانة', 'استلام وفحص وتسليم وتعديل وحذف أذون الصيانة'],
+  ['maintenance.charge_warranty', 'الصيانة', 'تحصيل تذكرة ضمان لحالة خارج نطاق الضمان — يتطلب سببًا إلزاميًا وتدقيقًا'],
+  ['maintenance.warranty_override', 'الصيانة', 'قبول تذكرة ضمان بعد انتهاء مدة الضمان — يتطلب سببًا إلزاميًا وتدقيقًا'],
 ];
 
 const ROLES: { name: string; nameEn: string; codes: string[] }[] = [

@@ -441,6 +441,8 @@ No issue. E2 signed off.
 | TD-53 | **متوسط — منتج/هندسة (لا تغطية): «Warranty eligibility not automated — no invoice/GRN linkage.»** GAP-03 v1 يُدخل تواريخ الضمان يدويًا؛ لا ربط `maintenance_tickets` ↔ `purchase_receipts`/`purchase_invoices` للأهلية التلقائية (L-size). **لا يعطّل GAP-03.** | GAP-03 | Medium | maintenance.slice.ts |
 | TD-54 | **متوسط — محاسبة (لا تغطية): «Warranty recovery from supplier not built.»**claims المورد (DEC-PURCH-027) غير مبني؛ GAP-03 يعامل الضمان كتكلفة COGS فقط، بلا حساب `warranty_claims` (مُرفوض في v1 لتجنّب حساب معلّق). | GAP-03 | Medium | accounting |
 | TD-55 | **منخفض — هندسة (لا تغطية): «X-Forwarded-For not honored in activity_log.»** `req.ip` خلف proxy يعطي IP الـproxy؛ deviation مقبول في Part B. **الإصلاح:** `trust proxy` + `X-Forwarded-For`/`X-Real-IP` عند الحاجة. | GAP-01 (deviation) | Low | common/audit.ts |
+| TD-56 | **عالي — محاسبة (أُصلح في GAP-03): «COGS on maintenance tickets conditionally posted on payment.»** `deliverTicket()` كان يقيّد `Dr COGS / Cr INVENTORY` داخل `if (paid > 0)` → تذكرة بلا دفع تستهلك مخزونًا بلا قيد. **الإصلاح:** القيد عند `partsCost > 0` مستقلًا عن التحصيل (GAP03-08a/08b). | GAP-03 | **High** | maintenance.slice.ts |
+| TD-57 | **منخفض — هندسة (لا تغطية): «`max_charge` dead field.»** عمود مخزَّن بلا أي استخدام/تحقق في الكود؛ `estimated_cost` هو التقدير الفعلي. **الإصلاح المستقبلي:** تطبيقه كسقف أو إزالته. | GAP-03 | Low | maintenance_tickets |
 
 ---
 
