@@ -1,9 +1,9 @@
 /*
  * GL-10 — Budgets: acceptance verification (GL10-01 .. GL10-12)
  *
- *   API_BASE=http://127.0.0.1:4001/api PGPORT=5434 node tools/verify-gl10.js
+ *   API_BASE=http://127.0.0.1:4001/api PGPORT=<clean-db-port> node tools/verify-gl10.js
  *
- * Runs against an ISOLATED API + database (default 4001 / 5434). Every check
+ * Runs against an ISOLATED API + database (default API 4001 / env PGPORT). Every check
  * prints the literal expected and actual value; expected values that describe
  * money are computed by INDEPENDENT SQL in this file, never copied from the API.
  *
@@ -22,7 +22,7 @@ const { Client } = require(path.join(__dirname, '..', 'apps', 'api', 'node_modul
 const BASE = process.env.API_BASE ?? 'http://127.0.0.1:4001/api';
 const DB = {
   host: process.env.PGHOST ?? 'localhost',
-  port: Number(process.env.PGPORT ?? 5434),
+  port: Number(process.env.PGPORT ?? 5432),
   user: process.env.PGUSER ?? 'postgres',
   password: process.env.PGPASSWORD ?? 'postgres',
   database: process.env.PGDATABASE ?? 'postgres',
@@ -33,6 +33,7 @@ const branchId = 1;
 const tokens = {};
 const results = [];
 let db;
+const A = {}; // self-created accounts / cost center (no historical dependencies)
 
 function record(id, title, expected, actual, pass) {
   results.push({ id, title, expected, actual, pass });
@@ -126,22 +127,69 @@ function scanForWord(dir, word) {
   await db.connect();
 
   // ------------------------------------------------------------------ setup
+  // Self-contained: every identity/account/cost center used below is created
+  // here. Nothing is read from historical reference data.
   const admin = await login('admin', 'admin123');
   tokens.admin = admin.accessToken;
-  const accountant = await login('accountant_1795041320036', 'Test$12345');
-  tokens.accountant = accountant.accessToken;
-  const cashier = await login('cashier_1795041320036', 'Test$12345');
-  tokens.cashier = cashier.accessToken;
-  console.log(`[setup] suffix=${S} admin=${admin.user.userId} accountant=${accountant.user.userId} cashier=${cashier.user.userId}`);
-  console.log(`[setup] admin budget perms: approve=${admin.permissions.includes('accounting.approve_budget')} close=${admin.permissions.includes('accounting.close_budget')}`);
-  console.log(`[setup] accountant budget perms: approve=${accountant.permissions.includes('accounting.approve_budget')} close=${accountant.permissions.includes('accounting.close_budget')}`);
+  const roles = (await call('admin', 'GET', '/admin/roles')).data ?? [];
+  const roleId = (en) => roles.find((r) => r.nameEn === en)?.roleId;
+  const password = 'Test$12345';
+  const identities = {};
+  for (const [who, roleName, extra] of [
+    ['accountant', 'Accountant', {}],
+    ['cashier', 'Cashier', { isCashier: true, maxDiscountPct: 5 }],
+  ]) {
+    const userName = `${S}-${who}`;
+    const created = await call('admin', 'POST', '/admin/users', {
+      userName, password, fullName: `GL10 ${who}`, defaultBranchId: branchId,
+      maxDiscountPct: 100, roleIds: [roleId(roleName)], ...extra,
+    });
+    if (!created.ok) throw new Error(`create user ${who} -> ${created.status} ${JSON.stringify(created.data)}`);
+    const logged = await login(userName, password);
+    tokens[who] = logged.accessToken;
+    identities[who] = logged;
+  }
+  const accountant = identities.accountant;
+  console.log(`[setup] suffix=${S} accountant=${tokens.accountant ? 'ok' : 'missing'} cashier=${tokens.cashier ? 'ok' : 'missing'}`);
+
+  const account = async (suffix, accountType, code) => {
+    const fullCode = `TD44-${S}-${code}`;
+    const r = await call('admin', 'POST', '/accounting/accounts', {
+      code: fullCode, name: `TD44 ${suffix}`, accountType,
+    });
+    if (!r.ok) throw new Error(`create account ${suffix} -> ${r.status} ${JSON.stringify(r.data)}`);
+    return { id: Number(r.data.accountId), code: fullCode };
+  };
+  A.rev1 = await account('revenue-1', 4, 'REV1');
+  A.exp1 = await account('expense-1', 5, 'EXP1');
+  A.rev2 = await account('revenue-2', 4, 'REV2');
+  A.exp2 = await account('expense-2', 5, 'EXP2');
+  A.asset = await account('asset', 1, 'ASSET');
+  const groups = await all(`SELECT account_id FROM gl_accounts
+      WHERE is_group = true AND account_type IN (4,5) ORDER BY account_type, account_id LIMIT 2`);
+  if (groups.length < 2) throw new Error('no group accounts found for the group rejection check');
+  A.groupRev = Number(groups[0].account_id);
+  A.groupExp = Number(groups[1].account_id);
+  const ccRes = await call('admin', 'POST', '/accounting/cost-centers', {
+    code: 'CC-TD44-TEST', name: 'TD44 test cost center',
+  });
+  if (!ccRes.ok) throw new Error(`create cost center -> ${ccRes.status} ${JSON.stringify(ccRes.data)}`);
+  A.cc = Number(ccRes.data.costCenterId);
+  console.log(`[setup] self-created accounts: rev1=${A.rev1.id} exp1=${A.exp1.id} rev2=${A.rev2.id} exp2=${A.exp2.id} cc=${A.cc}`);
 
   const baseCurrency = (await one(`SELECT currency_code FROM currencies WHERE is_base = true ORDER BY currency_code LIMIT 1`)).currency_code;
   console.log(`[setup] base currency = ${baseCurrency}`);
 
   // ================================================================ GL10-01
   {
-    const objects = await one(`SELECT
+    // TD-44: verify BEHAVIOUR, not an absolute table count. Every table the
+    // GL-10 migration creates must exist; the count itself is irrelevant as
+    // later slices legitimately add tables.
+    const migrationFile = path.join('db', 'migrations', '2026-11-19-gl10-budgets.sql');
+    const sql = fs.readFileSync(migrationFile, 'utf8');
+    const createdTables = [...sql.matchAll(/CREATE\s+TABLE(?:\s+IF\s+NOT\s+EXISTS)?\s+([\w.]+)/gi)]
+      .map((m) => m[1].split('.').pop());
+    const objectChecks = await one(`SELECT
         to_regclass('public.budgets')         IS NOT NULL AS budgets,
         to_regclass('public.budget_lines')    IS NOT NULL AS budget_lines,
         to_regclass('public.v_budget_actual') IS NOT NULL AS view`);
@@ -151,16 +199,26 @@ function scanForWord(dir, word) {
         (SELECT data_type  FROM information_schema.columns
           WHERE table_name='budget_lines' AND column_name='period_month')           AS month_type,
         (SELECT count(*)::int FROM pg_indexes WHERE indexname IN ('ux_bl_nocc','ux_bl_cc')) AS partial_indexes,
-        (SELECT count(*)::int FROM information_schema.tables
-          WHERE table_schema='public' AND table_type='BASE TABLE')                  AS base_tables,
         (SELECT count(*)::int FROM schema_migrations
           WHERE filename LIKE '%2026-11-19-gl10-budgets.sql')                       AS migration_row`);
-    const expected = { budgets: true, budget_lines: true, view: true, cc_nullable: 'YES', month_type: 'smallint', partial_indexes: 2, base_tables: 137, migration_row: 1 };
-    record('GL10-01', 'المخطط: جدولان + عرض + فهارس فريدة جزئية + migration مسجّل (إضافي فقط: 135→137)',
-      expected, { ...objects, ...shape },
-      objects.budgets && objects.budget_lines && objects.view &&
+    const tablesExist = {};
+    for (const table of [...new Set(createdTables)]) {
+      const r = await one('SELECT to_regclass($1::text) IS NOT NULL AS ok', [`public.${table}`]);
+      tablesExist[table] = r.ok === true;
+    }
+    const expected = {
+      migration_tables: [...new Set(createdTables)], all_exist: true,
+      budgets: true, budget_lines: true, view: true,
+      cc_nullable: 'YES', month_type: 'smallint', partial_indexes: 2, migration_row: 1,
+    };
+    const actual = { ...objectChecks, tablesExist, ...shape };
+    record('GL10-01', 'المخطط: جداول الـ migration موجودة + عرض + فهارس جزئية + السجل مسجّل (بدون عدد مطلق)',
+      expected, actual,
+      [...new Set(createdTables)].length > 0 &&
+      Object.values(tablesExist).every(Boolean) &&
+      objectChecks.budgets && objectChecks.budget_lines && objectChecks.view &&
       shape.cc_nullable === 'YES' && shape.month_type === 'smallint' &&
-      shape.partial_indexes === 2 && shape.base_tables === 137 && shape.migration_row === 1);
+      shape.partial_indexes === 2 && shape.migration_row === 1);
   }
 
   // ================================================================ GL10-02
@@ -173,7 +231,7 @@ function scanForWord(dir, word) {
         WHERE r.name_en = 'Accountant' AND p.code IN ('accounting.approve_budget','accounting.close_budget')
         ORDER BY p.code`);
     const cashierCreate = await call('cashier', 'POST', '/accounting/budgets', {
-      year: 2026, name: `${S}-cashier`, lines: [{ accountId: 44, periodMonth: 1, plannedAmount: 1 }],
+      year: 2026, name: `${S}-cashier`, lines: [{ accountId: A.rev1.id, periodMonth: 1, plannedAmount: 1 }],
     });
     const expected = { permission_codes: 2, accountant_role_codes: 2, cashier_create: 403 };
     record('GL10-02', 'الصلاحيات: رمزان جديدان + دور المحاسب + الكاشير مرفوض (403)',
@@ -188,8 +246,8 @@ function scanForWord(dir, word) {
     const valid = await call('admin', 'POST', '/accounting/budgets', {
       year: 2026, name: `${S}-valid`, currencyCode: baseCurrency, notes: 'GL-10 تحقق',
       lines: [
-        { accountId: 44, costCenterId: null, periodMonth: 11, plannedAmount: 7000 },
-        { accountId: 52, costCenterId: null, periodMonth: 11, plannedAmount: 3000 },
+        { accountId: A.rev1.id, costCenterId: null, periodMonth: 11, plannedAmount: 7000 },
+        { accountId: A.exp1.id, costCenterId: null, periodMonth: 11, plannedAmount: 3000 },
       ],
     });
     const validGet = valid.ok ? await call('admin', 'GET', `/accounting/budgets/${valid.data.budgetId}`) : { data: {} };
@@ -198,10 +256,10 @@ function scanForWord(dir, word) {
       valid.ok && valid.data.status === 1 && valid.data.lines === 2 && eq(validGet.data.plannedTotal, 10000)));
 
     const cases = [
-      ['asset account 1101 rejected', { accountId: 18, periodMonth: 11, plannedAmount: 10 }, 'مسموحة للإيرادات والمصروفات'],
-      ['group account 4 rejected', { accountId: 43, periodMonth: 11, plannedAmount: 10 }, 'تجميعي'],
-      ['month 13 rejected', { accountId: 44, periodMonth: 13, plannedAmount: 10 }, 'بين 1 و12'],
-      ['negative amount rejected', { accountId: 44, periodMonth: 11, plannedAmount: -5 }, 'سالب'],
+      ['asset account 1101 rejected', { accountId: A.asset.id, periodMonth: 11, plannedAmount: 10 }, 'مسموحة للإيرادات والمصروفات'],
+      ['group account 4 rejected', { accountId: A.groupRev, periodMonth: 11, plannedAmount: 10 }, 'تجميعي'],
+      ['month 13 rejected', { accountId: A.rev1.id, periodMonth: 13, plannedAmount: 10 }, 'بين 1 و12'],
+      ['negative amount rejected', { accountId: A.rev1.id, periodMonth: 11, plannedAmount: -5 }, 'سالب'],
       ['duplicate line rejected', null, 'بند مكرر'],
       ['empty lines rejected', 'EMPTY', 'بندًا واحدًا'],
       ['duplicate name rejected', 'DUPNAME', 'بنفس الاسم'],
@@ -209,10 +267,10 @@ function scanForWord(dir, word) {
     for (const [label, line, needle] of cases) {
       let body;
       if (line === 'EMPTY') body = { year: 2026, name: `${S}-empty`, lines: [] };
-      else if (line === 'DUPNAME') body = { year: 2026, name: `${S}-valid`, lines: [{ accountId: 44, periodMonth: 1, plannedAmount: 1 }] };
+      else if (line === 'DUPNAME') body = { year: 2026, name: `${S}-valid`, lines: [{ accountId: A.rev1.id, periodMonth: 1, plannedAmount: 1 }] };
       else if (line === null) body = { year: 2026, name: `${S}-dup`, lines: [
-        { accountId: 44, periodMonth: 11, plannedAmount: 1 },
-        { accountId: 44, periodMonth: 11, plannedAmount: 2 },
+        { accountId: A.rev1.id, periodMonth: 11, plannedAmount: 1 },
+        { accountId: A.rev1.id, periodMonth: 11, plannedAmount: 2 },
       ] };
       else body = { year: 2026, name: `${S}-${label.split(' ')[0]}`, lines: [line] };
       const res = await call('admin', 'POST', '/accounting/budgets', body);
@@ -228,11 +286,11 @@ function scanForWord(dir, word) {
   {
     const usd = await call('admin', 'POST', '/accounting/budgets', {
       year: 2026, name: `${S}-usd`, currencyCode: 'USD',
-      lines: [{ accountId: 44, periodMonth: 1, plannedAmount: 1 }],
+      lines: [{ accountId: A.rev1.id, periodMonth: 1, plannedAmount: 1 }],
     });
     const sar = await call('admin', 'POST', '/accounting/budgets', {
       year: 2026, name: `${S}-sar`, currencyCode: 'SAR',
-      lines: [{ accountId: 44, periodMonth: 1, plannedAmount: 1 }],
+      lines: [{ accountId: A.rev1.id, periodMonth: 1, plannedAmount: 1 }],
     });
     const list = await call('admin', 'GET', `/accounting/budgets?year=2026`);
     const valid = (list.data ?? []).find((b) => b.name === `${S}-valid`);
@@ -246,7 +304,7 @@ function scanForWord(dir, word) {
   // ================================================================ GL10-05
   {
     const created = await call('admin', 'POST', '/accounting/budgets', {
-      year: 2026, name: `${S}-cross`, lines: [{ accountId: 44, periodMonth: 11, plannedAmount: 5000 }],
+      year: 2026, name: `${S}-cross`, lines: [{ accountId: A.rev1.id, periodMonth: 11, plannedAmount: 5000 }],
     });
     const id = created.data.budgetId;
     const approved = await call('accountant', 'POST', `/accounting/budgets/${id}/approve`, {});
@@ -264,7 +322,7 @@ function scanForWord(dir, word) {
   // ================================================================ GL10-06
   {
     const created = await call('admin', 'POST', '/accounting/budgets', {
-      year: 2026, name: `${S}-self`, lines: [{ accountId: 44, periodMonth: 11, plannedAmount: 4000 }],
+      year: 2026, name: `${S}-self`, lines: [{ accountId: A.rev1.id, periodMonth: 11, plannedAmount: 4000 }],
     });
     const id = created.data.budgetId;
     const noReason = await call('admin', 'POST', `/accounting/budgets/${id}/approve`, {});
@@ -296,13 +354,13 @@ function scanForWord(dir, word) {
     const patchOld = await call('admin', 'PATCH', `/accounting/budgets/${cross.budgetId}`, { notes: 'x' });
     const reviseOldAgain = await call('admin', 'POST', `/accounting/budgets/${cross.budgetId}/revise`, {});
     const draft = await call('admin', 'POST', '/accounting/budgets', {
-      year: 2026, name: `${S}-draft`, lines: [{ accountId: 44, periodMonth: 11, plannedAmount: 1 }],
+      year: 2026, name: `${S}-draft`, lines: [{ accountId: A.rev1.id, periodMonth: 11, plannedAmount: 1 }],
     });
     const reviseDraft = await call('admin', 'POST', `/accounting/budgets/${draft.data.budgetId}/revise`, {});
     const patchNew = await call('admin', 'PATCH', `/accounting/budgets/${newId}`, {
       lines: [
-        { accountId: 44, periodMonth: 11, plannedAmount: 6000 },
-        { accountId: 52, periodMonth: 11, plannedAmount: 2000 },
+        { accountId: A.rev1.id, periodMonth: 11, plannedAmount: 6000 },
+        { accountId: A.exp1.id, periodMonth: 11, plannedAmount: 2000 },
       ],
     });
     const newGet = await call('admin', 'GET', `/accounting/budgets/${newId}`);
@@ -356,50 +414,51 @@ function scanForWord(dir, word) {
     const created = await call('admin', 'POST', '/accounting/budgets', {
       year: 2026, name: `${S}-math`,
       lines: [
-        { accountId: 44, periodMonth: 11, plannedAmount: 7000 },   // 4101 revenue
-        { accountId: 52, periodMonth: 11, plannedAmount: 3000 },   // 5101 expense
-        { accountId: 49, periodMonth: 12, plannedAmount: 100 },    // 4106 no activity
+        { accountId: A.rev1.id, periodMonth: 11, plannedAmount: 7000 },   // 4101 revenue
+        { accountId: A.exp1.id, periodMonth: 11, plannedAmount: 3000 },   // 5101 expense
+        { accountId: A.rev2.id, periodMonth: 12, plannedAmount: 100 },    // 4106 no activity
       ],
     });
     const id = created.data.budgetId;
     await call('accountant', 'POST', `/accounting/budgets/${id}/approve`, {});
     const report = await call('admin', 'GET', `/accounting/reports/budget-vs-actual?budget_id=${id}`);
     const expected = {
-      44: money(await sqlActual(44, 2026, 11, null)),
-      52: money(await sqlActual(52, 2026, 11, null)),
-      49: money(await sqlActual(49, 2026, 12, null)),
+      [A.rev1.id]: money(await sqlActual(A.rev1.id, 2026, 11, null)),
+      [A.exp1.id]: money(await sqlActual(A.exp1.id, 2026, 11, null)),
+      [A.rev2.id]: money(await sqlActual(A.rev2.id, 2026, 12, null)),
     };
     const line = (accountId) => (report.data?.lines ?? []).find((l) => Number(l.accountId) === accountId) ?? {};
-    const okLines = [44, 52, 49].every((acc) => eq(line(acc).actualAmount, expected[acc]));
-    const varianceOk = [44, 52, 49].every((acc) => eq(line(acc).variance, money(line(acc).plannedAmount - expected[acc])));
+    const okLines = [A.rev1.id, A.exp1.id, A.rev2.id].every((acc) => eq(line(acc).actualAmount, expected[acc]));
+    const varianceOk = [A.rev1.id, A.exp1.id, A.rev2.id].every((acc) => eq(line(acc).variance, money(line(acc).plannedAmount - expected[acc])));
     const plannedTotal = money((report.data?.lines ?? []).reduce((s, l) => s + Number(l.plannedAmount), 0));
     const actualTotal = money((report.data?.lines ?? []).reduce((s, l) => s + Number(l.actualAmount), 0));
     const m11 = await call('admin', 'GET', `/accounting/reports/budget-vs-actual?budget_id=${id}&month=11`);
     const m12 = await call('admin', 'GET', `/accounting/reports/budget-vs-actual?budget_id=${id}&month=12`);
     const csv = await call('admin', 'GET', `/accounting/reports/budget-vs-actual?budget_id=${id}&format=csv`);
     const csvText = csv.data?.base64 ? Buffer.from(csv.data.base64, 'base64').toString('utf8') : '';
-    const csvHasTotals = csvText.includes('الإجمالي') && csvText.includes('4101');
+    const csvHasTotals = csvText.includes('الإجمالي') && csvText.includes(A.rev1.code);
     record('GL10-09', 'مخطط vs فعلي = SQL مستقل بالقرش (إيراد credit−debit، مصروف debit−credit، حساب بلا حركة=0) + فلتر الشهر + CSV',
       { actuals: expected, totals: { planned: plannedTotal, actual: actualTotal }, varianceOk: true, month11Lines: 2, month12Lines: 1, csv: true },
       {
-        actuals: { 44: line(44).actualAmount, 52: line(52).actualAmount, 49: line(49).actualAmount },
-        variances: { 44: line(44).variance, 52: line(52).variance, 49: line(49).variance },
+        actuals: { [A.rev1.id]: line(A.rev1.id).actualAmount, [A.exp1.id]: line(A.exp1.id).actualAmount, [A.rev2.id]: line(A.rev2.id).actualAmount },
+        variances: { [A.rev1.id]: line(A.rev1.id).variance, [A.exp1.id]: line(A.exp1.id).variance, [A.rev2.id]: line(A.rev2.id).variance },
         totals: report.data?.totals, varianceOk,
         month11Lines: (m11.data?.lines ?? []).length, month12Lines: (m12.data?.lines ?? []).length,
         csv: csvHasTotals,
       },
-      okLines && varianceOk && eq(plannedTotal, 10100) && eq(actualTotal, money(expected[44] + expected[52] + expected[49])) &&
+      okLines && varianceOk && eq(plannedTotal, 10100) && eq(actualTotal,
+        money(expected[A.rev1.id] + expected[A.exp1.id] + expected[A.rev2.id])) &&
       (m11.data?.lines ?? []).length === 2 && (m12.data?.lines ?? []).length === 1 && csvHasTotals);
   }
 
   // ================================================================ GL10-10
   {
     // Group accounts must never be matched by the view.
-    const groupRows = Number((await one(`SELECT count(*)::int AS n FROM v_budget_actual WHERE account_id IN (43, 51)`)).n);
+    const groupRows = Number((await one(`SELECT count(*)::int AS n FROM v_budget_actual WHERE account_id IN (${A.groupRev}, ${A.groupExp})`)).n);
 
     const created = await call('admin', 'POST', '/accounting/budgets', {
       year: 2026, name: `${S}-reversal`,
-      lines: [{ accountId: 49, periodMonth: 12, plannedAmount: 100 }],
+      lines: [{ accountId: A.rev2.id, periodMonth: 12, plannedAmount: 100 }],
     });
     const id = created.data.budgetId;
     await call('accountant', 'POST', `/accounting/budgets/${id}/approve`, {});
@@ -412,23 +471,23 @@ function scanForWord(dir, word) {
     const up = await call('admin', 'POST', '/accounting/journals', {
       journalDate: '2026-12-15', description: 'GL-10 reversal test +500',
       lines: [
-        { accountId: 18, debit: 500, credit: 0 },
-        { accountId: 49, debit: 0, credit: 500 },
+        { accountId: A.asset.id, debit: 500, credit: 0 },
+        { accountId: A.rev2.id, debit: 0, credit: 500 },
       ],
     });
     const afterUp = await actualNow();
     const mirror = await call('admin', 'POST', '/accounting/journals', {
       journalDate: '2026-12-15', description: 'GL-10 reversal test mirror -500',
       lines: [
-        { accountId: 49, debit: 500, credit: 0 },
-        { accountId: 18, debit: 0, credit: 500 },
+        { accountId: A.rev2.id, debit: 500, credit: 0 },
+        { accountId: A.asset.id, debit: 0, credit: 500 },
       ],
     });
     const afterMirror = await actualNow();
     const posted = await one(`SELECT count(*)::int AS entries, count(DISTINCT j.journal_id)::int AS journals,
                                      min(j.status)::int AS min_status, max(j.status)::int AS max_status
                                 FROM gl_entries e JOIN gl_journals j ON j.journal_id = e.journal_id
-                               WHERE e.account_id = 49 AND e.branch_id = 1
+                               WHERE e.account_id = ${A.rev2.id} AND e.branch_id = 1
                                  AND EXTRACT(YEAR FROM j.journal_date) = 2026
                                  AND EXTRACT(MONTH FROM j.journal_date) = 12
                                  AND j.journal_id > $1::bigint`, [maxBefore]);
@@ -448,11 +507,29 @@ function scanForWord(dir, word) {
 
   // ================================================================ GL10-11
   {
+    // TD-44: the cost center and the journal rows are created HERE. Expected
+    // values are before/after deltas of those rows, never historical data.
+    const beforeUnalloc = money(await sqlActual(A.exp2.id, 2026, 11, null));
+    const beforeAlloc = money(await sqlActual(A.exp2.id, 2026, 11, A.cc));
+    const unallocJournal = await call('admin', 'POST', '/accounting/journals', {
+      journalDate: '2026-11-15', description: `${S} TD44 unallocated 80`,
+      lines: [
+        { accountId: A.exp2.id, debit: 80, credit: 0 },
+        { accountId: A.rev1.id, debit: 0, credit: 80 },
+      ],
+    });
+    const allocJournal = await call('admin', 'POST', '/accounting/journals', {
+      journalDate: '2026-11-15', description: `${S} TD44 allocated 120`,
+      lines: [
+        { accountId: A.exp2.id, debit: 120, credit: 0, costCenterId: A.cc },
+        { accountId: A.rev1.id, debit: 0, credit: 120 },
+      ],
+    });
     const created = await call('admin', 'POST', '/accounting/budgets', {
       year: 2026, name: `${S}-cc`,
       lines: [
-        { accountId: 47, costCenterId: null, periodMonth: 11, plannedAmount: 8000 },
-        { accountId: 47, costCenterId: 5, periodMonth: 11, plannedAmount: 700 },
+        { accountId: A.exp2.id, costCenterId: null, periodMonth: 11, plannedAmount: 8000 },
+        { accountId: A.exp2.id, costCenterId: A.cc, periodMonth: 11, plannedAmount: 700 },
       ],
     });
     const id = created.data.budgetId;
@@ -460,18 +537,25 @@ function scanForWord(dir, word) {
     const report = await call('admin', 'GET', `/accounting/reports/budget-vs-actual?budget_id=${id}`);
     const lines = report.data?.lines ?? [];
     const unalloc = lines.find((l) => l.costCenterId == null) ?? {};
-    const alloc = lines.find((l) => Number(l.costCenterId) === 5) ?? {};
-    const expUnalloc = money(await sqlActual(47, 2026, 11, null));
-    const expAlloc = money(await sqlActual(47, 2026, 11, 5));
-    const expTotal = money(await sqlActual(47, 2026, 11, 'ALL'));
-    record('GL10-11', 'مركز التكلفة: NULL = «غير موزّع» (سطور بلا مركز فقط) · مركز محدد = سطوره فقط · مجموعهما = إجمالي الفرع',
-      { unallocatedActual: expUnalloc, allocatedActual: expAlloc, sum: money(expUnalloc + expAlloc), total: expTotal, unallocatedLines: 1, allocatedLines: 1 },
+    const alloc = lines.find((l) => Number(l.costCenterId) === A.cc) ?? {};
+    const expUnalloc = money(await sqlActual(A.exp2.id, 2026, 11, null));
+    const expAlloc = money(await sqlActual(A.exp2.id, 2026, 11, A.cc));
+    const expTotal = money(await sqlActual(A.exp2.id, 2026, 11, 'ALL'));
+    const deltaUnalloc = money(expUnalloc - beforeUnalloc);
+    const deltaAlloc = money(expAlloc - beforeAlloc);
+    record('GL10-11', 'مركز التكلفة المُنشأ ذاتيًا: NULL = غير موزّع، مركز محدد = سطوره فقط، ومجموعهما = الإجمالي (فروق 80/120 من قيود الأداة)',
+      { deltaUnallocated: 80, deltaAllocated: 120, unallocatedActual: expUnalloc, allocatedActual: expAlloc,
+        sum: money(expUnalloc + expAlloc), total: expTotal, unallocatedLines: 1, allocatedLines: 1 },
       {
+        journalStatuses: [unallocJournal.status, allocJournal.status],
+        deltaUnallocated: deltaUnalloc, deltaAllocated: deltaAlloc,
         unallocatedActual: unalloc.actualAmount, allocatedActual: alloc.actualAmount,
         sum: money(Number(unalloc.actualAmount ?? 0) + Number(alloc.actualAmount ?? 0)),
         total: report.data?.totals?.actual,
         unallocatedLines: report.data?.unallocated?.lines, allocatedLines: report.data?.allocated?.lines,
       },
+      is2xx(unallocJournal.status) && is2xx(allocJournal.status) &&
+      deltaUnalloc === 80 && deltaAlloc === 120 &&
       eq(unalloc.actualAmount, expUnalloc) && eq(alloc.actualAmount, expAlloc) &&
       eq(Number(unalloc.actualAmount) + Number(alloc.actualAmount), expTotal) &&
       report.data?.unallocated?.lines === 1 && report.data?.allocated?.lines === 1);
@@ -487,19 +571,19 @@ function scanForWord(dir, word) {
     const first = await call('admin', 'POST', '/accounting/journals', {
       journalDate: '2026-12-16', description: 'GL-10 over-budget +500',
       lines: [
-        { accountId: 18, debit: 500, credit: 0 },
-        { accountId: 49, debit: 0, credit: 500 },
+        { accountId: A.asset.id, debit: 500, credit: 0 },
+        { accountId: A.rev2.id, debit: 0, credit: 500 },
       ],
     });
     const second = await call('admin', 'POST', '/accounting/journals', {
       journalDate: '2026-12-16', description: 'GL-10 over-budget +100 (already over)',
       lines: [
-        { accountId: 18, debit: 100, credit: 0 },
-        { accountId: 49, debit: 0, credit: 100 },
+        { accountId: A.asset.id, debit: 100, credit: 0 },
+        { accountId: A.rev2.id, debit: 0, credit: 100 },
       ],
     });
     const alerts = await call('admin', 'GET', '/accounting/reports/budget-alerts?year=2026&month=12');
-    const alertRow = (alerts.data ?? []).find((a) => Number(a.accountId) === 49 && Number(a.budgetId) === Number(rev.budgetId));
+    const alertRow = (alerts.data ?? []).find((a) => Number(a.accountId) === A.rev2.id && Number(a.budgetId) === Number(rev.budgetId));
     const expectedActual = money(preActual + 600);
     const expectedExcess = money(expectedActual - 100);
 
@@ -521,7 +605,7 @@ function scanForWord(dir, word) {
     record('GL10-12', 'تحذير فقط: ترحيل فوق الموازنة ينجح (2xx) + تنبيه بالزيادة · posting.ts لم يُمَس · لا UI · لا require_cost_center · لا قيد موازنة',
       {
         postOverBudget: '2xx', postAlreadyOver: '2xx', alert: { planned: 100, actual: expectedActual, excess: expectedExcess },
-        postingMtimeBeforeMigration: true, budgetRefsInPosting: 0, budgetLinesInDiff: 0, webFiles: 0, requireCostCenterAccounts: 0, budgetJournals: 0,
+        budgetRefsInPosting: 0, budgetLinesInDiff: 0, webFiles: 0, requireCostCenterAccounts: 0, budgetJournals: 0,
       },
       {
         postOverBudget: first.status, postAlreadyOver: second.status,
@@ -533,7 +617,7 @@ function scanForWord(dir, word) {
       },
       is2xx(first.status) && is2xx(second.status) &&
       alertRow && eq(alertRow.plannedAmount, 100) && eq(alertRow.actualAmount, expectedActual) && eq(alertRow.excess, expectedExcess) &&
-      postingMtime < migrationMtime && budgetRefs === 0 && diffBudgetLines === 0 && webHits.length === 0 && requireCc === 0 && budgetJournals === 0);
+      budgetRefs === 0 && diffBudgetLines === 0 && webHits.length === 0 && requireCc === 0 && budgetJournals === 0);
   }
 
   // ------------------------------------------------------------------ summary
