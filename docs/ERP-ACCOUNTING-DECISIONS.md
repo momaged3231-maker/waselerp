@@ -443,6 +443,7 @@ No issue. E2 signed off.
 | TD-55 | **منخفض — هندسة (لا تغطية): «X-Forwarded-For not honored in activity_log.»** `req.ip` خلف proxy يعطي IP الـproxy؛ deviation مقبول في Part B. **الإصلاح:** `trust proxy` + `X-Forwarded-For`/`X-Real-IP` عند الحاجة. | GAP-01 (deviation) | Low | common/audit.ts |
 | TD-56 | **عالي — محاسبة (أُصلح في GAP-03): «COGS on maintenance tickets conditionally posted on payment.»** `deliverTicket()` كان يقيّد `Dr COGS / Cr INVENTORY` داخل `if (paid > 0)` → تذكرة بلا دفع تستهلك مخزونًا بلا قيد. **الإصلاح:** القيد عند `partsCost > 0` مستقلًا عن التحصيل (GAP03-08a/08b). | GAP-03 | **High** | maintenance.slice.ts |
 | TD-57 | **منخفض — هندسة (لا تغطية): «`max_charge` dead field.»** عمود مخزَّن بلا أي استخدام/تحقق في الكود؛ `estimated_cost` هو التقدير الفعلي. **الإصلاح المستقبلي:** تطبيقه كسقف أو إزالته. | GAP-03 | Low | maintenance_tickets |
+| TD-58 | **منخفض — قابلية تقرير (لا تغطية): «Expired-warranty override not distinguishable in `activity_log.action`.»** تجاوز المدة وتحصيل الضمان يستخدمان نفس الـaction `maintenance.warranty_charge_override`؛ المميّز في `details` فقط. **الإصلاح:** action منفصل أو `override_kind` عند الحاجة لتقرير مؤرخ. لا يعطّل GAP-03. | GAP-03 | Low | maintenance.slice.ts |
 
 ---
 
