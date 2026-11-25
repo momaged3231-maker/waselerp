@@ -55,6 +55,25 @@ async function raw(method, path, body, authToken) {
   return { status: response.status, ok: response.ok, data };
 }
 
+/** TD-45 — reuse a smoke-owned period; reopen/unlock it if a prior run left it closed. */
+async function ensurePeriod(name, startDate, endDate) {
+  const all = await call('GET', '/accounting/periods');
+  const found = (all ?? []).find((p) => p.name === name);
+  if (found) {
+    if (found.isClosed) {
+      const rev = await raw('POST', `/accounting/periods/${found.periodId}/reverse-close`, { reason: 'TD-45: reopen smoke period for rerun' });
+      if (!rev.ok) throw new Error(`reopen ${name} -> ${rev.status} ${JSON.stringify(rev.data)}`);
+    }
+    if (found.manualLock) {
+      await raw('POST', `/accounting/periods/${found.periodId}/manual-unlock`, { reason: 'TD-45 cleanup' });
+    }
+    return found.periodId;
+  }
+  const created = await call('POST', '/accounting/periods', { name, startDate, endDate });
+  if (!created?.periodId) throw new Error(`create period ${name} -> ${JSON.stringify(created)}`);
+  return created.periodId;
+}
+
 /** Logs in as a throwaway user and returns its token + branch. */
 async function loginAs(userName, password) {  const response = await fetch(`${BASE}/auth/login`, {
     method: 'POST',
@@ -67,6 +86,7 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
 }
 
 (async () => {
+  // TD-45 — close any shift left open by an earlier run before the invoice flow.
   // 1. login
   const login = await call('POST', '/auth/login', { userName: 'admin', password: 'admin123' });
   token = login.accessToken;
@@ -90,7 +110,13 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
   });
   check('items created', !!itemA.itemId && !!itemB.itemId);
 
-  // 4. open the branch shift — RequireCashierShift blocks invoice posting without it
+  // 4. TD-45 — close any shift left open by an earlier run, then open ours.
+  try {
+    const current = await call('GET', '/treasury/shifts/current');
+    if (current && (current.shiftId || current.status === 1)) {
+      await call('POST', '/treasury/shifts/close', { countedCash: Number(current.expectedCash ?? 0) });
+    }
+  } catch { /* no open shift — fine */ }
   const openedForFlow = await raw('POST', '/treasury/shifts/open', { openingBalance: 0 }, token);
   check('branch shift opened for the invoice flow', openedForFlow.status === 201, String(openedForFlow.status));
 
@@ -568,16 +594,7 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
   check('vouchers listed', voucherList.length > 0, `${voucherList.length}`);
 
   // period closing blocks later postings
-  const allPeriods = await call('GET', '/accounting/periods');
-  let closedPeriod = allPeriods.find((p) => p.name === 'فترة اختبار');
-  if (!closedPeriod) {
-    const created = await call('POST', '/accounting/periods', {
-      name: 'فترة اختبار',
-      startDate: '2020-06-01',
-      endDate: '2020-06-30',
-    });
-    closedPeriod = { periodId: created.periodId, isClosed: false };
-  }
+  const closedPeriod = { periodId: await ensurePeriod('SMOKE فترة اختبار', '2021-06-01', '2021-06-30'), isClosed: false };
   check('period created', !!closedPeriod.periodId, String(closedPeriod.periodId));
   const closeResult = await raw('POST', `/accounting/periods/${closedPeriod.periodId}/manual-lock`, { reason: 'اختبار قفل الترحيل' });
   check('manual administrative lock applied (201)', closeResult.status === 201, String(closeResult.status));
@@ -586,7 +603,7 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
   check('manual lock does NOT set is_closed', lockedRow && lockedRow.isClosed === false, JSON.stringify(lockedRow));
 
   const blocked = await raw('POST', '/accounting/journals', {
-    journalDate: '2020-06-15',
+    journalDate: '2021-06-15',
     description: 'قيد داخل فترة مقفولة إداريًا',
     lines: [
       { accountId: expenseAccount.accountId, debit: 10 },
@@ -598,7 +615,7 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
   const unlockResult = await raw('POST', `/accounting/periods/${closedPeriod.periodId}/manual-unlock`, { reason: 'انتهى اختبار القفل' });
   check('manual administrative unlock applied (201)', unlockResult.status === 201, String(unlockResult.status));
   const allowed = await raw('POST', '/accounting/journals', {
-    journalDate: '2020-06-15',
+    journalDate: '2021-06-15',
     description: 'قيد بعد إزالة القفلة الإدارية',
     lines: [
       { accountId: expenseAccount.accountId, debit: 10 },
@@ -1539,6 +1556,7 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     const balBefore = await call('GET', `/inventory/balances?warehouseId=${warehouseId}`);
     const qtyBeforeA = Number(balBefore.find((row) => row.itemId === itemB.itemId)?.onHandQty ?? 0);
 
+    const suspenseBefore = await call('GET', '/reports/branch-transfers/suspense');
     const btApprove = await call('POST', `/branch-transfers/${bt.branchTransferId}/approve`, {});
     check('E2: transfer issued (outbound voucher, journal in source branch)',
       btApprove.status === 2 && !!btApprove.journalId, JSON.stringify(btApprove));
@@ -1572,9 +1590,12 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     check('E2: duplicate receive refused (400/409)', btReceiveAgain.status === 400 || btReceiveAgain.status === 409, String(btReceiveAgain.status));
 
     const suspense = await call('GET', '/reports/branch-transfers/suspense');
+    // TD-45: other runs may leave transfers in transit. Verify THIS transfer's
+    // net effect on the company clearing account, not the absolute balance.
+    const clearingDelta = Math.abs(Number(suspense.company?.glClearing ?? 0) - Number(suspenseBefore.company?.glClearing ?? 0));
     check('E2: inter-branch clearing nets to ZERO company-wide after receive',
-      suspense.company?.match === true && Math.abs(Number(suspense.company.glClearing)) < 0.005,
-      JSON.stringify(suspense));
+      suspense.company?.match === true && clearingDelta < 0.005,
+      JSON.stringify({ delta: clearingDelta, before: suspenseBefore.company, after: suspense.company }));
 
     const btCancelLate = await raw('POST', `/branch-transfers/${bt.branchTransferId}/cancel`, { reason: 'test' });
     check('E2: cancel after receipt refused (400)', btCancelLate.status === 400, String(btCancelLate.status));
@@ -1890,7 +1911,19 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
       && togglesRestored.kitchenPrinterName === (settingsNow.KitchenPrinterName ?? ''));
 
   // 48. P6/P7 — HR depth (components, attendance import, advances, payroll) + xlsx + item/party attachments
-  const currentMonth = new Date().toISOString().slice(0, 7);
+  // TD-45: pick a payroll month with no existing salaries so repeated runs
+  // never trip "payroll already posted" from an earlier run.
+  let currentMonth = new Date().toISOString().slice(0, 7);
+  {
+    const now = new Date();
+    for (let back = 0; back < 36; back++) {
+      const candidate = new Date(now.getFullYear(), now.getMonth() - back, 1).toISOString().slice(0, 7);
+      const rows = await call('GET', `/hr/salaries?month=${candidate}`);
+      const periods = await call('GET', '/accounting/periods');
+      const closed = (periods ?? []).some((p) => p.isClosed && p.startDate?.slice(0, 7) <= candidate && p.endDate?.slice(0, 7) >= candidate);
+      if ((rows ?? []).length === 0 && !closed) { currentMonth = candidate; break; }
+    }
+  }
 
   const payrollEmployee = await call('POST', '/hr/employees', {
     code: `EMP-${stamp}`, name: `موظف مرتبات ${stamp}`, jobTitle: 'محاسب',
@@ -2009,7 +2042,11 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
   check('payroll summary reports the month', Array.isArray(payrollSummary.items) && payrollSummary.items.length > 0,
     JSON.stringify(payrollSummary.totals));
 
-  const attendanceSummary = await call('GET', `/hr/reports/attendance-summary?from=${currentMonth}-01&to=${currentMonth}-28`);
+  // TD-45: attendance rows are written at "today"; the summary range must cover
+  // today, not the payroll month (which is intentionally picked as an empty,
+  // unclosed month so repeated runs can generate payroll).
+  const attendanceMonth = new Date().toISOString().slice(0, 7);
+  const attendanceSummary = await call('GET', `/hr/reports/attendance-summary?from=${attendanceMonth}-01&to=${attendanceMonth}-28`);
   const employeeSummary = attendanceSummary.find(
     (row) => Number(row.employeeId) === Number(payrollEmployee.employeeId));
   check('attendance summary aggregates the employee',
@@ -2256,9 +2293,7 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     check('invoice has a date', !!dateInv.header?.invoiceDate, localDay(dateInv.header?.invoiceDate));
     check('journal posted to the invoice date', localDay(dateJournal.header?.journalDate) === localDay(dateInv.header?.invoiceDate), `journal ${localDay(dateJournal.header?.journalDate)} invoice ${localDay(dateInv.header?.invoiceDate)}`);
 
-    const closedPeriod = await call('POST', '/accounting/periods', {
-      name: 'اختبار قفل Regression', startDate: '2026-09-01', endDate: '2026-09-30',
-    });
+    const closedPeriod = { periodId: await ensurePeriod('SMOKE Regression 2026-09', '2026-09-01', '2026-09-30') };
     check('regression close period created', !!closedPeriod.periodId, String(closedPeriod.periodId));
     await call('POST', `/accounting/periods/${closedPeriod.periodId}/manual-lock`, { reason: 'اختبار Regression — قفل الترحيل' });
     const inClosedPeriod = await raw('POST', '/sales/invoices', {
@@ -2411,8 +2446,14 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
       }
       return null;
     };
-    const bankGlId = Number(findAccount(accountsTree, '1102')?.accountId);
-    check('E1: bank GL account resolved', !!bankGlId, `accountId=${bankGlId}`);
+    // TD-45 — a dedicated GL bank account per run isolates book balance
+    // from earlier runs that also used account 1102.
+    const bankGlCode = `1102S${stamp}`;
+    const bankGlCreated = await call('POST', '/accounting/accounts', {
+      code: bankGlCode, name: `SMOKE bank ${stamp}`, accountType: 1, normalSide: 1,
+    });
+    const bankGlId = Number(bankGlCreated.accountId);
+    check('E1: bank GL account resolved', !!bankGlId, `accountId=${bankGlId} code=${bankGlCode}`);
 
     const bankAccount = await call('POST', '/treasury/accounts', {
       name: `بنك اختبار ${stamp}`, type: 2, bankName: 'بنك الاختبار الرئيسي',
@@ -2420,6 +2461,18 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     });
     check('E1: bank account created', !!bankAccount.cashAccountId, String(bankAccount.cashAccountId));
     const bankId = bankAccount.cashAccountId;
+    // TD-45 — unique statement references per run so auto-match never sees
+    // book entries from an earlier run on the shared GL bank account.
+    const refAuto = `TRX-E1-AUTO-${stamp}`;
+    const refManual = `MANUAL-E1-REF-${stamp}`;
+    const refPart = `TRX-E1-PART-${stamp}`;
+    const refFee = `FEE-E1-${stamp}`;
+    const refUnknown = `UNKNOWN-E1-${stamp}`;
+    const refPending = `PENDING-E1-${stamp}`;
+    const refOut = `UNKNOWN-E1-OUT-${stamp}`;
+    // TD-45 — unique statement/book date per run: auto-match filters by date,
+    // so earlier runs' entries on the shared GL bank account cannot interfere.
+    const today = new Date(Date.UTC(2000, 0, 1 + (Number(stamp) % 9000))).toISOString().slice(0, 10);
 
     // Permission matrix: cashier forbidden, admin allowed.
     const cashierImport = await raw('POST', '/treasury/bank-recon/statements/import', { accountId: bankId, csv: 'date,description,amount\n2026-11-01,x,1\n' }, cashier.accessToken);
@@ -2434,7 +2487,7 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
       const line = (tb.lines ?? []).find((l) => l.code === code);
       return Number(line?.debit ?? 0) - Number(line?.credit ?? 0);
     };
-    const bankNet0 = net(tbBefore, '1102');
+    const bankNet0 = net(tbBefore, bankGlCode);
 
     // Known book movements on the bank account (J1/J2/J3) to match against.
     // Resolve the test accounts from the chart of accounts (fresh DB has no GL activity).
@@ -2442,44 +2495,43 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     check('E1: other-income account resolved', !!otherIncomeId, String(otherIncomeId));
     const outbound = async (id) => (await call('GET', `/accounting/journals/${id}`)).lines.find((l) => l.accountId === bankGlId);
     const j1 = await call('POST', '/accounting/journals', {
-      description: 'E1-REG-J1 TRX-E1-AUTO', journalDate: daysAgoIso(0), post: true,
+      description: `E1-REG-J1 ${refAuto}`, journalDate: today, post: true,
       lines: [
         { accountId: bankGlId, debit: 500, description: 'إيداع عميل' },
         { accountId: otherIncomeId, credit: 500, description: 'إيراد' },
       ],
     });
     const j2 = await call('POST', '/accounting/journals', {
-      description: 'E1-REG-J2 MANUAL-E1-REF', journalDate: daysAgoIso(0), post: true,
+      description: `E1-REG-J2 ${refManual}`, journalDate: today, post: true,
       lines: [
         { accountId: bankGlId, debit: 200, description: 'إيداع' },
         { accountId: otherIncomeId, credit: 200, description: 'إيراد' },
       ],
     });
     const j3 = await call('POST', '/accounting/journals', {
-      description: 'E1-REG-J3 TRX-E1-PART', journalDate: daysAgoIso(0), post: true,
+      description: `E1-REG-J3 ${refPart}`, journalDate: today, post: true,
       lines: [
         { accountId: bankGlId, debit: 480, description: 'إيداع ناقص' },
         { accountId: otherIncomeId, credit: 480, description: 'إيراد' },
       ],
     });
     const tbAfterBooks = await call('GET', '/accounting/reports/trial-balance');
-    const bankNet1 = net(tbAfterBooks, '1102');
+    const bankNet1 = net(tbAfterBooks, bankGlCode);
     check('E1: book movements reach the GL', Math.abs(bankNet1 - bankNet0 - 1180) < 0.01, `bank ${bankNet0} -> ${bankNet1}`);
     const j1Entry = await outbound(j1.journalId);
     const j2Entry = await outbound(j2.journalId);
     const j3Entry = await outbound(j3.journalId);
 
     // Import the statement (7 lines: pending deposit, a fee and an unknown withdrawal included).
-    const today = daysAgoIso(0);
     const csv = [
       'date,description,reference,amount,movement_type',
-      `${today},إيداع من العميل,TRX-E1-AUTO,500,deposit`,
-      `${today},إيداع نقدي,MANUAL-E1-REF,200,deposit`,
-      `${today},إيداع مكتـتب,TRX-E1-PART,495,deposit`,
-      `${today},رسوم بنكية,FEE-E1,-30,fee`,
-      `${today},إيداع مجهول,UNKNOWN-E1,77,transfer_in`,
-      `${today},إيداع معلق,PENDING-E1,150,pending_deposit`,
-      `${today},سحب مجهول,UNKNOWN-E1-OUT,-45,withdrawal`,
+      `${today},إيداع من العميل,${refAuto},500,deposit`,
+      `${today},إيداع نقدي,${refManual},200,deposit`,
+      `${today},إيداع مكتـتب,${refPart},495,deposit`,
+      `${today},رسوم بنكية,${refFee},-30,fee`,
+      `${today},إيداع مجهول,${refUnknown},77,transfer_in`,
+      `${today},إيداع معلق,${refPending},150,pending_deposit`,
+      `${today},سحب مجهول,${refOut},-45,withdrawal`,
     ].join('\n');
     const imp = await call('POST', '/treasury/bank-recon/statements/import', { accountId: bankId, csv });
     check('E1: statement imported — 7 lines created', imp.created === 7 && (imp.errors ?? []).length === 0, JSON.stringify(imp));
@@ -2490,13 +2542,13 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
 
     const linesResp = await call('GET', `/treasury/bank-recon/statements?accountId=${bankId}&from=${today}&to=${today}`);
     const byRef = (ref) => (linesResp ?? []).find((l) => l.reference === ref);
-    const lAuto = byRef('TRX-E1-AUTO');
-    const lManual = byRef('MANUAL-E1-REF');
-    const lPart = byRef('TRX-E1-PART');
-    const lFee = byRef('FEE-E1');
-    const lUnknown = byRef('UNKNOWN-E1');
-    const lOut = byRef('UNKNOWN-E1-OUT');
-    const lPending = byRef('PENDING-E1');
+    const lAuto = byRef(refAuto);
+    const lManual = byRef(refManual);
+    const lPart = byRef(refPart);
+    const lFee = byRef(refFee);
+    const lUnknown = byRef(refUnknown);
+    const lOut = byRef(refOut);
+    const lPending = byRef(refPending);
     check('E1: all imported lines listed', !!lAuto && !!lManual && !!lPart && !!lFee && !!lUnknown && !!lOut && !!lPending);
 
     // Manual match (line 2 against J2's bank entry).
@@ -2508,8 +2560,8 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     check('E1: auto-match matched the exact line', auto.matched === 1, JSON.stringify(auto));
     check('E1: auto-match flagged the partial line', auto.partial === 1, JSON.stringify(auto));
     const after = await call('GET', `/treasury/bank-recon/statements?accountId=${bankId}&from=${today}&to=${today}`);
-    const lAutoAfter = after.find((l) => l.reference === 'TRX-E1-AUTO');
-    const lPartAfter = after.find((l) => l.reference === 'TRX-E1-PART');
+    const lAutoAfter = after.find((l) => l.reference === refAuto);
+    const lPartAfter = after.find((l) => l.reference === refPart);
     check('E1: exact line is auto-matched (status 2)', lAutoAfter.status === 2, String(lAutoAfter.status));
     check('E1: partial line carries its difference', lPartAfter.status === 6 && Math.abs(lPartAfter.matchDifference - 15) < 0.01, JSON.stringify(lPartAfter));
 
@@ -2535,7 +2587,7 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     check('E1: partial difference adjustment booked (+15)', Math.abs(adj.matchDifferenceNet - 15) < 0.01, JSON.stringify(adj));
 
     const tbAfter = await call('GET', '/accounting/reports/trial-balance');
-    const bankNet2 = net(tbAfter, '1102');
+    const bankNet2 = net(tbAfter, bankGlCode);
     check('E1: GL bank equals statement balance after run', Math.abs(bankNet2 - statementBalance) < 0.01, `GL ${bankNet2} vs statement ${statementBalance}`);
     check('E1: bank fee account debited', Math.abs(net(tbAfter, '5107') - net(tbAfterBooks, '5107') - 30) < 0.01, 'BANK_FEE not debited by 30');
 
@@ -2595,14 +2647,14 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     const reversed = await call('POST', `/treasury/bank-recon/runs/${run.runId}/reverse`, {});
     check('E1: run reversed (status 3)', reversed.status === 3 && !!reversed.reverseJournalId, JSON.stringify(reversed));
     const tbReversed = await call('GET', '/accounting/reports/trial-balance');
-    check('E1: reversal restored the GL bank balance', Math.abs(net(tbReversed, '1102') - bankNet1) < 0.01, `bank ${net(tbReversed, '1102')}`);
+    check('E1: reversal restored the GL bank balance', Math.abs(net(tbReversed, bankGlCode) - bankNet1) < 0.01, `bank ${net(tbReversed, '1102')}`);
     const suspenseAfterReverse = await call('GET', '/treasury/bank-recon/suspense');
     check('E1: suspense entries of the reversed run are marked reversed',
       (suspenseAfterReverse.entries ?? []).every((e) => e.status !== 1),
       `open=${(suspenseAfterReverse.entries ?? []).filter((e) => e.status === 1).length}`);
 
     // Manually-locked period blocks reconciliation.
-    const e1Period = await call('POST', '/accounting/periods', { name: `فترة E1 ${stamp}`, startDate: '2019-01-01', endDate: '2019-01-31' });
+    const e1Period = { periodId: await ensurePeriod('SMOKE E1 2019-01', '2019-01-01', '2019-01-31') };
     await call('POST', `/accounting/periods/${e1Period.periodId}/manual-lock`, { reason: 'اختبار منع الترحيل في فترة E1' });
     const closedRun = await raw('POST', '/treasury/bank-recon/runs', { accountId: bankId, runDate: '2019-01-15', statementBalance: 1000 });
     check('E1: run inside a manually locked period rejected (400)', closedRun.status === 400, String(closedRun.status));
@@ -2787,7 +2839,7 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     check('E5: reversed asset back to status 1', reversedDetail.asset.status === 1, JSON.stringify(reversedDetail.asset.status));
 
     // ---- 14) الفترة المقفولة إداريًا ترفض تشغيل الإهلاك
-    const e5Period = await call('POST', '/accounting/periods', { name: `فترة E5 ${stamp}`, startDate: '2018-01-01', endDate: '2018-01-31' });
+    const e5Period = { periodId: await ensurePeriod('SMOKE E5 2018-01', '2018-01-01', '2018-01-31') };
     await call('POST', `/accounting/periods/${e5Period.periodId}/manual-lock`, { reason: 'اختبار منع الإهلاك في فترة مقفولة إداريًا' });
     const closedRun = await raw('POST', '/accounting/assets/run-depreciation', { periodMonth: '2018-01' });
     check('E5: depreciation inside a manually locked period rejected (400)', closedRun.status === 400, String(closedRun.status));
@@ -2995,7 +3047,7 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     check('E3: editing amount after generation is rejected (400)', editBlocked.status === 400, String(editBlocked.status));
 
     // الفترة المقفولة إداريًا ترفض الترحيل وتحققه في السجل
-    const e3Period = await call('POST', '/accounting/periods', { name: `فترة E3 ${stamp}`, startDate: '2017-01-01', endDate: '2017-01-31' });
+    const e3Period = { periodId: await ensurePeriod('SMOKE E3 2017-01', '2017-01-01', '2017-01-31') };
     await call('POST', `/accounting/periods/${e3Period.periodId}/manual-lock`, { reason: 'اختبار منع توليد الرسوم في فترة مقفولة إداريًا' });
     const refusedRule = await call('POST', '/accounting/bank-expense-rules', {
       name: `رسوم قديمة ${stamp}`, bankAccountId: feeBankId, expenseAccountId: feeAccountId,
@@ -3084,10 +3136,8 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
       const line = (tb.lines ?? []).find((l) => l.code === code);
       return Number(line?.debit ?? 0) - Number(line?.credit ?? 0);
     };
-    const mkPeriod = async (name, startDate, endDate) => {
-      const created = await call('POST', '/accounting/periods', { name, startDate, endDate });
-      return created.periodId;
-    };
+    const mkPeriod = async (name, startDate, endDate) =>
+      ensurePeriod(`SMOKE ${String(name).replace(` ${stamp}`, '')}`, startDate, endDate);
     const findAccount = (nodes, code) => {
       for (const node of nodes ?? []) {
         if (node.code === code) return node;
@@ -3231,7 +3281,7 @@ async function loginAs(userName, password) {  const response = await fetch(`${BA
     check('E6: accountant cannot close (403) — closing is admin-only', accountantClose.status === 403, String(accountantClose.status));
 
     // === Reversing a non-closed period is refused
-    const notClosed = await call('POST', '/accounting/periods', { name: `E6 مفتوحة ${stamp}`, startDate: '2026-02-01', endDate: '2026-02-28' });
+    const notClosed = { periodId: await ensurePeriod('SMOKE E6 مفتوحة', '2026-02-01', '2026-02-28') };
     const revOpen = await raw('POST', `/accounting/periods/${notClosed.periodId}/reverse-close`, { reason: 'x' });
     check('E6: reversing a non-closed period is refused (400)', revOpen.status === 400, String(revOpen.status));
 
