@@ -1,12 +1,14 @@
 import {
   BadRequestException, Body, Controller, Get, Injectable, Module,
-  Param, ParseIntPipe, Post, Put, Query,
+  Param, ParseIntPipe, Post, Put, Query, Req,
 } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
 import { postJournal, requireMapping, resolvePeriod, reverseJournal } from '../../common/posting';
 import { asIsoDate } from '../../common/dates';
 import { depreciationForMonth, monthBounds, monthsBetween } from '../../common/depreciation';
+import { logActivity } from '../../common/audit';
+import { Request } from 'express';
 
 /**
  * E5 — Fixed Assets & Depreciation.
@@ -39,13 +41,9 @@ const DISPOSAL: Record<number, string> = { 1: 'بيع', 4: 'هلاك/تفريخ'
 export class FixedAssetsService {
   constructor(private readonly db: DatabaseService) {}
 
-  private async activity(client: any, userId: number, branchId: number, action: string, entityId: number | string, details: string) {
+  private async activity(client: any, userId: number, branchId: number, action: string, entityId: number | string, details: string, ip: string) {
     try {
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int,$2::int,$3::text,'fixed_asset',$4::bigint,$5::text)`,
-        [userId, branchId, action, entityId, details],
-      );
+      await logActivity(client, { userId, branchId, action, entity: 'fixed_asset', entityId: String(entityId), details, ip });
     } catch { /* audit must never break the flow */ }
   }
 
@@ -67,7 +65,7 @@ export class FixedAssetsService {
   }
 
   // ---------------------------------------------------------------- creation
-  async create(dto: any, user: AuthUser, branchId: number) {
+  async create(dto: any, user: AuthUser, branchId: number, ip: string) {
     const name = String(dto?.name ?? '').trim();
     const category = String(dto?.category ?? '').trim();
     const cost = num(dto?.cost);
@@ -144,7 +142,7 @@ export class FixedAssetsService {
       await client.query(`UPDATE fixed_assets SET gl_asset_journal_id = $2::bigint WHERE asset_id = $1::int`, [assetId, journalId]);
 
       await this.activity(client, user.userId, branchId, 'asset.create', assetId,
-        `تسجيل أصل ${assetCode} «${name}» بقيمة ${cost} — قيد الاستحواذ #${journalId}`);
+        `تسجيل أصل ${assetCode} «${name}» بقيمة ${cost} — قيد الاستحواذ #${journalId}`, ip)
       return { assetId, assetCode, journalId };
     });
   }
@@ -224,7 +222,7 @@ export class FixedAssetsService {
     return { asset, lines: lines.map((l) => ({ ...l, periodMonthName: l.periodMonth })), disposals };
   }
 
-  async update(id: number, dto: any, user: AuthUser, branchId: number) {
+  async update(id: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     const rows = await this.db.query<any>(`SELECT * FROM fixed_assets WHERE asset_id = $1::int AND branch_id = $2::int`, [id, branchId]);
     if (!rows.length) throw new BadRequestException('الأصل غير موجود');
     const asset = rows[0];
@@ -242,11 +240,8 @@ export class FixedAssetsService {
       `UPDATE fixed_assets SET tag_number = $2, responsible_person = $3, notes = $4, category = $5, updated_at = now() WHERE asset_id = $1::int`,
       [id, tag, person, notes, category],
     );
-    await this.db.query(
-      `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-       VALUES ($1::int,$2::int,'asset.update','fixed_asset',$3::bigint,$4)`,
-      [user.userId, branchId, id, 'تعديل بيانات الأصل التشغيلية'],
-    );
+    await logActivity(this.db as any, { userId: user.userId, branchId, action: 'asset.update',
+      entity: 'fixed_asset', entityId: String(id), details: 'تعديل بيانات الأصل التشغيلية', ip });
     return { assetId: id };
   }
 
@@ -272,7 +267,7 @@ export class FixedAssetsService {
     return { month: monthDate.slice(0, 7), assets: rows, total: round2(rows.reduce((s, r) => s + r.amount, 0)) };
   }
 
-  async runDepreciation(dto: any, user: AuthUser, branchId: number) {
+  async runDepreciation(dto: any, user: AuthUser, branchId: number, ip: string) {
     const { first, last, monthDate, days } = monthBounds(String(dto?.periodMonth ?? ''));
     return this.db.transaction(async (client) => {
       await this.requirePeriodOpen(client, branchId, last);
@@ -320,7 +315,7 @@ export class FixedAssetsService {
         posted.push({ assetId: asset.asset_id, assetCode: asset.asset_code, amount, journalId });
       }
       await this.activity(client, user.userId, branchId, 'asset.run_depreciation', 0,
-        `إهلاك ${monthDate.slice(0, 7)}: ${posted.length} أصلًا بقيمة ${total} — ${skipped.length} متخطى`);
+        `إهلاك ${monthDate.slice(0, 7)}: ${posted.length} أصلًا بقيمة ${total} — ${skipped.length} متخطى`, ip)
       return { month: monthDate.slice(0, 7), posted, skipped, total };
     });
   }
@@ -332,7 +327,7 @@ export class FixedAssetsService {
   }
 
   // --------------------------------------------------------------- disposal
-  async dispose(id: number, dto: any, user: AuthUser, branchId: number) {
+  async dispose(id: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     const disposalType = Number(dto?.disposalType ?? 1);
     if (disposalType !== 1 && disposalType !== 4) throw new BadRequestException('نوع الاستبعاد: 1 بيع أو 4 هلاك/تفريخ');
     const disposalDate = asIsoDate(dto?.disposalDate) ?? new Date().toISOString().slice(0, 10);
@@ -402,12 +397,12 @@ export class FixedAssetsService {
         [id, disposalType === 1 ? 3 : 5],
       );
       await this.activity(client, user.userId, branchId, 'asset.dispose', id,
-        `${disposalType === 1 ? 'بيع' : 'هلاك/تفريخ'} أصل ${asset.asset_code} بمبلغ ${proceeds} (دفترك ${bookValue}) — قيد #${journalId}`);
+        `${disposalType === 1 ? 'بيع' : 'هلاك/تفريخ'} أصل ${asset.asset_code} بمبلغ ${proceeds} (دفترك ${bookValue}) — قيد #${journalId}`, ip)
       return { disposalId: id, journalId, bookValue, accumulated, proceeds, gainLoss };
     });
   }
 
-  async reverseDisposal(id: number, dto: any, user: AuthUser, branchId: number) {
+  async reverseDisposal(id: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     const reverseDate = asIsoDate(dto?.date) ?? new Date().toISOString().slice(0, 10);
     return this.db.transaction(async (client) => {
       const { rows } = await client.query(
@@ -433,7 +428,7 @@ export class FixedAssetsService {
         [id],
       );
       await this.activity(client, user.userId, branchId, 'asset.reverse_disposal', id,
-        `عكس استبعاد الأصل — ${reverseJournalId ? `قيد عكسي #${reverseJournalId}` : 'بلا قيد'}`);
+        `عكس استبعاد الأصل — ${reverseJournalId ? `قيد عكسي #${reverseJournalId}` : 'بلا قيد'}`, ip)
       return { assetId: id, reverseJournalId };
     });
   }
@@ -540,32 +535,37 @@ export class FixedAssetsController {
 
   @Post()
   @RequirePermissions('assets.manage')
-  create(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.create(dto, user, branchId);
+  create(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.create(dto, user, branchId, ip);
   }
 
   @Put(':id')
   @RequirePermissions('assets.manage')
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.update(id, dto, user, branchId);
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.update(id, dto, user, branchId, ip);
   }
 
   @Post('run-depreciation')
   @RequirePermissions('assets.manage')
-  runDepreciation(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.runDepreciation(dto, user, branchId);
+  runDepreciation(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.runDepreciation(dto, user, branchId, ip);
   }
 
   @Post(':id/dispose')
   @RequirePermissions('assets.manage')
-  dispose(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.dispose(id, dto, user, branchId);
+  dispose(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.dispose(id, dto, user, branchId, ip);
   }
 
   @Post(':id/reverse-disposal')
   @RequirePermissions('assets.manage')
-  reverseDisposal(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.reverseDisposal(id, dto, user, branchId);
+  reverseDisposal(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.reverseDisposal(id, dto, user, branchId, ip);
   }
 }
 

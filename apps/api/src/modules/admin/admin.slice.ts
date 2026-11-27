@@ -1,8 +1,10 @@
 import {
-  Body, Controller, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Query, BadRequestException,
+  Body, Controller, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Query, BadRequestException, Req,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { DatabaseService } from '../../common/database/database.service';
 import { AuthUser, CurrentUser, RequireAnyPermission, RequirePermissions, hashPassword } from '../../common/security';
+import { logActivity } from '../../common/audit';
 
 @Injectable()
 export class AdminService {
@@ -152,7 +154,7 @@ export class AdminService {
     };
   }
 
-  async setUserRestrictions(id: number, body: any, actor: AuthUser) {
+  async setUserRestrictions(id: number, body: any, actor: AuthUser, ip: string) {
     const clean = (list: any) =>
       [...new Set((Array.isArray(list) ? list : []).map(Number).filter((n) => Number.isFinite(n) && n > 0))];
     const warehouseIds = clean(body?.warehouseIds);
@@ -176,11 +178,9 @@ export class AdminService {
           [id, cashAccountId],
         );
       }
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int, NULL, 'user.restrictions', 'user', $2::int, $3)`,
-        [actor.userId, id, `تقييد القوائم — مخازن: ${warehouseIds.length}، صناديق/خزائن: ${cashAccountIds.length} (الفاضي = الكل مسموح)`],
-      );
+      await logActivity(client, { userId: actor.userId, branchId: null, action: 'user.restrictions',
+        entity: 'user', entityId: String(id),
+        details: `تقييد القوائم — مخازن: ${warehouseIds.length}، صناديق/خزائن: ${cashAccountIds.length} (الفاضي = الكل مسموح)`, ip });
       return { userId: id, warehouseCount: warehouseIds.length, cashAccountCount: cashAccountIds.length };
     });
   }
@@ -279,7 +279,7 @@ export class AdminService {
     );
   }
 
-  async updateAttachmentPolicy(entityType: string, body: any, actor: AuthUser) {
+  async updateAttachmentPolicy(entityType: string, body: any, actor: AuthUser, ip: string) {
     const type = String(entityType ?? '').trim();
     const maxSizeMb = Math.trunc(Number(body?.maxSizeMb ?? body?.max_size_mb));
     const maxCount = Math.trunc(Number(body?.maxCountPerEntity ?? body?.max_count_per_entity));
@@ -302,11 +302,9 @@ export class AdminService {
           WHERE entity_type = $1::text`,
         [type, maxSizeMb, maxCount, actor.userId],
       );
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int, NULL, 'attachment_policy.update', 'attachment_policy', $2::text, $3::text)`,
-        [actor.userId, type, `تحديث سياسة المرفقات (${type}): الحجم ${maxSizeMb}MB، العدد ${maxCount}`],
-      );
+      await logActivity(client, { userId: actor.userId, branchId: null, action: 'attachment_policy.update',
+        entity: 'attachment_policy', entityId: type,
+        details: `تحديث سياسة المرفقات (${type}): الحجم ${maxSizeMb}MB، العدد ${maxCount}`, ip });
       const row = await client.query<any>(
         `SELECT entity_type AS "entityType", max_size_mb AS "maxSizeMb", max_count_per_entity AS "maxCountPerEntity",
                 updated_by AS "updatedBy", updated_at AS "updatedAt"
@@ -418,8 +416,9 @@ export class AdminController {
 
   @RequirePermissions('users.manage')
   @Put('users/:id/restrictions')
-  setUserRestrictions(@Param('id', ParseIntPipe) id: number, @Body() body: any, @CurrentUser() actor: AuthUser) {
-    return this.service.setUserRestrictions(id, body, actor);
+  setUserRestrictions(@Param('id', ParseIntPipe) id: number, @Body() body: any, @CurrentUser() actor: AuthUser, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.setUserRestrictions(id, body, actor, ip);
   }
 
   @RequirePermissions('users.manage')
@@ -471,8 +470,10 @@ export class AdminController {
     @Param('entityType') entityType: string,
     @Body() body: any,
     @CurrentUser() actor: AuthUser,
+    @Req() req: Request,
   ) {
-    return this.service.updateAttachmentPolicy(entityType, body, actor);
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.updateAttachmentPolicy(entityType, body, actor, ip);
   }
 
   @RequireAnyPermission('settings.manage', 'users.manage')

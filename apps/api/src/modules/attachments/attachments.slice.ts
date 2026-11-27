@@ -1,10 +1,13 @@
 import {
   Body, Controller, Delete, Get, HttpException, HttpStatus, Injectable, Module, Param, ParseIntPipe, Post, Query,
   BadRequestException,
+  Req,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { DatabaseService } from '../../common/database/database.service';
 import { assertDeletionAllowed } from '../../common/delete-guard';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
+import { logActivity } from '../../common/audit';
 
 /**
  * D4 — entities that may carry attachments.
@@ -90,7 +93,7 @@ export class AttachmentsService {
     };
   }
 
-  async create(dto: any, user: AuthUser, branchId: number) {
+  async create(dto: any, user: AuthUser, branchId: number, ip: string) {
     const entityType = String(dto.entityType ?? '').trim();
     const entityId = Number(dto.entityId);
     const fileName = String(dto.fileName ?? '').trim();
@@ -165,16 +168,14 @@ export class AttachmentsService {
         throw err;
       }
 
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int, $2::int, 'attachment.create', $3::text, $4::text, $5::text)`,
-        [user.userId, branchId, entityType, String(entityId), `رفع مرفق: ${fileName} (${Math.ceil(buffer.length / 1024)} KB)`],
-      );
+      await logActivity(client, { userId: user.userId, branchId, action: 'attachment.create',
+        entity: entityType, entityId: String(entityId),
+        details: `رفع مرفق: ${fileName} (${Math.ceil(buffer.length / 1024)} KB)`, ip });
       return { attachmentId };
     });
   }
 
-  async remove(id: number, user: AuthUser, branchId: number) {
+  async remove(id: number, user: AuthUser, branchId: number, ip: string) {
     await assertDeletionAllowed(this.db, 'attachments');
     await this.db.transaction(async (client) => {
       const row = await client.query<any>(
@@ -188,11 +189,9 @@ export class AttachmentsService {
         'DELETE FROM attachments WHERE attachment_id = $1::bigint AND branch_id = $2::int',
         [id, branchId],
       );
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int, $2::int, 'attachment.delete', $3::text, $4::text, $5::text)`,
-        [user.userId, branchId, target.entity_type, String(target.entity_id), `حذف مرفق: ${target.file_name}`],
-      );
+      await logActivity(client, { userId: user.userId, branchId, action: 'attachment.delete',
+        entity: target.entity_type, entityId: String(target.entity_id),
+        details: `حذف مرفق: ${target.file_name}`, ip });
     });
     return { attachmentId: id, deleted: true };
   }
@@ -231,14 +230,16 @@ export class AttachmentsController {
 
   @RequirePermissions('attachments.manage')
   @Post()
-  create(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.create(dto, user, branchId);
+  create(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.create(dto, user, branchId, ip);
   }
 
   @RequirePermissions('attachments.manage')
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.remove(id, user, branchId);
+  remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.remove(id, user, branchId, ip);
   }
 }
 

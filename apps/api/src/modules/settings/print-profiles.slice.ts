@@ -1,10 +1,12 @@
 import {
-  BadRequestException, Body, Controller, Delete, Get, Injectable, Module, Param, ParseIntPipe, Post, Put,
+  BadRequestException, Body, Controller, Delete, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Req,
 } from '@nestjs/common';
 import { PoolClient } from 'pg';
 import { DatabaseService } from '../../common/database/database.service';
 import { assertDeletionAllowed } from '../../common/delete-guard';
 import { AuthUser, CurrentBranch, CurrentUser, RequireAnyPermission, RequirePermissions } from '../../common/security';
+import { logActivity } from '../../common/audit';
+import { Request } from 'express';
 
 const PAPER_SIZES = ['thermal80', 'thermal58', 'a5', 'a4'];
 
@@ -121,7 +123,7 @@ export class PrintProfilesService {
     return row ? alias(row) : null;
   }
 
-  async create(dto: any, user: AuthUser, branchId: number) {
+  async create(dto: any, user: AuthUser, branchId: number, ip: string) {
     const data = sanitize(dto);
     return this.db.transaction(async (client) => {
       await assertNameFree(client, data.name, branchId);
@@ -144,16 +146,13 @@ export class PrintProfilesService {
          data.kitchenPrinterName, data.showTaxOnReceipt, data.receiptShowBranchName,
          data.receiptShowPartyName, data.receiptShowTotals, data.isDefault],
       );
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int, $2::int, 'print_profile.create', 'print_profile', $3::int, $4::text)`,
-        [user.userId, branchId, Number(rows[0].profile_id), data.name],
-      );
+      await logActivity(client, { userId: user.userId, branchId, action: 'print_profile.create',
+        entity: 'print_profile', entityId: String(rows[0].profile_id), details: data.name, ip });
       return alias(rows[0]);
     });
   }
 
-  async update(id: number, dto: any, user: AuthUser, branchId: number) {
+  async update(id: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     const data = sanitize(dto);
     await this.get(id, branchId);
     return this.db.transaction(async (client) => {
@@ -181,25 +180,19 @@ export class PrintProfilesService {
          data.kitchenPrinterName, data.showTaxOnReceipt, data.receiptShowBranchName,
          data.receiptShowPartyName, data.receiptShowTotals, data.isDefault],
       );
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int, $2::int, 'print_profile.update', 'print_profile', $3::int, $4::text)`,
-        [user.userId, branchId, id, data.name],
-      );
+      await logActivity(client, { userId: user.userId, branchId, action: 'print_profile.update',
+        entity: 'print_profile', entityId: String(id), details: data.name, ip });
       return alias(rows[0]);
     });
   }
 
-  async remove(id: number, user: AuthUser, branchId: number) {
+  async remove(id: number, user: AuthUser, branchId: number, ip: string) {
     await assertDeletionAllowed(this.db, 'printProfiles');
     const existing = await this.get(id, branchId);
     await this.db.transaction(async (client) => {
       await client.query('DELETE FROM print_profiles WHERE profile_id = $1::int AND branch_id = $2::int', [id, branchId]);
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int, $2::int, 'print_profile.delete', 'print_profile', $3::int, $4::text)`,
-        [user.userId, branchId, id, existing.name],
-      );
+      await logActivity(client, { userId: user.userId, branchId, action: 'print_profile.delete',
+        entity: 'print_profile', entityId: String(id), details: existing.name, ip });
     });
     return { profileId: id, deleted: true };
   }
@@ -218,20 +211,23 @@ export class PrintProfilesController {
 
   @RequirePermissions('settings.manage')
   @Post()
-  create(@Body() body: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.create(body, user, branchId);
+  create(@Body() body: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.create(body, user, branchId, ip);
   }
 
   @RequirePermissions('settings.manage')
   @Put(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() body: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.update(id, body, user, branchId);
+  update(@Param('id', ParseIntPipe) id: number, @Body() body: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.update(id, body, user, branchId, ip);
   }
 
   @RequirePermissions('settings.manage')
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.remove(id, user, branchId);
+  remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.remove(id, user, branchId, ip);
   }
 }
 

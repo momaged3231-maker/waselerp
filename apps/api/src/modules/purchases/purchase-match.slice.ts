@@ -1,10 +1,12 @@
 import {
   BadRequestException, Controller, ForbiddenException, Get, Injectable, Module,
-  NotFoundException, Param, ParseIntPipe, Post, Body, Query, HttpCode,
+  NotFoundException, Param, ParseIntPipe, Post, Body, Query, HttpCode, Req,
 } from '@nestjs/common';
 import { PoolClient } from 'pg';
 import { DatabaseService } from '../../common/database/database.service';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
+import { logActivity } from '../../common/audit';
+import { Request } from 'express';
 
 const round2 = (v: number) => Math.round((Number(v) + Number.EPSILON) * 100) / 100;
 const round6 = (v: number) => Math.round((Number(v) + Number.EPSILON) * 1e6) / 1e6;
@@ -147,7 +149,7 @@ export class PurchaseMatchService {
   // ------------------------------------------------------------------- //
   //  B3.2 — exception approval (audit only; never posts a journal)
   // ------------------------------------------------------------------- //
-  async approveException(invoiceId: number, dto: any, user: AuthUser, branchId: number) {
+  async approveException(invoiceId: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     const reason = String(dto?.reason ?? '').trim();
     if (!reason) throw new BadRequestException('سبب الاستثناء إلزامي');
     const links = Array.isArray(dto?.links) ? dto.links : [];
@@ -197,11 +199,9 @@ export class PurchaseMatchService {
         [invoiceId, orderId, receiptId, user.userId, reason],
       );
 
-      await client.query(
-        `INSERT INTO activity_log (branch_id, user_id, action, entity, entity_id, details)
-         VALUES ($1::int, $2::int, 'purchase.match_exception', 'invoice', $3::text, $4)`,
-        [Number(h.branch_id), user.userId, String(invoiceId), JSON.stringify({ reason, links })],
-      );
+      await logActivity(client, { userId: user.userId, branchId: Number(h.branch_id),
+        action: 'purchase.match_exception', entity: 'invoice', entityId: String(invoiceId),
+        details: JSON.stringify({ reason, links }), ip });
 
       return {
         overrideId: Number(ins.rows[0].override_id),
@@ -351,7 +351,8 @@ export class PurchaseMatchController {
 
   @RequirePermissions('purchases.view')
   @Get('invoices/:id/match')
-  match(@Param('id', ParseIntPipe) id: number, @CurrentBranch() branchId: number) {
+  match(@Param('id', ParseIntPipe) id: number, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
     return this.service.match(id, branchId);
   }
 
@@ -363,8 +364,10 @@ export class PurchaseMatchController {
     @Body() dto: any,
     @CurrentUser() user: AuthUser,
     @CurrentBranch() branchId: number,
+    @Req() req: Request,
   ) {
-    return this.service.approveException(id, dto, user, branchId);
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.approveException(id, dto, user, branchId, ip);
   }
 
   @RequirePermissions('purchases.view')

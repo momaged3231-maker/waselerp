@@ -1,8 +1,10 @@
-import { Body, Controller, Delete, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Query, BadRequestException } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Query, BadRequestException , Req } from '@nestjs/common';
+import { Request } from 'express';
 import { DatabaseService } from '../../common/database/database.service';
 import { assertDeletionAllowed, countReferencingRows } from '../../common/delete-guard';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
 import { postJournal, requireMapping } from '../../common/posting';
+import { logActivity } from '../../common/audit';
 import { parseImportFile, buildTemplateXlsx, applyHeaderAliases, PARTY_IMPORT_ALIASES } from '../../common/spreadsheet';
 
 export interface PartyDto {
@@ -243,7 +245,7 @@ export class PartiesService {
     return { rows, errors };
   }
 
-  async importFile(dto: any, user: AuthUser, branchId: number) {
+  async importFile(dto: any, user: AuthUser, branchId: number, ip: string) {
     const mode = dto?.mode === 'apply' ? 'apply' : 'preview';
     const parsed = parseImportFile({ csv: dto?.csv, xlsxBase64: dto?.xlsxBase64 });
     if (!parsed.raw.length) throw new BadRequestException('الملف لا يحتوي أي صفوف بيانات');
@@ -286,11 +288,8 @@ export class PartiesService {
           failed.push({ row: row.line, message: error?.message ?? 'تعذر الحفظ' });
         }
       }
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int, $2::int, 'party.import', 'party', NULL, $3::text)`,
-        [user.userId, branchId, `استيراد عملاء/موردين: ${created} جديد، ${updated} محدّث، ${failed.length} فاشل`],
-      );
+      await logActivity(client, { userId: user.userId, branchId, action: 'party.import',
+        entity: 'party', entityId: '', details: `استيراد عملاء/موردين: ${created} جديد، ${updated} محدّث، ${failed.length} فاشل`, ip });
       return { mode, total: parsed.raw.length, created, updated, failed };
     });
   }
@@ -316,7 +315,7 @@ export class PartiesService {
   }
 
   /** Posts opening balances as ledger entries (entry_type=4) + one balanced journal. */
-  async setOpeningBalances(dto: any, user: AuthUser, branchId: number) {
+  async setOpeningBalances(dto: any, user: AuthUser, branchId: number, ip: string) {
     const date = String(dto?.date ?? new Date().toISOString().slice(0, 10)).slice(0, 10);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new BadRequestException('صيغة التاريخ غير صحيحة (YYYY-MM-DD)');
     const entries = (Array.isArray(dto?.entries) ? dto.entries : [])
@@ -384,17 +383,14 @@ export class PartiesService {
         sourceType: 'opening_balance', userId: user.userId, autoBalance: false,
         lines: journalLines,
       });
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int, $2::int, 'party.opening_balance', 'party', NULL, $3::text)`,
-        [user.userId, branchId, `أرصدة افتتاحية: ${saved.length} طرف (${saved.join('، ')})`],
-      );
+      await logActivity(client, { userId: user.userId, branchId, action: 'party.opening_balance',
+        entity: 'party', entityId: '', details: `أرصدة افتتاحية: ${saved.length} طرف (${saved.join('، ')})`, ip });
       return { saved: saved.length, skippedExisting, date, arTotal, apTotal, journalId };
     });
   }
 
   /** Hard delete a party — refused while any FK anywhere points at it. */
-  async deleteParty(id: number, user: AuthUser, branchId: number) {
+  async deleteParty(id: number, user: AuthUser, branchId: number, ip: string) {
     await assertDeletionAllowed(this.db, 'parties');
     const refs = await countReferencingRows(this.db, 'parties', 'party_id', id);
     if (refs.length) {
@@ -402,11 +398,8 @@ export class PartiesService {
       throw new BadRequestException(`لا يمكن حذف هذا الطرف — عليه حركات: ${detail}. عطّله بدل الحذف`);
     }
     await this.db.query('DELETE FROM parties WHERE party_id = $1::int', [id]);
-    await this.db.query(
-      `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-       VALUES ($1::int, $2::int, 'party.delete', 'party', $3::int, $4::text)`,
-      [user.userId, branchId, id, `حذف طرف #${id}`],
-    );
+    await logActivity(this.db as any, { userId: user.userId, branchId, action: 'party.delete',
+      entity: 'party', entityId: String(id), details: `حذف طرف #${id}`, ip });
     return { deleted: true };
   }
 }
@@ -424,8 +417,9 @@ export class PartiesController {
 
   @RequirePermissions('parties.manage')
   @Post('import')
-  importFile(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.importFile(dto, user, branchId);
+  importFile(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.importFile(dto, user, branchId, ip);
   }
 
   @RequirePermissions('parties.view')
@@ -436,8 +430,9 @@ export class PartiesController {
 
   @RequirePermissions('parties.manage')
   @Post('opening-balances')
-  setOpeningBalances(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.setOpeningBalances(dto, user, branchId);
+  setOpeningBalances(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.setOpeningBalances(dto, user, branchId, ip);
   }
 
   @RequirePermissions('parties.view')
@@ -477,8 +472,9 @@ export class PartiesController {
 
   @RequirePermissions('parties.manage')
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.deleteParty(id, user, branchId);
+  remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.deleteParty(id, user, branchId, ip);
   }
 }
 
