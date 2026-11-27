@@ -472,7 +472,8 @@ No issue. E2 signed off.
 | TD-65 | **منخفض — إثبات (لا تغطية): «`item.components` و`order.move` بلا sample row في B3.»** 10/12 مباشر + 2/12 بنمط متطابق. **الإغلاق:** اختبار يدوي لاحق. لا يعطّل TD-52. | TD-52 | Low | catalog/items, pos |
 | TD-66 | **منخفض — توثيق (لا تغطية): «`branch_transfer` branchId semantics.»** approve=from · receive=to · cancel=from (قرار تفسيري B3). | TD-52 | Low | branch-transfer.slice.ts |
 | TD-67 | **متوسط — محاسبة (لا تغطية): «`Claim Receivable` account needed for DEC-PURCH-027 (v2) replacement flow.»** حساب أصل جديد (party+branch) يُغلق في TD-53/54. | TD-53/54 | Medium | chart of accounts |
-| TD-68 | **منخفض — توثيق (لا تغطية): «Documentation drift: DEC-PURCH count 48/51/54.»** العدد الصحيح **54** (001..054: §10 كتب 48 قبل Addendum v1.1/v1.2 + 6، جدول §1.10片段 51 صف). يُغلق في commit وثيقة قادم. | docs | Low | ERP-ACCOUNTING-DECISIONS.md |
+| TD-68 | **منخفض — ✅ مُغلق:** العدد الصحيح **54** (001..054: §10 كتب 48 قبل Addendum). لا drift. | docs | Closed | ERP-ACCOUNTING-DECISIONS.md |
+| TD-69 | **منخفض — مبدأ (لا تغطية): «AUTOMATED_SOURCES grows with each new financial source — append-only configuration, immutable logic.»** كل TD يُدخل `source_type` جديدًا يتضمن تحديث allowlist صريحًا. `posting.ts` **logic** (Dr=Cr, assertPeriodOpen, is_control check) لا يُلمس؛ **configuration** (AUTOMATED_SOURCES) append-only. | TD-53/54 | Low | posting.ts allowlist |
 | TD-59 | **منخفض — تحليل (لا تغطية): «CRM: no `closed_at` timestamp — win rate by close-date not possible; cohort-based (`created_at`) only.»** `GET /crm/summary?from=&to=` يفلتر على `created_at`. **الإصلاح:** عمود `closed_at` + backfill عند الحاجة. لا يعطّل GAP-02. | GAP-02 | Low | crm_leads |
 
 ---

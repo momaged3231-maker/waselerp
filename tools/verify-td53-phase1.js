@@ -6,6 +6,7 @@ const path = require('path');
 const { Client } = require(path.join(__dirname, '..', 'apps', 'api', 'node_modules', 'pg'));
 const { postSupplierClaimJournal, reverseSupplierVat } = require(
   path.join(__dirname, '..', 'apps', 'api', 'dist', 'modules', 'purchases', 'supplier-claims.helper'));
+const { postJournal: requirePost } = require(path.join(__dirname, '..', 'apps', 'api', 'dist', 'common', 'posting'));
 
 async function main() {
   const c = new Client({ host: '127.0.0.1', port: Number(process.env.PGPORT ?? 5664),
@@ -48,6 +49,23 @@ async function main() {
     { amount: 100, sourceId: 1, dr: '2108', cr: '1104' }, 'supplier_claim');
   await testHelper('P1-03', () => reverseSupplierVat(c, { branchId: branch, supplierId: party, supplierInvoiceId: 2, vatAmount: 14, description: 'P1-03 unit test VAT reversal' }),
     { amount: 14, sourceId: 2, dr: '2101', cr: '1105' }, 'supplier_vat_reversal');
+
+  // P1-02b — default-deny still active: unknown source on a control account is rejected
+  await c.query('BEGIN');
+  try {
+    const inv = await c.query("SELECT account_id FROM gl_accounts WHERE code='1104'");
+    const cash = await c.query("SELECT account_id FROM gl_accounts WHERE code='1101'");
+    await requirePost(c, {
+      branchId: branch, journalType: 2, description: 'bogus source', sourceType: 'bogus_test_type', sourceId: 1,
+      lines: [
+        { accountId: Number(inv.rows[0].account_id), debit: 10, credit: 0 },
+        { accountId: Number(cash.rows[0].account_id), debit: 0, credit: 10 },
+      ],
+    });
+    check('P1-02b bogus source rejected', false, 'unexpectedly accepted');
+  } catch (e) {
+    check('P1-02b bogus source rejected', true, String(e.message).slice(0, 90));
+  } finally { await c.query('ROLLBACK'); }
 
   console.log(`\nRESULT ${pass}/${total}`);
   await c.end();
