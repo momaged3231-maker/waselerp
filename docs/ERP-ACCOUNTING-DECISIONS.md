@@ -446,8 +446,10 @@ No issue. E2 signed off.
 | TD-58 | **منخفض — قابلية تقرير (لا تغطية): «Expired-warranty override not distinguishable in `activity_log.action`.»** تجاوز المدة وتحصيل الضمان يستخدمان نفس الـaction `maintenance.warranty_charge_override`؛ المميّز في `details` فقط. **الإصلاح:** action منفصل أو `override_kind` عند الحاجة لتقرير مؤرخ. لا يعطّل GAP-03. | GAP-03 | Low | maintenance.slice.ts |
 | TD-61 | **متوسط → ✅ مُغلق (أ) 2026-11-25:** كان «smoke 605/605 على DB مستعملة —conditional check متخطًّى». الفحص `second warehouse created for transfer test` (`smoke-test.js:1665`) داخل `if (!whB)` — على DB مستعملة يوجد مخزن ثانٍ فيُُتخطى. (أ) فحص «إذا وُجد X»=safe. TD-45 مغلق نهائيًا. | TD-45 | Closed | smoke-test.js |
 | TD-62 | **منخفض — هندسة (لا تغطية): «`period.backpost` activity_log INSERT bypasses helper — IP not captured.»** `posting.ts` لا يعرف `req.ip`؛ القرار: إبقاء مباشر. يُسجَّل للتبع. | TD-52 | Low | posting.ts |
-| TD-63 | **منخفض — هندسة (لا تغطية): «`logActivity.branchId` nullable بسبب `backup.*`.»** توسيع النوع إلى `number|null` حصرًا لـ backup؛ أي `null` خارج backup = تصعيد مراجعة. | TD-52 | Low | common/audit.ts |
+| TD-63 | **منخفض — هندسة (لا تغطية): «`logActivity.branchId` nullable — استثناءات مشروعة.»** `number|null` لـ `backup.*` + `catalog/items.*` (معرَّف شركة-مستوى). أي `null` خارج هاتين المجموعتين = تصعيد. `TD52-phaseB3-clarification.md`. | TD-52 | Low | common/audit.ts |
 | TD-64 | **متوسط → ✅ مُغلق (أ): «`restoreGAP07` ip source.»** `backup.slice.ts:454-456` → `X-Forwarded-For ?? req.ip ?? socket` = IP مُنفِّذ الاستعادة (لا من الحزمة). `TD52-phaseB1-clarification.md`. | TD-52 | Closed | backup.slice.ts |
+| TD-65 | **منخفض — إثبات (لا تغطية): «`item.components` و`order.move` بلا sample row في B3.»** 10/12 مباشر + 2/12 بنمط متطابق. **الإغلاق:** اختبار يدوي لاحق. لا يعطّل TD-52. | TD-52 | Low | catalog/items, pos |
+| TD-66 | **منخفض — توثيق (لا تغطية): «`branch_transfer` branchId semantics.»** approve=from · receive=to · cancel=from (قرار تفسيري B3). | TD-52 | Low | branch-transfer.slice.ts |
 | TD-59 | **منخفض — تحليل (لا تغطية): «CRM: no `closed_at` timestamp — win rate by close-date not possible; cohort-based (`created_at`) only.»** `GET /crm/summary?from=&to=` يفلتر على `created_at`. **الإصلاح:** عمود `closed_at` + backfill عند الحاجة. لا يعطّل GAP-02. | GAP-02 | Low | crm_leads |
 
 ---
