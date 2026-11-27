@@ -1,12 +1,14 @@
 import {
   BadRequestException, Body, Controller, Get, Injectable, Module,
-  Param, ParseIntPipe, Post, Query,
+  Param, ParseIntPipe, Post, Query, Req,
 } from '@nestjs/common';
 import { createHash, randomUUID } from 'node:crypto';
 import { DatabaseService } from '../../common/database/database.service';
 import { AuthUser, CurrentBranch, CurrentUser, RequireAnyPermission, RequirePermissions } from '../../common/security';
 import { postJournal, requireMapping, resolvePeriod, reverseJournal } from '../../common/posting';
 import { asIsoDate } from '../../common/dates';
+import { logActivity } from '../../common/audit';
+import { Request } from 'express';
 
 /**
  * E1 — Bank Reconciliation.
@@ -116,12 +118,8 @@ async function assertPeriodOpen(client: any, branchId: number, date: string, wha
   return period.periodId;
 }
 
-async function activity(client: any, userId: number, branchId: number, action: string, entity: string, entityId: number | string, details: string) {
-  await client.query(
-    `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-     VALUES ($1::int,$2::int,$3::text,$4::text,$5::bigint,$6::text)`,
-    [userId, branchId, action, entity, entityId, details],
-  );
+async function activity(client: any, userId: number, branchId: number, action: string, entity: string, entityId: number | string, details: string, ip: string) {
+  await logActivity(client, { userId, branchId, action, entity, entityId: String(entityId), details, ip });
 }
 
 @Injectable()
@@ -157,13 +155,10 @@ export class BankReconService {
     return mapping.accountId;
   }
 
-  private async auditNote(branchId: number, user: AuthUser, action: string, details: string, entityId: number | string = 0) {
+  private async auditNote(branchId: number, user: AuthUser, action: string, details: string, entityId: number | string = 0, ip: string) {
     try {
-      await this.db.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int,$2::int,$3::text,'bank_recon',$4::bigint,$5::text)`,
-        [user.userId, branchId, action, entityId, details],
-      );
+      await logActivity(this.db as any, { userId: user.userId, branchId, action,
+        entity: 'bank_recon', entityId: String(entityId), details, ip });
     } catch { /* audit must never break the flow */ }
   }
 
@@ -197,7 +192,7 @@ export class BankReconService {
   }
 
   // ------------------------------------------------------------- statement
-  async importStatement(dto: any, user: AuthUser, branchId: number) {
+  async importStatement(dto: any, user: AuthUser, branchId: number, ip: string) {
     const accountId = Number(dto?.accountId);
     const records: Array<Record<string, any>> = Array.isArray(dto?.records) && dto.records.length
       ? dto.records
@@ -252,7 +247,7 @@ export class BankReconService {
       }
 
       await activity(client, user.userId, branchId, 'bank_recon.import', 'bank_recon', 0,
-        `استيراد كشف حساب ${accountId}: أُضيف ${created} سطرًا، ${duplicates.length} مكرر، ${errors.length} خطأ`);
+        `استيراد كشف حساب ${accountId}: أُضيف ${created} سطرًا، ${duplicates.length} مكرر، ${errors.length} خطأ`, ip);
 
       return { batchId: batch, created, duplicates, skipped, errors,
         toleranceDays: cfg.toleranceDays, toleranceAmount: cfg.toleranceAmount };
@@ -280,7 +275,7 @@ export class BankReconService {
   }
 
   // -------------------------------------------------------------- matching
-  async autoMatch(dto: any, user: AuthUser, branchId: number) {
+  async autoMatch(dto: any, user: AuthUser, branchId: number, ip: string) {
     const accountId = Number(dto?.accountId);
     if (!accountId) throw new BadRequestException('اختر الحساب البنكي');
     const from = asIsoDate(dto?.from) ?? '1900-01-01';
@@ -352,13 +347,13 @@ export class BankReconService {
       }
 
       await activity(client, user.userId, branchId, 'bank_recon.auto_match', 'bank_recon', accountId,
-        `مطابقة تلقائية لحساب ${accountId}: مطابقة ${matched}، بفروق ${partial}، متخطي ${skipped} (${ambiguous.length} ملتبس)`);
+        `مطابقة تلقائية لحساب ${accountId}: مطابقة ${matched}، بفروق ${partial}، متخطي ${skipped} (${ambiguous.length} ملتبس)`, ip);
 
       return { matched, partial, skipped, ambiguous };
     });
   }
 
-  async manualMatch(id: number, dto: any, user: AuthUser, branchId: number) {
+  async manualMatch(id: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     const entryId = Number(dto?.entryId);
     if (!entryId) throw new BadRequestException('اختر القيد الطرفي المراد ربطه');
     return this.db.transaction(async (client) => {
@@ -400,12 +395,12 @@ export class BankReconService {
         [id, status, entryId, entry.journal_id, difference],
       );
       await activity(client, user.userId, branchId, 'bank_recon.manual_match', 'bank_recon', id,
-        `مطابقة يدوية للسطر ${id} مع الطرف ${entryId} (فرق ${difference})`);
+        `مطابقة يدوية للسطر ${id} مع الطرف ${entryId} (فرق ${difference})`, ip);
       return { lineId: id, status, matchDifference: difference, journalId: entry.journal_id };
     });
   }
 
-  async unmatch(id: number, user: AuthUser, branchId: number) {
+  async unmatch(id: number, user: AuthUser, branchId: number, ip: string) {
     return this.db.transaction(async (client) => {
       const { rows } = await client.query(
         `SELECT line_id, status FROM bank_statement_lines WHERE line_id = $1::bigint AND branch_id = $2::int FOR UPDATE`,
@@ -417,13 +412,13 @@ export class BankReconService {
         `UPDATE bank_statement_lines SET status = 1, matched_entry_id = NULL, matched_journal_id = NULL, match_difference = 0 WHERE line_id = $1::bigint`,
         [id],
       );
-      await activity(client, user.userId, branchId, 'bank_recon.unmatch', 'bank_recon', id, `فك مطابقة السطر ${id}`);
+      await activity(client, user.userId, branchId, 'bank_recon.unmatch', 'bank_recon', id, `فك مطابقة السطر ${id}`, ip);
       return { lineId: id, status: 1 };
     });
   }
 
   /** Mark a line as a timing difference (pending deposit / outstanding check) — no GL effect. */
-  async markTiming(id: number, dto: any, user: AuthUser, branchId: number) {
+  async markTiming(id: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     const kind = String(dto?.kind ?? '').trim();
     const movementType = kind === 'pending_deposit' ? 10 : kind === 'outstanding_check' ? 11 : 0;
     if (!movementType) throw new BadRequestException('نوع التوقيت: pending_deposit أو outstanding_check');
@@ -439,13 +434,13 @@ export class BankReconService {
         [id, movementType],
       );
       await activity(client, user.userId, branchId, 'bank_recon.mark_timing', 'bank_recon', id,
-        `السطر ${id}: توقيت (${movementType === 10 ? 'إيداع معلق' : 'شيك غير مصروف'}) — بلا أثر محاسبي`);
+        `السطر ${id}: توقيت (${movementType === 10 ? 'إيداع معلق' : 'شيك غير مصروف'}) — بلا أثر محاسبي`, ip);
       return { lineId: id, status: 4 };
     });
   }
 
   // ------------------------------------------------------------------- runs
-  async createRun(dto: any, user: AuthUser, branchId: number) {
+  async createRun(dto: any, user: AuthUser, branchId: number, ip: string) {
     const accountId = Number(dto?.accountId);
     const runDate = asIsoDate(dto?.runDate) ?? new Date().toISOString().slice(0, 10);
     if (!accountId) throw new BadRequestException('اختر الحساب البنكي');
@@ -494,7 +489,7 @@ export class BankReconService {
           dto?.notes ?? null, user.userId],
       );
       await activity(client, user.userId, branchId, 'bank_recon.create_run', 'bank_recon', inserted.rows[0].run_id,
-        `إنشاء مسيرة ${runNo}: دفتر ${bookBalance.toFixed(2)} مقابل كشف ${statementBalance.toFixed(2)} (فرق ${variance.toFixed(2)})`);
+        `إنشاء مسيرة ${runNo}: دفتر ${bookBalance.toFixed(2)} مقابل كشف ${statementBalance.toFixed(2)} (فرق ${variance.toFixed(2)})`, ip);
       return {
         runId: inserted.rows[0].run_id, runNo,
         bookBalance: round2(bookBalance), statementBalance: round2(statementBalance), variance,
@@ -505,7 +500,7 @@ export class BankReconService {
   }
 
   /** Posts the adjustment journal (one balanced journal, source_type = 'bank_recon') and marks the run posted. */
-  async postRun(id: number, dto: any, user: AuthUser, branchId: number) {
+  async postRun(id: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     const runDate = asIsoDate(dto?.date) ?? new Date().toISOString().slice(0, 10);
     return this.db.transaction(async (client) => {
       const { rows: runs } = await client.query(
@@ -649,7 +644,7 @@ export class BankReconService {
         [Number(run.bank_account_id), Number(run.statement_balance).toFixed(2)],
       );
       await activity(client, user.userId, branchId, 'bank_recon.post_run', 'bank_recon', id,
-        `ترحيل مسيرة ${run.run_no} — ${journalId ? `قيد تسوية #${journalId}` : 'بلا قيد (صفر فروقات قيدية)'} — ${included.length} سطور مشمولة`);
+        `ترحيل مسيرة ${run.run_no} — ${journalId ? `قيد تسوية #${journalId}` : 'بلا قيد (صفر فروقات قيدية)'} — ${included.length} سطور مشمولة`, ip);
 
       return { runId: id, status: 2, journalId, adjustedLines: included.length,
         suspenseEntries: suspenseDrafts.length,
@@ -658,7 +653,7 @@ export class BankReconService {
   }
 
   /** Reverses a posted run: mirror journal + lines back to unreconciled. */
-  async reverseRun(id: number, dto: any, user: AuthUser, branchId: number) {
+  async reverseRun(id: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     const reversalDate = asIsoDate(dto?.date) ?? new Date().toISOString().slice(0, 10);
     return this.db.transaction(async (client) => {
       const { rows: runs } = await client.query(
@@ -705,7 +700,7 @@ export class BankReconService {
         [Number(run.bank_account_id)],
       );
       await activity(client, user.userId, branchId, 'bank_recon.reverse_run', 'bank_recon', id,
-        `عكس مسيرة ${run.run_no} — ${reverseJournalId ? `قيد عكسي #${reverseJournalId}` : 'بلا قيد'} — السطور عادت غير مطابقة`);
+        `عكس مسيرة ${run.run_no} — ${reverseJournalId ? `قيد عكسي #${reverseJournalId}` : 'بلا قيد'} — السطور عادت غير مطابقة`, ip);
       return { runId: id, status: 3, reverseJournalId };
     });
   }
@@ -812,7 +807,7 @@ export class BankReconService {
    * Classifies one suspense entry into a REAL account: Dr/Cr suspense ↔ chosen account
    * through posting.ts, with the entry locked and audited. Reversible via reverse-classification.
    */
-  async classifySuspense(id: number, dto: any, user: AuthUser, branchId: number) {
+  async classifySuspense(id: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     const accountId = Number(dto?.accountId);
     if (!accountId) throw new BadRequestException('اختر الحساب المراد التصنيف إليه');
     const notes = String(dto?.notes ?? '').trim() || null;
@@ -865,13 +860,13 @@ export class BankReconService {
         [id, journalId, accountId, user.userId, notes],
       );
       await activity(client, user.userId, branchId, 'bank_recon.suspense_classify', 'bank_recon', id,
-        `تصنيف حركة سطر ${entry.bank_statement_line_id} إلى حساب ${acctRows[0].code} — قيد #${journalId}`);
+        `تصنيف حركة سطر ${entry.bank_statement_line_id} إلى حساب ${acctRows[0].code} — قيد #${journalId}`, ip);
       return { suspenseEntryId: id, classificationJournalId: journalId, classifiedAccountId: accountId, amount };
     });
   }
 
   /** Reverses a classification: mirror journal + the suspense entry becomes open again. */
-  async reverseClassification(id: number, dto: any, user: AuthUser, branchId: number) {
+  async reverseClassification(id: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     const reverseDate = asIsoDate(dto?.date) ?? new Date().toISOString().slice(0, 10);
     return this.db.transaction(async (client) => {
       const { rows } = await client.query(
@@ -900,7 +895,7 @@ export class BankReconService {
         [id],
       );
       await activity(client, user.userId, branchId, 'bank_recon.suspense_reverse', 'bank_recon', id,
-        `عكس تصنيف حركة سطر ${entry.bank_statement_line_id} — ${reverseJournalId ? `قيد عكسي #${reverseJournalId}` : 'بلا قيد'}`);
+        `عكس تصنيف حركة سطر ${entry.bank_statement_line_id} — ${reverseJournalId ? `قيد عكسي #${reverseJournalId}` : 'بلا قيد'}`, ip);
       return { suspenseEntryId: id, status: 1, reverseJournalId };
     });
   }
@@ -928,8 +923,9 @@ export class BankReconController {
 
   @Post('statements/import')
   @RequirePermissions('bank.manage')
-  importStatement(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.importStatement(dto, user, branchId);
+  importStatement(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.importStatement(dto, user, branchId, ip);
   }
 
   @Get('statements')
@@ -940,44 +936,51 @@ export class BankReconController {
 
   @Post('auto-match')
   @RequirePermissions('bank.manage')
-  autoMatch(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.autoMatch(dto, user, branchId);
+  autoMatch(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.autoMatch(dto, user, branchId, ip);
   }
 
   @Post('statements/lines/:id/match')
   @RequirePermissions('bank.manage')
-  manualMatch(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.manualMatch(id, dto, user, branchId);
+  manualMatch(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.manualMatch(id, dto, user, branchId, ip);
   }
 
   @Post('statements/lines/:id/unmatch')
   @RequirePermissions('bank.manage')
-  unmatch(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.unmatch(id, user, branchId);
+  unmatch(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.unmatch(id, user, branchId, ip);
   }
 
   @Post('statements/lines/:id/mark-timing')
   @RequirePermissions('bank.manage')
-  markTiming(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.markTiming(id, dto, user, branchId);
+  markTiming(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.markTiming(id, dto, user, branchId, ip);
   }
 
   @Post('runs')
   @RequirePermissions('bank.manage')
-  createRun(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.createRun(dto, user, branchId);
+  createRun(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.createRun(dto, user, branchId, ip);
   }
 
   @Post('runs/:id/post')
   @RequirePermissions('bank.manage')
-  postRun(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.postRun(id, dto, user, branchId);
+  postRun(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.postRun(id, dto, user, branchId, ip);
   }
 
   @Post('runs/:id/reverse')
   @RequirePermissions('bank.manage')
-  reverseRun(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.reverseRun(id, dto, user, branchId);
+  reverseRun(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.reverseRun(id, dto, user, branchId, ip);
   }
 
   @Get('runs')
@@ -1000,14 +1003,16 @@ export class BankReconController {
 
   @Post('suspense/:id/classify')
   @RequirePermissions('bank.manage')
-  classifySuspense(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.classifySuspense(id, dto, user, branchId);
+  classifySuspense(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.classifySuspense(id, dto, user, branchId, ip);
   }
 
   @Post('suspense/:id/reverse-classification')
   @RequirePermissions('bank.manage')
-  reverseClassification(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.reverseClassification(id, dto, user, branchId);
+  reverseClassification(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.reverseClassification(id, dto, user, branchId, ip);
   }
 }
 

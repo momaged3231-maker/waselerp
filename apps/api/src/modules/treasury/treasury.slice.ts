@@ -1,12 +1,14 @@
 import {
   Body, Controller, Delete, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Query,
-  BadRequestException,
+  BadRequestException, Req,
 } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
 import { assertDeletionAllowed } from '../../common/delete-guard';
 import { getBooleanSetting } from '../../common/settings';
 import { postCashJournal, postJournal, resolveMapping } from '../../common/posting';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
+import { logActivity } from '../../common/audit';
+import { Request } from 'express';
 
 export interface CashTransactionInput {
   cashAccountId: number;
@@ -126,7 +128,7 @@ export class TreasuryService {
   }
 
   /** Creates a cash account (drawer, bank, card settlement, wallet…). */
-  async createAccount(dto: any, user: AuthUser, branchId: number) {
+  async createAccount(dto: any, user: AuthUser, branchId: number, ip: string) {
     const name = String(dto.name ?? '').trim();
     if (!name) throw new BadRequestException('اسم الحساب مطلوب');
     const type = Number(dto.type ?? 1);
@@ -164,11 +166,8 @@ export class TreasuryService {
         );
       }
 
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int,$2,'cash.account.create','cash_account',$3,$4)`,
-        [user.userId, branchId, String(accountId), name],
-      );
+      await logActivity(client, { userId: user.userId, branchId, action: 'cash.account.create',
+        entity: 'cash_account', entityId: String(accountId), details: name, ip });
       return { cashAccountId: accountId };
     });
   }
@@ -228,7 +227,7 @@ export class TreasuryService {
     );
   }
 
-  async addTransaction(dto: CashTransactionInput, user: AuthUser, branchId: number) {
+  async addTransaction(dto: CashTransactionInput, user: AuthUser, branchId: number, ip: string) {
     if (!(Number(dto.amount) > 0)) throw new BadRequestException('المبلغ يجب أن يكون أكبر من صفر');
     return this.db.transaction(async (client) => {
       const requireShift = await getBooleanSetting(client, 'RequireCashierShift', false);
@@ -273,12 +272,9 @@ export class TreasuryService {
         journalDate: dto.transactionDate ? String(dto.transactionDate).slice(0, 10) : undefined,
       });
 
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1,$2,'cash.transaction','cash_transaction',$3,$4)`,
-        [user.userId, branchId, String(result.rows[0].cash_transaction_id),
-          `${dto.direction === 1 ? 'إيداع' : 'سحب'} ${dto.amount}`],
-      );
+      await logActivity(client, { userId: user.userId, branchId, action: 'cash.transaction',
+        entity: 'cash_transaction', entityId: String(result.rows[0].cash_transaction_id),
+        details: `${dto.direction === 1 ? 'إيداع' : 'سحب'} ${dto.amount}`, ip });
       return { transactionId: Number(result.rows[0].cash_transaction_id) };
     });
   }
@@ -401,7 +397,7 @@ export class TreasuryService {
     });
   }
 
-  async closeShift(body: { countedCash?: number; notes?: string }, user: AuthUser, branchId: number) {
+  async closeShift(body: { countedCash?: number; notes?: string }, user: AuthUser, branchId: number, ip: string) {
     return this.db.transaction(async (client) => {
       const shiftResult = await client.query<any>(
         `SELECT s.*, c.name AS cash_account_name
@@ -482,12 +478,9 @@ export class TreasuryService {
         }
       }
 
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1,$2,'shift.close','shift',$3,$4)`,
-        [user.userId, branchId, String(shift.shift_id),
-          `إغلاق وردية ${shift.shift_no}: متوقع ${expectedTotal} / فعلي ${counted}`],
-      );
+      await logActivity(client, { userId: user.userId, branchId, action: 'shift.close',
+        entity: 'shift', entityId: String(shift.shift_id),
+        details: `إغلاق وردية ${shift.shift_no}: متوقع ${expectedTotal} / فعلي ${counted}`, ip });
 
       return {
         shiftId: Number(shift.shift_id),
@@ -576,8 +569,9 @@ export class TreasuryController {
 
   @RequirePermissions('cash.manage')
   @Post('accounts')
-  createAccount(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.createAccount(dto, user, branchId);
+  createAccount(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.createAccount(dto, user, branchId, ip);
   }
 
   @RequirePermissions('cash.manage')
@@ -633,8 +627,9 @@ export class TreasuryController {
 
   @RequirePermissions('cash.manage')
   @Post('transactions')
-  addTransaction(@Body() dto: CashTransactionInput, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.addTransaction(dto, user, branchId);
+  addTransaction(@Body() dto: CashTransactionInput, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.addTransaction(dto, user, branchId, ip);
   }
 
   @RequirePermissions('cash.manage')
@@ -676,8 +671,9 @@ export class TreasuryController {
 
   @RequirePermissions('cash.manage')
   @Post('shifts/close')
-  closeShift(@Body() body: { countedCash?: number; notes?: string }, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.closeShift(body, user, branchId);
+  closeShift(@Body() body: { countedCash?: number; notes?: string }, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.closeShift(body, user, branchId, ip);
   }
 }
 

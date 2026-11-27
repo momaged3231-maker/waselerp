@@ -366,7 +366,7 @@ export class AccountingService {
     });
   }
 
-  async postJournalById(id: number, user: AuthUser) {
+  async postJournalById(id: number, user: AuthUser, ip: string) {
     return this.db.transaction(async (client) => {
       const header = await client.query<any>(
         'SELECT * FROM gl_journals WHERE journal_id = $1::bigint FOR UPDATE',
@@ -390,16 +390,13 @@ export class AccountingService {
           WHERE journal_id = $1::bigint`,
         [id, debit, credit],
       );
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1,$2,'gl.journal.post','gl_journal',$3,$4)`,
-        [user.userId, Number(header.rows[0].branch_id), String(id), 'ترحيل قيد'],
-      );
+      await logActivity(client, { userId: user.userId, branchId: Number(header.rows[0].branch_id),
+        action: 'gl.journal.post', entity: 'gl_journal', entityId: String(id), details: 'ترحيل قيد', ip });
       return { journalId: id, status: 2 };
     });
   }
 
-  async voidJournalById(id: number, user: AuthUser) {
+  async voidJournalById(id: number, user: AuthUser, ip: string) {
     return this.db.transaction(async (client) => {
       const header = await client.query<any>(
         'SELECT * FROM gl_journals WHERE journal_id = $1::bigint FOR UPDATE',
@@ -408,11 +405,8 @@ export class AccountingService {
       if (!header.rows.length) throw new BadRequestException('القيد غير موجود');
       if (Number(header.rows[0].status) === 3) throw new BadRequestException('القيد ملغى بالفعل');
       await voidJournal(client, id);
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1,$2,'gl.journal.void','gl_journal',$3,$4)`,
-        [user.userId, Number(header.rows[0].branch_id), String(id), 'إلغاء قيد'],
-      );
+      await logActivity(client, { userId: user.userId, branchId: Number(header.rows[0].branch_id),
+        action: 'gl.journal.void', entity: 'gl_journal', entityId: String(id), details: 'إلغاء قيد', ip });
       return { journalId: id, status: 3 };
     });
   }
@@ -655,7 +649,7 @@ export class AccountingService {
   }
 
   /** Cancels a voucher: voids the journal and reverses the treasury movement. */
-  async cancelVoucher(id: number, user: AuthUser) {
+  async cancelVoucher(id: number, user: AuthUser, ip: string) {
     return this.db.transaction(async (client) => {
       const row = await client.query<any>(
         'SELECT * FROM vouchers WHERE voucher_id = $1::bigint FOR UPDATE',
@@ -717,11 +711,8 @@ export class AccountingService {
       }
       await client.query('DELETE FROM invoice_allocations WHERE voucher_id = $1::bigint', [id]);
 
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1,$2,'gl.voucher.cancel','voucher',$3,$4)`,
-        [user.userId, Number(voucher.branch_id), String(id), `إلغاء ${voucher.voucher_no}`],
-      );
+      await logActivity(client, { userId: user.userId, branchId: Number(voucher.branch_id),
+        action: 'gl.voucher.cancel', entity: 'voucher', entityId: String(id), details: `إلغاء ${voucher.voucher_no}`, ip });
       return { voucherId: id, status: 2 };
     });
   }
@@ -998,7 +989,7 @@ export class AccountingService {
    * `is_closed`, `closing_entry_id`, `net_income` — the accounting state is
    * untouched by design. Audited with a mandatory reason.
    */
-  async manualLock(id: number, dto: any, user: AuthUser, branchId: number) {
+  async manualLock(id: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     const reason = String(dto?.reason ?? '').trim();
     if (!reason) throw new BadRequestException('سبب القفل الإداري إلزامي — اذكر السبب (مثل: حفظ الدفاتر أثناء التدقيق)');
     return this.db.transaction(async (client) => {
@@ -1015,17 +1006,14 @@ export class AccountingService {
           WHERE period_id = $1::int`,
         [id, user.userId, reason],
       );
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int,$2::int,'period.manual_lock','period',$3::bigint,$4)`,
-        [user.userId, branchId, id, `قفل إداري للفترة «${p.name}» — ${reason}`],
-      );
+      await logActivity(client, { userId: user.userId, branchId, action: 'period.manual_lock',
+        entity: 'period', entityId: String(id), details: `قفل إداري للفترة «${p.name}» — ${reason}`, ip });
       return { periodId: id, manualLock: true, isClosed: !!p.is_closed, reason };
     });
   }
 
   /** MANUAL administrative unlock — lifts the administrative freeze. Accounting state unchanged. */
-  async manualUnlock(id: number, dto: any, user: AuthUser, branchId: number) {
+  async manualUnlock(id: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     const reason = String(dto?.reason ?? '').trim();
     if (!reason) throw new BadRequestException('سبب إزالة القفلة الإدارية إلزامي — اذكر السبب');
     return this.db.transaction(async (client) => {
@@ -1042,11 +1030,8 @@ export class AccountingService {
           WHERE period_id = $1::int`,
         [id],
       );
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int,$2::int,'period.manual_unlock','period',$3::bigint,$4)`,
-        [user.userId, branchId, id, `إزالة القفلة الإدارية عن الفترة «${p.name}» — ${reason}`],
-      );
+      await logActivity(client, { userId: user.userId, branchId, action: 'period.manual_unlock',
+        entity: 'period', entityId: String(id), details: `إزالة القفلة الإدارية عن الفترة «${p.name}» — ${reason}`, ip });
       return { periodId: id, manualLock: false, isClosed: !!p.is_closed, reason };
     });
   }
@@ -1098,7 +1083,7 @@ export class AccountingService {
    * period_close_checks (idempotent per period+check via UNIQUE upsert).
    * Never throws: returns the check rows; the closing call enforces them.
    */
-  private async runCloseChecklist(client: PoolClient, period: any, branchId: number, userId: number | null,
+  private async runCloseChecklist(client: PoolClient, period: any, branchId: number, userId: number | null, ip: string,
     opts?: { bypassReason?: string | null; overrides?: { checkCode: string; dueKey: string; reason: string }[] | null; canOverride?: boolean; dryRun?: boolean }) {
     type DueItem = { key: string; label: string; amount: number };
     const bypassReason = opts?.bypassReason ?? null;
@@ -1162,11 +1147,9 @@ export class AccountingService {
         }
       }
       for (const { item, reason } of waived) {
-        await client.query(
-          `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-           VALUES ($1::int,$2::int,'period.close_override','period',$3::bigint,$4)`,
-          [userId, branchId, period.period_id, `تجاوز «${item.label}» بمبلغ ${item.amount.toFixed(2)} — ${reason}`],
-        );
+        await logActivity(client, { userId: userId ?? 0, branchId, action: 'period.close_override',
+          entity: 'period', entityId: String(period.period_id),
+          details: `تجاوز «${item.label}» بمبلغ ${item.amount.toFixed(2)} — ${reason}`, ip });
       }
     };
 
@@ -1355,10 +1338,10 @@ export class AccountingService {
   }
 
   /** Pre-close check — runs the checklist, stores results, returns them. No journal, no close. */
-  async preCloseCheck(id: number, user: AuthUser, branchId: number) {
+  async preCloseCheck(id: number, user: AuthUser, branchId: number, ip: string) {
     return this.db.transaction(async (client) => {
       const period = await this.periodByIdForBranch(client, id, branchId);
-      const out = await this.runCloseChecklist(client, period, branchId, user.userId, { dryRun: true });
+      const out = await this.runCloseChecklist(client, period, branchId, user.userId, ip, { dryRun: true });
       return { ...out, overrideAvailable: !!user.permissions.includes('accounting.close_override') };
     });
   }
@@ -1369,7 +1352,7 @@ export class AccountingService {
    * Idempotent: an already-closed period is refused with an Arabic message.
    * An empty (no movement) period closes WITHOUT a journal (closing_entry_id = NULL).
    */
-  async closeMonth(id: number, dto: any, user: AuthUser, branchId: number) {
+  async closeMonth(id: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     const bypassReason = String(dto?.bypassReason ?? '').trim() || null;
     const overrides: { checkCode: string; dueKey: string; reason: string }[] = Array.isArray(dto?.overrides)
       ? dto.overrides
@@ -1394,7 +1377,7 @@ export class AccountingService {
       if (period.manual_lock) {
         throw new BadRequestException(`الفترة «${period.name}» مقفولة إداريًا — أزل القفلة الإدارية قبل الإقفال المحاسبي`);
       }
-      const checklist = await this.runCloseChecklist(client, period, branchId, user.userId, {
+      const checklist = await this.runCloseChecklist(client, period, branchId, user.userId, ip, {
         bypassReason,
         overrides: overrides.length ? overrides : null,
         canOverride,
@@ -1451,14 +1434,11 @@ export class AccountingService {
       if (updated.rows.length !== 1) {
         throw new BadRequestException('تعذر إقفال الفترة — تغيرت حالتها أثناء التنفيذ، أعد المحاولة');
       }
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int,$2::int,'period.close','period',$3::bigint,$4)`,
-        [user.userId, branchId, period.period_id,
-          journalId
-            ? `إقفال «${period.name}» — صافي ${netProfit} — قيد #${journalId}`
-            : `إقفال «${period.name}» — بلا حركات (دخل 0)`],
-      );
+      await logActivity(client, { userId: user.userId, branchId, action: 'period.close',
+        entity: 'period', entityId: String(period.period_id),
+        details: journalId
+          ? `إقفال «${period.name}» — صافي ${netProfit} — قيد #${journalId}`
+          : `إقفال «${period.name}» — بلا حركات (دخل 0)`, ip });
       return {
         periodId: period.period_id, isClosed: true, journalId, netProfit,
         totalRevenue, totalExpense, checklist,
@@ -1470,7 +1450,7 @@ export class AccountingService {
    * Reverses a closing: mirror journal (if one was posted) + period reopened.
    * Never rewrites history — the closing and its reversal both remain in the ledger.
    */
-  async reverseClose(id: number, dto: any, user: AuthUser, branchId: number) {
+  async reverseClose(id: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     const reason = String(dto?.reason ?? '').trim();
     if (!reason) throw new BadRequestException('سبب العكس إلزامي — اذكر سبب إعادة فتح الفترة');
     return this.db.transaction(async (client) => {
@@ -1493,11 +1473,9 @@ export class AccountingService {
         [period.period_id],
       );
       if (!entryId) {
-        await client.query(
-          `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-           VALUES ($1::int,$2::int,'period.reverse_close','period',$3::bigint,$4)`,
-          [user.userId, branchId, period.period_id, `عكس إقفال «${period.name}» (بلا قيد) — ${reason}`],
-        );
+        await logActivity(client, { userId: user.userId, branchId, action: 'period.reverse_close',
+          entity: 'period', entityId: String(period.period_id),
+          details: `عكس إقفال «${period.name}» (بلا قيد) — ${reason}`, ip });
         return { periodId: period.period_id, isClosed: false, reverseJournalId: null, reason };
       }
       const reverseJournalId = await reverseJournal(client, entryId, {
@@ -1505,12 +1483,9 @@ export class AccountingService {
         description: `عكس إقفال «${period.name}» — ${reason}`,
         journalType: 6,
       });
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int,$2::int,'period.reverse_close','period',$3::bigint,$4)`,
-        [user.userId, branchId, period.period_id,
-          `عكس إقفال «${period.name}» — ${reverseJournalId ? `قيد عكسي #${reverseJournalId}` : 'بلا قيد'} — ${reason}`],
-      );
+      await logActivity(client, { userId: user.userId, branchId, action: 'period.reverse_close',
+        entity: 'period', entityId: String(period.period_id),
+        details: `عكس إقفال «${period.name}» — ${reverseJournalId ? `قيد عكسي #${reverseJournalId}` : 'بلا قيد'} — ${reason}`, ip });
       return { periodId: period.period_id, isClosed: false, reverseJournalId, reason };
     });
   }
@@ -1560,7 +1535,7 @@ export class AccountingService {
    * Closes the books for a year: revenue and expense accounts are zeroed
    * and the result is transferred to retained earnings.
    */
-  async closeYear(body: { year?: number; asOf?: string }, user: AuthUser, branchId: number) {
+  async closeYear(body: { year?: number; asOf?: string }, user: AuthUser, branchId: number, ip: string) {
     const year = Number(body.year ?? new Date().getFullYear());
     const from = `${year}-01-01`;
     const to = body.asOf ?? `${year}-12-31`;
@@ -1646,11 +1621,8 @@ export class AccountingService {
         userId: user.userId,
       });
 
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1,$2,'gl.year.close','gl_journal',$3,$4)`,
-        [user.userId, branchId, String(journalId), `إقفال السنة ${year} — ربح ${netProfit}`],
-      );
+      await logActivity(client, { userId: user.userId, branchId, action: 'gl.year.close',
+        entity: 'gl_journal', entityId: String(journalId), details: `إقفال السنة ${year} — ربح ${netProfit}`, ip });
 
       return {
         journalId,
@@ -2237,7 +2209,7 @@ export class AccountingService {
     return { ...header[0], lines, plannedTotal };
   }
 
-  async createBudget(dto: any, user: AuthUser, branchId: number) {
+  async createBudget(dto: any, user: AuthUser, branchId: number, ip: string) {
     return this.db.transaction(async (client) => {
       const name = String(dto.name ?? '').trim();
       if (!name) throw new BadRequestException('اسم الموازنة مطلوب');
@@ -2260,16 +2232,13 @@ export class AccountingService {
       );
       const budgetId = Number(ins.rows[0].budget_id);
       await this.insertBudgetLines(client, budgetId, lines);
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int,$2::int,'budget.create','budget',$3::bigint,$4)`,
-        [user.userId, branchId, budgetId, `إنشاء موازنة ${year} — ${name} (${lines.length} بندًا)`],
-      );
+      await logActivity(client, { userId: user.userId, branchId, action: 'budget.create',
+        entity: 'budget', entityId: String(budgetId), details: `إنشاء موازنة ${year} — ${name} (${lines.length} بندًا)`, ip });
       return { budgetId, status: 1, lines: lines.length };
     });
   }
 
-  async updateBudget(id: number, dto: any, user: AuthUser, branchId: number) {
+  async updateBudget(id: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     return this.db.transaction(async (client) => {
       const cur = await client.query<any>(
         `SELECT budget_id, status, created_by FROM budgets
@@ -2300,16 +2269,13 @@ export class AccountingService {
         await client.query('DELETE FROM budget_lines WHERE budget_id = $1::bigint', [id]);
         await this.insertBudgetLines(client, id, lines);
       }
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int,$2::int,'budget.update','budget',$3::bigint,$4)`,
-        [user.userId, branchId, id, 'تعديل موازنة مسودة'],
-      );
+      await logActivity(client, { userId: user.userId, branchId, action: 'budget.update',
+        entity: 'budget', entityId: String(id), details: 'تعديل موازنة مسودة', ip });
       return { budgetId: id, status };
     });
   }
 
-  async approveBudget(id: number, dto: any, user: AuthUser, branchId: number) {
+  async approveBudget(id: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     return this.db.transaction(async (client) => {
       const cur = await client.query<any>(
         `SELECT budget_id, status, created_by FROM budgets
@@ -2337,12 +2303,9 @@ export class AccountingService {
           WHERE budget_id = $1::bigint`,
         [id, user.userId, createdBy === user.userId ? reason : (reason || null)],
       );
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int,$2::int,'budget.approve','budget',$3::bigint,$4)`,
-        [user.userId, branchId, id,
-          createdBy === user.userId ? `اعتماد ذاتي — ${reason}` : 'اعتماد موازنة'],
-      );
+      await logActivity(client, { userId: user.userId, branchId, action: 'budget.approve',
+        entity: 'budget', entityId: String(id),
+        details: createdBy === user.userId ? `اعتماد ذاتي — ${reason}` : 'اعتماد موازنة', ip });
       return {
         budgetId: id, status: 2, approvedBy: user.userId, createdBy,
         sameUserApprovalReason: createdBy === user.userId ? reason : null,
@@ -2350,7 +2313,7 @@ export class AccountingService {
     });
   }
 
-  async closeBudget(id: number, dto: any, user: AuthUser, branchId: number) {
+  async closeBudget(id: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     return this.db.transaction(async (client) => {
       const cur = await client.query<any>(
         `SELECT budget_id, status FROM budgets
@@ -2366,17 +2329,15 @@ export class AccountingService {
           WHERE budget_id = $1::bigint`,
         [id, user.userId],
       );
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int,$2::int,'budget.close','budget',$3::bigint,$4)`,
-        [user.userId, branchId, id, dto?.reason ? `إغلاق موازنة — ${String(dto.reason).trim()}` : 'إغلاق موازنة'],
-      );
+      await logActivity(client, { userId: user.userId, branchId, action: 'budget.close',
+        entity: 'budget', entityId: String(id),
+        details: dto?.reason ? `إغلاق موازنة — ${String(dto.reason).trim()}` : 'إغلاق موازنة', ip });
       return { budgetId: id, status: 3 };
     });
   }
 
   /** Approved budgets are never edited in place: a revision is a new draft. */
-  async reviseBudget(id: number, dto: any, user: AuthUser, branchId: number) {
+  async reviseBudget(id: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     return this.db.transaction(async (client) => {
       const cur = await client.query<any>(
         `SELECT * FROM budgets WHERE budget_id = $1::bigint AND branch_id = $2::int FOR UPDATE`,
@@ -2422,11 +2383,8 @@ export class AccountingService {
         `UPDATE budgets SET status = 4, superseded_by = $2::bigint WHERE budget_id = $1::bigint`,
         [id, newId],
       );
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int,$2::int,'budget.revise','budget',$3::bigint,$4)`,
-        [user.userId, branchId, newId, `مراجعة موازنة — يستبدل #${id}`],
-      );
+      await logActivity(client, { userId: user.userId, branchId, action: 'budget.revise',
+        entity: 'budget', entityId: String(newId), details: `مراجعة موازنة — يستبدل #${id}`, ip });
       return { budgetId: newId, supersedesId: id, supersededStatus: 4 };
     });
   }
@@ -2630,14 +2588,16 @@ export class AccountingController {
 
   @RequirePermissions('accounting.post')
   @Post('journals/:id/post')
-  postJournal(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
-    return this.service.postJournalById(id, user);
+  postJournal(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.postJournalById(id, user, ip);
   }
 
   @RequirePermissions('accounting.post')
   @Post('journals/:id/void')
-  voidJournal(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
-    return this.service.voidJournalById(id, user);
+  voidJournal(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.voidJournalById(id, user, ip);
   }
 
   // ---- vouchers ------------------------------------------------------ //
@@ -2694,8 +2654,9 @@ export class AccountingController {
 
   @RequirePermissions('accounting.post')
   @Post('vouchers/:id/cancel')
-  cancelVoucher(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
-    return this.service.cancelVoucher(id, user);
+  cancelVoucher(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.cancelVoucher(id, user, ip);
   }
 
   // ---- checks -------------------------------------------------------- //
@@ -2746,32 +2707,37 @@ export class AccountingController {
 
   @RequirePermissions('periods.admin')
   @Post('periods/:id/manual-lock')
-  manualLock(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.manualLock(id, dto ?? {}, user, branchId);
+  manualLock(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.manualLock(id, dto ?? {}, user, branchId, ip);
   }
 
   @RequirePermissions('periods.admin')
   @Post('periods/:id/manual-unlock')
-  manualUnlock(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.manualUnlock(id, dto ?? {}, user, branchId);
+  manualUnlock(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.manualUnlock(id, dto ?? {}, user, branchId, ip);
   }
 
   @RequirePermissions('accounting.close')
   @Post('periods/:id/preclose-check')
-  preCloseCheck(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.preCloseCheck(id, user, branchId);
+  preCloseCheck(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.preCloseCheck(id, user, branchId, ip);
   }
 
   @RequirePermissions('accounting.close')
   @Post('periods/:id/close-month')
-  closeMonth(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.closeMonth(id, dto ?? {}, user, branchId);
+  closeMonth(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.closeMonth(id, dto ?? {}, user, branchId, ip);
   }
 
   @RequirePermissions('accounting.close')
   @Post('periods/:id/reverse-close')
-  reverseClose(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.reverseClose(id, dto ?? {}, user, branchId);
+  reverseClose(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.reverseClose(id, dto ?? {}, user, branchId, ip);
   }
 
   @RequirePermissions('accounting.view')
@@ -2783,8 +2749,9 @@ export class AccountingController {
   // ---- year end ------------------------------------------------------ //
   @RequirePermissions('accounting.close')
   @Post('close-year')
-  closeYear(@Body() body: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.closeYear(body ?? {}, user, branchId);
+  closeYear(@Body() body: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.closeYear(body ?? {}, user, branchId, ip);
   }
 
   // ---- recurring journals -------------------------------------------- //
@@ -2895,32 +2862,37 @@ export class AccountingController {
 
   @RequirePermissions('accounting.manage')
   @Post('budgets')
-  createBudget(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.createBudget(dto ?? {}, user, branchId);
+  createBudget(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.createBudget(dto ?? {}, user, branchId, ip);
   }
 
   @RequirePermissions('accounting.manage')
   @Patch('budgets/:id')
-  updateBudget(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.updateBudget(id, dto ?? {}, user, branchId);
+  updateBudget(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.updateBudget(id, dto ?? {}, user, branchId, ip);
   }
 
   @RequirePermissions('accounting.approve_budget')
   @Post('budgets/:id/approve')
-  approveBudget(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.approveBudget(id, dto ?? {}, user, branchId);
+  approveBudget(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.approveBudget(id, dto ?? {}, user, branchId, ip);
   }
 
   @RequirePermissions('accounting.close_budget')
   @Post('budgets/:id/close')
-  closeBudget(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.closeBudget(id, dto ?? {}, user, branchId);
+  closeBudget(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.closeBudget(id, dto ?? {}, user, branchId, ip);
   }
 
   @RequirePermissions('accounting.manage')
   @Post('budgets/:id/revise')
-  reviseBudget(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.reviseBudget(id, dto ?? {}, user, branchId);
+  reviseBudget(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.reviseBudget(id, dto ?? {}, user, branchId, ip);
   }
 
   @RequirePermissions('accounting.view')

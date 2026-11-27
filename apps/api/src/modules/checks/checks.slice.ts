@@ -1,7 +1,9 @@
-import { BadRequestException, Body, Controller, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Query, Req } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
 import { AuthUser, CurrentBranch, CurrentUser, RequireAnyPermission, RequirePermissions } from '../../common/security';
 import { postJournal, requireMapping, resolveMapping } from '../../common/posting';
+import { logActivity } from '../../common/audit';
+import { Request } from 'express';
 
 const STATUS: Record<number, string> = { 1: 'تحت التحصيل', 2: 'محصّل', 3: 'مرتد', 4: 'ملغي' };
 const DIR: Record<number, string> = { 1: 'قبض (وارد)', 2: 'صرف (صادر)' };
@@ -114,7 +116,7 @@ export class ChecksService {
     return { cashAccountId, glAccountId: Number(cash.accountId) };
   }
 
-  async create(dto: any, branchId: number, user: AuthUser) {
+  async create(dto: any, branchId: number, user: AuthUser, ip: string) {
     const direction = Number(dto.direction);
     if (![1, 2].includes(direction)) throw new BadRequestException('اتجاه الشيك غير صحيح');
     const amount = Number(dto.amount);
@@ -149,16 +151,13 @@ export class ChecksService {
         );
       }
       await this.postIssuanceJournal(client, check, user);
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1,$2,'check.create','check',$3,$4)`,
-        [user.userId, branchId, String(check.check_id), `${DIR[direction]} ${checkNo}`],
-      );
+      await logActivity(client, { userId: user.userId, branchId, action: 'check.create',
+        entity: 'check', entityId: String(check.check_id), details: `${DIR[direction]} ${checkNo}`, ip });
       return { checkId: Number(check.check_id), checkNo, amount, direction, status: 1 };
     });
   }
 
-  async updateStatus(id: number, status: number, branchId: number, user: AuthUser, notes?: string, cashAccountId?: number | null) {
+  async updateStatus(id: number, status: number, branchId: number, user: AuthUser, ip: string, notes?: string, cashAccountId?: number | null) {
     const st = Number(status);
     if (![2, 3, 4].includes(st)) throw new BadRequestException('الحالة المطلوبة غير صحيحة — التحصيل/الارتداد/الإلغاء فقط من هنا');
     const existing = await this.db.one<any>(
@@ -218,11 +217,8 @@ export class ChecksService {
         await client.query('UPDATE checks SET status=$2, notes = COALESCE($3::text, notes) WHERE check_id=$1::int',
           [id, st, notes ?? null]);
       }
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1,$2,'check.status','check',$3,$4)`,
-        [user.userId, branchId, String(id), `status=${st} (${STATUS[st]})`],
-      );
+      await logActivity(client, { userId: user.userId, branchId, action: 'check.status',
+        entity: 'check', entityId: String(id), details: `status=${st} (${STATUS[st]})`, ip });
       return { checkId: id, status: st };
     });
   }
@@ -312,12 +308,12 @@ export class ChecksController {
 
   @RequirePermissions('accounting.manage')
   @Post()
-  create(@Body() body: any, @CurrentBranch() b: number, @CurrentUser() u: AuthUser) { return this.svc.create(body, b, u); }
+  create(@Body() body: any, @CurrentBranch() b: number, @CurrentUser() u: AuthUser, @Req() req: Request) { const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown'; return this.svc.create(body, b, u, ip); }
 
   @RequirePermissions('accounting.manage')
   @Put(':id/status')
-  updateStatus(@Param('id', ParseIntPipe) id: number, @Body() body: any, @CurrentBranch() b: number, @CurrentUser() u: AuthUser) {
-    return this.svc.updateStatus(id, Number(body?.status), b, u, body?.notes, body?.cashAccountId ? Number(body.cashAccountId) : null);
+  updateStatus(@Param('id', ParseIntPipe) id: number, @Body() body: any, @CurrentBranch() b: number, @CurrentUser() u: AuthUser, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown'; return this.svc.updateStatus(id, Number(body?.status), b, u, ip, body?.notes, body?.cashAccountId ? Number(body.cashAccountId) : null);
   }
 }
 

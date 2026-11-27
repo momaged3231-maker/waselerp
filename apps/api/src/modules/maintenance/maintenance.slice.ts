@@ -1,9 +1,11 @@
 import {
   BadRequestException, Body, Controller, Delete, ForbiddenException, Get, Injectable, Module, NotFoundException,
-  Param, ParseIntPipe, Post, Put, Query,
+  Param, ParseIntPipe, Post, Put, Query, Req,
 } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
 import { PoolClient } from 'pg';
+import { Request } from 'express';
+import { logActivity } from '../../common/audit';
 import { assertDeletionAllowed } from '../../common/delete-guard';
 import { applyMovement, getWarehouseCost } from '../../common/stock';
 import {
@@ -408,13 +410,10 @@ export class MaintenanceService {
 
   /** GAP-03 — audit a warranty override inside the caller's transaction. */
   private async auditWarranty(
-    client: PoolClient, action: string, branchId: number, ticketId: number, details: string, user: AuthUser,
+    client: PoolClient, action: string, branchId: number, ticketId: number, details: string, user: AuthUser, ip: string,
   ): Promise<void> {
-    await client.query(
-      `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details, ip_address)
-       VALUES ($1::int,$2::int,$3::text,$4::text,$5::text,$6::text,$7::text)`,
-      [user.userId, branchId, action, 'maintenance_ticket', String(ticketId), details, 'policy'],
-    );
+    await logActivity(client, { userId: user.userId, branchId, action,
+      entity: 'maintenance_ticket', entityId: String(ticketId), details, ip });
   }
 
   private async validateTicketInput(dto: any) {
@@ -438,7 +437,7 @@ export class MaintenanceService {
     return { customerName, phone, phone2: phone2 || null, productId, modelId };
   }
 
-  async createTicket(dto: any, user: AuthUser, branchId: number) {
+  async createTicket(dto: any, user: AuthUser, branchId: number, ip: string) {
     const input = await this.validateTicketInput(dto);
     const paid = Number(dto?.paidAmount ?? 0);
     const cashAccountId = dto?.cashAccountId ? Number(dto.cashAccountId) : null;
@@ -511,7 +510,7 @@ export class MaintenanceService {
       const ticketId = Number(result.rows[0].ticket_id);
       if (isWarranty && warrantyCharged) {
         await this.auditWarranty(client, 'maintenance.warranty_charge_override', branchId, ticketId,
-          `تحصيل تذكرة ضمان — ${warrantyReason}`, user);
+          `تحصيل تذكرة ضمان — ${warrantyReason}`, user, ip);
       }
 
       if (paid > 0) {
@@ -530,7 +529,7 @@ export class MaintenanceService {
     });
   }
 
-  async updateTicket(id: number, dto: any, user: AuthUser, branchId: number) {
+  async updateTicket(id: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     const input = await this.validateTicketInput(dto);
     const paid = Number(dto?.paidAmount ?? 0);
     const cashAccountId = dto?.cashAccountId ? Number(dto.cashAccountId) : null;
@@ -598,7 +597,7 @@ export class MaintenanceService {
       );
       if (mw.isWarranty && mw.charged) {
         await this.auditWarranty(client, 'maintenance.warranty_charge_override', branchId, id,
-          `تحصيل تذكرة ضمان — ${mw.reason}`, user);
+          `تحصيل تذكرة ضمان — ${mw.reason}`, user, ip);
       }
 
       return { updated: true };
@@ -1040,14 +1039,16 @@ export class MaintenanceController {
 
   @RequirePermissions('maintenance.manage')
   @Post('tickets')
-  createTicket(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.createTicket(dto, user, branchId);
+  createTicket(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.createTicket(dto, user, branchId, ip);
   }
 
   @RequirePermissions('maintenance.manage')
   @Put('tickets/:id')
-  updateTicket(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.updateTicket(id, dto, user, branchId);
+  updateTicket(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.updateTicket(id, dto, user, branchId, ip);
   }
 
   @RequirePermissions('maintenance.manage')

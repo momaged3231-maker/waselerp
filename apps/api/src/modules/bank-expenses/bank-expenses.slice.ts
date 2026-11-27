@@ -1,9 +1,11 @@
 import {
   BadRequestException, Body, Controller, Delete, Get, Injectable, Module,
-  Param, ParseIntPipe, Post, Put, Query,
+  Param, ParseIntPipe, Post, Put, Query, Req,
 } from '@nestjs/common';
 import { DatabaseService } from '../../common/database/database.service';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
+import { logActivity } from '../../common/audit';
+import { Request } from 'express';
 import { postJournal, requireMapping, resolvePeriod, reverseJournal } from '../../common/posting';
 import { asIsoDate } from '../../common/dates';
 import { occurrences, nextOccurrence } from '../../common/occurrences';
@@ -70,13 +72,10 @@ function toRule(row: any) {
 export class BankExpensesService {
   constructor(private readonly db: DatabaseService) {}
 
-  private async activity(client: any, userId: number, branchId: number, action: string, entityId: number | string, details: string) {
+  private async activity(client: any, userId: number, branchId: number, action: string, entityId: number | string, details: string, ip: string) {
     try {
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int,$2::int,$3::text,'bank_expense',$4::bigint,$5::text)`,
-        [userId, branchId, action, entityId, details],
-      );
+      await logActivity(client, { userId, branchId, action, entity: 'bank_expense',
+        entityId: String(entityId), details, ip });
     } catch { /* audit must never break the flow */ }
   }
 
@@ -142,7 +141,7 @@ export class BankExpensesService {
   }
 
   // ---------------------------------------------------------------- writes
-  async create(dto: any, user: AuthUser, branchId: number) {
+  async create(dto: any, user: AuthUser, branchId: number, ip: string) {
     const name = String(dto?.name ?? '').trim();
     const description = dto?.description ? String(dto.description).trim() : null;
     const counterparty = dto?.counterpartyName ? String(dto.counterpartyName).trim() : null;
@@ -186,12 +185,12 @@ export class BankExpensesService {
       );
       const id = Number(inserted.rows[0].rule_id);
       await this.activity(client, user.userId, branchId, 'bank_expense.create', id,
-        `إنشاء قاعدة «${name}» — ${amount} ${FREQ_LABEL[frequency]} يوم ${dayOfMonth} من ${startDate}`);
+        `إنشاء قاعدة «${name}» — ${amount} ${FREQ_LABEL[frequency]} يوم ${dayOfMonth} من ${startDate}`, ip)
       return { ruleId: id };
     });
   }
 
-  async update(id: number, dto: any, user: AuthUser, branchId: number) {
+  async update(id: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     return this.db.transaction(async (client) => {
       const { rows } = await client.query(`SELECT * FROM bank_expense_rules WHERE rule_id = $1::int AND branch_id = $2::int FOR UPDATE`, [id, branchId]);
       if (!rows.length) throw new BadRequestException('القاعدة غير موجودة');
@@ -255,12 +254,12 @@ export class BankExpensesService {
           WHERE rule_id = $1::int`,
         [id, name, description, endDate, counterparty],
       );
-      await this.activity(client, user.userId, branchId, 'bank_expense.update', id, `تعديل القاعدة #${id} (${name})`);
+      await this.activity(client, user.userId, branchId, 'bank_expense.update', id, `تعديل القاعدة #${id} (${name})`, ip)
       return { ruleId: id };
     });
   }
 
-  async setActive(id: number, dto: any, user: AuthUser, branchId: number) {
+  async setActive(id: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     const active = !!dto?.isActive;
     return this.db.transaction(async (client) => {
       const { rows } = await client.query(
@@ -271,12 +270,12 @@ export class BankExpensesService {
       );
       if (!rows.length) throw new BadRequestException('القاعدة غير موجودة');
       await this.activity(client, user.userId, branchId, active ? 'bank_expense.activate' : 'bank_expense.deactivate', id,
-        `${active ? 'تفعيل' : 'إيقاف'} القاعدة #${id}`);
+        `${active ? 'تفعيل' : 'إيقاف'} القاعدة #${id}`, ip)
       return { ruleId: id, isActive: rows[0].is_active };
     });
   }
 
-  async suspend(id: number, dto: any, user: AuthUser, branchId: number) {
+  async suspend(id: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     const reason = String(dto?.reason ?? '').trim();
     if (!reason) throw new BadRequestException('سبب الإيقاف مطلوب');
     return this.db.transaction(async (client) => {
@@ -286,12 +285,12 @@ export class BankExpensesService {
         [id, reason, branchId],
       );
       if (!rows.length) throw new BadRequestException('القاعدة غير موجودة');
-      await this.activity(client, user.userId, branchId, 'bank_expense.suspend', id, `إيقاف القاعدة #${id} — ${reason}`);
+      await this.activity(client, user.userId, branchId, 'bank_expense.suspend', id, `إيقاف القاعدة #${id} — ${reason}`, ip)
       return { ruleId: id, suspended: true };
     });
   }
 
-  async resume(id: number, user: AuthUser, branchId: number) {
+  async resume(id: number, user: AuthUser, branchId: number, ip: string) {
     return this.db.transaction(async (client) => {
       const { rows } = await client.query(
         `UPDATE bank_expense_rules SET suspended_at = NULL, suspended_reason = NULL, updated_at = now()
@@ -299,12 +298,12 @@ export class BankExpensesService {
         [id, branchId],
       );
       if (!rows.length) throw new BadRequestException('القاعدة غير موجودة');
-      await this.activity(client, user.userId, branchId, 'bank_expense.resume', id, `استئناف القاعدة #${id}`);
+      await this.activity(client, user.userId, branchId, 'bank_expense.resume', id, `استئناف القاعدة #${id}`, ip)
       return { ruleId: id, suspended: false };
     });
   }
 
-  async remove(id: number, user: AuthUser, branchId: number) {
+  async remove(id: number, user: AuthUser, branchId: number, ip: string) {
     return this.db.transaction(async (client) => {
       const postedCount = Number((await client.query(
         `SELECT COUNT(*)::int AS n FROM bank_expense_runs WHERE rule_id = $1::int AND status = 1`,
@@ -318,13 +317,13 @@ export class BankExpensesService {
         [id, branchId],
       );
       if (!rows.length) throw new BadRequestException('القاعدة غير موجودة');
-      await this.activity(client, user.userId, branchId, 'bank_expense.delete', id, `حذف القاعدة #${id}`);
+      await this.activity(client, user.userId, branchId, 'bank_expense.delete', id, `حذف القاعدة #${id}`, ip)
       return { ruleId: id, deleted: true };
     });
   }
 
   // ------------------------------------------------------------- generation
-  async run(dto: any, user: AuthUser, branchId: number) {
+  async run(dto: any, user: AuthUser, branchId: number, ip: string) {
     const asOf = asIsoDate(dto?.asOf) ?? iso(new Date());
     return this.db.transaction(async (client) => {
       const { rows: rules } = await client.query(
@@ -396,7 +395,7 @@ export class BankExpensesService {
         }
       }
       await this.activity(client, user.userId, branchId, 'bank_expense.run', 0,
-        `توليد رسوم بنكية: ${posted.length} قيدًا (${refused.length} مرفوض) حتى ${asOf}`);
+        `توليد رسوم بنكية: ${posted.length} قيدًا (${refused.length} مرفوض) حتى ${asOf}`, ip)
       return { asOf, posted, refused };
     });
   }
@@ -420,7 +419,7 @@ export class BankExpensesService {
   }
 
   /** Reverses a generated occurrence: mirror journal + run marked reversed. */
-  async reverseRun(id: number, dto: any, user: AuthUser, branchId: number) {
+  async reverseRun(id: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     const reverseDate = asIsoDate(dto?.date) ?? iso(new Date());
     return this.db.transaction(async (client) => {
       const { rows } = await client.query(
@@ -464,7 +463,7 @@ export class BankExpensesService {
             [ml.lineId],
           );
           await this.activity(client, user.userId, branchId, 'bank_expense.unmatch_on_reverse', ml.lineId,
-            `إعادة فتح مطابقة السطر ${ml.lineId} — أُلغي قيد القاعدة #${id} (${run.name})`);
+            `إعادة فتح مطابقة السطر ${ml.lineId} — أُلغي قيد القاعدة #${id} (${run.name})`, ip)
         }
       }
       await client.query(
@@ -472,7 +471,7 @@ export class BankExpensesService {
         [id],
       );
       await this.activity(client, user.userId, branchId, 'bank_expense.reverse_run', id,
-        `عكس توليد #${id} (${run.name}) — ${reverseJournalId ? `قيد عكسي #${reverseJournalId}` : 'بلا قيد'}`);
+        `عكس توليد #${id} (${run.name}) — ${reverseJournalId ? `قيد عكسي #${reverseJournalId}` : 'بلا قيد'}`, ip)
       return { runId: id, status: 3, reverseJournalId };
     });
   }
@@ -502,56 +501,65 @@ export class BankExpensesController {
 
   @Post()
   @RequirePermissions('accounting.manage')
-  create(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.create(dto, user, branchId);
+  create(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.create(dto, user, branchId, ip);
   }
 
   @Put(':id')
   @RequirePermissions('accounting.manage')
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.update(id, dto, user, branchId);
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.update(id, dto, user, branchId, ip);
   }
 
   @Post(':id/activate')
   @RequirePermissions('accounting.manage')
-  activate(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.setActive(id, { isActive: true }, user, branchId);
+  activate(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.setActive(id, { isActive: true }, user, branchId, ip);
   }
 
   @Post(':id/deactivate')
   @RequirePermissions('accounting.manage')
-  deactivate(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.setActive(id, { isActive: false }, user, branchId);
+  deactivate(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.setActive(id, { isActive: false }, user, branchId, ip);
   }
 
   @Post(':id/suspend')
   @RequirePermissions('accounting.manage')
-  suspend(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.suspend(id, dto, user, branchId);
+  suspend(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.suspend(id, dto, user, branchId, ip);
   }
 
   @Post(':id/resume')
   @RequirePermissions('accounting.manage')
-  resume(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.resume(id, user, branchId);
+  resume(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.resume(id, user, branchId, ip);
   }
 
   @Delete(':id')
   @RequirePermissions('accounting.manage')
-  remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.remove(id, user, branchId);
+  remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.remove(id, user, branchId, ip);
   }
 
   @Post('run')
   @RequirePermissions('accounting.manage')
-  run(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.run(dto, user, branchId);
+  run(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.run(dto, user, branchId, ip);
   }
 
   @Post('runs/:id/reverse')
   @RequirePermissions('accounting.manage')
-  reverseRun(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.reverseRun(id, dto, user, branchId);
+  reverseRun(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.reverseRun(id, dto, user, branchId, ip);
   }
 }
 

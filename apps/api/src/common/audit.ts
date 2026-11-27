@@ -9,7 +9,7 @@ import { PoolClient } from 'pg';
  */
 export async function logActivity(client: PoolClient, params: {
   userId: number;
-  branchId: number;
+  branchId: number | null;
   action: string;
   entity: string;
   entityId: string | number;

@@ -9,6 +9,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { Request } from 'express';
+import { logActivity } from '../../common/audit';
 import { PoolClient } from 'pg';
 import { DatabaseService } from '../../common/database/database.service';
 import { AuthUser, CurrentUser, RequirePermissions } from '../../common/security';
@@ -42,7 +43,7 @@ interface FkDef {
 export class BackupService {
   constructor(private readonly db: DatabaseService) {}
 
-  async create(user: AuthUser) {
+  async create(user: AuthUser, ip: string) {
     return this.db.transaction(async (client) => {
       const tableRows = await client.query<any>(
         `SELECT table_name
@@ -58,11 +59,8 @@ export class BackupService {
       }
       const totalRows = Object.values(tables).reduce((sum, rows) => sum + rows.length, 0);
       const meta = { tables: tableRows.rows.length, rows: totalRows };
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int, NULL, 'backup.export', 'database', NULL, $2::text)`,
-        [user.userId, `تصدير نسخة احتياطية (${meta.tables} جدول، ${meta.rows} سطر)`],
-      );
+      await logActivity(client, { userId: user.userId, branchId: null, action: 'backup.export',
+        entity: 'database', entityId: '0', details: `تصدير نسخة احتياطية (${meta.tables} جدول، ${meta.rows} سطر)`, ip });
       return {
         version: 1,
         createdAt: new Date().toISOString(),
@@ -73,7 +71,7 @@ export class BackupService {
   }
 
   /** Legacy restore (admin/backup/restore, users.manage) — kept for compatibility. */
-  async restore(payload: BackupPayload, user: AuthUser) {
+  async restore(payload: BackupPayload, user: AuthUser, ip: string) {
     if (!payload || typeof payload !== 'object' || !payload.tables || typeof payload.tables !== 'object') {
       throw new BadRequestException('ملف النسخة الاحتياطية غير صالح');
     }
@@ -131,17 +129,15 @@ export class BackupService {
       }
       await this.resetSequences(client, tableNames);
       await client.query("SET session_replication_role = 'origin'");
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int, NULL, 'backup.restore', 'database', NULL, $2::text)`,
-        [user.userId, `استعادة نسخة احتياطية (${restoredTables} جدول، ${restoredRows} سطر${skipped.length ? `، تجاهل ${skipped.length} جدول غير معروف` : ''}) — بواسطة ${user.userName}`],
-      );
+      await logActivity(client, { userId: user.userId, branchId: null, action: 'backup.restore',
+        entity: 'database', entityId: '0',
+        details: `استعادة نسخة احتياطية (${restoredTables} جدول، ${restoredRows} سطر${skipped.length ? `، تجاهل ${skipped.length} جدول غير معروف` : ''}) — بواسطة ${user.userName}`, ip });
       return { restored: true, tables: restoredTables, rows: restoredRows, skipped };
     });
   }
 
   /** GAP-07 compliant restore: POST /admin/restore */
-  async restoreGAP07(body: RestoreRequest, user: AuthUser, sourceIp: string | null) {
+  async restoreGAP07(body: RestoreRequest, user: AuthUser, sourceIp: string | null, ip: string) {
     if (!body || body.confirm !== 'RESTORE') {
       throw new BadRequestException('يجب تأكيد الاستعادة بإرسال confirm: "RESTORE"');
     }
@@ -256,11 +252,9 @@ export class BackupService {
         [user.userId, backup.version, JSON.stringify(expectedCounts), sourceIp],
       );
       // also keep activity_log for traceability
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int, NULL, 'backup.restore', 'database', NULL, $2::text)`,
-        [user.userId, `استعادة نسخة (GAP-07) — ${includedTableNames.length} جدول، ${Object.values(expectedCounts).reduce((a, b) => a + b, 0)} سطر`],
-      );
+      await logActivity(client, { userId: user.userId, branchId: null, action: 'backup.restore',
+        entity: 'database', entityId: '0',
+        details: `استعادة نسخة (GAP-07) — ${includedTableNames.length} جدول، ${Object.values(expectedCounts).reduce((a, b) => a + b, 0)} سطر`, ip });
 
       return {
         restored: true,
@@ -437,14 +431,16 @@ export class BackupController {
 
   @RequirePermissions('users.manage')
   @Get()
-  create(@CurrentUser() user: AuthUser) {
-    return this.service.create(user);
+  create(@CurrentUser() user: AuthUser, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.create(user, ip);
   }
 
   @RequirePermissions('users.manage')
   @Post('restore')
-  restore(@Body() body: any, @CurrentUser() user: AuthUser) {
-    return this.service.restore(body as BackupPayload, user);
+  restore(@Body() body: any, @CurrentUser() user: AuthUser, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.restore(body as BackupPayload, user, ip);
   }
 }
 
@@ -457,7 +453,7 @@ export class AdminRestoreController {
   restore(@Body() body: RestoreRequest, @CurrentUser() user: AuthUser, @Req() req: Request) {
     const forwarded = (req.headers['x-forwarded-for'] as string | undefined)?.split(',')[0]?.trim();
     const ip = forwarded || req.ip || (req.socket as any)?.remoteAddress || null;
-    return this.service.restoreGAP07(body, user, ip);
+    return this.service.restoreGAP07(body, user, ip, ip);
   }
 }
 

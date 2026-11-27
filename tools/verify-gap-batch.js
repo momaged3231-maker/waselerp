@@ -2,8 +2,8 @@
  * Verification batch for the "implemented without evidence" domains.
  *   node tools/verify-gap-batch.js
  *
- * Target: an ISOLATED API + database (default 4001 / 5434).
- *   API_BASE=http://127.0.0.1:4001/api PGPORT=5434 node tools/verify-gap-batch.js
+ * Target: an isolated API + database supplied via env (no fixed default port).
+ *   API_BASE=<url> PGPORT=<port> node tools/verify-gap-batch.js
  *
  * Every check prints the literal expected/actual values. Nothing is asserted
  * without a number taken from the API or from an independent SQL query.
