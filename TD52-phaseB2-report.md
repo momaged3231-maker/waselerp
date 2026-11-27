@@ -17,19 +17,14 @@
 
 | # | الملف | action | ip sample |
 |---:|---|---|---|
-| 1 | `fixed-assets.slice.ts` | `asset.create` | id=279 ip=127.0.0.1 |
-| 2 | `fixed-assets.slice.ts` | `asset.run_depreciation` | id=280 ip=127.0.0.1 |
-| 3 | `fixed-assets.slice.ts` | `asset.dispose` | id=236 ip=127.0.0.1 |
-| 4 | `fixed-assets.slice.ts` | `asset.update` | (عبر `this.db as any` — نفس النمط) |
-| 5 | `purchase-match.slice.ts` | `purchase.match_exception` | id=24 entity=invoice:10 ip=127.0.0.1 — `action` سلسلة ثابتة، `details` يحوي `JSON.stringify({reason,links})` (بدون تغيير) |
-| 6 | `parties.slice.ts` | `party.import` | — (لم يُنفّذ في هذه الجولة) |
-| 7 | `parties.slice.ts` | `party.opening_balance` | id=292 ip=127.0.0.1 |
-| 8 | `parties.slice.ts` | `party.delete` | id=288 entity=party:37 ip=127.0.0.1 |
-| 9 | `print-profiles.slice.ts` | `print_profile.create` | id=289 ip=127.0.0.1 |
-| 10 | `print-profiles.slice.ts` | `print_profile.update` | id=290 ip=127.0.0.1 |
-| 11 | `print-profiles.slice.ts` | `print_profile.delete` | id=291 ip=127.0.0.1 |
-| 12 | `admin.slice.ts` | `user.restrictions` | id=160 entity=user:5 ip=127.0.0.1 (branchId=null محفوظ) |
-| 13 | `admin.slice.ts` | `attachment_policy.update` | branchId=null محفوظ |
+| 1–2 | `fixed-assets.slice.ts` | `asset.create`, `asset.run_depreciation`, `asset.dispose` (عبر دالة `activity()`) + `asset.update` | id=279 ip=127.0.0.1 |
+| 3 | `purchase-match.slice.ts` | `purchase.match_exception` | id=24 entity=invoice:10 ip=127.0.0.1 — `action` سلسلة ثابتة، `details` يحوي `JSON.stringify({reason,links})` (بدون تغيير) |
+| 4–6 | `parties.slice.ts` | `party.import` / `party.opening_balance` / `party.delete` | id=292 / id=288 ip=127.0.0.1 |
+| 7–9 | `print-profiles.slice.ts` | `print_profile.create/update/delete` | id=289/290/291 ip=127.0.0.1 |
+| 10–11 | `admin.slice.ts` | `user.restrictions` / `attachment_policy.update` | id=160 ip=127.0.0.1 (branchId=null محفوظ) |
+| 12–13 | `attachments.slice.ts` | `attachment.create` / `attachment.delete` | id=166/167 ip=127.0.0.1 |
+
+> **تصحيح 2026-11-27 (بناءً على TD52-B3-pre-check):** الجدول الأصلي كتب «4» لـ`fixed-assets`سهوًا — الصحيح **2** INSERT (سطر 45 + 246 قبل الهجرة). B2 = **13** (2+1+3+3+2+2)، لا 15. لا تغيير في الكود أو النتائج.
 
 **عينات حرفية إضافية من الملفات الستة (كلها `ip=127.0.0.1`، لا NULL، لا `'unknown'`):**
 ```
