@@ -1,7 +1,8 @@
 import {
   Body, Controller, Delete, Get, Injectable, Param, ParseIntPipe, Post, Put, Query,
-  BadRequestException, ForbiddenException, NotFoundException,
+  BadRequestException, ForbiddenException, NotFoundException, Req,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { PoolClient } from 'pg';
 import { DatabaseService } from '../../common/database/database.service';
 import { assertDeletionAllowed } from '../../common/delete-guard';
@@ -9,6 +10,7 @@ import { applyMovement, getWarehouseCost, lockWarehouseAverageCost, toBaseUnits 
 import { postJournal, resolvePeriod } from '../../common/posting';
 import { asIsoDate } from '../../common/dates';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
+import { logActivity } from '../../common/audit';
 
 
 
@@ -365,7 +367,7 @@ export class BranchTransferService {
    * journal Dr 1108 / Cr 1104 in the SOURCE branch → status 2.
    * Both branches must be open (receive is refused while the destination is locked too).
    */
-  async approve(id: number, user: AuthUser, branchId: number) {
+  async approve(id: number, user: AuthUser, branchId: number, ip: string) {
     if (!user.permissions?.includes('transfer.interbranch.manage')) {
       throw new ForbiddenException('اعتماد التحويل بين الفروع يتطلب صلاحية transfer.interbranch.manage');
     }
@@ -493,12 +495,9 @@ const outSerial = await this.db.nextNumber(client, `stockvoucher:${Number(t.from
         [id, outVoucherId, journalId, user.userId, netValue],
       );
 
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int,$2::int,'stock.branch_transfer.approve','branch_transfer',$3::bigint,$4)`,
-        [user.userId, Number(t.from_branch_id), id,
-          `اعتماد تحويل بين فروع ${t.transfer_no} إلى فرع ${t.to_branch_id}`],
-      );
+      await logActivity(client, { userId: user.userId, branchId: Number(t.from_branch_id),
+        action: 'stock.branch_transfer.approve', entity: 'branch_transfer', entityId: String(id),
+        details: `اعتماد تحويل بين فروع ${t.transfer_no} إلى فرع ${t.to_branch_id}`, ip });
       return { branchTransferId: id, status: 2, outboundVoucherId: outVoucherId, journalId, totalValue: netValue };
     });
   }
@@ -507,7 +506,7 @@ const outSerial = await this.db.nextNumber(client, `stockvoucher:${Number(t.from
    * Receives the transfer at the DESTINATION branch: inbound voucher → ledger →
    * journal Dr 1104 / Cr 1108 in the DESTINATION branch (same cost) → status 4.
    */
-  async receive(id: number, user: AuthUser, branchId: number) {
+  async receive(id: number, user: AuthUser, branchId: number, ip: string) {
     if (!user.permissions?.includes('transfer.interbranch.manage')) {
       throw new ForbiddenException('استلام التحويل بين الفروع يتطلب صلاحية transfer.interbranch.manage');
     }
@@ -607,12 +606,9 @@ const outSerial = await this.db.nextNumber(client, `stockvoucher:${Number(t.from
         [id, inVoucherId, journalId, netValue],
       );
 
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int,$2::int,'stock.branch_transfer.receive','branch_transfer',$3::bigint,$4)`,
-        [user.userId, Number(t.to_branch_id), id,
-          `استلام تحويل بين فروع ${t.transfer_no} واصلًا من فرع ${t.from_branch_id}`],
-      );
+      await logActivity(client, { userId: user.userId, branchId: Number(t.to_branch_id),
+        action: 'stock.branch_transfer.receive', entity: 'branch_transfer', entityId: String(id),
+        details: `استلام تحويل بين فروع ${t.transfer_no} واصلًا من فرع ${t.from_branch_id}`, ip });
       return { branchTransferId: id, status: 4, inboundVoucherId: inVoucherId, journalId, totalValue: netValue };
     });
   }
@@ -622,7 +618,7 @@ const outSerial = await this.db.nextNumber(client, `stockvoucher:${Number(t.from
    * the ledger movement and the issue journal — atomically. Status 4 is NOT
    * cancelable from here (integrated reversal workflow is out of scope).
    */
-  async cancel(id: number, dto: any, user: AuthUser, branchId: number) {
+  async cancel(id: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     if (!user.permissions?.includes('transfer.interbranch.cancel')) {
       throw new ForbiddenException('إلغاء التحويل بين الفروع يتطلب صلاحية transfer.interbranch.cancel');
     }
@@ -704,12 +700,9 @@ const outSerial = await this.db.nextNumber(client, `stockvoucher:${Number(t.from
         [id, user.userId, reason],
       );
 
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int,$2::int,'stock.branch_transfer.cancel','branch_transfer',$3::bigint,$4)`,
-        [user.userId, Number(t.from_branch_id), id,
-          `إلغاء تحويل بين فروع ${t.transfer_no} — ${reason}`],
-      );
+      await logActivity(client, { userId: user.userId, branchId: Number(t.from_branch_id),
+        action: 'stock.branch_transfer.cancel', entity: 'branch_transfer', entityId: String(id),
+        details: `إلغاء تحويل بين فروع ${t.transfer_no} — ${reason}`, ip });
       return { branchTransferId: id, status: 5, journalId, cancelled: true };
     });
   }
@@ -784,20 +777,23 @@ export class BranchTransferController {
 
   @RequirePermissions('transfer.interbranch.manage')
   @Post(':id/approve')
-  approve(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.approve(id, user, branchId);
+  approve(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.approve(id, user, branchId, ip);
   }
 
   @RequirePermissions('transfer.interbranch.manage')
   @Post(':id/receive')
-  receive(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.receive(id, user, branchId);
+  receive(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.receive(id, user, branchId, ip);
   }
 
   @RequirePermissions('transfer.interbranch.cancel')
   @Post(':id/cancel')
-  cancel(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.cancel(id, dto ?? {}, user, branchId);
+  cancel(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.cancel(id, dto ?? {}, user, branchId, ip);
   }
 
   @RequirePermissions('transfer.interbranch.manage')

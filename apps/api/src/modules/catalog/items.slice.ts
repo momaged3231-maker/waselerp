@@ -1,11 +1,13 @@
 import {
   Body, Controller, Delete, Get, Injectable, Module, Param, ParseIntPipe, Post, Put, Query,
-  BadRequestException,
+  BadRequestException, Req,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { DatabaseService } from '../../common/database/database.service';
 import { assertDeletionAllowed } from '../../common/delete-guard';
 import { resolvePrices } from '../../common/pricing';
 import { CurrentBranch, CurrentUser, AuthUser, RequirePermissions } from '../../common/security';
+import { logActivity } from '../../common/audit';
 import { LiveEventsService } from '../events/live-events.service';
 import { EventsModule } from '../events/events.slice';
 import { parseImportFile, buildTemplateXlsx, applyHeaderAliases, ITEM_IMPORT_ALIASES } from '../../common/spreadsheet';
@@ -260,7 +262,7 @@ export class ItemsService {
   }
 
   /** Replaces the component BOM of an assembled item and recalculates its cost from the children. */
-  async setComponents(id: number, dto: any, user: AuthUser) {
+  async setComponents(id: number, dto: any, user: AuthUser, ip: string) {
     const item = await this.db.one<any>('SELECT item_id FROM items WHERE item_id = $1::int AND is_grouped = true', [id]);
     if (!item) throw new BadRequestException('الصنف غير موجود أو ليس «صنف مجمع»');
     const lines = Array.isArray(dto?.lines) ? dto.lines : [];
@@ -294,11 +296,9 @@ export class ItemsService {
       );
       const cost = Math.round(Number(costRow.rows[0]?.cost ?? 0) * 100) / 100;
       await client.query('UPDATE items SET cost_price = $2::numeric WHERE item_id = $1::int', [id, cost]);
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int, NULL, 'item.components', 'item', $2::text, $3::text)`,
-        [user.userId, String(id), `تعديل مكونات صنف مجمع (${lines.length} مكوّن، التكلفة ${cost})`],
-      );
+      await logActivity(client, { userId: user.userId, branchId: null, action: 'item.components',
+        entity: 'item', entityId: String(id),
+        details: `تعديل مكونات صنف مجمع (${lines.length} مكوّن، التكلفة ${cost})`, ip });
       return { parentItemId: id, componentsCount: lines.length, costPrice: cost };
     });
   }
@@ -415,7 +415,7 @@ export class ItemsService {
     return { rows, errors };
   }
 
-  async importFile(dto: any, user: AuthUser, branchId: number) {
+  async importFile(dto: any, user: AuthUser, branchId: number, ip: string) {
     const mode = dto?.mode === 'apply' ? 'apply' : 'preview';
     const parsed = parseImportFile({ csv: dto?.csv, xlsxBase64: dto?.xlsxBase64 });
     if (!parsed.raw.length) throw new BadRequestException('الملف لا يحتوي أي صفوف بيانات');
@@ -475,17 +475,15 @@ export class ItemsService {
           failed.push({ row: row.line, message: error?.message ?? 'تعذر الحفظ' });
         }
       }
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int, $2::int, 'item.import', 'item', NULL, $3::text)`,
-        [user.userId, branchId, `استيراد أصناف: ${created} جديد، ${updated} محدّث، ${failed.length} فاشل`],
-      );
+      await logActivity(client, { userId: user.userId, branchId, action: 'item.import',
+        entity: 'item', entityId: 'batch',
+        details: `استيراد أصناف: ${created} جديد، ${updated} محدّث، ${failed.length} فاشل`, ip });
       return { mode, total: parsed.raw.length, created, updated, failed };
     });
   }
 
   /** Bulk edit sell/cost prices with preview — Tools → «أسعار الأصناف». */
-  async bulkPrice(dto: any, user: AuthUser) {
+  async bulkPrice(dto: any, user: AuthUser, ip: string) {
     const scope = dto?.scope === 'category' ? 'category' : dto?.scope === 'ids' ? 'ids' : 'all';
     const categoryId = scope === 'category' ? Number(dto?.categoryId ?? 0) : 0;
     if (scope === 'category' && !categoryId) throw new BadRequestException('اختر الفئة أولًا');
@@ -533,11 +531,9 @@ export class ItemsService {
           [row.id, row.newPrice],
         );
       }
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int, NULL, 'item.bulk_price', 'item', NULL, $2::text)`,
-        [user.userId, `تعديل جماعي للأسعار (${field}, ${op}, ${value}) على ${changed.length} صنف`],
-      );
+      await logActivity(client, { userId: user.userId, branchId: null, action: 'item.bulk_price',
+        entity: 'item', entityId: 'batch',
+        details: `تعديل جماعي للأسعار (${field}, ${op}, ${value}) على ${changed.length} صنف`, ip });
     });
     return { mode, field, op, value, scope, categoryId, updated: changed.length };
   }
@@ -598,15 +594,17 @@ export class ItemsController {
   /** Upload CSV/XLSX (base64 or raw csv text) — mode=preview (default) or mode=apply. */
   @RequirePermissions('items.manage')
   @Post('import')
-  importFile(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number) {
-    return this.service.importFile(dto, user, branchId);
+  importFile(@Body() dto: any, @CurrentUser() user: AuthUser, @CurrentBranch() branchId: number, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.importFile(dto, user, branchId, ip);
   }
 
   /** Bulk edit sell/cost prices — mode=preview (default) or mode=apply. */
   @RequirePermissions('items.manage')
   @Post('bulk-price')
-  bulkPrice(@Body() dto: any, @CurrentUser() user: AuthUser) {
-    return this.service.bulkPrice(dto, user);
+  bulkPrice(@Body() dto: any, @CurrentUser() user: AuthUser, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.bulkPrice(dto, user, ip);
   }
 
   @RequirePermissions('items.view')
@@ -641,8 +639,9 @@ export class ItemsController {
 
   @RequirePermissions('items.manage')
   @Put(':id/components')
-  setComponents(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser) {
-    return this.service.setComponents(id, dto, user);
+  setComponents(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.setComponents(id, dto, user, ip);
   }
 
   @RequirePermissions('items.manage')

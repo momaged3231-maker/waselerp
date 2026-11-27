@@ -7,6 +7,7 @@ import { PoolClient } from 'pg';
 import { toBaseUnits } from '../../common/stock';
 import { resolvePrices, asRunner } from '../../common/pricing';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
+import { logActivity } from '../../common/audit';
 import { Request } from 'express';
 import { SalesService } from './sales.slice';
 
@@ -417,7 +418,7 @@ export class DocumentsService {
    * Confirms an order and reserves the stock so the goods cannot be sold
    * twice. Cancelling an order releases the reservation.
    */
-  async setOrderStatus(id: number, dto: any, user: AuthUser) {
+  async setOrderStatus(id: number, dto: any, user: AuthUser, ip: string) {
     const status = Number(dto.status);
     if (!ORDER_STATUS[status]) throw new BadRequestException('حالة الأمر غير صحيحة');
 
@@ -461,12 +462,9 @@ export class DocumentsService {
       }
 
       await client.query('UPDATE orders SET status = $2 WHERE order_id = $1::bigint', [id, status]);
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1,$2,'order.status','order',$3,$4)`,
-        [user.userId, Number(order.branch_id), String(id),
-          `${ORDER_STATUS[previous]} ← ${ORDER_STATUS[status]}`],
-      );
+      await logActivity(client, { userId: user.userId, branchId: Number(order.branch_id),
+        action: 'order.status', entity: 'order', entityId: String(id),
+        details: `${ORDER_STATUS[previous]} ← ${ORDER_STATUS[status]}`, ip });
       return { orderId: id, status };
     });
   }
@@ -782,8 +780,9 @@ export class OrdersController {
 
   @RequirePermissions('sales.manage')
   @Post(':id/status')
-  setStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser) {
-    return this.service.setOrderStatus(id, dto, user);
+  setStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @CurrentUser() user: AuthUser, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.setOrderStatus(id, dto, user, ip);
   }
 
   @RequirePermissions('sales.manage')

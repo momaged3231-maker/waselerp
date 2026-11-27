@@ -1,7 +1,8 @@
 import {
   Body, Controller, Delete, Get, Injectable, Param, ParseIntPipe, Post, Put, Query,
-  BadRequestException,
+  BadRequestException, Req,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { PoolClient } from 'pg';
 import { DatabaseService } from '../../common/database/database.service';
 import { assertDeletionAllowed } from '../../common/delete-guard';
@@ -9,6 +10,7 @@ import { applyMovement, getWarehouseCost, lockWarehouseAverageCost, toBaseUnits 
 import { postJournal, resolveMapping } from '../../common/posting';
 import { asIsoDate } from '../../common/dates';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
+import { logActivity } from '../../common/audit';
 
 /** Money is rounded to two decimals; quantities to six. */
 const round2 = (value: number) => Math.round((Number(value) + Number.EPSILON) * 100) / 100;
@@ -267,7 +269,7 @@ export class StockTransferService {
    * Approves the transfer: creates and approves an OUTBOUND voucher (type 2)
    * from the source warehouse. Stock leaves the source at this point.
    */
-  async approve(id: number, user: AuthUser) {
+  async approve(id: number, user: AuthUser, ip: string) {
     return this.db.transaction(async (client) => {
       const header = await client.query<any>(
         'SELECT * FROM stock_transfers WHERE stock_transfer_id = $1::bigint FOR UPDATE',
@@ -383,12 +385,9 @@ export class StockTransferService {
         [id, outVoucherId, journalId, user.userId],
       );
 
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int,$2::int,'stock.transfer.approve','stock_transfer',$3::bigint,$4)`,
-        [user.userId, Number(transfer.branch_id), id,
-          `اعتماد تحويل غير مباشر ${transfer.transfer_no} (أذن صادر)`],
-      );
+      await logActivity(client, { userId: user.userId, branchId: Number(transfer.branch_id),
+        action: 'stock.transfer.approve', entity: 'stock_transfer', entityId: String(id),
+        details: `اعتماد تحويل غير مباشر ${transfer.transfer_no} (أذن صادر)`, ip });
 
       return { stockTransferId: id, status: 2, outboundVoucherId: outVoucherId, journalId };
     });
@@ -398,7 +397,7 @@ export class StockTransferService {
    * Receives the transfer: creates and approves an INBOUND voucher (type 1)
    * at the destination warehouse. Stock arrives at the destination.
    */
-  async receive(id: number, user: AuthUser) {
+  async receive(id: number, user: AuthUser, ip: string) {
     return this.db.transaction(async (client) => {
       const header = await client.query<any>(
         'SELECT * FROM stock_transfers WHERE stock_transfer_id = $1::bigint FOR UPDATE',
@@ -494,12 +493,9 @@ export class StockTransferService {
         [id, inVoucherId, journalId],
       );
 
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int,$2::int,'stock.transfer.receive','stock_transfer',$3::bigint,$4)`,
-        [user.userId, Number(transfer.branch_id), id,
-          `استلام تحويل غير مباشر ${transfer.transfer_no} (أذن وارد)`],
-      );
+      await logActivity(client, { userId: user.userId, branchId: Number(transfer.branch_id),
+        action: 'stock.transfer.receive', entity: 'stock_transfer', entityId: String(id),
+        details: `استلام تحويل غير مباشر ${transfer.transfer_no} (أذن وارد)`, ip });
 
       return { stockTransferId: id, status: 4, inboundVoucherId: inVoucherId, journalId };
     });
@@ -594,14 +590,16 @@ export class StockTransferController {
 
   @RequirePermissions('stock.manage')
   @Post(':id/approve')
-  approve(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
-    return this.service.approve(id, user);
+  approve(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.approve(id, user, ip);
   }
 
   @RequirePermissions('stock.manage')
   @Post(':id/receive')
-  receive(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
-    return this.service.receive(id, user);
+  receive(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.receive(id, user, ip);
   }
 
   @RequirePermissions('stock.manage')

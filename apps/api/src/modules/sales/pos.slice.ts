@@ -7,6 +7,7 @@ import { assertDeletionAllowed } from '../../common/delete-guard';
 import { PoolClient } from 'pg';
 import { Request } from 'express';
 import { AuthUser, CurrentBranch, CurrentUser, RequirePermissions } from '../../common/security';
+import { logActivity } from '../../common/audit';
 import { SalesService } from './sales.slice';
 
 /**
@@ -575,7 +576,7 @@ export class PosService {
    * Moves some lines of a table order to another table.
    * Only lines the kitchen has not started yet can be moved.
    */
-  async splitTableOrder(id: number, dto: any, user: AuthUser, branchId: number) {
+  async splitTableOrder(id: number, dto: any, user: AuthUser, branchId: number, ip: string) {
     await this.assertRestaurantsEnabled();
     const lineIds = (Array.isArray(dto.lineIds) ? dto.lineIds : []).map(Number).filter(Boolean);
     if (!lineIds.length) throw new BadRequestException('اختر السطور المراد فصلها');
@@ -676,18 +677,16 @@ export class PosService {
         await this.retotalOrder(client, orderId);
       }
 
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int,$2::int,'order.split','table_order',$3::bigint,$4)`,
-        [user.userId, branchId, id, `فصل ${lines.rows.length} سطر إلى الطاولة ${table.rows[0].name}`],
-      );
+      await logActivity(client, { userId: user.userId, branchId, action: 'order.split',
+        entity: 'table_order', entityId: String(id),
+        details: `فصل ${lines.rows.length} سطر إلى الطاولة ${table.rows[0].name}`, ip });
 
       return { sourceOrderId: id, targetOrderId, movedLines: lines.rows.length };
     });
   }
 
   /** Moves a whole order to another (free) table. */
-  async moveTableOrder(id: number, dto: any, user: AuthUser) {
+  async moveTableOrder(id: number, dto: any, user: AuthUser, ip: string) {
     await this.assertRestaurantsEnabled();
     const targetTableId = Number(dto.tableId);
     if (!targetTableId) throw new BadRequestException('اختر الطاولة الجديدة');
@@ -722,11 +721,9 @@ export class PosService {
         'UPDATE table_orders SET table_id = $2::int WHERE table_order_id = $1::bigint',
         [id, targetTableId],
       );
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1::int,$2::int,'order.move','table_order',$3::bigint,$4)`,
-        [user.userId, Number(order.branch_id), id, `نقل الطلب ${order.order_no} إلى الطاولة ${table.rows[0].name}`],
-      );
+      await logActivity(client, { userId: user.userId, branchId: Number(order.branch_id),
+        action: 'order.move', entity: 'table_order', entityId: String(id),
+        details: `نقل الطلب ${order.order_no} إلى الطاولة ${table.rows[0].name}`, ip });
       return { tableOrderId: id, tableId: targetTableId, tableName: table.rows[0].name };
     });
   }
@@ -950,7 +947,8 @@ export class PosController {
 
   @RequirePermissions('pos.operate')
   @Post('table-orders/:id/kitchen')
-  kitchenStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: any) {
+  kitchenStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: any, @Req() req: Request) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
     return this.service.setKitchenStatus(id, dto);
   }
 
@@ -969,8 +967,10 @@ export class PosController {
     @Body() dto: any,
     @CurrentUser() user: AuthUser,
     @CurrentBranch() branchId: number,
+    @Req() req: Request,
   ) {
-    return this.service.splitTableOrder(id, dto ?? {}, user, branchId);
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.splitTableOrder(id, dto ?? {}, user, branchId, ip);
   }
 
   @RequirePermissions('pos.operate')
@@ -979,8 +979,10 @@ export class PosController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: any,
     @CurrentUser() user: AuthUser,
+    @Req() req: Request,
   ) {
-    return this.service.moveTableOrder(id, dto ?? {}, user);
+    const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
+    return this.service.moveTableOrder(id, dto ?? {}, user, ip);
   }
 
   // ---- kitchen display ------------------------------------------------ //

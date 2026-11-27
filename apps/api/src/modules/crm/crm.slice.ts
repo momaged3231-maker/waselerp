@@ -170,7 +170,7 @@ export class CrmService {
     return { ok: true };
   }
 
-  async convertLead(id: number, branchId: number, user: AuthUser) {
+  async convertLead(id: number, branchId: number, user: AuthUser, ip: string) {
     return this.db.transaction(async (client) => {
       const lead = (await client.query<any>(
         `SELECT * FROM crm_leads WHERE lead_id=$1::int AND branch_id=$2::int FOR UPDATE`, [id, branchId]
@@ -187,11 +187,9 @@ export class CrmService {
         `UPDATE crm_leads SET party_id=$2::int, stage=5, converted_at=now(), updated_at=now() WHERE lead_id=$1::int`,
         [id, party.partyId],
       );
-      await client.query(
-        `INSERT INTO activity_log (user_id, branch_id, action, entity, entity_id, details)
-         VALUES ($1,$2,'crm.lead.convert','crm_lead',$3,$4)`,
-        [user.userId, branchId, String(id), `تحويل إلى عميل ${party.partyId}`],
-      );
+      await logActivity(client, { userId: user.userId, branchId, action: 'crm.lead.convert',
+        entity: 'crm_lead', entityId: String(id),
+        details: `تحويل إلى عميل ${party.partyId}`, ip });
       return { ok: true, leadId: id, partyId: Number(party.partyId), partyName: party.name };
     });
   }
@@ -316,7 +314,7 @@ export class CrmController {
   @RequirePermissions('crm.manage') @Post('leads') createLead(@Body() body: any, @CurrentBranch() b: number, @CurrentUser() u: AuthUser) { return this.svc.createLead(body, b, u); }
   @RequirePermissions('crm.manage') @Put('leads/:id') updateLead(@Param('id', ParseIntPipe) id: number, @Body() body: any, @CurrentBranch() b: number, @CurrentUser() u: AuthUser, @Req() req: Request) { const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown'; return this.svc.updateLead(id, body, b, u, ip); }
   @RequirePermissions('crm.manage') @Delete('leads/:id') deleteLead(@Param('id', ParseIntPipe) id: number, @CurrentBranch() b: number) { return this.svc.deleteLead(id, b); }
-  @RequirePermissions('crm.manage') @Post('leads/:id/convert') convertLead(@Param('id', ParseIntPipe) id: number, @CurrentBranch() b: number, @CurrentUser() u: AuthUser) { return this.svc.convertLead(id, b, u); }
+  @RequirePermissions('crm.manage') @Post('leads/:id/convert') convertLead(@Param('id', ParseIntPipe) id: number, @CurrentBranch() b: number, @CurrentUser() u: AuthUser, @Req() req: Request) { const ip = req.ip ?? req.socket?.remoteAddress ?? 'unknown'; return this.svc.convertLead(id, b, u, ip); }
 
   @RequirePermissions('crm.manage') @Post('leads/:id/activities') addActivity(@Param('id', ParseIntPipe) id: number, @Body() body: any, @CurrentBranch() b: number, @CurrentUser() u: AuthUser) { return this.svc.addActivity(id, body, b, u); }
   @RequirePermissions('crm.manage') @Put('activities/:id/done') toggleActivity(@Param('id', ParseIntPipe) id: number, @Body() body: any) { return this.svc.toggleActivity(id, !!body?.isDone); }
