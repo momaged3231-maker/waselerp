@@ -167,6 +167,16 @@ Decisions are grouped by topic, not by session. Each decision carries its DEC-ID
 | DEC-PURCH-045 | OI-11 (payables tile) — Phase-3. | §3 | accounting | approved |
 | DEC-PURCH-046 | OI-12 (PPV account) — Phase-2. | §3 | accounting | approved |
 
+#### §1.10.1 — Addendum v2.0 (2026-11-27, بعد B1/B5.2/ TD-52): Claims & Allocation
+
+| DEC-ID | Decision (revised, literal) | Status |
+|---|---|---|
+| **DEC-PURCH-027 (v2)** | Claim flow عبر **3 مسارات** (لا 4): **(أ) Replacement** — `Dr Claim Receivable / Cr Inventory` عند تسجيل الـclaim، ثم `Dr Inventory / Cr Claim Receivable` عند الـreplacement GRN (لا AP، لا GRNI، القيمة = تكلفة الأصل). **(ب) Credit note** — `Dr AP / Cr PPV` (عكس الـAP الأصلي) + عكس VAT Input على الـCN الرسمي؛ يظهر في AP لا Claim Receivable. **(ج) Cash refund** — `Dr Cash/Bank / Cr Claim Receivable` مع `supplier_claims.settlement='cash_refund'`. **VAT:** لا يُثبت على claim؛ فقط عند CN رسمي (ب) أو CN على replacement (VAT صفر). **حساب جديد:** `Claim Receivable` (أصل، party+branch) → TD-67. | **approved (v2)** |
+| **DEC-PURCH-028 (v2)** | عند مرتجع شراء بعد سداد جزئي/كامل: **الرصيد المرتجع يُحوَّل إلى Supplier Advance credit** (لا auto-apply، لا refund فوري). مثال: CN 400 على فاتورة مسددة 600/1000 → `Cr AP 400 / Dr Supplier Advances 400`؛ يُستخدم لاحقًا `Dr AP / Cr Supplier Advances`. المستخدم يقرر الفاتورة (المورد قد يعترض على التخصيص التلقائي). لا يُحل تلقائيًا على CNs متعددة — التفصيل في pre-check. | **approved (v2)** |
+| **DEC-PURCH-037** | **`superseded by DEC-PURCH-027 (v2)`** — «Replacement» مسار من ثلاثة ضمن 027، ليس قرارًا منفصلًا. يبقى كإشارة، لا يُحذف. | **superseded** |
+
+> **TD-68 (منخفض):** عدّ DEC-PURCH الصحيح = **54** (001..054). §10 كتب 48 قبل Addendum v1.1/v1.2. يُغلق في commit وثيقة قادم.
+
 ### 1.11 Inventory (المخزون)
 
 | DEC-ID | Decision (literal) | Source | Owner | Status |
@@ -450,6 +460,8 @@ No issue. E2 signed off.
 | TD-64 | **متوسط → ✅ مُغلق (أ): «`restoreGAP07` ip source.»** `backup.slice.ts:454-456` → `X-Forwarded-For ?? req.ip ?? socket` = IP مُنفِّذ الاستعادة (لا من الحزمة). `TD52-phaseB1-clarification.md`. | TD-52 | Closed | backup.slice.ts |
 | TD-65 | **منخفض — إثبات (لا تغطية): «`item.components` و`order.move` بلا sample row في B3.»** 10/12 مباشر + 2/12 بنمط متطابق. **الإغلاق:** اختبار يدوي لاحق. لا يعطّل TD-52. | TD-52 | Low | catalog/items, pos |
 | TD-66 | **منخفض — توثيق (لا تغطية): «`branch_transfer` branchId semantics.»** approve=from · receive=to · cancel=from (قرار تفسيري B3). | TD-52 | Low | branch-transfer.slice.ts |
+| TD-67 | **متوسط — محاسبة (لا تغطية): «`Claim Receivable` account needed for DEC-PURCH-027 (v2) replacement flow.»** حساب أصل جديد (party+branch) يُغلق في TD-53/54. | TD-53/54 | Medium | chart of accounts |
+| TD-68 | **منخفض — توثيق (لا تغطية): «Documentation drift: DEC-PURCH count 48/51/54.»** العدد الصحيح **54** (001..054: §10 كتب 48 قبل Addendum v1.1/v1.2 + 6، جدول §1.10片段 51 صف). يُغلق في commit وثيقة قادم. | docs | Low | ERP-ACCOUNTING-DECISIONS.md |
 | TD-59 | **منخفض — تحليل (لا تغطية): «CRM: no `closed_at` timestamp — win rate by close-date not possible; cohort-based (`created_at`) only.»** `GET /crm/summary?from=&to=` يفلتر على `created_at`. **الإصلاح:** عمود `closed_at` + backfill عند الحاجة. لا يعطّل GAP-02. | GAP-02 | Low | crm_leads |
 
 ---
