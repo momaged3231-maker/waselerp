@@ -186,6 +186,7 @@ const CHART: {
   { code: '2105', name: 'أوراق دفع', nameEn: 'Notes Payable', type: 2, mapping: 'NOTES_PAYABLE', mappingLabel: 'أوراق دفع', parent: '21' },
   { code: '2106', name: 'حركات بنكية غير مصنفة', nameEn: 'Bank Suspense (Unclassified)', type: 2, parent: '21', mapping: 'BANK_SUSPENSE', mappingLabel: 'حركات بنكية غير مصنفة — تؤجَّل حتى التصنيف' },
   { code: '2107', name: 'GRNI — بضاعة مستلمة غير مفوترة', nameEn: 'Goods Received Not Invoiced', type: 2, mapping: 'GRNI', mappingLabel: 'بضاعة مستلمة غير مفوترة', parent: '21', is_control: true },
+  { code: '2108', name: 'ذمم مطالبات الموردين', nameEn: 'Supplier Claim Receivable', type: 1, mapping: 'SUPPLIER_CLAIM_RECEIVABLE', mappingLabel: 'مطالبات الموردين (أصل)', parent: '21' },
 
   { code: '3', name: 'حقوق الملكية', nameEn: 'Equity', type: 3, group: true },
   { code: '3101', name: 'رأس المال', nameEn: 'Capital', type: 3, parent: '3' },

@@ -175,7 +175,18 @@ Decisions are grouped by topic, not by session. Each decision carries its DEC-ID
 | **DEC-PURCH-028 (v2)** | عند مرتجع شراء بعد سداد جزئي/كامل: **الرصيد المرتجع يُحوَّل إلى Supplier Advance credit** (لا auto-apply، لا refund فوري). مثال: CN 400 على فاتورة مسددة 600/1000 → `Cr AP 400 / Dr Supplier Advances 400`؛ يُستخدم لاحقًا `Dr AP / Cr Supplier Advances`. المستخدم يقرر الفاتورة (المورد قد يعترض على التخصيص التلقائي). لا يُحل تلقائيًا على CNs متعددة — التفصيل في pre-check. | **approved (v2)** |
 | **DEC-PURCH-037** | **`superseded by DEC-PURCH-027 (v2)`** — «Replacement» مسار من ثلاثة ضمن 027، ليس قرارًا منفصلًا. يبقى كإشارة، لا يُحذف. | **superseded** |
 
-> **TD-68 (منخفض):** عدّ DEC-PURCH الصحيح = **54** (001..054). §10 كتب 48 قبل Addendum v1.1/v1.2. يُغلق في commit وثيقة قادم.
+> **TD-68 (منخفض):** عدّ DEC-PURCH الصحيح = **54** (001..054). §10 كتب 48 قبل Addendum v1.1/v1.2. **مُغلق 2026-11-28** (لا drift — الرقم المعتمد 54).
+
+#### Planned audit actions (TD-53/54 Phase 1 — P1-04)
+
+تُوثَّق هنا، وتُستدعى عبر `logActivity` في Phases 2–4 (`ip` إلزامي، `branchId` من مُنفِّذ العملية):
+
+| action | entity | phased في |
+|---|---|---|
+| `supplier.claim.create` | `supplier_claim` | Phase 3 |
+| `supplier.claim.settle` | `supplier_claim` | Phase 4 |
+| `supplier.claim.reverse` | `supplier_claim` | Phase 4 |
+| `purchase.credit_note.post` | `purchase_credit_note` | Phase 2 |
 
 ### 1.11 Inventory (المخزون)
 
