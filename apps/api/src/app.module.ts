@@ -38,6 +38,7 @@ import { PrintAgentsModule } from './modules/print-agents/print-agents.slice';
 import { PurchaseReceiptModule } from './modules/purchases/purchase-receipt.slice';
 import { PurchaseMatchModule } from './modules/purchases/purchase-match.slice';
 import { SupplierStatementModule } from './modules/purchases/supplier-statement.slice';
+import { SupplierCreditNotesModule } from './modules/purchases/supplier-credit-notes.slice';
 
 @Module({
   imports: [
@@ -86,6 +87,7 @@ import { SupplierStatementModule } from './modules/purchases/supplier-statement.
     PurchaseReceiptModule,
     PurchaseMatchModule,
     SupplierStatementModule,
+    SupplierCreditNotesModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

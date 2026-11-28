@@ -201,6 +201,7 @@ export async function postJournal(client: PoolClient, input: JournalInput): Prom
     'sales_credit_note',
     // TD-53/54 P1 — supplier claims & VAT reversal (DEC-PURCH-027 v2) post to control accounts.
     'supplier_claim', 'supplier_vat_reversal',
+    'supplier_credit_note',
   ]);
   const accountIds = [...new Set(lines.map((l) => Number(l.accountId)))];
   const { rows: acctRows } = await client.query<{ account_id: number; is_control: boolean; code: string; name: string; require_cost_center: boolean }>(
